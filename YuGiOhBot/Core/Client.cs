@@ -53,7 +53,9 @@ namespace YuGiOhBot.Core
 
             _map = new DependencyMap();
             _yugiohService = new YuGiOhServices();
+            await AltConsole.PrintAsync("Service", "YuGiOh", "Populating hexcode list...");
             await _yugiohService.InitializeService();
+            await AltConsole.PrintAsync("Service", "YuGiOh", "Hexcode list populated.");
 
             _map.Add(_yugiohBot);
             _map.Add(_yugiohService);

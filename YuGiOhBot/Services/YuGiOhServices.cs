@@ -44,7 +44,9 @@ namespace YuGiOhBot.Services
                 using (SqliteCommand getText = databaseConnection.CreateCommand())
                 {
 
-                    getText.CommandText = $"select id,name,desc from {CardTable} where (name like '{cardName}')";
+                    getText.CommandText = $"select id,name,desc from {CardTable} where name like @CARD";
+                    getText.Parameters.Add("@CARD", SqliteType.Text);
+                    getText.Parameters["@CARD"].Value = cardName;
 
                     using (SqliteDataReader dataReader = await getText.ExecuteReaderAsync())
                     {
@@ -64,7 +66,9 @@ namespace YuGiOhBot.Services
                 using (SqliteCommand getData = databaseConnection.CreateCommand())
                 {
 
-                    getData.CommandText = $"select * from {DataTable} where (id like '{id}')";
+                    getData.CommandText = $"select * from {DataTable} where (id like @ID)";
+                    getData.Parameters.Add("@ID", SqliteType.Integer);
+                    getData.Parameters["@ID"].Value = id;
 
                     using (SqliteDataReader dataReader = await getData.ExecuteReaderAsync())
                     {
@@ -155,8 +159,11 @@ namespace YuGiOhBot.Services
                 await databaseConnection.OpenAsync();
 
                 SqliteCommand searchCommand = databaseConnection.CreateCommand();
+                //i can't sanitize this since the % marks all over the place will sanitize it, lmfao
+                //das right, stahp
                 searchCommand.CommandText = isArchetypeSearch ? $"select name from texts where (name like '%{search.Replace(" ", "%")}%') or (desc like '%{search.Replace(" ", "%")}%')" :
                     $"select name from texts where name like '%{search.Replace(" ", "%")}%'";
+
 
                 using (SqliteDataReader dataReader = await searchCommand.ExecuteReaderAsync())
                 {
@@ -422,7 +429,7 @@ namespace YuGiOhBot.Services
             await Task.Run(() =>
             {
 
-                var lines = File.ReadAllLines("Files/YuGiOh/Archetypes.txt");
+                var lines = File.ReadAllLines("Files/Archetypes.txt");
                 var tempDictionary = new SortedDictionary<string, string>(new LengthComparer());
                 var textInFile = new List<string>(lines);
 
@@ -457,7 +464,7 @@ namespace YuGiOhBot.Services
 
                 //}
 
-                lines = File.ReadAllLines("Files/YuGiOh/Types.txt");
+                lines = File.ReadAllLines("Files/Types.txt");
                 var veryTempDictionary = new Dictionary<int, string>(lines.Length);
                 textInFile = new List<string>(lines);
 
@@ -482,7 +489,7 @@ namespace YuGiOhBot.Services
 
                 //}
 
-                lines = File.ReadAllLines("Files/YuGiOh/Races.txt");
+                lines = File.ReadAllLines("Files/Races.txt");
                 tempDictionary.Clear();
                 textInFile = new List<string>(lines);
 
@@ -505,7 +512,7 @@ namespace YuGiOhBot.Services
 
                 //}
 
-                lines = File.ReadAllLines("Files/YuGiOh/Attributes.txt");
+                lines = File.ReadAllLines("Files/Attributes.txt");
                 tempDictionary.Clear();
                 textInFile = new List<string>(lines);
 
