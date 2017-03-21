@@ -16,7 +16,7 @@ namespace YuGiOhBot.Services
     public class YuGiOhServices
     {
 
-        private const string DataBasePath = @"Data Source=Databases\cards.cdb;";
+        private const string DataBasePath = "Data Source=Databases/cards.cdb;";
         private const string CardTable = "texts";
         private const string DataTable = "datas";
         private const string BasePricesUrl = "http://yugiohprices.com/api/get_card_prices/";
