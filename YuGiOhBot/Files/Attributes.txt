@@ -1,0 +1,7 @@
+﻿1 Earth
+2 Water
+4 Fire
+8 Wind
+10 Light
+20 Dark
+40 Divine

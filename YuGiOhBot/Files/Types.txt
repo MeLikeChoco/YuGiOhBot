@@ -1,0 +1,24 @@
+﻿2000000 Special Summon
+1000000 Pendulum
+800000 XYZ
+400000 Toon
+200000 Flip
+100000 Counter
+80000 Field
+40000 Equip
+20000 Continuous
+10000 Quickplay
+4000 Token
+2000 Synchro
+1000 Tuner
+800 Gemini
+400 Union
+200 Spirit
+100 Trap Monster
+80 Ritual
+40 Fusion
+20 Effect
+10 Normal
+4 Trap
+2 Spell
+1 Monster
