@@ -162,7 +162,7 @@ namespace YuGiOhBot.Commands
 
                     x.Name = "Support";
                     x.Value = "[Support Server](https://image.slidesharecdn.com/bitcoin-130620013853-phpapp01/95/bitcoin-digital-gold-52-638.jpg?cb=1371692421)" +
-                    "\nOr you could use ";
+                    "\nOr you could use my [Github](https://github.com/MeLikeChoco/YuGiOhBot/issues)";
                     x.IsInline = false;
 
                 });
