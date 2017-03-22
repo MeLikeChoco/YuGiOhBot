@@ -7,11 +7,32 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using YuGiOhBot.Services;
 
 namespace YuGiOhBot.Commands
 {
     public class InfoCommands : ModuleBase
     {
+
+        private GuildServices _guildService;
+
+        public InfoCommands(GuildServices guildServiceParams)
+        {
+
+            _guildService = guildServiceParams;
+
+        }
+
+        [Command("prefix")]
+        [Summary("Change command prefix")]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        public async Task PrefixCommand([Remainder]string prefix)
+        {
+
+            await _guildService.SetPrefix(Context.Guild.Id, prefix);
+            await ReplyAsync($"Prefix has been set to: {prefix}");
+
+        }
 
         [Command("invite")]
         [Summary("Get invite link")]
@@ -152,7 +173,7 @@ namespace YuGiOhBot.Commands
                 {
 
                     x.Name = "Uptime";
-                    x.Value = $"{Uptime.Days} days {Uptime.Hours} hours {Uptime.Minutes} minutes {Uptime.Seconds} seconds";
+                    x.Value = $"{Uptime.TotalDays} days {Uptime.TotalHours} hours {Uptime.TotalMinutes} minutes {Uptime.TotalSeconds} seconds";
                     x.IsInline = false;
 
                 });
@@ -170,6 +191,16 @@ namespace YuGiOhBot.Commands
             }
 
             await ReplyAsync(string.Empty, embed: eBuilder);
+
+        }
+
+        [Command("uptime")]
+        [Summary("Returns how long the bot has remained up without stopping")]
+        public async Task UptimeCommand()
+        {
+
+            TimeSpan Uptime = DateTime.Now.Subtract(Process.GetCurrentProcess().StartTime);
+            await ReplyAsync($"The bot has been up for {Uptime.TotalDays} days, {Uptime.TotalHours} hours, {Uptime.TotalMinutes} minutes, and {Uptime.TotalSeconds} seconds.");
 
         }
 

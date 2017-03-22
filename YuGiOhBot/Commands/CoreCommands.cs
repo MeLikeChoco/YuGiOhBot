@@ -73,21 +73,21 @@ namespace YuGiOhBot.Commands
                 }
 
                 //if the card even has a level
-                if (card.Level.Count() != 0)
+                if (!string.IsNullOrEmpty(card.Level))
                 {
 
-                    organizedDescription.AppendLine($"**Level:** {card.Level}");
+                    if (card.Types.Contains("XYZ")) organizedDescription.AppendLine($"**Rank:** {card.Level}"); //some traps have levels like metal reflect slime
+                    else organizedDescription.AppendLine($"**Level:** {card.Level}");
 
-                    if (card.Level.Count() > 1)
-                    {
+                }
+                if (!string.IsNullOrEmpty(card.LeftPend))
+                {
 
-                        //for now only 1 value is needed because there are no cards with different pendulum
-                        //values on both ends (for now of course, you never know)
-                        organizedDescription.AppendLine($"**Pedulum Scale:** {card.LeftPend}");
-                        //organizedDescription.AppendLine($"**Left Pedulum Scale:** {card.LeftPend}");
-                        //organizedDescription.AppendLine($"**Right Pedulum Scale:** {card.RightPend}");
-
-                    }
+                    //for now only 1 value is needed because there are no cards with different pendulum
+                    //values on both ends (for now of course, you never know)
+                    organizedDescription.AppendLine($"**Pedulum Scale:** {card.LeftPend}");
+                    //organizedDescription.AppendLine($"**Left Pedulum Scale:** {card.LeftPend}");
+                    //organizedDescription.AppendLine($"**Right Pedulum Scale:** {card.RightPend}");
 
                 }
 
@@ -105,7 +105,8 @@ namespace YuGiOhBot.Commands
 
                     Author = authorBuilder,
                     Color = WhatColorIsTheCard(card.Types, card.Name),
-                    ThumbnailUrl = card.ImageUrl,
+                    ImageUrl = card.ImageUrl,
+                    //ThumbnailUrl = card.ImageUrl,
                     Title = card.Name,
                     Description = organizedDescription.ToString(),
                     Footer = footerBuilder
@@ -158,7 +159,7 @@ namespace YuGiOhBot.Commands
 
                 }
 
-                if (card.Prices != null)
+                if (card.Prices.data != null)
                 {
 
                     var organizedPrices = new StringBuilder();
@@ -245,7 +246,7 @@ namespace YuGiOhBot.Commands
 
             await ReplyAsync(organizedResults.ToString());
 
-            var response = await WaitForMessage(Context.User, Context.Channel, TimeSpan.FromSeconds(60));
+            IUserMessage response = await WaitForMessage(Context.User, Context.Channel, TimeSpan.FromSeconds(60));
 
             if (!int.TryParse(response.Content, out int searchNumber)) return;
             else if (searchNumber > searchResults.Count)
@@ -322,8 +323,8 @@ namespace YuGiOhBot.Commands
             else if (cardTypes.Contains("Synchro")) return new Color(204, 204, 204);
             else if (cardTypes.Contains("Fusion")) return new Color(160, 134, 183);
             else if (cardTypes.Contains("Ritual")) return new Color(157, 181, 204);
-            else if (cardTypes.Contains("Effect")) return new Color(165, 98, 39);
-            else return new Color(253, 230, 138);
+            else if (cardTypes.Contains("Effect")) return new Color(174, 121, 66);
+            else return new Color(216, 171, 12);
 
         }
 

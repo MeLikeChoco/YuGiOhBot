@@ -22,11 +22,14 @@ namespace YuGiOhBot.Core
         private CommandService _commandService;
         private DependencyMap _map;
         private YuGiOhServices _yugiohService;
+        private GuildServices _guildService;
         private int _latencyMessageLimiter = 10; //pls no spam console
         private const string DiscordTokenPath = "Tokens/Discord.txt";
 
         public async Task Run()
         {
+
+            await AltConsole.PrintAsync("Info", "Client", "Bot has been started!");
 
             _yugiohBot = new DiscordSocketClient(new DiscordSocketConfig()
             {
@@ -53,11 +56,18 @@ namespace YuGiOhBot.Core
 
             _map = new DependencyMap();
             _yugiohService = new YuGiOhServices();
+            _guildService = new GuildServices();
+
+            await AltConsole.PrintAsync("Service", "Guild", "Populating prefix list...");
+            await _guildService.InitializeService();
+            await AltConsole.PrintAsync("Service", "Guild", "Prefix list populated.");
+
             await AltConsole.PrintAsync("Service", "YuGiOh", "Populating hexcode list...");
             await _yugiohService.InitializeService();
             await AltConsole.PrintAsync("Service", "YuGiOh", "Hexcode list populated.");
 
             _map.Add(_yugiohBot);
+            _map.Add(_guildService);
             _map.Add(_yugiohService);
 
             Log();
@@ -122,12 +132,17 @@ namespace YuGiOhBot.Core
         {
 
             var message = possibleCommand as SocketUserMessage;
+            var guildId = (message.Channel as SocketGuildChannel).Guild.Id;
 
             if (message == null) return;
 
             var argPos = 0;
+            string prefix;
 
-            if (!(message.HasStringPrefix("e$", ref argPos) || message.HasMentionPrefix(_yugiohBot.CurrentUser, ref argPos))) return;
+            if (_guildService._guildPrefixes.TryGetValue(guildId, out prefix)) { }
+            else prefix = "e$";
+
+            if (!(message.HasStringPrefix(prefix, ref argPos) || message.HasMentionPrefix(_yugiohBot.CurrentUser, ref argPos))) return;
 
             var context = new CommandContext(_yugiohBot, message);
             IResult result = await _commandService.ExecuteAsync(context, argPos, _map);

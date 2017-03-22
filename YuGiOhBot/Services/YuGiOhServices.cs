@@ -16,7 +16,7 @@ namespace YuGiOhBot.Services
     public class YuGiOhServices
     {
 
-        private const string DataBasePath = "Data Source=Databases/cards.cdb;";
+        private const string DatabasePath = "Data Source=Databases/cards.cdb;";
         private const string CardTable = "texts";
         private const string DataTable = "datas";
         private const string BasePricesUrl = "http://yugiohprices.com/api/get_card_prices/";
@@ -34,7 +34,7 @@ namespace YuGiOhBot.Services
             //format, archetype(if any), atk, def, level(including pend, need to convert from dec to hex), race(beast, aqua, dragon etc etc), effect(if not 0)
             string ot, setcode, type, atk, def, level, race, attribute, category;
 
-            using (var databaseConnection = new SqliteConnection(DataBasePath))
+            using (var databaseConnection = new SqliteConnection(DatabasePath))
             {
 
                 await databaseConnection.OpenAsync();
@@ -66,7 +66,7 @@ namespace YuGiOhBot.Services
                 using (SqliteCommand getData = databaseConnection.CreateCommand())
                 {
 
-                    getData.CommandText = $"select * from {DataTable} where (id like @ID)";
+                    getData.CommandText = $"select * from {DataTable} where id like @ID";
                     getData.Parameters.Add("@ID", SqliteType.Integer);
                     getData.Parameters["@ID"].Value = id;
 
@@ -153,32 +153,32 @@ namespace YuGiOhBot.Services
 
             var searchResults = new List<string>();
 
-            using (var databaseConnection = new SqliteConnection(DataBasePath))
+            using (var databaseConnection = new SqliteConnection(DatabasePath))
             {
 
                 await databaseConnection.OpenAsync();
 
-                SqliteCommand searchCommand = databaseConnection.CreateCommand();
-                //i can't sanitize this since the % marks all over the place will sanitize it, lmfao
-                //das right, stahp
-                searchCommand.CommandText = isArchetypeSearch ? $"select name from texts where (name like '%{search.Replace(" ", "%")}%') or (desc like '%{search.Replace(" ", "%")}%')" :
-                    $"select name from texts where name like '%{search.Replace(" ", "%")}%'";
-
-
-                using (SqliteDataReader dataReader = await searchCommand.ExecuteReaderAsync())
+                using (SqliteCommand searchCommand = databaseConnection.CreateCommand())
                 {
+                    
+                    //i can't sanitize this since the % marks all over the place will sanitize it, lmfao
+                    //das right, stahp
+                    searchCommand.CommandText = isArchetypeSearch ? $"select name from texts where (name like '%{search.Replace(" ", "%")}%') or (desc like '%{search.Replace(" ", "%")}%')" :
+                        $"select name from texts where name like '%{search.Replace(" ", "%")}%'";
 
-                    while (await dataReader.ReadAsync())
+                    using (SqliteDataReader dataReader = await searchCommand.ExecuteReaderAsync())
                     {
 
-                        var card = dataReader["name"].ToString();
+                        while (await dataReader.ReadAsync())
+                        {
 
-                        if (!searchResults.Contains(card)) searchResults.Add(card);
+                            var card = dataReader["name"].ToString();
 
+                            if (!searchResults.Contains(card)) searchResults.Add(card);
+
+                        }
                     }
-
                 }
-
             }
 
             return searchResults;
@@ -248,30 +248,23 @@ namespace YuGiOhBot.Services
 
         private async Task<string> ConvertSetCodeToArchetype(string setcode)
         {
-
-            string archetype;
+            
             long decimalForm = long.Parse(setcode);
             var hexcode = decimalForm.ToString("x"); //convert decimal to hexcode
 
-            await Task.Run(() =>
+            return await Task.Run(() =>
             {
 
-                foreach (KeyValuePair<string, string> archetypePair in _hexcodeToArchetype)
+                foreach (KeyValuePair<string, string> kv in _hexcodeToArchetype)
                 {
 
-                    if (hexcode.StartsWith(archetypePair.Key))
-                    {
-
-                        archetype = archetypePair.Value;
-                        break;
-
-                    }
+                    if (hexcode.StartsWith(kv.Key)) return kv.Value;
 
                 }
 
-            });
+                return string.Empty;
 
-            return string.Empty;
+            });
 
         }
 
