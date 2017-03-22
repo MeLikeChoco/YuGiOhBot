@@ -185,6 +185,13 @@ namespace YuGiOhBot.Services
 
         }
 
+        public async Task<List<string>> LazySearchCards(string search)
+        {
+
+
+
+        }
+
         private async Task<YuGiOhPriceSerializer> GetPrices(string cardName)
         {
 
