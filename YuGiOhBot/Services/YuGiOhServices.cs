@@ -187,8 +187,48 @@ namespace YuGiOhBot.Services
 
         public async Task<List<string>> LazySearchCards(string search)
         {
+            
+            var searchResults = new List<string>();
 
+            using (var databaseConnection = new SqliteConnection(DatabasePath))
+            {
 
+                await databaseConnection.OpenAsync();
+
+                using (SqliteCommand lazySearchCommand = databaseConnection.CreateCommand())
+                {
+
+                    lazySearchCommand.CommandText = "select name,desc from texts where ";
+                    var buildSearch = new StringBuilder();
+                    string[] splitSearch = search.Split(' ');
+
+                    for(int i = 0; i < splitSearch.Length; i++)
+                    {
+
+                        if(i == splitSearch.Length - 1) buildSearch.Append($"name like %@SEARCH{i}%;");
+                        else buildSearch.Append($"name like %@SEARCH{i}% AND ");
+
+                        lazySearchCommand.Parameters.Add($"@SEARCH{i}", SqliteType.Text);
+                        lazySearchCommand.Parameters[$"@SEARCH{i}"].Value = splitSearch[i];
+
+                    }
+
+                    using (SqliteDataReader dataReader = await lazySearchCommand.ExecuteReaderAsync())
+                    {
+
+                        while (await dataReader.ReadAsync())
+                        {
+
+                            var card = dataReader["name"].ToString();
+
+                            if (!searchResults.Contains(card)) searchResults.Add(card);
+
+                        }
+                    }
+                }
+            }
+
+            return searchResults;
 
         }
 

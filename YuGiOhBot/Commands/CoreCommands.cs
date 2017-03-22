@@ -304,7 +304,7 @@ namespace YuGiOhBot.Commands
             {
 
                 //<card names>
-                searchResults = await _service.SearchCards(search);
+                searchResults = await _service.LazySearchCards(search);
 
                 if (searchResults.Count == 0)
                 {
