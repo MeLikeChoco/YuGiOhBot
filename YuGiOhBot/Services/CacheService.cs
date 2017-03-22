@@ -16,21 +16,23 @@ namespace YuGiOhBot.Services
     public static class CacheService
     {
 
-        public static ConcurrentDictionary<string, EmbedBuilder> _yuGiOhCardCache { get; set; }
+        public static ConcurrentDictionary<string, EmbedBuilder> _yugiohCardCache { get; set; }
         private static Timer _yugiohCacheClearer;
 
         public static void InitializeService()
         {
 
+            _yugiohCardCache = new ConcurrentDictionary<string, EmbedBuilder>();
+
             _yugiohCacheClearer = new Timer(async (state) =>
             {
 
                 await AltConsole.PrintAsync("Service", "Cache", "Checking YuGiOh cache...");
-                if (_yuGiOhCardCache.Count > 0)
+                if (_yugiohCardCache.Count > 0)
                 {
 
                     await AltConsole.PrintAsync("Service", "Cache", "Clearing YuGiOh cache...");
-                    _yuGiOhCardCache.Clear();
+                    _yugiohCardCache.Clear();
                     await AltConsole.PrintAsync("Service", "Cache", "Cache cleared.");
 
                 }
