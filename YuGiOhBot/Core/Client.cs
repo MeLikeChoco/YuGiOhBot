@@ -66,6 +66,10 @@ namespace YuGiOhBot.Core
             await _yugiohService.InitializeService();
             await AltConsole.PrintAsync("Service", "YuGiOh", "Hexcode list populated.");
 
+            await AltConsole.PrintAsync("Service", "Cache", "Starting up cache service...");
+            CacheService.InitializeService();
+            await AltConsole.PrintAsync("Service", "Cache", "Cache service initialized.");
+
             _map.Add(_yugiohBot);
             _map.Add(_guildService);
             _map.Add(_yugiohService);

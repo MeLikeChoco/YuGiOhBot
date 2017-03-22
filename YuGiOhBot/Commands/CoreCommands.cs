@@ -26,8 +26,14 @@ namespace YuGiOhBot.Commands
         [Summary("Returns information based on given card name")]
         public async Task CardCommand([Remainder]string cardName)
         {
+                       
+            if (CacheService._yuGiOhCardCache.TryGetValue(cardName, out EmbedBuilder eBuilder))
+            {
 
-            EmbedBuilder eBuilder;
+                await ReplyAsync("", embed: eBuilder);
+                return;
+
+            }
 
             using (var typingState = Context.Channel.EnterTypingState())
             {
@@ -220,12 +226,75 @@ namespace YuGiOhBot.Commands
             }
 
             await ReplyAsync("", embed: eBuilder);
+            CacheService._yuGiOhCardCache.TryAdd(cardName, eBuilder);
 
         }
 
         [Command("search", RunMode = RunMode.Async)]
         [Summary("Searches for cards based on name given")]
         public async Task CardSearchCommand([Remainder]string search)
+        {
+
+            StringBuilder organizedResults;
+            List<string> searchResults;
+
+            using (Context.Channel.EnterTypingState())
+            {
+
+                //<card names>
+                searchResults = await _service.SearchCards(search);
+
+                if (searchResults.Count == 0)
+                {
+
+                    await ReplyAsync($"Nothing was found with the search of {search}!");
+                    return;
+
+                }
+                else if (searchResults.Count > 50)
+                {
+
+                    await ReplyAsync($"Too many results were returned, please refine your search!");
+                    return;
+
+                }
+
+                var str = $"```There are {searchResults.Count} results based on your search!\n\n";
+                organizedResults = new StringBuilder(str);
+                var counter = 1;
+
+                foreach (string card in searchResults)
+                {
+
+                    organizedResults.AppendLine($"{counter}. {card}");
+                    counter++;
+
+                }
+
+                organizedResults.Append("\nHit a number to look at that card. Expires in a minute!```");
+
+            }
+
+            await ReplyAsync(organizedResults.ToString());
+
+            IUserMessage response = await WaitForMessage(Context.User, Context.Channel, TimeSpan.FromSeconds(60));
+
+            if (!int.TryParse(response.Content, out int searchNumber)) return;
+            else if (searchNumber > searchResults.Count)
+            {
+
+                await ReplyAsync($"{Context.User.Mention} Not a valid search!");
+                return;
+
+            }
+
+            await CardCommand(searchResults[searchNumber - 1]);
+
+        }
+
+        [Command("lsearch", RunMode = RunMode.Async)]
+        [Summary("A lazy search of all cards that CONTAIN the words entered, it may be not be in any particular order")]
+        public async Task LazySearchCommand([Remainder]string search)
         {
 
             StringBuilder organizedResults;
