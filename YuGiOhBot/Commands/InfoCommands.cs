@@ -130,7 +130,7 @@ namespace YuGiOhBot.Commands
                 {
 
                     x.Name = "What language and API?";
-                    x.Value = $"Bot is coded in C# with .NET Core using Discord.NET library {discordnetVersion}";
+                    x.Value = $"Bot is coded in C# with .NET Core using Discord.NET library. Version: {discordnetVersion}";
                     x.IsInline = false;
 
                 });
