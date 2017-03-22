@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Commands;
+using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -173,7 +174,7 @@ namespace YuGiOhBot.Commands
                 {
 
                     x.Name = "Uptime";
-                    x.Value = $"{Uptime.TotalDays} days {Uptime.TotalHours} hours {Uptime.TotalMinutes} minutes {Uptime.TotalSeconds} seconds";
+                    x.Value = $"{Uptime.Days} days {Uptime.Hours} hours {Uptime.Minutes} minutes {Uptime.Seconds} seconds";
                     x.IsInline = false;
 
                 });
@@ -200,7 +201,17 @@ namespace YuGiOhBot.Commands
         {
 
             TimeSpan Uptime = DateTime.Now.Subtract(Process.GetCurrentProcess().StartTime);
-            await ReplyAsync($"The bot has been up for {Uptime.TotalDays} days, {Uptime.TotalHours} hours, {Uptime.TotalMinutes} minutes, and {Uptime.TotalSeconds} seconds.");
+            await ReplyAsync($"The bot has been up for {Uptime.Days} days, {Uptime.Hours} hours, {Uptime.Minutes} minutes, and {Uptime.Seconds} seconds.");
+
+        }
+
+        [Command("ping")]
+        [Summary("Returns ping between bot and guild")]
+        public async Task PingCommang()
+        {
+
+            int latency = (Context.Client as DiscordSocketClient).Latency;
+            await ReplyAsync($"The latency between the bot and guild is: **{latency} ms**");
 
         }
 

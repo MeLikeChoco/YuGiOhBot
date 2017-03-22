@@ -36,7 +36,7 @@ namespace YuGiOhBot.Services
                         while (await dataReader.ReadAsync())
                         {
 
-                            _guildPrefixes.TryAdd(ulong.Parse(dataReader["guild"].ToString()), dataReader["prefix"].ToString());
+                            _guildPrefixes.TryAdd(ulong.Parse(dataReader["id"].ToString()), dataReader["prefix"].ToString());
 
                         }
 

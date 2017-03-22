@@ -164,7 +164,31 @@ namespace YuGiOhBot.Commands
 
                     var organizedPrices = new StringBuilder();
 
-                    if (card.Prices.data.Count > 8) organizedPrices.Append("Too many prices to show");
+                    //debug usage
+                    //card.Prices.data.ForEach(d => Console.WriteLine(d.price_data.data.prices.average));
+
+                    if (card.Prices.data.Count > 8)
+                    {
+
+                        List<Datum> prices = card.Prices.data;
+
+                        organizedPrices.AppendLine("**Showing the first 7 prices due to too many available.**");
+
+                        for(int counter = 0; counter < 8; counter++)
+                        {
+
+                            Datum data = prices[counter];
+
+                            organizedPrices.AppendLine($"**Name:** {data.name}");
+                            organizedPrices.AppendLine($"\t\tRarity: {data.rarity}");
+                            //this is what redundancy looks like people, lmfao
+                            organizedPrices.AppendLine($"\t\tHigh: ${data.price_data.data.prices.high.ToString("0.00")}");
+                            organizedPrices.AppendLine($"\t\tLow: ${data.price_data.data.prices.low.ToString("0.00")}");
+                            organizedPrices.AppendLine($"\t\tAverage: ${data.price_data.data.prices.average.ToString("0.00")}");
+
+                        }
+
+                    }
                     else
                     {
 
@@ -261,18 +285,19 @@ namespace YuGiOhBot.Commands
 
         }
 
-        [Command("archetype")]
+        [Command("archetype", RunMode = RunMode.Async)]
         [Summary("Attempt to search all cards associated with searched archetype")]
         public async Task ArchetypeSearchCommand([Remainder]string archetype)
         {
 
             StringBuilder organizedResults;
+            List<string> searchResults;
 
             using (Context.Channel.EnterTypingState())
             {
 
                 //<card names>
-                List<string> searchResults = await _service.SearchCards(archetype, true);
+                searchResults = await _service.SearchCards(archetype, true);
 
                 if (searchResults.Count == 0)
                 {
@@ -301,11 +326,24 @@ namespace YuGiOhBot.Commands
 
                 }
 
-                organizedResults.Append("```");
+                organizedResults.Append("\nHit a number to look at that card. Expires in a minute!```");
 
             }
 
             await ReplyAsync(organizedResults.ToString());
+
+            IUserMessage response = await WaitForMessage(Context.User, Context.Channel, TimeSpan.FromSeconds(60));
+
+            if (!int.TryParse(response.Content, out int searchNumber)) return;
+            else if (searchNumber > searchResults.Count)
+            {
+
+                await ReplyAsync($"{Context.User.Mention} Not a valid search!");
+                return;
+
+            }
+
+            await CardCommand(searchResults[searchNumber - 1]);
 
         }
 
