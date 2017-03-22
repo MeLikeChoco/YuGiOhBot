@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -67,6 +68,7 @@ namespace YuGiOhBot.Commands
                 var architecture = RuntimeInformation.OSArchitecture.ToString();
                 var ramUsage = ((Process.GetCurrentProcess().WorkingSet64 / 1024f) / 1024f).ToString();
                 TimeSpan Uptime = DateTime.Now.Subtract(Process.GetCurrentProcess().StartTime);
+                string discordnetVersion = DiscordConfig.Version;
 
                 var authorBuilder = new EmbedAuthorBuilder()
                 {
@@ -128,7 +130,7 @@ namespace YuGiOhBot.Commands
                 {
 
                     x.Name = "What language and API?";
-                    x.Value = "Bot is coded in C# with .NET Core using Discord.NET library";
+                    x.Value = $"Bot is coded in C# with .NET Core using Discord.NET library {discordnetVersion}";
                     x.IsInline = false;
 
                 });
