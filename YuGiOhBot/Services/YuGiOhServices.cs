@@ -197,21 +197,19 @@ namespace YuGiOhBot.Services
 
                 using (SqliteCommand lazySearchCommand = databaseConnection.CreateCommand())
                 {
-
-                    lazySearchCommand.CommandText = "select name,desc from texts where ";
-                    var buildSearch = new StringBuilder();
+                    
+                    var buildSearch = new StringBuilder("select name from texts where ");
                     string[] splitSearch = search.Split(' ');
 
                     for(int i = 0; i < splitSearch.Length; i++)
                     {
 
-                        if(i == splitSearch.Length - 1) buildSearch.Append($"name like %@SEARCH{i}%;");
-                        else buildSearch.Append($"name like %@SEARCH{i}% AND ");
-
-                        lazySearchCommand.Parameters.Add($"@SEARCH{i}", SqliteType.Text);
-                        lazySearchCommand.Parameters[$"@SEARCH{i}"].Value = splitSearch[i];
+                        if(i == splitSearch.Length - 1) buildSearch.Append($"(name like '%{splitSearch[i]}%')");
+                        else buildSearch.Append($"(name like '%{splitSearch[i]}%') and ");
 
                     }
+
+                    lazySearchCommand.CommandText = buildSearch.ToString();
 
                     using (SqliteDataReader dataReader = await lazySearchCommand.ExecuteReaderAsync())
                     {

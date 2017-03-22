@@ -27,7 +27,7 @@ namespace YuGiOhBot.Commands
         public async Task CardCommand([Remainder]string cardName)
         {
                        
-            if (CacheService._yuGiOhCardCache.TryGetValue(cardName, out EmbedBuilder eBuilder))
+            if (CacheService._yugiohCardCache.TryGetValue(cardName, out EmbedBuilder eBuilder))
             {
 
                 await ReplyAsync("", embed: eBuilder);
@@ -226,7 +226,7 @@ namespace YuGiOhBot.Commands
             }
 
             await ReplyAsync("", embed: eBuilder);
-            CacheService._yuGiOhCardCache.TryAdd(cardName, eBuilder);
+            CacheService._yugiohCardCache.TryAdd(cardName, eBuilder);
 
         }
 
