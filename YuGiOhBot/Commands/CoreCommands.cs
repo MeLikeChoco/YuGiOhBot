@@ -1,4 +1,5 @@
 ﻿using Discord.Commands;
+using Discord.WebSocket;
 using Discord;
 using Discord.Addons.InteractiveCommands;
 using System;
@@ -172,8 +173,13 @@ namespace YuGiOhBot.Commands
 
                     //debug usage
                     //card.Prices.data.ForEach(d => Console.WriteLine(d.price_data.data.prices.average));
+                    if(card.Prices.data == null)
+                    {
 
-                    if (card.Prices.data.Count > 8)
+                        organizedPrices.Append("**No prices to show.**");
+
+                    }
+                    else if (card.Prices.data.Count > 8)
                     {
 
                         List<Datum> prices = card.Prices.data;
@@ -195,7 +201,7 @@ namespace YuGiOhBot.Commands
                         }
 
                     }
-                    else
+                    else if(card.Prices.data.Count < 8)
                     {
 
                         foreach (Datum data in card.Prices.data)
@@ -204,13 +210,28 @@ namespace YuGiOhBot.Commands
                             organizedPrices.AppendLine($"**Name:** {data.name}");
                             organizedPrices.AppendLine($"\t\tRarity: {data.rarity}");
                             //this is what redundancy looks like people, lmfao
-                            organizedPrices.AppendLine($"\t\tHigh: ${data.price_data.data.prices.high.ToString("0.00")}");
-                            organizedPrices.AppendLine($"\t\tLow: ${data.price_data.data.prices.low.ToString("0.00")}");
-                            organizedPrices.AppendLine($"\t\tAverage: ${data.price_data.data.prices.average.ToString("0.00")}");
+
+                            if(data.price_data.data == null)
+                            {
+
+                                organizedPrices.AppendLine($"\t\tError: No prices to display for this card variant.");
+
+                            }
+                            else
+                            {
+
+
+                                organizedPrices.AppendLine($"\t\tHigh: ${data.price_data.data.prices.high.ToString("0.00")}");
+                                organizedPrices.AppendLine($"\t\tLow: ${data.price_data.data.prices.low.ToString("0.00")}");
+                                organizedPrices.AppendLine($"\t\tAverage: ${data.price_data.data.prices.average.ToString("0.00")}");
+
+                            }
 
                         }
 
                     }
+
+                    
 
                     eBuilder.AddField(x =>
                     {
