@@ -23,7 +23,7 @@ namespace YuGiOhBot.Core
         private DependencyMap _map;
         private YuGiOhServices _yugiohService;
         private GuildServices _guildService;
-        private int _latencyMessageLimiter = 10; //pls no spam console
+        private int _latencyMessageLimiter = 20; //pls no spam console
         private const string DiscordTokenPath = "Tokens/Discord.txt";
 
         public async Task Run()
@@ -63,7 +63,7 @@ namespace YuGiOhBot.Core
             await AltConsole.PrintAsync("Service", "Guild", "Prefix list populated.");
 
             await AltConsole.PrintAsync("Service", "YuGiOh", "Populating hexcode list...");
-            await _yugiohService.InitializeService();
+            _yugiohService.InitializeService();
             await AltConsole.PrintAsync("Service", "YuGiOh", "Hexcode list populated.");
 
             await AltConsole.PrintAsync("Service", "Cache", "Starting up cache service...");
@@ -136,14 +136,19 @@ namespace YuGiOhBot.Core
         {
 
             var message = possibleCommand as SocketUserMessage;
-            var guildId = (message.Channel as SocketGuildChannel).Guild.Id;
+            ulong guildId;
+
+            if (message.Channel is IDMChannel) guildId = 1;
+            else guildId = (message.Channel as SocketGuildChannel).Guild.Id;
+
+            //var guildId = (message.Channel as SocketGuildChannel).Guild.Id;
 
             if (message == null) return;
+            if (message.Author.IsBot) return;
 
             var argPos = 0;
-            string prefix;
 
-            if (_guildService._guildPrefixes.TryGetValue(guildId, out prefix)) { }
+            if (_guildService._guildPrefixes.TryGetValue(guildId, out string prefix)) { }
             else prefix = "e$";
 
             if (!(message.HasStringPrefix(prefix, ref argPos) || message.HasMentionPrefix(_yugiohBot.CurrentUser, ref argPos))) return;
@@ -181,6 +186,8 @@ namespace YuGiOhBot.Core
                     if (_latencyMessageLimiter == 10)
                     {
 
+
+                        await AltConsole.PrintAsync(message.Severity.ToString(), message.Source, message.Message, message.Exception);
                         _latencyMessageLimiter = 0;
 
                     }
@@ -191,13 +198,10 @@ namespace YuGiOhBot.Core
                         //Console.ForegroundColor = ConsoleColor.White;
                         //Console.WriteLine("blocked");
                         _latencyMessageLimiter++;
-                        return;
 
                     }
 
                 }
-
-                await AltConsole.PrintAsync(message.Severity.ToString(), message.Source, message.Message, message.Exception);
 
             };
 

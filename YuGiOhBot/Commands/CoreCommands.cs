@@ -23,12 +23,12 @@ namespace YuGiOhBot.Commands
 
         }
 
-        [Command("card")]
+        [Command("card"), Alias("c")]
         [Summary("Returns information based on given card name")]
         public async Task CardCommand([Remainder]string cardName)
         {
                        
-            if (CacheService._yugiohCardCache.TryGetValue(cardName, out EmbedBuilder eBuilder))
+            if (CacheService.YuGiOhCardCache.TryGetValue(cardName, out EmbedBuilder eBuilder))
             {
 
                 await ReplyAsync("", embed: eBuilder);
@@ -247,11 +247,11 @@ namespace YuGiOhBot.Commands
             }
 
             await ReplyAsync("", embed: eBuilder);
-            CacheService._yugiohCardCache.TryAdd(cardName, eBuilder);
+            CacheService.YuGiOhCardCache.TryAdd(cardName, eBuilder);
 
         }
 
-        [Command("search", RunMode = RunMode.Async)]
+        [Command("search", RunMode = RunMode.Async), Alias("s")]
         [Summary("Searches for cards based on name given")]
         public async Task CardSearchCommand([Remainder]string search)
         {
@@ -313,7 +313,7 @@ namespace YuGiOhBot.Commands
 
         }
 
-        [Command("lsearch", RunMode = RunMode.Async)]
+        [Command("lsearch", RunMode = RunMode.Async), Alias("ls")]
         [Summary("A lazy search of all cards that CONTAIN the words entered, it may be not be in any particular order")]
         public async Task LazySearchCommand([Remainder]string search)
         {
@@ -375,7 +375,7 @@ namespace YuGiOhBot.Commands
 
         }
 
-        [Command("archetype", RunMode = RunMode.Async)]
+        [Command("archetype", RunMode = RunMode.Async), Alias("a", "arch")]
         [Summary("Attempt to search all cards associated with searched archetype")]
         public async Task ArchetypeSearchCommand([Remainder]string archetype)
         {

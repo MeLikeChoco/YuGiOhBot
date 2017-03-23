@@ -27,6 +27,7 @@ namespace YuGiOhBot.Commands
 
         [Command("prefix")]
         [Summary("Change command prefix")]
+        [RequireContext(ContextType.Guild)]
         [RequireUserPermission(GuildPermission.Administrator)]
         public async Task PrefixCommand([Remainder]string prefix)
         {
