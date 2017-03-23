@@ -99,6 +99,9 @@ namespace YuGiOhBot.Services
             card.Race = types.Count > 0 ? types.FirstOrDefault() : string.Empty; //it will always be the first thing declared in types
             card.Attribute = attribute;
             card.Prices = await GetPrices(name, realName);
+            card.ImageUrl = await GetImageUrl(name, realName);
+
+            return card;
 
         }
 
@@ -113,9 +116,14 @@ namespace YuGiOhBot.Services
                 if (json.StartsWith("{\"status\":\"fail\""))
                 {
 
-                    json = await http.GetStringAsync($"{BasePricesUrl}{Uri.EscapeUriString(realName)}");
+                    if (!string.IsNullOrEmpty(realName))
+                    {
 
-                    if (json.StartsWith("{\"status\":\"fail\"")) return new YuGiOhPriceSerializer();
+                        json = await http.GetStringAsync($"{BasePricesUrl}{Uri.EscapeUriString(realName)}");
+
+                        if (json.StartsWith("{\"status\":\"fail\"")) return new YuGiOhPriceSerializer();
+
+                    }else return new YuGiOhPriceSerializer();
 
                 }
 
@@ -125,7 +133,7 @@ namespace YuGiOhBot.Services
 
         }
 
-        private async Task<string> GetImageUrl(string cardName)
+        private async Task<string> GetImageUrl(string cardName, string realName)
         {
 
             //redirects are annoying eh?
@@ -133,6 +141,20 @@ namespace YuGiOhBot.Services
             {
 
                 HttpResponseMessage response = await http.GetAsync($"{BaseImagesUrl}{cardName}");
+
+                if (!response.IsSuccessStatusCode)
+                {
+
+                    try
+                    {
+
+                        response = await http.GetAsync($"{BaseImagesUrl}{realName}");
+                        return response.RequestMessage.RequestUri.ToString();
+
+                    }
+                    catch { return response.RequestMessage.RequestUri.ToString(); }
+
+                }
 
                 return response.RequestMessage.RequestUri.ToString();
 
