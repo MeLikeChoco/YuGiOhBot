@@ -38,43 +38,46 @@ namespace YuGiOhBot.Services
                 linkMarkers = link = property = lore = ocgStatus = tcgAdvStatus = tcgTrnStatus = string.Empty;
 
             using (var databaseConnection = new SqliteConnection(DatabasePath))
+            using (SqliteCommand getCardCommand = databaseConnection.CreateCommand())
             {
+
+                getCardCommand.CommandText = $"select * from Card where name like @NAME";
+                getCardCommand.Parameters.Add("@NAME", SqliteType.Text);
+                getCardCommand.Parameters["@NAME"].Value = cardName;
 
                 await databaseConnection.OpenAsync();
 
-                using (SqliteCommand getCardCommand = databaseConnection.CreateCommand())
+                using (SqliteDataReader dataReader = await getCardCommand.ExecuteReaderAsync())
                 {
 
-                    getCardCommand.CommandText = $"select * from Card where name like @NAME";
-                    getCardCommand.Parameters.Add("@NAME", SqliteType.Text);
-                    getCardCommand.Parameters["@NAME"].Value = cardName;
-
-                    using (SqliteDataReader dataReader = await getCardCommand.ExecuteReaderAsync())
+                    if (!dataReader.HasRows)
                     {
 
-                        if (!dataReader.HasRows) return card;
+                        databaseConnection.Close();
+                        return card;
 
-                        await dataReader.ReadAsync();
-
-                        name = dataReader["name"].ToString();
-                        if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("realName"))) realName = dataReader["realName"].ToString();
-                        if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("attribute"))) attribute = dataReader["attribute"].ToString();
-                        if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("cardType"))) cardType = dataReader["cardType"].ToString();
-                        if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("types"))) types = dataReader["types"].ToString().Split('/').Select(aType => aType.Trim()).ToList();
-                        if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("level"))) level = dataReader["level"].ToString();
-                        if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("atk"))) atk = dataReader["atk"].ToString();
-                        if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("def"))) def = dataReader["def"].ToString();
-                        if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("rank"))) rank = dataReader["rank"].ToString();
-                        if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("pendulumScale"))) pendScale = dataReader["pendulumScale"].ToString();
-                        if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("link"))) link = dataReader["link"].ToString();
-                        if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("property"))) property = dataReader["rank"].ToString();
-                        if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("lore"))) lore = dataReader["lore"].ToString();
-                        if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("ocgStatus"))) rank = dataReader["ocgStatus"].ToString();
-                        if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("tcgAdvStatus"))) tcgAdvStatus = dataReader["tcgAdvStatus"].ToString();
-                        if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("ocgOnly"))) ocgOnly = true; //both values will always have a 1 if true, therefore no need to check
-                        if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("tcgTrnStatus"))) tcgOnly = true; //if the column in the current row has a value, it will ALWAYS be 1
-                        
                     }
+
+                    await dataReader.ReadAsync();
+
+                    //eh, i was stupid to not use ordinals, but whatever, this works too
+                    name = dataReader["name"].ToString();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("realName"))) realName = dataReader["realName"].ToString();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("attribute"))) attribute = dataReader["attribute"].ToString();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("cardType"))) cardType = dataReader["cardType"].ToString();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("types"))) types = dataReader["types"].ToString().Split('/').Select(aType => aType.Trim()).ToList();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("level"))) level = dataReader["level"].ToString();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("atk"))) atk = dataReader["atk"].ToString();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("def"))) def = dataReader["def"].ToString();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("rank"))) rank = dataReader["rank"].ToString();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("pendulumScale"))) pendScale = dataReader["pendulumScale"].ToString();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("link"))) link = dataReader["link"].ToString();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("property"))) property = dataReader["rank"].ToString();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("lore"))) lore = dataReader["lore"].ToString();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("ocgStatus"))) rank = dataReader["ocgStatus"].ToString();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("tcgAdvStatus"))) tcgAdvStatus = dataReader["tcgAdvStatus"].ToString();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("ocgOnly"))) ocgOnly = true; //both values will always have a 1 if true, therefore no need to check
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("tcgTrnStatus"))) tcgOnly = true; //if the column in the current row has a value, it will ALWAYS be 1
 
                 }
 
@@ -102,6 +105,99 @@ namespace YuGiOhBot.Services
             card.ImageUrl = await GetImageUrl(name, realName);
 
             return card;
+
+        }
+
+        public async Task<List<string>> SearchCards(string cardName, bool IsArchetypeSearch)
+        {
+
+            var searchResults = new List<string>();
+
+            using(var databaseConnection = new SqliteConnection(DatabasePath))
+            using (SqliteCommand searchCommand = databaseConnection.CreateCommand())
+            {
+
+                var unintentionalSanitization = cardName.Replace(" ", "%");
+                searchCommand.CommandText = IsArchetypeSearch ? $"select name from Card where (name like {unintentionalSanitization}) or (lore like {unintentionalSanitization})" : "select name from Card where name like @NAME";
+
+                await databaseConnection.OpenAsync();
+
+                using(SqliteDataReader dataReader = await searchCommand.ExecuteReaderAsync())
+                {
+
+                    if (dataReader.HasRows)
+                    {
+
+                        int nameOrdinal = dataReader.GetOrdinal("name");
+
+                        while (await dataReader.ReadAsync())
+                        {
+
+                            searchResults.Add(dataReader.GetString(nameOrdinal)); 
+
+                        }
+
+                    }
+
+                }
+
+                databaseConnection.Close();
+
+            }
+
+            return searchResults;
+
+        }
+
+        public async Task<List<string>> LazySearchCards(string search)
+        {
+
+            var searchTerms = search.Split(' ');
+            var searchResults = new List<string>();
+
+            using (var databaseConnection = new SqliteConnection(DatabasePath))
+            using (SqliteCommand searchCommand = databaseConnection.CreateCommand())
+            {
+
+                var buildCommand = new StringBuilder("select name from Card where ");
+
+                var lastTerm = searchTerms.Last();
+                foreach(var term in searchTerms)
+                {
+
+                    if(!term.Equals(lastTerm)) buildCommand = buildCommand.Append($"(name like %{term}%) ");
+                    else buildCommand = buildCommand.Append($"(name like %{term}%)");
+
+                }
+
+                searchCommand.CommandText = buildCommand.ToString();
+
+                await databaseConnection.OpenAsync();
+
+                using (SqliteDataReader dataReader = await searchCommand.ExecuteReaderAsync())
+                {
+
+                    if (dataReader.HasRows)
+                    {
+
+                        int nameOrdinal = dataReader.GetOrdinal("name");
+
+                        while(await dataReader.ReadAsync())
+                        {
+
+                            searchResults.Add(dataReader.GetString(nameOrdinal));
+
+                        }
+
+                    }
+
+                }
+
+                databaseConnection.Close();
+
+            }
+
+            return searchResults;
 
         }
 
