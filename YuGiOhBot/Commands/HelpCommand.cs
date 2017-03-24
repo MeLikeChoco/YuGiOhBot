@@ -20,7 +20,6 @@ namespace YuGiOhBot.Commands
 
             _commandService = commandServiceParams;
 
-
         }
 
         [Command("help"), Alias("h")]
