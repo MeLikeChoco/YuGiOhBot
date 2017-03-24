@@ -144,7 +144,7 @@ namespace YuGiOhBot.Services
                 databaseConnection.Close();
 
             }
-
+            
             return searchResults;
 
         }

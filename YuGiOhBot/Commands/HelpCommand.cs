@@ -29,7 +29,7 @@ namespace YuGiOhBot.Commands
         {
 
             var organizedHelp = new StringBuilder("```http\n");
-            IEnumerable<ModuleInfo> commandModules = _commandService.Modules;
+            //IEnumerable<ModuleInfo> commandModules = _commandService.Modules;
 
             organizedHelp.AppendLine($"{"Command".PadRight(30, ' ')} | Description");
             organizedHelp.AppendLine($"{"".PadRight(56, '-')}");
