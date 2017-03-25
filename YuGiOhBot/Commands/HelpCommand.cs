@@ -10,6 +10,7 @@ using YuGiOhBot.Services;
 
 namespace YuGiOhBot.Commands
 {
+
     public class HelpCommand : ModuleBase
     {
 
