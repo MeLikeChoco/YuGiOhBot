@@ -181,7 +181,6 @@ namespace YuGiOhBot.Core
                 if (message.Message.Contains("Latency"))
                 {
 
-
                     if (_latencyMessageLimiter == 10)
                     {
 
@@ -201,6 +200,7 @@ namespace YuGiOhBot.Core
                     }
 
                 }
+                else await AltConsole.PrintAsync(message.Severity.ToString(), message.Source, message.Message);
 
             };
 
