@@ -31,9 +31,12 @@ namespace YuGiOhBot.Commands
             var organizedHelp = new StringBuilder("```http\n");
             //IEnumerable<ModuleInfo> commandModules = _commandService.Modules;
 
-            organizedHelp.AppendLine($"{"Command".PadRight(30, ' ')} | Description");
+            organizedHelp.AppendLine($"{"Commands".PadRight(30, ' ')} | Description");
             organizedHelp.AppendLine($"{"".PadRight(56, '-')}");
-            organizedHelp.AppendLine($"{"card <card name>".PadRight(30, ' ')} | Searches card based on card name, capitalization not needed.");
+            organizedHelp.AppendLine($"Note: Capitalization does not matter");
+            organizedHelp.AppendLine($"{"".PadRight(56, '-')}");
+            organizedHelp.AppendLine($"{"card <card name>".PadRight(30, ' ')} | Searches card based on card name");
+            organizedHelp.AppendLine($"{"lcard <card name>".PadRight(30, ' ')} | Coined lazy card, word order does not matter, gets the first available result");
             organizedHelp.AppendLine($"{"search <search>".PadRight(30, ' ')} | Searches for cards based on search terms given");
             organizedHelp.AppendLine($"{"lsearch <search>".PadRight(30, ' ')} | Coined lazy search, word order does not matter, capitalization not needed");
             organizedHelp.AppendLine($"{"archetype <search>".PadRight(30, ' ')} | Attemps an archetype search");

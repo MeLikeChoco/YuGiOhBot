@@ -36,22 +36,18 @@ namespace YuGiOhBot.Commands
 
             }
 
-            EmbedBuilder eBuilder;
+            if (CacheService.YuGiOhCardCache.TryGetValue(cardName.ToLower(), out EmbedBuilder eBuilder))
+            {
+
+                await ReplyAsync("", embed: eBuilder);
+                return;
+
+            }
 
             using (var typingState = Context.Channel.EnterTypingState())
             {
 
                 YuGiOhCard card = await _service.GetCard(cardName);
-
-                //i am putting the cache service here because the card name will not always be correct
-                if (CacheService.YuGiOhCardCache.TryGetValue(card.Name, out eBuilder))
-                {
-
-                    await ReplyAsync("", embed: eBuilder);
-                    typingState.Dispose();
-                    return;
-
-                }
 
                 if (card.Name.Equals(string.Empty))
                 {
@@ -84,36 +80,51 @@ namespace YuGiOhBot.Commands
                 organizedDescription.AppendLine($"\n**Format:** {card.Format}");
 
                 if (!string.IsNullOrEmpty(card.CardType)) organizedDescription.AppendLine($"**Card Type:** {card.CardType}");
-                if (!string.IsNullOrEmpty(card.Types.FirstOrDefault())) organizedDescription.AppendLine($"**Types:** {string.Join(" / ", card.Types)}");
 
-                //if the card even has a level
-                if (!string.IsNullOrEmpty(card.Level))
+                if(!(card.CardType.Equals("Spell") || card.CardType.Equals("Trap")))
                 {
+
+                    organizedDescription.AppendLine($"**Attribute:** {card.Attribute}");
 
                     if (card.Types.Contains("Xyz")) organizedDescription.AppendLine($"**Rank:** {card.Level}");
                     else organizedDescription.AppendLine($"**Level:** {card.Level}");
 
-                }
+                    if (!string.IsNullOrEmpty(card.LeftPend)) organizedDescription.AppendLine($"**Pendulum Scale:** {card.LeftPend}");
 
-                if (!string.IsNullOrEmpty(card.LeftPend))
-                {
-
-                    //for now only 1 value is needed because there are no cards with different pendulum
-                    //values on both ends (for now of course, you never know)
-                    organizedDescription.AppendLine($"**Pedulum Scale:** {card.LeftPend}");
-                    //organizedDescription.AppendLine($"**Left Pedulum Scale:** {card.LeftPend}");
-                    //organizedDescription.AppendLine($"**Right Pedulum Scale:** {card.RightPend}");
+                    organizedDescription.AppendLine($"**Types:** {string.Join(" / ", card.Types)}");
 
                 }
 
-                //if the card is not a spell or a trap
-                if (!(card.CardType.Equals("Spell") || card.CardType.Equals("Trap")))
-                {
+                //if (!string.IsNullOrEmpty(card.Types.FirstOrDefault())) organizedDescription.AppendLine($"**Types:** {string.Join(" / ", card.Types)}");
 
-                    organizedDescription.AppendLine($"**Attribute:** {card.Attribute}");
-                    organizedDescription.AppendLine($"**Race:** {card.Race}");
+                //if the card even has a level
+                //if (!string.IsNullOrEmpty(card.Level))
+                //{
 
-                }
+                //    if (card.Types.Contains("Xyz")) organizedDescription.AppendLine($"**Rank:** {card.Level}");
+                //    else organizedDescription.AppendLine($"**Level:** {card.Level}");
+
+                //}
+
+                //if (!string.IsNullOrEmpty(card.LeftPend))
+                //{
+
+                //    //for now only 1 value is needed because there are no cards with different pendulum
+                //    //values on both ends (for now of course, you never know)
+                //    organizedDescription.AppendLine($"**Pedulum Scale:** {card.LeftPend}");
+                //    //organizedDescription.AppendLine($"**Left Pedulum Scale:** {card.LeftPend}");
+                //    //organizedDescription.AppendLine($"**Right Pedulum Scale:** {card.RightPend}");
+
+                //}
+
+                ////if the card is not a spell or a trap
+                //if (!(card.CardType.Equals("Spell") || card.CardType.Equals("Trap")))
+                //{
+
+                //    organizedDescription.AppendLine($"**Attribute:** {card.Attribute}");
+                //    organizedDescription.AppendLine($"**Race:** {card.Race}");
+
+                //}
 
                 eBuilder = new EmbedBuilder()
                 {
@@ -134,7 +145,7 @@ namespace YuGiOhBot.Commands
                 {
 
                     var tempArray = card.Description.Split(new string[] { "Monster Effect" }, StringSplitOptions.None);
-                    description = "__Pendulum Effect__\n" + tempArray[0].Replace("Pendulum Effect", "").Trim() + "\n__Monster Effect__\n" + tempArray[1].Replace("Monster Effect", "").Trim();
+                    description = "__Pendulum Effect__\n" + tempArray[0].Replace("Pendulum Effect", "").Replace("\" ", "\"").Trim() + "\n__Monster Effect__\n" + tempArray[1].Replace("Monster Effect", "").Replace("\" ", "\"").Trim();
 
                 }
                 else description = card.Description;
@@ -264,7 +275,7 @@ namespace YuGiOhBot.Commands
             }
 
             await ReplyAsync("", embed: eBuilder);
-            CacheService.YuGiOhCardCache.TryAdd(cardName, eBuilder);
+            CacheService.YuGiOhCardCache.TryAdd(cardName.ToLower(), eBuilder);
 
         }
 
@@ -281,13 +292,7 @@ namespace YuGiOhBot.Commands
 
             }
 
-            if (CacheService.YuGiOhCardCache.TryGetValue(cardName, out EmbedBuilder eBuilder))
-            {
-
-                await ReplyAsync("", embed: eBuilder);
-                return;
-
-            }
+            EmbedBuilder eBuilder;
 
             using (var typingState = Context.Channel.EnterTypingState())
             {
@@ -298,6 +303,15 @@ namespace YuGiOhBot.Commands
                 {
 
                     await ReplyAsync($"No card by the name {cardName} was found!");
+                    typingState.Dispose();
+                    return;
+
+                }
+
+                if (CacheService.YuGiOhCardCache.TryGetValue(card.Name.ToLower(), out eBuilder))
+                {
+
+                    await ReplyAsync("", embed: eBuilder);
                     typingState.Dispose();
                     return;
 
@@ -501,11 +515,12 @@ namespace YuGiOhBot.Commands
                     });
 
                 }
+                
+                CacheService.YuGiOhCardCache.TryAdd(card.Name.ToLower(), eBuilder);
 
             }
 
             await ReplyAsync("", embed: eBuilder);
-            CacheService.YuGiOhCardCache.TryAdd(cardName, eBuilder);
 
         }
 
@@ -698,6 +713,15 @@ namespace YuGiOhBot.Commands
             }
 
             await CardCommand(searchResults[searchNumber - 1]);
+
+        }
+
+        [Command("random"), Alias("r")]
+        [Summary("Picks a random card to display, good for random decks")]
+        public async Task RandomCardCommand()
+        {
+
+
 
         }
 

@@ -169,8 +169,8 @@ namespace YuGiOhBot.Services
                     if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("archetype"))) archetype = dataReader["archetype"].ToString();
                     if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("ocgStatus"))) rank = dataReader["ocgStatus"].ToString();
                     if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("tcgAdvStatus"))) tcgAdvStatus = dataReader["tcgAdvStatus"].ToString();
-                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("ocgOnly"))) ocgOnly = true; //both values will always have a 1 if true, therefore no need to check
-                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("tcgTrnStatus"))) tcgOnly = true; //if the column in the current row has a value, it will ALWAYS be 1
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("ocgOnly"))) ocgOnly = dataReader["ocgOnly"].ToString().Equals("1");
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("tcgTrnStatus"))) tcgOnly = dataReader["tcgOnly"].ToString().Equals("1");
 
                 }
 
