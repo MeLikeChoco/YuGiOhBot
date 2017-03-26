@@ -1,589 +1,355 @@
-﻿//using Newtonsoft.Json;
-//using System;
-//using System.Collections.Generic;
-//using System.Net.Http;
-//using System.Text;
-//using System.Threading.Tasks;
-//using Microsoft.Data.Sqlite;
-//using YuGiOhBot.Core;
-//using System.IO;
-//using System.Linq;
-//using System.Globalization;
-//using System.Collections.Concurrent;
+﻿using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Text;
+using System.Threading.Tasks;
+using Microsoft.Data.Sqlite;
+using YuGiOhBot.Core;
+using System.IO;
+using System.Linq;
+using System.Globalization;
+using System.Collections.Concurrent;
+using System.Text.RegularExpressions;
 
-//namespace YuGiOhBot.Services
-//{
-//    public class YuGiOhServices
-//    {
+namespace YuGiOhBot.Services
+{
+    public class YuGiOhServices
+    {
 
-//        private const string DatabasePath = "Data Source=Databases/cards.cdb;";
-//        private const string CardTable = "texts";
-//        private const string DataTable = "datas";
-//        private const string BasePricesUrl = "http://yugiohprices.com/api/get_card_prices/";
-//        private const string BaseImagesUrl = "http://yugiohprices.com/api/card_image/";
-//        private static Dictionary<string, string> _hexcodeToArchetype;
-//        private static Dictionary<int, string> _hexcodeToType;
-//        private static Dictionary<string, string> _hexcodeToRace;
-//        private static Dictionary<string, string> _hexcodeToAttribute;
+        private const string DatabasePath = "Data Source=Databases/YgoSqliteDb/ygo.db;";
+        private const string CardTable = "Card";
+        private const string BasePricesUrl = "http://yugiohprices.com/api/get_card_prices/";
+        private const string BaseImagesUrl = "http://yugiohprices.com/api/card_image/";
 
-//        public async Task<YuGiOhCard> GetCard(string cardName)
-//        {
+        public async Task<YuGiOhCard> GetCard(string cardName)
+        {
 
-//            var card = new YuGiOhCard();
+            var card = new YuGiOhCard();
 
-//            //format, archetype(if any), atk, def, level(including pend, need to convert from dec to hex), race(beast, aqua, dragon etc etc), effect(if not 0)
-//            string ot, setcode, type, atk, def, level, race, attribute, category;
+            //til that you can do something like this
+            string name, realName, attribute, cardType, level, atk, def, rank, pendScale,
+                linkMarkers, link, property, lore, archetype, ocgStatus, tcgAdvStatus, tcgTrnStatus;
+            bool ocgOnly = false, tcgOnly = false;
+            var types = new List<string>();
+            name = realName = attribute = cardType = level = atk = def = rank = pendScale =
+                linkMarkers = link = property = lore = archetype = ocgStatus = tcgAdvStatus = tcgTrnStatus = string.Empty;
 
-//            using (var databaseConnection = new SqliteConnection(DatabasePath))
-//            {
+            using (var databaseConnection = new SqliteConnection(DatabasePath))
+            using (SqliteCommand getCardCommand = databaseConnection.CreateCommand())
+            {
 
-//                await databaseConnection.OpenAsync();
+                getCardCommand.CommandText = $"select * from Card where name like @NAME";
+                getCardCommand.Parameters.Add("@NAME", SqliteType.Text);
+                getCardCommand.Parameters["@NAME"].Value = cardName;
 
-//                string id;
+                await databaseConnection.OpenAsync();
 
-//                using (SqliteCommand getText = databaseConnection.CreateCommand())
-//                {
+                using (SqliteDataReader dataReader = await getCardCommand.ExecuteReaderAsync())
+                {
 
-//                    getText.CommandText = $"select id,name,desc from {CardTable} where name like @CARD";
-//                    getText.Parameters.Add("@CARD", SqliteType.Text);
-//                    getText.Parameters["@CARD"].Value = cardName;
+                    if (!dataReader.HasRows)
+                    {
 
-//                    using (SqliteDataReader dataReader = await getText.ExecuteReaderAsync())
-//                    {
+                        databaseConnection.Close();
+                        return card;
 
-//                        if (!dataReader.HasRows) return card;
+                    }
 
-//                        await dataReader.ReadAsync();
+                    await dataReader.ReadAsync();
 
-//                        card.Name = dataReader["name"].ToString();
-//                        card.Description = dataReader["desc"].ToString();
-//                        id = dataReader["id"].ToString();
+                    //eh, i was stupid to not use ordinals, but whatever, this works too
+                    name = dataReader["name"].ToString();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("realName"))) realName = dataReader["realName"].ToString();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("attribute"))) attribute = dataReader["attribute"].ToString();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("cardType"))) cardType = dataReader["cardType"].ToString();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("types"))) types = dataReader["types"].ToString().Split('/').Select(aType => aType.Trim()).ToList();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("level"))) level = dataReader["level"].ToString();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("atk"))) atk = dataReader["atk"].ToString();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("def"))) def = dataReader["def"].ToString();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("rank"))) rank = dataReader["rank"].ToString();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("pendulumScale"))) pendScale = dataReader["pendulumScale"].ToString();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("link"))) link = dataReader["link"].ToString();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("property"))) property = dataReader["rank"].ToString();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("lore"))) lore = dataReader["lore"].ToString();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("ocgStatus"))) rank = dataReader["ocgStatus"].ToString();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("tcgAdvStatus"))) tcgAdvStatus = dataReader["tcgAdvStatus"].ToString();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("ocgOnly"))) ocgOnly = dataReader["ocgOnly"].ToString().Equals("1");
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("tcgTrnStatus"))) tcgOnly = dataReader["tcgOnly"].ToString().Equals("1");
 
-//                    }
+                }
 
-//                }
+                databaseConnection.Close();
 
-//                using (SqliteCommand getData = databaseConnection.CreateCommand())
-//                {
+            }
 
-//                    getData.CommandText = $"select * from {DataTable} where id like @ID";
-//                    getData.Parameters.Add("@ID", SqliteType.Integer);
-//                    getData.Parameters["@ID"].Value = id;
+            if (tcgOnly) card.Format = "TCG";
+            else if (ocgOnly) card.Format = "OCG";
+            else card.Format = "TCG/OCG";
 
-//                    using (SqliteDataReader dataReader = await getData.ExecuteReaderAsync())
-//                    {
+            card.Name = name;
+            card.Description = lore;
+            card.IsEffect = cardType.Equals("Trap") || cardType.Equals("Spell") || types.Contains("Effect") || types.Contains("Pendulum") ? true : false;
+            card.Level = level;
+            card.LeftPend = pendScale;
+            card.RightPend = pendScale;
+            card.Types = types;
+            card.CardType = cardType;
+            card.Atk = atk;
+            card.Def = def;
+            card.Race = types.Count > 0 ? types.FirstOrDefault() : string.Empty; //it will always be the first thing declared in types
+            card.Attribute = attribute;
+            card.Prices = await GetPrices(name, realName);
+            card.ImageUrl = await GetImageUrl(name, realName);
 
-//                        if (await dataReader.ReadAsync())
-//                        {
+            return card;
 
-//                            ot = dataReader["ot"].ToString();
-//                            setcode = dataReader["setcode"].ToString();
-//                            type = dataReader["type"].ToString();
-//                            atk = dataReader["atk"].ToString();
-//                            def = dataReader["def"].ToString();
-//                            level = dataReader["level"].ToString();
-//                            race = dataReader["race"].ToString();
-//                            attribute = dataReader["attribute"].ToString();
-//                            category = dataReader["category"].ToString();
+        }
 
-//                        }
-//                        else return new YuGiOhCard();
+        public async Task<YuGiOhCard> LazyGetCard(string cardName)
+        {
 
-//                    }
+            var searchTerms = cardName.Split(' ');
+            var card = new YuGiOhCard();
 
-//                }
+            //til that you can do something like this
+            string name, realName, attribute, cardType, level, atk, def, rank, pendScale,
+                linkMarkers, link, property, lore, archetype, ocgStatus, tcgAdvStatus, tcgTrnStatus;
+            bool ocgOnly = false, tcgOnly = false;
+            List<string> types = new List<string>();
+            name = realName = attribute = cardType = level = atk = def = rank = pendScale =
+                linkMarkers = link = property = lore = archetype = ocgStatus = tcgAdvStatus = tcgTrnStatus = string.Empty;
 
-//                databaseConnection.Close();
+            using (var databaseConnection = new SqliteConnection(DatabasePath))
+            using (SqliteCommand getCardCommand = databaseConnection.CreateCommand())
+            {
 
-//            }
+                var buildCommand = new StringBuilder("select * from Card where ");
 
-//            card.Format = ConvertOtToFormat(ot);
-//            card.Archetype = ConvertSetCodeToArchetype(setcode);
-//            card.Types = ConvertTypeCodeToType(type).ToList();
-//            card.Atk = CheckAtkDefValues(atk, card.Types);
-//            card.Def = CheckAtkDefValues(def, card.Types);
+                var lastTerm = searchTerms.Last();
+                foreach (var term in searchTerms)
+                {
 
-//            List<string> levelsAndPend = ConvertLevelToLevelPend(level);
+                    if (!term.Equals(lastTerm)) buildCommand = buildCommand.Append($"(name like '%{term}%') and ");
+                    else buildCommand = buildCommand.Append($"(name like '%{term}%')");
 
-//            //if there is 1 value in levelsandpend, it will always contain regular level
-//            //if there are 0 values, then we do not assign anything because by default, all
-//            //properties in yugiohcard is string.default or a null list
-//            //therefore, if there are more than 1 value in levelsandpend, it will always be a
-//            //pendulum monster
-//            if (levelsAndPend.Count == 1)
-//            {
+                }
 
-//                card.Level = levelsAndPend.FirstOrDefault();
+                getCardCommand.CommandText = buildCommand.ToString();
 
-//            }
-//            else if (levelsAndPend.Count > 1)
-//            {
+                await databaseConnection.OpenAsync();
 
-//                card.LeftPend = levelsAndPend[0];
-//                card.RightPend = levelsAndPend[1];
-//                card.Level = levelsAndPend.LastOrDefault();
+                using (SqliteDataReader dataReader = await getCardCommand.ExecuteReaderAsync())
+                {
 
-//            }
+                    if (!dataReader.HasRows)
+                    {
 
-//            card.Race = ConvertHexToRace(race);
-//            card.Attribute = ConvertHexToAttribute(attribute);
-//            card.Prices = await GetPrices(cardName);
-//            card.ImageUrl = await GetImageUrl(cardName);
-//            card.IsEffect = IsEffect(card);
+                        databaseConnection.Close();
+                        return card;
 
-//            ////debug purposes
-//            //Console.WriteLine(card.Format);
-//            //Console.WriteLine(card.Archetype);
-//            //card.Types.ForEach(t => Console.Write(t));
-//            //Console.WriteLine(card.Atk);
-//            //Console.WriteLine(card.Def);
-//            //Console.WriteLine(card.Level);
-//            //Console.WriteLine(card.LeftPend);
-//            //Console.WriteLine(card.RightPend);
-//            //Console.WriteLine(card.Race);
-//            //Console.WriteLine(card.Attribute);
-//            //Console.WriteLine(card.ImageUrl);
+                    }
 
-//            return card;
+                    await dataReader.ReadAsync();
 
-//        }
+                    //eh, i was stupid to not use ordinals, but whatever, this works too
+                    name = dataReader["name"].ToString();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("realName"))) realName = dataReader["realName"].ToString();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("attribute"))) attribute = dataReader["attribute"].ToString();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("cardType"))) cardType = dataReader["cardType"].ToString();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("types"))) types = dataReader["types"].ToString().Split('/').Select(aType => aType.Trim()).ToList();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("level"))) level = dataReader["level"].ToString();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("atk"))) atk = dataReader["atk"].ToString();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("def"))) def = dataReader["def"].ToString();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("rank"))) rank = dataReader["rank"].ToString();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("pendulumScale"))) pendScale = dataReader["pendulumScale"].ToString();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("link"))) link = dataReader["link"].ToString();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("property"))) property = dataReader["rank"].ToString();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("lore"))) lore = dataReader["lore"].ToString();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("archetype"))) archetype = dataReader["archetype"].ToString();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("ocgStatus"))) rank = dataReader["ocgStatus"].ToString();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("tcgAdvStatus"))) tcgAdvStatus = dataReader["tcgAdvStatus"].ToString();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("ocgOnly"))) ocgOnly = true; //both values will always have a 1 if true, therefore no need to check
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("tcgTrnStatus"))) tcgOnly = true; //if the column in the current row has a value, it will ALWAYS be 1
 
-//        public async Task<List<string>> SearchCards(string search, bool isArchetypeSearch = false)
-//        {
+                }
 
-//            var searchResults = new List<string>();
+                databaseConnection.Close();
 
-//            using (var databaseConnection = new SqliteConnection(DatabasePath))
-//            {
+            }
 
-//                await databaseConnection.OpenAsync();
+            if (tcgOnly) card.Format = "TCG";
+            else if (ocgOnly) card.Format = "OCG";
+            else card.Format = "TCG/OCG";
 
-//                using (SqliteCommand searchCommand = databaseConnection.CreateCommand())
-//                {
-                    
-//                    //i can't sanitize this since the % marks all over the place will sanitize it, lmfao
-//                    //das right, stahp
-//                    searchCommand.CommandText = isArchetypeSearch ? $"select name from texts where (name like '%{search.Replace(" ", "%")}%') or (desc like '%{search.Replace(" ", "%")}%')" :
-//                        $"select name from texts where name like '%{search.Replace(" ", "%")}%'";
+            card.Name = name;
+            card.Description = lore;
+            card.IsEffect = cardType.Equals("Trap") || cardType.Equals("Spell") || types.Contains("Effect") || lore.Contains("Pendulum Effect") ? true : false; //yes, there are completely blank pendulum monsters, like Flash Knight
+            card.Level = level;
+            card.LeftPend = pendScale;
+            card.RightPend = pendScale;
+            card.Types = types;
+            card.Archetype = archetype;
+            card.Atk = atk;
+            card.Def = def;
+            card.Race = types.Count > 0 ? types.FirstOrDefault() : string.Empty; //it will always be the first thing declared in types
+            card.Attribute = attribute;
+            card.Prices = await GetPrices(name, realName);
+            card.ImageUrl = await GetImageUrl(name, realName);
 
-//                    using (SqliteDataReader dataReader = await searchCommand.ExecuteReaderAsync())
-//                    {
+            return card;
 
-//                        while (await dataReader.ReadAsync())
-//                        {
+        }
 
-//                            var card = dataReader["name"].ToString();
+        public async Task<List<string>> SearchCards(string cardName, bool IsArchetypeSearch)
+        {
 
-//                            if (!searchResults.Contains(card)) searchResults.Add(card);
+            var searchResults = new List<string>(15); //I think 15 is a good initial capacity
 
-//                        }
-//                    }
-//                }
-//            }
+            using(var databaseConnection = new SqliteConnection(DatabasePath))
+            using (SqliteCommand searchCommand = databaseConnection.CreateCommand())
+            {
 
-//            return searchResults;
+                var unintentionalSanitization = cardName.Replace(" ", "%");
+                searchCommand.CommandText = IsArchetypeSearch ? $"select name from Card where (name like '%{unintentionalSanitization}%') or (lore like '%{unintentionalSanitization}%')" : $"select name from Card where name like '%{unintentionalSanitization}%'";
 
-//        }
+                await databaseConnection.OpenAsync();
 
-//        public async Task<List<string>> LazySearchCards(string search)
-//        {
+                using(SqliteDataReader dataReader = await searchCommand.ExecuteReaderAsync())
+                {
+
+                    if (dataReader.HasRows)
+                    {
+
+                        int nameOrdinal = dataReader.GetOrdinal("name");
+
+                        while (await dataReader.ReadAsync())
+                        {
+
+                            searchResults.Add(dataReader.GetString(nameOrdinal)); 
+
+                        }
+
+                    }
+
+                }
+
+                databaseConnection.Close();
+
+            }
             
-//            var searchResults = new List<string>();
+            return searchResults;
 
-//            using (var databaseConnection = new SqliteConnection(DatabasePath))
-//            {
+        }
 
-//                await databaseConnection.OpenAsync();
+        public async Task<List<string>> LazySearchCards(string search)
+        {
 
-//                using (SqliteCommand lazySearchCommand = databaseConnection.CreateCommand())
-//                {
-                    
-//                    var buildSearch = new StringBuilder("select name from texts where ");
-//                    string[] splitSearch = search.Split(' ');
+            var searchTerms = search.Split(' ');
+            var searchResults = new List<string>();
 
-//                    for(int i = 0; i < splitSearch.Length; i++)
-//                    {
+            using (var databaseConnection = new SqliteConnection(DatabasePath))
+            using (SqliteCommand searchCommand = databaseConnection.CreateCommand())
+            {
 
-//                        if(i == splitSearch.Length - 1) buildSearch.Append($"(name like '%{splitSearch[i]}%')");
-//                        else buildSearch.Append($"(name like '%{splitSearch[i]}%') and ");
+                var buildCommand = new StringBuilder("select name from Card where ");
 
-//                    }
+                var lastTerm = searchTerms.Last();
+                foreach(var term in searchTerms)
+                {
 
-//                    lazySearchCommand.CommandText = buildSearch.ToString();
+                    if(!term.Equals(lastTerm)) buildCommand = buildCommand.Append($"(name like '%{term}%') and ");
+                    else buildCommand = buildCommand.Append($"(name like '%{term}%')");
 
-//                    using (SqliteDataReader dataReader = await lazySearchCommand.ExecuteReaderAsync())
-//                    {
+                }
 
-//                        while (await dataReader.ReadAsync())
-//                        {
+                searchCommand.CommandText = buildCommand.ToString();
 
-//                            var card = dataReader["name"].ToString();
+                await databaseConnection.OpenAsync();
 
-//                            if (!searchResults.Contains(card)) searchResults.Add(card);
+                using (SqliteDataReader dataReader = await searchCommand.ExecuteReaderAsync())
+                {
 
-//                        }
-//                    }
-//                }
-//            }
+                    if (dataReader.HasRows)
+                    {
 
-//            return searchResults;
+                        int nameOrdinal = dataReader.GetOrdinal("name");
 
-//        }
+                        while(await dataReader.ReadAsync())
+                        {
 
-//        private async Task<YuGiOhPriceSerializer> GetPrices(string cardName)
-//        {
+                            searchResults.Add(dataReader.GetString(nameOrdinal));
 
-//            using (var http = new HttpClient())
-//            {
+                        }
 
-//                var json = await http.GetStringAsync($"{BasePricesUrl}{Uri.EscapeUriString(cardName)}");
+                    }
 
-//                if (json.StartsWith("{\"status\":\"fail\"")) return new YuGiOhPriceSerializer();
+                }
 
-//                return JsonConvert.DeserializeObject<YuGiOhPriceSerializer>(json);
+                databaseConnection.Close();
 
-//            }
+            }
 
-//        }
+            return searchResults;
 
-//        private async Task<string> GetImageUrl(string cardName)
-//        {
+        }
 
-//            //redirects are annoying eh?
-//            using (var http = new HttpClient())
-//            {
+        private async Task<YuGiOhPriceSerializer> GetPrices(string cardName, string realName)
+        {
 
-//                HttpResponseMessage response = await http.GetAsync($"{BaseImagesUrl}{cardName}");
+            using (var http = new HttpClient())
+            {
 
-//                return response.RequestMessage.RequestUri.ToString();
+                var json = await http.GetStringAsync($"{BasePricesUrl}{Uri.EscapeUriString(cardName)}");
 
-//            }
+                if (json.StartsWith("{\"status\":\"fail\""))
+                {
 
-//        }
+                    if (!string.IsNullOrEmpty(realName))
+                    {
 
-//        private string ConvertOtToFormat(string ot)
-//        {
+                        json = await http.GetStringAsync($"{BasePricesUrl}{Uri.EscapeUriString(realName)}");
 
-//            switch (int.Parse(ot))
-//            {
+                        if (json.StartsWith("{\"status\":\"fail\"")) return new YuGiOhPriceSerializer();
 
-//                case 1:
-//                    return "OCG";
-//                case 2:
-//                    return "TCG";
-//                case 3:
-//                    return "OCG/TCG";
-//                case 4:
-//                    return "Prerelease";
-//                case 5:
-//                    return "OCG/Prerelease";
-//                case 6:
-//                    return "TCG/Prerelease";
-//                default:
-//                    return "Imaginary Format";
+                    }else return new YuGiOhPriceSerializer();
 
-//            }
+                }
 
-//        }
+                return JsonConvert.DeserializeObject<YuGiOhPriceSerializer>(json);
 
-//        private string ConvertSetCodeToArchetype(string setcode)
-//        {
-            
-//            long decimalForm = long.Parse(setcode);
-//            var hexcode = decimalForm.ToString("x"); //convert decimal to hexcode
+            }
 
-//            foreach (KeyValuePair<string, string> kv in _hexcodeToArchetype)
-//            {
+        }
 
-//                if (hexcode.StartsWith(kv.Key)) return kv.Value;
+        private async Task<string> GetImageUrl(string cardName, string realName)
+        {
 
-//            }
+            //redirects are annoying eh?
+            using (var http = new HttpClient())
+            {
 
-//            return string.Empty;
+                HttpResponseMessage response = await http.GetAsync($"{BaseImagesUrl}{cardName}");
 
-//        }
+                if (!response.IsSuccessStatusCode)
+                {
 
-//        private IEnumerable<string> ConvertTypeCodeToType(string type)
-//        {
-            
-//            var stringToInt = int.Parse(type);
-//            var intToHexcode = int.Parse(stringToInt.ToString("x")); //to hexcode
+                    try
+                    {
 
-//            //basically since it's sorted from large to small
-//            //everytime the value is larger or equal to what is in the dictionary, we will subtract it from the total value and
-//            //add what it is to the list of types
-//            //in the end, it should be equal to 0, in other words, all possible types will have been
-//            //went through
-//            foreach (KeyValuePair<int, string> pair in _hexcodeToType)
-//            {
+                        response = await http.GetAsync($"{BaseImagesUrl}{realName}");
+                        return response.RequestMessage.RequestUri.ToString();
 
-//                if (intToHexcode >= pair.Key)
-//                {
+                    }
+                    catch { return response.RequestMessage.RequestUri.ToString(); }
 
-//                    yield return pair.Value;
-//                    intToHexcode -= pair.Key;
+                }
 
-//                }
+                return response.RequestMessage.RequestUri.ToString();
 
-//                if (intToHexcode == 0) break;
+            }
 
-//            }
+        }
 
-//        }
-
-//        private List<string> ConvertLevelToLevelPend(string level)
-//        {
-
-//            var listOfLevels = new List<string>();
-
-//            //check if unconverted is a valid level
-//            int levelToInt = int.Parse(level);
-
-//            if (levelToInt == 0) return listOfLevels;
-//            if (levelToInt <= 12)
-//            {
-
-//                listOfLevels.Add(levelToInt.ToString());
-//                return listOfLevels;
-
-//            }
-//            //past this point, it is 100% likely it is a pendulum               
-
-//            //pendulums will never be double digit in hexcode
-//            //because anything past 9 will be in letter form
-//            //ex. 10 will be A, 11 will be B, etc etc
-//            var hexcode = levelToInt.ToString("x");
-//            var leftPend = hexcode[0].ToString();
-//            var rightPend = hexcode[2].ToString();
-//            char cardLevel = hexcode.Last();
-
-//            var leftPendToInt = int.Parse(leftPend, NumberStyles.HexNumber);
-//            var rightPendToInt = int.Parse(rightPend, NumberStyles.HexNumber);
-
-//            listOfLevels.Add(leftPendToInt.ToString());
-//            listOfLevels.Add(rightPendToInt.ToString());
-//            listOfLevels.Add(cardLevel.ToString());
-
-//            return listOfLevels;
-
-//        }
-
-//        private string ConvertHexToRace(string race)
-//        {
-
-//            var hexcode = int.Parse(race).ToString("x");
-
-//            foreach (KeyValuePair<string, string> pair in _hexcodeToRace)
-//            {
-
-//                if (hexcode.Equals(pair.Key)) return pair.Value;
-
-//            }
-
-//            return string.Empty;
-
-//        }
-
-//        private string ConvertHexToAttribute(string attribute)
-//        {
-
-//            var hexcode = int.Parse(attribute).ToString("x");
-
-//            foreach (KeyValuePair<string, string> pair in _hexcodeToAttribute)
-//            {
-
-//                if (pair.Key.Equals(hexcode)) return pair.Value;
-
-//            }
-
-//            return string.Empty;
-
-//        }
-
-//        private bool IsEffect(YuGiOhCard card)
-//        {
-
-//            if (card.Types.Contains("Spell") || card.Types.Contains("Trap") || card.Types.Contains("Effect") || card.Types.Contains("Pendulum")) return true;
-//            else return false;
-
-
-//        }
-
-//        private string CheckAtkDefValues(string atkdef, List<string> types)
-//        {
-
-//            if (types.Contains("Spell") || types.Contains("Trap")) return string.Empty;
-//            else if (atkdef.Equals("-2")) return "???";
-//            else return atkdef;
-
-//        }
-
-//        public void InitializeService()
-//        {
-
-//            var lines = File.ReadAllLines("Files/Archetypes.txt");
-//            var tempDictionary = new SortedDictionary<string, string>(new LengthComparer());
-//            var textInFile = new List<string>(lines);
-
-//            textInFile.ForEach(line =>
-//            {
-
-//                var hexcode = line.Substring(0, line.IndexOf(' '));
-//                var archetype = line.Remove(0, line.IndexOf(' ') + 1);
-//                tempDictionary.Add(hexcode, archetype);
-
-//            });
-
-//            _hexcodeToArchetype = new Dictionary<string, string>();
-
-//            //the reason for this is because there is no reliable way to check archetype by hexcode except by checking
-//            //if the hexcode starts with the constant values, if its a single 1, it can return the WRONG archetype, therefore
-//            //i need to compare by longest hexcode to smallest
-//            //also, thank the lord for linq, never leaving c# again
-//            //_hexcodeToArchetype = new SortedDictionary<string, string>(tempDictionary);
-//            foreach (KeyValuePair<string, string> kv in tempDictionary.Reverse())
-//            {
-
-//                _hexcodeToArchetype.Add(kv.Key, kv.Value);
-
-//            }
-
-//            //debug purposes
-//            //foreach (KeyValuePair<string, string> pair in _hexcodeToArchetype)
-//            //{
-
-//            //    Console.WriteLine(pair.Key + " " + pair.Value);
-
-//            //}
-
-//            lines = File.ReadAllLines("Files/Types.txt");
-//            var veryTempDictionary = new Dictionary<int, string>(lines.Length);
-//            textInFile = new List<string>(lines);
-
-//            textInFile.ForEach(line =>
-//            {
-
-//                var hexcode = int.Parse(line.Substring(0, line.IndexOf(' ')));
-//                var type = line.Remove(0, line.IndexOf(' ') + 1);
-//                veryTempDictionary.Add(hexcode, type);
-
-//            });
-
-//            //sort be descending because i need to subtract from large to small
-//            //to eliminate cases of accidental race assignments
-//            _hexcodeToType = new Dictionary<int, string>(veryTempDictionary.OrderByDescending(keyvaluepair => keyvaluepair.Key).ToDictionary(key => key.Key, value => value.Value));
-
-//            //debug purposes
-//            //foreach (KeyValuePair<int, string> pair in _hexcodeToType)
-//            //{
-
-//            //    Console.WriteLine(pair.Key + " " + pair.Value);
-
-//            //}
-
-//            lines = File.ReadAllLines("Files/Races.txt");
-//            tempDictionary.Clear();
-//            textInFile = new List<string>(lines);
-
-//            textInFile.ForEach(line =>
-//            {
-
-//                var hexcode = line.Substring(0, line.IndexOf(' '));
-//                var race = line.Remove(0, line.IndexOf(' ') + 1);
-//                tempDictionary.Add(hexcode, race);
-
-//            });
-
-//            _hexcodeToRace = new Dictionary<string, string>(tempDictionary);
-
-//            //debug purposes
-//            //foreach(KeyValuePair<string, string> pair in _hexcodeToRace)
-//            //{
-
-//            //    Console.WriteLine(pair.Key + " " + pair.Value);
-
-//            //}
-
-//            lines = File.ReadAllLines("Files/Attributes.txt");
-//            tempDictionary.Clear();
-//            textInFile = new List<string>(lines);
-
-//            textInFile.ForEach(line =>
-//            {
-
-//                var hexcode = line.Substring(0, line.IndexOf(' '));
-//                var attribute = line.Remove(0, line.IndexOf(' ') + 1);
-//                tempDictionary.Add(hexcode, attribute);
-
-//            });
-
-//            _hexcodeToAttribute = new Dictionary<string, string>(tempDictionary);
-
-//            //debug purposes
-//            //foreach (KeyValuePair<string, string> pair in _hexcodeToAttribute)
-//            //{
-
-//            //    Console.WriteLine(pair.Key + " " + pair.Value);
-
-//            //}
-
-//        }
-
-//        //public async Task<Dictionary<string,string>> SearchCard(string cardName)
-//        //{
-
-//        //    var cards = new Dictionary<string, string>();
-
-//        //    //C:\Users\Edgar Chang\Documents\Visual Studio 2017\Projects\YunoBot\src\YunoBot\Databases\cards.cdb;
-//        //    using (var databaseConnection = new SqliteConnection(DataBasePath))
-//        //    {
-
-//        //        await databaseConnection.OpenAsync();
-
-//        //        SqliteCommand getMatchingNames = databaseConnection.CreateCommand();
-//        //        getMatchingNames.CommandText = $"select name,desc from {CardTable} where name like '%{cardName.Replace(" ", "%")}%'";
-
-//        //        using(SqliteDataReader dataReader = await getMatchingNames.ExecuteReaderAsync())
-//        //        {
-
-//        //            while(await dataReader.ReadAsync())
-//        //            {
-
-//        //                if (!cards.ContainsKey(dataReader["name"].ToString()))
-//        //                {
-
-//        //                    cards.Add(dataReader["name"].ToString(), dataReader["desc"].ToString());
-
-//        //                }                        
-
-//        //            }
-
-//        //        }
-
-//        //        databaseConnection.Close();
-
-//        //    }
-
-//        //    return cards;
-
-//        //}
-
-//    }
-
-//    class LengthComparer : IComparer<String>
-//    {
-//        public int Compare(string x, string y)
-//        {
-//            int lengthComparison = x.Length.CompareTo(y.Length);
-
-//            if (lengthComparison == 0)
-//            {
-//                return x.CompareTo(y);
-//            }
-//            else
-//            {
-//                return lengthComparison;
-//            }
-//        }
-//    }
-//}
+    }
+}

@@ -1,460 +1,724 @@
-﻿//using Discord.Commands;
-//using Discord.WebSocket;
-//using Discord;
-//using Discord.Addons.InteractiveCommands;
-//using System;
-//using System.Collections.Generic;
-//using System.Linq;
-//using System.Text;
-//using System.Threading.Tasks;
-//using YuGiOhBot.Services;
+﻿using Discord.Commands;
+using Discord.WebSocket;
+using Discord;
+using Discord.Addons.InteractiveCommands;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using YuGiOhBot.Services;
 
-//namespace YuGiOhBot.Commands
-//{
-//    public class CoreCommands : InteractiveModuleBase
-//    {
+namespace YuGiOhBot.Commands
+{
+    public class CoreCommands : InteractiveModuleBase
+    {
 
-//        private YuGiOhServices _service;
+        private YuGiOhServices _service;
 
-//        public CoreCommands(YuGiOhServices serviceParams)
-//        {
+        public CoreCommands(YuGiOhServices serviceParams)
+        {
 
-//            _service = serviceParams;
+            _service = serviceParams;
 
-//        }
+        }
 
-//        [Command("card"), Alias("c")]
-//        [Summary("Returns information based on given card name")]
-//        public async Task CardCommand([Remainder]string cardName)
-//        {
-                       
-//            if (CacheService.YuGiOhCardCache.TryGetValue(cardName, out EmbedBuilder eBuilder))
-//            {
+        [Command("card"), Alias("c")]
+        [Summary("Returns information based on given card name")]
+        public async Task CardCommand([Remainder]string cardName)
+        {
 
-//                await ReplyAsync("", embed: eBuilder);
-//                return;
+            if (string.IsNullOrEmpty(cardName))
+            {
 
-//            }
+                await ReplyAsync("There is no card with no name, unless it's the shadow realm. Everyone is just a soul there.");
+                return;
 
-//            using (var typingState = Context.Channel.EnterTypingState())
-//            {
+            }
 
-//                YuGiOhCard card = await _service.GetCard(cardName);
+            EmbedBuilder eBuilder;
 
-//                if (card.Name.Equals(string.Empty))
-//                {
+            using (var typingState = Context.Channel.EnterTypingState())
+            {
 
-//                    await ReplyAsync($"No card by the name {cardName} was found!");
-//                    typingState.Dispose();
-//                    return;
+                YuGiOhCard card = await _service.GetCard(cardName);
 
-//                }
+                //i am putting the cache service here because the card name will not always be correct
+                if (CacheService.YuGiOhCardCache.TryGetValue(card.Name, out eBuilder))
+                {
 
-//                var authorBuilder = new EmbedAuthorBuilder()
-//                {
+                    await ReplyAsync("", embed: eBuilder);
+                    typingState.Dispose();
+                    return;
 
-//                    Name = "YuGiOh",
-//                    IconUrl = "http://card-masters.com/cardmasters/wp-content/uploads/2013/08/yugioh-product-icon-lg.png",
-//                    Url = "http://www.yugioh-card.com/en/"
+                }
 
-//                };
+                if (card.Name.Equals(string.Empty))
+                {
 
-//                var footerBuilder = new EmbedFooterBuilder()
-//                {
+                    await ReplyAsync($"No card by the name {cardName} was found!");
+                    typingState.Dispose();
+                    return;
 
-//                    Text = "It's time to d-d-d-d-duel",
-//                    IconUrl = "http://i722.photobucket.com/albums/ww227/omar_alami/icon_gold_classic_zps66eae1c7.png"
+                }
 
-//                };
+                var authorBuilder = new EmbedAuthorBuilder()
+                {
 
-//                string lastType = card.Types.Last();
-//                var organizedDescription = new StringBuilder();
-//                organizedDescription.Append($"\n**Format:** {card.Format}\n**Types:** ");
+                    Name = "YuGiOh",
+                    IconUrl = "http://card-masters.com/cardmasters/wp-content/uploads/2013/08/yugioh-product-icon-lg.png",
+                    Url = "http://www.yugioh-card.com/en/"
 
-//                foreach (string type in card.Types)
-//                {
+                };
 
-//                    if (lastType.Equals(type)) organizedDescription.AppendLine($"{type}");
-//                    else organizedDescription.Append($"{type}, ");
+                var footerBuilder = new EmbedFooterBuilder()
+                {
 
-//                }
+                    Text = "It's time to d-d-d-d-duel | Database made by chinhodado",
+                    IconUrl = "http://i722.photobucket.com/albums/ww227/omar_alami/icon_gold_classic_zps66eae1c7.png"
 
-//                //if the card even has a level
-//                if (!string.IsNullOrEmpty(card.Level))
-//                {
+                };
 
-//                    if (card.Types.Contains("XYZ")) organizedDescription.AppendLine($"**Rank:** {card.Level}"); //some traps have levels like metal reflect slime
-//                    else organizedDescription.AppendLine($"**Level:** {card.Level}");
+                string lastType = card.Types.Last();
+                var organizedDescription = new StringBuilder();
+                organizedDescription.AppendLine($"\n**Format:** {card.Format}");
 
-//                }
-//                if (!string.IsNullOrEmpty(card.LeftPend))
-//                {
+                if (!string.IsNullOrEmpty(card.CardType)) organizedDescription.AppendLine($"**Card Type:** {card.CardType}");
+                if (!string.IsNullOrEmpty(card.Types.FirstOrDefault())) organizedDescription.AppendLine($"**Types:** {string.Join(" / ", card.Types)}");
 
-//                    //for now only 1 value is needed because there are no cards with different pendulum
-//                    //values on both ends (for now of course, you never know)
-//                    organizedDescription.AppendLine($"**Pedulum Scale:** {card.LeftPend}");
-//                    //organizedDescription.AppendLine($"**Left Pedulum Scale:** {card.LeftPend}");
-//                    //organizedDescription.AppendLine($"**Right Pedulum Scale:** {card.RightPend}");
+                //if the card even has a level
+                if (!string.IsNullOrEmpty(card.Level))
+                {
 
-//                }
+                    if (card.Types.Contains("Xyz")) organizedDescription.AppendLine($"**Rank:** {card.Level}");
+                    else organizedDescription.AppendLine($"**Level:** {card.Level}");
 
-//                //if the card is not a spell or a trap
-//                if (!(card.Types.Contains("Spell") || card.Types.Contains("Trap")))
-//                {
+                }
 
-//                    organizedDescription.AppendLine($"**Attribute:** {card.Attribute}");
-//                    organizedDescription.AppendLine($"**Race:** {card.Race}");
+                if (!string.IsNullOrEmpty(card.LeftPend))
+                {
 
-//                }
+                    //for now only 1 value is needed because there are no cards with different pendulum
+                    //values on both ends (for now of course, you never know)
+                    organizedDescription.AppendLine($"**Pedulum Scale:** {card.LeftPend}");
+                    //organizedDescription.AppendLine($"**Left Pedulum Scale:** {card.LeftPend}");
+                    //organizedDescription.AppendLine($"**Right Pedulum Scale:** {card.RightPend}");
 
-//                eBuilder = new EmbedBuilder()
-//                {
+                }
 
-//                    Author = authorBuilder,
-//                    Color = WhatColorIsTheCard(card.Types, card.Name),
-//                    ImageUrl = card.ImageUrl,
-//                    //ThumbnailUrl = card.ImageUrl,
-//                    Title = card.Name,
-//                    Description = organizedDescription.ToString(),
-//                    Footer = footerBuilder
+                //if the card is not a spell or a trap
+                if (!(card.CardType.Equals("Spell") || card.CardType.Equals("Trap")))
+                {
 
-//                };
+                    organizedDescription.AppendLine($"**Attribute:** {card.Attribute}");
+                    organizedDescription.AppendLine($"**Race:** {card.Race}");
 
-//                eBuilder.AddField(x =>
-//                {
+                }
 
-//                    x.Name = card.IsEffect ? "Effect" : "Description";
-//                    x.Value = card.Description;
-//                    x.IsInline = false;
+                eBuilder = new EmbedBuilder()
+                {
 
-//                });
+                    Author = authorBuilder,
+                    Color = WhatColorIsTheCard(card.Types, card.Name, card.CardType),
+                    ImageUrl = card.ImageUrl,
+                    //ThumbnailUrl = card.ImageUrl,
+                    Title = card.Name,
+                    Description = organizedDescription.ToString(),
+                    Footer = footerBuilder
 
-//                if (!string.IsNullOrEmpty(card.Atk) && !string.IsNullOrEmpty(card.Def))
-//                {
+                };
 
-//                    eBuilder.AddField(x =>
-//                    {
+                string description;
 
-//                        x.Name = "Attack";
-//                        x.Value = card.Atk;
-//                        x.IsInline = true;
+                if (card.Description.StartsWith("Pendulum Effect"))
+                {
 
-//                    });
+                    var tempArray = card.Description.Split(new string[] { "Monster Effect" }, StringSplitOptions.None);
+                    description = "__Pendulum Effect__\n" + tempArray[0].Replace("Pendulum Effect", "").Trim() + "\n__Monster Effect__\n" + tempArray[1].Replace("Monster Effect", "").Trim();
 
-//                    eBuilder.AddField(x =>
-//                    {
+                }
+                else description = card.Description;
 
-//                        x.Name = "Defense";
-//                        x.Value = card.Def;
-//                        x.IsInline = true;
+                eBuilder.AddField(x =>
+                {
 
-//                    });
+                    x.Name = card.IsEffect ? "Effect" : "Description";
+                    x.Value = description;
+                    x.IsInline = false;
 
-//                }
+                });
 
-//                if (!string.IsNullOrEmpty(card.Archetype))
-//                {
+                if (!(string.IsNullOrEmpty(card.Atk) || string.IsNullOrEmpty(card.Def)))
+                {
 
-//                    eBuilder.AddField(x =>
-//                    {
+                    eBuilder.AddField(x =>
+                    {
 
-//                        x.Name = "Archetype";
-//                        x.Value = card.Archetype;
-//                        x.IsInline = false;
+                        x.Name = "Attack";
+                        x.Value = card.Atk;
+                        x.IsInline = true;
 
-//                    });
+                    });
 
-//                }
+                    eBuilder.AddField(x =>
+                    {
 
-//                if (card.Prices.data != null)
-//                {
+                        x.Name = "Defense";
+                        x.Value = card.Def;
+                        x.IsInline = true;
 
-//                    var organizedPrices = new StringBuilder();
+                    });
 
-//                    //debug usage
-//                    //card.Prices.data.ForEach(d => Console.WriteLine(d.price_data.data.prices.average));
-//                    if(card.Prices.data == null)
-//                    {
+                }
 
-//                        organizedPrices.Append("**No prices to show.**");
+                if (!string.IsNullOrEmpty(card.Archetype))
+                {
 
-//                    }
-//                    else if (card.Prices.data.Count > 8)
-//                    {
+                    eBuilder.AddField(x =>
+                    {
 
-//                        List<Datum> prices = card.Prices.data;
+                        x.Name = "Archetype(s)";
+                        x.Value = card.Archetype;
+                        x.IsInline = false;
 
-//                        organizedPrices.AppendLine("**Showing the first 7 prices due to too many available.**");
+                    });
 
-//                        for(int counter = 0; counter < 8; counter++)
-//                        {
+                }
 
-//                            Datum data = prices[counter];
+                if (card.Prices.data != null)
+                {
 
-//                            organizedPrices.AppendLine($"**Name:** {data.name}");
-//                            organizedPrices.AppendLine($"\t\tRarity: {data.rarity}");
-//                            //this is what redundancy looks like people, lmfao
-//                            organizedPrices.AppendLine($"\t\tHigh: ${data.price_data.data.prices.high.ToString("0.00")}");
-//                            organizedPrices.AppendLine($"\t\tLow: ${data.price_data.data.prices.low.ToString("0.00")}");
-//                            organizedPrices.AppendLine($"\t\tAverage: ${data.price_data.data.prices.average.ToString("0.00")}");
+                    var organizedPrices = new StringBuilder();
 
-//                        }
+                    //debug usage
+                    //card.Prices.data.ForEach(d => Console.WriteLine(d.price_data.data.prices.average));
+                    if (card.Prices.data == null)
+                    {
 
-//                    }
-//                    else if(card.Prices.data.Count < 8)
-//                    {
+                        organizedPrices.Append("**No prices to show.**");
 
-//                        foreach (Datum data in card.Prices.data)
-//                        {
+                    }
+                    else if (card.Prices.data.Count > 8)
+                    {
 
-//                            organizedPrices.AppendLine($"**Name:** {data.name}");
-//                            organizedPrices.AppendLine($"\t\tRarity: {data.rarity}");
-//                            //this is what redundancy looks like people, lmfao
+                        List<Datum> prices = card.Prices.data;
 
-//                            if(data.price_data.data == null)
-//                            {
+                        organizedPrices.AppendLine("**Showing the first 7 prices due to too many available.**");
 
-//                                organizedPrices.AppendLine($"\t\tError: No prices to display for this card variant.");
+                        for (int counter = 0; counter < 8; counter++)
+                        {
 
-//                            }
-//                            else
-//                            {
+                            Datum data = prices[counter];
 
+                            organizedPrices.AppendLine($"**Name:** {data.name}");
+                            organizedPrices.AppendLine($"\t\tRarity: {data.rarity}");
+                            //this is what redundancy looks like people, lmfao
+                            organizedPrices.AppendLine($"\t\tHigh: ${data.price_data.data.prices.high.ToString("0.00")}");
+                            organizedPrices.AppendLine($"\t\tLow: ${data.price_data.data.prices.low.ToString("0.00")}");
+                            organizedPrices.AppendLine($"\t\tAverage: ${data.price_data.data.prices.average.ToString("0.00")}");
 
-//                                organizedPrices.AppendLine($"\t\tHigh: ${data.price_data.data.prices.high.ToString("0.00")}");
-//                                organizedPrices.AppendLine($"\t\tLow: ${data.price_data.data.prices.low.ToString("0.00")}");
-//                                organizedPrices.AppendLine($"\t\tAverage: ${data.price_data.data.prices.average.ToString("0.00")}");
+                        }
 
-//                            }
+                    }
+                    else if (card.Prices.data.Count < 8)
+                    {
 
-//                        }
+                        foreach (Datum data in card.Prices.data)
+                        {
 
-//                    }
+                            organizedPrices.AppendLine($"**Name:** {data.name}");
+                            organizedPrices.AppendLine($"\t\tRarity: {data.rarity}");
+                            //this is what redundancy looks like people, lmfao
 
-                    
+                            if (data.price_data.data == null)
+                            {
 
-//                    eBuilder.AddField(x =>
-//                    {
+                                organizedPrices.AppendLine($"\t\tError: No prices to display for this card variant.");
 
-//                        x.Name = "Prices";
-//                        x.Value = organizedPrices.ToString();
-//                        x.IsInline = false;
+                            }
+                            else
+                            {
 
-//                    });
 
-//                }
+                                organizedPrices.AppendLine($"\t\tHigh: ${data.price_data.data.prices.high.ToString("0.00")}");
+                                organizedPrices.AppendLine($"\t\tLow: ${data.price_data.data.prices.low.ToString("0.00")}");
+                                organizedPrices.AppendLine($"\t\tAverage: ${data.price_data.data.prices.average.ToString("0.00")}");
 
-//            }
+                            }
 
-//            await ReplyAsync("", embed: eBuilder);
-//            CacheService.YuGiOhCardCache.TryAdd(cardName, eBuilder);
+                        }
 
-//        }
+                    }
 
-//        [Command("search", RunMode = RunMode.Async), Alias("s")]
-//        [Summary("Searches for cards based on name given")]
-//        public async Task CardSearchCommand([Remainder]string search)
-//        {
+                    eBuilder.AddField(x =>
+                    {
 
-//            StringBuilder organizedResults;
-//            List<string> searchResults;
+                        x.Name = "Prices";
+                        x.Value = organizedPrices.ToString();
+                        x.IsInline = false;
 
-//            using (Context.Channel.EnterTypingState())
-//            {
+                    });
 
-//                //<card names>
-//                searchResults = await _service.SearchCards(search);
+                }
 
-//                if (searchResults.Count == 0)
-//                {
+            }
 
-//                    await ReplyAsync($"Nothing was found with the search of {search}!");
-//                    return;
+            await ReplyAsync("", embed: eBuilder);
+            CacheService.YuGiOhCardCache.TryAdd(cardName, eBuilder);
 
-//                }
-//                else if (searchResults.Count > 50)
-//                {
+        }
 
-//                    await ReplyAsync($"Too many results were returned, please refine your search!");
-//                    return;
+        [Command("lcard"), Alias("lc")]
+        [Summary("Word position does not matter and will pull the first available result in the search")]
+        public async Task LazyCardCommand([Remainder]string cardName)
+        {
 
-//                }
+            if (string.IsNullOrEmpty(cardName))
+            {
 
-//                var str = $"```There are {searchResults.Count} results based on your search!\n\n";
-//                organizedResults = new StringBuilder(str);
-//                var counter = 1;
+                await ReplyAsync("There are no cards with a lack of name.");
+                return;
 
-//                foreach (string card in searchResults)
-//                {
+            }
 
-//                    organizedResults.AppendLine($"{counter}. {card}");
-//                    counter++;
+            if (CacheService.YuGiOhCardCache.TryGetValue(cardName, out EmbedBuilder eBuilder))
+            {
 
-//                }
+                await ReplyAsync("", embed: eBuilder);
+                return;
 
-//                organizedResults.Append("\nHit a number to look at that card. Expires in a minute!```");
+            }
 
-//            }
+            using (var typingState = Context.Channel.EnterTypingState())
+            {
 
-//            await ReplyAsync(organizedResults.ToString());
+                YuGiOhCard card = await _service.LazyGetCard(cardName);
 
-//            IUserMessage response = await WaitForMessage(Context.User, Context.Channel, TimeSpan.FromSeconds(60));
+                if (card.Name.Equals(string.Empty))
+                {
 
-//            if (!int.TryParse(response.Content, out int searchNumber)) return;
-//            else if (searchNumber > searchResults.Count)
-//            {
+                    await ReplyAsync($"No card by the name {cardName} was found!");
+                    typingState.Dispose();
+                    return;
 
-//                await ReplyAsync($"{Context.User.Mention} Not a valid search!");
-//                return;
+                }
 
-//            }
+                var authorBuilder = new EmbedAuthorBuilder()
+                {
 
-//            await CardCommand(searchResults[searchNumber - 1]);
+                    Name = "YuGiOh",
+                    IconUrl = "http://card-masters.com/cardmasters/wp-content/uploads/2013/08/yugioh-product-icon-lg.png",
+                    Url = "http://www.yugioh-card.com/en/"
 
-//        }
+                };
 
-//        [Command("lsearch", RunMode = RunMode.Async), Alias("ls")]
-//        [Summary("A lazy search of all cards that CONTAIN the words entered, it may be not be in any particular order")]
-//        public async Task LazySearchCommand([Remainder]string search)
-//        {
+                var footerBuilder = new EmbedFooterBuilder()
+                {
 
-//            StringBuilder organizedResults;
-//            List<string> searchResults;
+                    Text = "It's time to d-d-d-d-duel | Database made by chinhodado",
+                    IconUrl = "http://i722.photobucket.com/albums/ww227/omar_alami/icon_gold_classic_zps66eae1c7.png"
 
-//            using (Context.Channel.EnterTypingState())
-//            {
+                };
 
-//                //<card names>
-//                searchResults = await _service.LazySearchCards(search);
+                string lastType = card.Types.Last();
+                var organizedDescription = new StringBuilder();
+                organizedDescription.AppendLine($"\n**Format:** {card.Format}");
 
-//                if (searchResults.Count == 0)
-//                {
+                if (!string.IsNullOrEmpty(card.CardType)) organizedDescription.AppendLine($"**Card Type:** {card.CardType}");
+                if (!string.IsNullOrEmpty(card.Types.FirstOrDefault())) organizedDescription.AppendLine($"**Types:** {string.Join(" / ", card.Types)}");
 
-//                    await ReplyAsync($"Nothing was found with the search of {search}!");
-//                    return;
+                //if the card even has a level
+                if (!string.IsNullOrEmpty(card.Level))
+                {
 
-//                }
-//                else if (searchResults.Count > 50)
-//                {
+                    if (card.Types.Contains("Xyz")) organizedDescription.AppendLine($"**Rank:** {card.Level}");
+                    else organizedDescription.AppendLine($"**Level:** {card.Level}");
 
-//                    await ReplyAsync($"Too many results were returned, please refine your search!");
-//                    return;
+                }
 
-//                }
+                if (!string.IsNullOrEmpty(card.LeftPend))
+                {
 
-//                var str = $"```There are {searchResults.Count} results based on your search!\n\n";
-//                organizedResults = new StringBuilder(str);
-//                var counter = 1;
+                    //for now only 1 value is needed because there are no cards with different pendulum
+                    //values on both ends (for now of course, you never know)
+                    organizedDescription.AppendLine($"**Pedulum Scale:** {card.LeftPend}");
+                    //organizedDescription.AppendLine($"**Left Pedulum Scale:** {card.LeftPend}");
+                    //organizedDescription.AppendLine($"**Right Pedulum Scale:** {card.RightPend}");
 
-//                foreach (string card in searchResults)
-//                {
+                }
 
-//                    organizedResults.AppendLine($"{counter}. {card}");
-//                    counter++;
+                //if the card is not a spell or a trap
+                if (!(card.CardType.Equals("Spell") || card.CardType.Equals("Trap")))
+                {
 
-//                }
+                    organizedDescription.AppendLine($"**Attribute:** {card.Attribute}");
+                    organizedDescription.AppendLine($"**Race:** {card.Race}");
 
-//                organizedResults.Append("\nHit a number to look at that card. Expires in a minute!```");
+                }
 
-//            }
+                eBuilder = new EmbedBuilder()
+                {
 
-//            await ReplyAsync(organizedResults.ToString());
+                    Author = authorBuilder,
+                    Color = WhatColorIsTheCard(card.Types, card.Name, card.CardType),
+                    ImageUrl = card.ImageUrl,
+                    //ThumbnailUrl = card.ImageUrl,
+                    Title = card.Name,
+                    Description = organizedDescription.ToString(),
+                    Footer = footerBuilder
 
-//            IUserMessage response = await WaitForMessage(Context.User, Context.Channel, TimeSpan.FromSeconds(60));
+                };
 
-//            if (!int.TryParse(response.Content, out int searchNumber)) return;
-//            else if (searchNumber > searchResults.Count)
-//            {
+                string description;
 
-//                await ReplyAsync($"{Context.User.Mention} Not a valid search!");
-//                return;
+                if (card.Description.StartsWith("Pendulum Effect"))
+                {
 
-//            }
+                    var tempArray = card.Description.Split(new string[] { "Monster Effect" }, StringSplitOptions.None);
+                    description = "__Pendulum Effect__\n" + tempArray[0].Replace("Pendulum Effect", "").Trim() + "\n__Monster Effect__\n" + tempArray[1].Replace("Monster Effect", "").Trim();
 
-//            await CardCommand(searchResults[searchNumber - 1]);
+                }
+                else description = card.Description;
 
-//        }
+                eBuilder.AddField(x =>
+                {
 
-//        [Command("archetype", RunMode = RunMode.Async), Alias("a", "arch")]
-//        [Summary("Attempt to search all cards associated with searched archetype")]
-//        public async Task ArchetypeSearchCommand([Remainder]string archetype)
-//        {
+                    x.Name = card.IsEffect ? "Effect" : "Description";
+                    x.Value = description;
+                    x.IsInline = false;
 
-//            StringBuilder organizedResults;
-//            List<string> searchResults;
+                });
 
-//            using (Context.Channel.EnterTypingState())
-//            {
+                if (!(string.IsNullOrEmpty(card.Atk) || string.IsNullOrEmpty(card.Def)))
+                {
 
-//                //<card names>
-//                searchResults = await _service.SearchCards(archetype, true);
+                    eBuilder.AddField(x =>
+                    {
 
-//                if (searchResults.Count == 0)
-//                {
+                        x.Name = "Attack";
+                        x.Value = card.Atk;
+                        x.IsInline = true;
 
-//                    await ReplyAsync($"Nothing was found with the search of {archetype}!");
-//                    return;
+                    });
 
-//                }
-//                else if (searchResults.Count > 50)
-//                {
+                    eBuilder.AddField(x =>
+                    {
 
-//                    await ReplyAsync($"Too many results were returned, please refine your search!");
-//                    return;
+                        x.Name = "Defense";
+                        x.Value = card.Def;
+                        x.IsInline = true;
 
-//                }
+                    });
 
-//                var str = $"```There are {searchResults.Count} results based on your search!\n\n";
-//                organizedResults = new StringBuilder(str);
-//                var counter = 1;
+                }
 
-//                foreach (string card in searchResults)
-//                {
+                if (!string.IsNullOrEmpty(card.Archetype))
+                {
 
-//                    organizedResults.AppendLine($"{counter}. {card}");
-//                    counter++;
+                    eBuilder.AddField(x =>
+                    {
 
-//                }
+                        x.Name = "Archetype(s)";
+                        x.Value = card.Archetype;
+                        x.IsInline = false;
 
-//                organizedResults.Append("\nHit a number to look at that card. Expires in a minute!```");
+                    });
 
-//            }
+                }
 
-//            await ReplyAsync(organizedResults.ToString());
+                if (card.Prices.data != null)
+                {
 
-//            IUserMessage response = await WaitForMessage(Context.User, Context.Channel, TimeSpan.FromSeconds(60));
+                    var organizedPrices = new StringBuilder();
 
-//            if (!int.TryParse(response.Content, out int searchNumber)) return;
-//            else if (searchNumber > searchResults.Count)
-//            {
+                    //debug usage
+                    //card.Prices.data.ForEach(d => Console.WriteLine(d.price_data.data.prices.average));
+                    if (card.Prices.data == null)
+                    {
 
-//                await ReplyAsync($"{Context.User.Mention} Not a valid search!");
-//                return;
+                        organizedPrices.Append("**No prices to show.**");
 
-//            }
+                    }
+                    else if (card.Prices.data.Count > 8)
+                    {
 
-//            await CardCommand(searchResults[searchNumber - 1]);
+                        List<Datum> prices = card.Prices.data;
 
-//        }
+                        organizedPrices.AppendLine("**Showing the first 7 prices due to too many available.**");
 
-//        private Color WhatColorIsTheCard(List<string> cardTypes, string cardName)
-//        {
+                        for (int counter = 0; counter < 8; counter++)
+                        {
 
-//            if (cardName.Equals("Slifer the Sky Dragon")) return new Color(255, 0, 0);
-//            else if (cardName.Equals("The Winged Dragon of Ra")) return new Color(255, 215, 0);
-//            else if (cardName.Equals("Obelisk the Tormentor")) return new Color(50, 50, 153);
-//            else if (cardTypes.Contains("Pendulum")) return new Color(175, 219, 205);
-//            else if (cardTypes.Contains("Spell")) return new Color(29, 158, 116);
-//            else if (cardTypes.Contains("Trap") || cardTypes.Contains("Trap Monster")) return new Color(188, 90, 132);
-//            else if (cardTypes.Contains("XYZ")) return new Color(0, 0, 0);
-//            else if (cardTypes.Contains("Token")) return new Color(192, 192, 192);
-//            else if (cardTypes.Contains("Synchro")) return new Color(204, 204, 204);
-//            else if (cardTypes.Contains("Fusion")) return new Color(160, 134, 183);
-//            else if (cardTypes.Contains("Ritual")) return new Color(157, 181, 204);
-//            else if (cardTypes.Contains("Effect")) return new Color(174, 121, 66);
-//            else return new Color(216, 171, 12);
+                            Datum data = prices[counter];
 
-//        }
+                            organizedPrices.AppendLine($"**Name:** {data.name}");
+                            organizedPrices.AppendLine($"\t\tRarity: {data.rarity}");
+                            //this is what redundancy looks like people, lmfao
+                            organizedPrices.AppendLine($"\t\tHigh: ${data.price_data.data.prices.high.ToString("0.00")}");
+                            organizedPrices.AppendLine($"\t\tLow: ${data.price_data.data.prices.low.ToString("0.00")}");
+                            organizedPrices.AppendLine($"\t\tAverage: ${data.price_data.data.prices.average.ToString("0.00")}");
 
-//    }
-//}
+                        }
+
+                    }
+                    else if (card.Prices.data.Count < 8)
+                    {
+
+                        foreach (Datum data in card.Prices.data)
+                        {
+
+                            organizedPrices.AppendLine($"**Name:** {data.name}");
+                            organizedPrices.AppendLine($"\t\tRarity: {data.rarity}");
+                            //this is what redundancy looks like people, lmfao
+
+                            if (data.price_data.data == null)
+                            {
+
+                                organizedPrices.AppendLine($"\t\tError: No prices to display for this card variant.");
+
+                            }
+                            else
+                            {
+
+
+                                organizedPrices.AppendLine($"\t\tHigh: ${data.price_data.data.prices.high.ToString("0.00")}");
+                                organizedPrices.AppendLine($"\t\tLow: ${data.price_data.data.prices.low.ToString("0.00")}");
+                                organizedPrices.AppendLine($"\t\tAverage: ${data.price_data.data.prices.average.ToString("0.00")}");
+
+                            }
+
+                        }
+
+                    }
+
+                    eBuilder.AddField(x =>
+                    {
+
+                        x.Name = "Prices";
+                        x.Value = organizedPrices.ToString();
+                        x.IsInline = false;
+
+                    });
+
+                }
+
+            }
+
+            await ReplyAsync("", embed: eBuilder);
+            CacheService.YuGiOhCardCache.TryAdd(cardName, eBuilder);
+
+        }
+
+        [Command("search", RunMode = RunMode.Async), Alias("s")]
+        [Summary("Searches for cards based on name given")]
+        public async Task CardSearchCommand([Remainder]string search)
+        {
+
+            StringBuilder organizedResults;
+            List<string> searchResults;
+
+            using (var typingState = Context.Channel.EnterTypingState())
+            {
+
+                //<card names>
+                searchResults = await _service.SearchCards(search, false);
+
+                if (searchResults.Count == 0)
+                {
+
+                    await ReplyAsync($"Nothing was found with the search of {search}!");
+                    typingState.Dispose();
+                    return;
+
+                }
+                else if (searchResults.Count > 50)
+                {
+
+                    await ReplyAsync($"Too many results were returned, please refine your search!");
+                    typingState.Dispose();
+                    return;
+
+                }
+
+                var str = $"```There are {searchResults.Count} results based on your search!\n\n";
+                organizedResults = new StringBuilder(str);
+                var counter = 1;
+
+                foreach (string card in searchResults)
+                {
+
+                    organizedResults.AppendLine($"{counter}. {card}");
+                    counter++;
+
+                }
+
+                organizedResults.Append("\nHit a number to look at that card. Expires in a minute!```");
+                typingState.Dispose();
+            }
+
+            await ReplyAsync(organizedResults.ToString());
+
+            IUserMessage response = await WaitForMessage(Context.User, Context.Channel, TimeSpan.FromSeconds(60));
+
+            if (!int.TryParse(response.Content, out int searchNumber)) return;
+            else if (searchNumber > searchResults.Count)
+            {
+
+                await ReplyAsync($"{Context.User.Mention} Not a valid search!");
+                return;
+
+            }
+
+            await CardCommand(searchResults[searchNumber - 1]);
+
+        }
+
+        [Command("lsearch", RunMode = RunMode.Async), Alias("ls")]
+        [Summary("A lazy search of all cards that CONTAIN the words entered, it may be not be in any particular order")]
+        public async Task LazySearchCommand([Remainder]string search)
+        {
+
+            StringBuilder organizedResults;
+            List<string> searchResults;
+
+            using (var typingState = Context.Channel.EnterTypingState())
+            {
+
+                //<card names>
+                searchResults = await _service.LazySearchCards(search);
+
+                if (searchResults.Count == 0)
+                {
+
+                    await ReplyAsync($"Nothing was found with the search of {search}!");
+                    typingState.Dispose();
+                    return;
+
+                }
+                else if (searchResults.Count > 50)
+                {
+
+                    await ReplyAsync($"Too many results were returned, please refine your search!");
+                    typingState.Dispose();
+                    return;
+
+                }
+
+                var str = $"```There are {searchResults.Count} results based on your search!\n\n";
+                organizedResults = new StringBuilder(str);
+                var counter = 1;
+
+                foreach (string card in searchResults)
+                {
+
+                    organizedResults.AppendLine($"{counter}. {card}");
+                    counter++;
+
+                }
+
+                organizedResults.Append("\nHit a number to look at that card. Expires in a minute!```");
+
+            }
+
+            await ReplyAsync(organizedResults.ToString());
+
+            IUserMessage response = await WaitForMessage(Context.User, Context.Channel, TimeSpan.FromSeconds(60));
+
+            if (!int.TryParse(response.Content, out int searchNumber)) return;
+            else if (searchNumber > searchResults.Count)
+            {
+
+                await ReplyAsync($"{Context.User.Mention} Not a valid search!");
+                return;
+
+            }
+
+            await CardCommand(searchResults[searchNumber - 1]);
+
+        }
+
+        [Command("archetype", RunMode = RunMode.Async), Alias("a", "arch")]
+        [Summary("Attempt to search all cards associated with searched archetype")]
+        public async Task ArchetypeSearchCommand([Remainder]string archetype)
+        {
+
+            StringBuilder organizedResults;
+            List<string> searchResults;
+
+            using (var typingState =  Context.Channel.EnterTypingState())
+            {
+
+                //<card names>
+                searchResults = await _service.SearchCards(archetype, true);
+
+                if (searchResults.Count == 0)
+                {
+
+                    await ReplyAsync($"Nothing was found with the search of {archetype}!");
+                    typingState.Dispose();
+                    return;
+
+                }
+                else if (searchResults.Count > 50)
+                {
+
+                    await ReplyAsync($"Too many results were returned, please refine your search!");
+                    typingState.Dispose();
+                    return;
+
+                }
+
+                var str = $"```There are {searchResults.Count} results based on your search!\n\n";
+                organizedResults = new StringBuilder(str);
+                var counter = 1;
+
+                foreach (string card in searchResults)
+                {
+
+                    organizedResults.AppendLine($"{counter}. {card}");
+                    counter++;
+
+                }
+
+                organizedResults.Append("\nHit a number to look at that card. Expires in a minute!```");
+
+            }
+
+            await ReplyAsync(organizedResults.ToString());
+
+            IUserMessage response = await WaitForMessage(Context.User, Context.Channel, TimeSpan.FromSeconds(60));
+
+            if (!int.TryParse(response.Content, out int searchNumber)) return;
+            else if (searchNumber > searchResults.Count)
+            {
+
+                await ReplyAsync($"{Context.User.Mention} Not a valid search!");
+                return;
+
+            }
+
+            await CardCommand(searchResults[searchNumber - 1]);
+
+        }
+
+        private Color WhatColorIsTheCard(List<string> cardTypes, string cardName, string cardType)
+        {
+
+            if (cardName.Equals("Slifer the Sky Dragon")) return new Color(255, 0, 0);
+            else if (cardName.Equals("The Winged Dragon of Ra")) return new Color(255, 215, 0);
+            else if (cardName.Equals("Obelisk the Tormentor")) return new Color(50, 50, 153);
+            else if (cardTypes.Contains("Pendulum")) return new Color(175, 219, 205);
+            else if (cardType.Equals("Spell")) return new Color(29, 158, 116);
+            else if (cardType.Equals("Trap")) return new Color(188, 90, 132);
+            else if (cardTypes.Contains("XYZ")) return new Color(0, 0, 0);
+            else if (cardTypes.Contains("Token")) return new Color(192, 192, 192);
+            else if (cardTypes.Contains("Synchro")) return new Color(204, 204, 204);
+            else if (cardTypes.Contains("Fusion")) return new Color(160, 134, 183);
+            else if (cardTypes.Contains("Ritual")) return new Color(157, 181, 204);
+            else if (cardTypes.Contains("Effect")) return new Color(174, 121, 66);
+            else return new Color(216, 171, 12);
+
+        }
+
+    }
+}

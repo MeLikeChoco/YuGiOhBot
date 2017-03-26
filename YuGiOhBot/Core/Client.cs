@@ -21,7 +21,7 @@ namespace YuGiOhBot.Core
         private DiscordSocketClient _yugiohBot;
         private CommandService _commandService;
         private DependencyMap _map;
-        private YuGiOhServices2 _yugiohService;
+        private YuGiOhServices _yugiohService;
         private GuildServices _guildService;
         private int _latencyMessageLimiter = 20; //pls no spam console
         private const string DiscordTokenPath = "Tokens/Discord.txt";
@@ -54,17 +54,13 @@ namespace YuGiOhBot.Core
             //await AltConsole.PrintAsync("Info", "YuGiOh", "Population of hexcode dictionary finished.");
 
             _map = new DependencyMap();
-            _yugiohService = new YuGiOhServices2();
+            _yugiohService = new YuGiOhServices();
             _guildService = new GuildServices();
 
             await AltConsole.PrintAsync("Service", "Guild", "Populating prefix list...");
             await _guildService.InitializeService();
             await AltConsole.PrintAsync("Service", "Guild", "Prefix list populated.");
-
-            await AltConsole.PrintAsync("Service", "YuGiOh", "Populating hexcode list...");
-            //_yugiohService.InitializeService();
-            await AltConsole.PrintAsync("Service", "YuGiOh", "Hexcode list populated.");
-
+            
             await AltConsole.PrintAsync("Service", "Cache", "Starting up cache service...");
             CacheService.InitializeService();
             await AltConsole.PrintAsync("Service", "Cache", "Cache service initialized.");

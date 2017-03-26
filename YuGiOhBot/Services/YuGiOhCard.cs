@@ -13,6 +13,7 @@ namespace YuGiOhBot.Services
         public string LeftPend { get; set; } = string.Empty; //i know they are both the same for now
         public string RightPend { get; set; } = string.Empty; //but you never know that one day we may get both pends different
         public List<string> Types { get; set; } = null; //effect, synchro, union etc etc    DUAL IS GEMINI
+        public string CardType { get; set; } = string.Empty; //trap, spell, monster
         public string Atk { get; set; } = string.Empty;
         public string Def { get; set; } = string.Empty;
         public string Race { get; set; } = string.Empty; //beast, aqua, zombie etc etc

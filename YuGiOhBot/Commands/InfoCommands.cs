@@ -32,6 +32,14 @@ namespace YuGiOhBot.Commands
         public async Task PrefixCommand([Remainder]string prefix)
         {
 
+            if(string.IsNullOrEmpty(prefix) || string.IsNullOrWhiteSpace(prefix))
+            {
+
+                await ReplyAsync("You need something as your prefix.");
+                return;
+
+            }
+
             await _guildService.SetPrefix(Context.Guild.Id, prefix);
             await ReplyAsync($"Prefix has been set to: {prefix}");
 
