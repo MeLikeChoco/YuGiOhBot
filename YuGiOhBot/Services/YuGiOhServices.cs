@@ -11,6 +11,7 @@ using System.Linq;
 using System.Globalization;
 using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
+using YuGiOhBot.Services.CardObjects;
 
 namespace YuGiOhBot.Services
 {
@@ -25,21 +26,18 @@ namespace YuGiOhBot.Services
         public async Task<YuGiOhCard> GetCard(string cardName)
         {
 
-            var card = new YuGiOhCard();
-
             //til that you can do something like this
-            string name, realName, attribute, cardType, level, atk, def, rank, pendScale,
+            string name, realName, attribute, types, cardType, level, atk, def, rank, pendScale,
                 linkMarkers, link, property, lore, archetype, ocgStatus, tcgAdvStatus, tcgTrnStatus;
             bool ocgOnly = false, tcgOnly = false;
-            var types = new List<string>();
-            name = realName = attribute = cardType = level = atk = def = rank = pendScale =
+            name = realName = attribute = types = cardType = level = atk = def = rank = pendScale =
                 linkMarkers = link = property = lore = archetype = ocgStatus = tcgAdvStatus = tcgTrnStatus = string.Empty;
 
             using (var databaseConnection = new SqliteConnection(DatabasePath))
             using (SqliteCommand getCardCommand = databaseConnection.CreateCommand())
             {
 
-                getCardCommand.CommandText = $"select * from Card where name like @NAME";
+                getCardCommand.CommandText = $"select * from Card where (name like @NAME) or (realName like @NAME)";
                 getCardCommand.Parameters.Add("@NAME", SqliteType.Text);
                 getCardCommand.Parameters["@NAME"].Value = cardName;
 
@@ -52,7 +50,7 @@ namespace YuGiOhBot.Services
                     {
 
                         databaseConnection.Close();
-                        return card;
+                        return new YuGiOhCard();
 
                     }
 
@@ -63,19 +61,21 @@ namespace YuGiOhBot.Services
                     if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("realName"))) realName = dataReader["realName"].ToString();
                     if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("attribute"))) attribute = dataReader["attribute"].ToString();
                     if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("cardType"))) cardType = dataReader["cardType"].ToString();
-                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("types"))) types = dataReader["types"].ToString().Split('/').Select(aType => aType.Trim()).ToList();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("types"))) types = dataReader["types"].ToString();
                     if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("level"))) level = dataReader["level"].ToString();
                     if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("atk"))) atk = dataReader["atk"].ToString();
                     if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("def"))) def = dataReader["def"].ToString();
                     if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("rank"))) rank = dataReader["rank"].ToString();
                     if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("pendulumScale"))) pendScale = dataReader["pendulumScale"].ToString();
                     if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("link"))) link = dataReader["link"].ToString();
-                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("property"))) property = dataReader["rank"].ToString();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("linkMarkers"))) linkMarkers = dataReader["linkMarkers"].ToString();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("property"))) property = dataReader["property"].ToString();
                     if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("lore"))) lore = dataReader["lore"].ToString();
-                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("ocgStatus"))) rank = dataReader["ocgStatus"].ToString();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("ocgStatus"))) ocgStatus = dataReader["ocgStatus"].ToString();
                     if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("tcgAdvStatus"))) tcgAdvStatus = dataReader["tcgAdvStatus"].ToString();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("tcgTrnStatus"))) tcgTrnStatus = dataReader["tcgTrnStatus"].ToString();
                     if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("ocgOnly"))) ocgOnly = dataReader["ocgOnly"].ToString().Equals("1");
-                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("tcgTrnStatus"))) tcgOnly = dataReader["tcgOnly"].ToString().Equals("1");
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("tcgOnly"))) tcgOnly = dataReader["tcgOnly"].ToString().Equals("1");
 
                 }
 
@@ -83,26 +83,120 @@ namespace YuGiOhBot.Services
 
             }
 
-            if (tcgOnly) card.Format = "TCG";
-            else if (ocgOnly) card.Format = "OCG";
-            else card.Format = "TCG/OCG";
+            if (cardType.Equals("Monster"))
+            {
 
-            card.Name = name;
-            card.Description = lore;
-            card.IsEffect = cardType.Equals("Trap") || cardType.Equals("Spell") || types.Contains("Effect") || types.Contains("Pendulum") ? true : false;
-            card.Level = level;
-            card.LeftPend = pendScale;
-            card.RightPend = pendScale;
-            card.Types = types;
-            card.CardType = cardType;
-            card.Atk = atk;
-            card.Def = def;
-            card.Race = types.Count > 0 ? types.FirstOrDefault() : string.Empty; //it will always be the first thing declared in types
-            card.Attribute = attribute;
-            card.Prices = await GetPrices(name, realName);
-            card.ImageUrl = await GetImageUrl(name, realName);
+                //if(types.Contains("Link"))
+                if (types.Contains("Xyz"))
+                {
 
-            return card;
+                    var card = new XyzMonster()
+                    {
+                        Name = name,
+                        RealName = realName,
+                        Attribute = attribute,
+                        CardType = cardType,
+                        Types = types,
+                        Rank = rank,
+                        Atk = atk,
+                        Def = def,
+                        Lore = lore,
+                        TcgOnly = tcgOnly,
+                        OcgOnly = ocgOnly,
+                        Archetype = archetype,
+                        HasEffect = types.Contains("Effect"),                        
+                    };
+
+                    return card;
+
+                }else if (types.Contains("Pendulum"))
+                {
+
+                    var card = new PendulumMonster()
+                    {
+                        Name = name,
+                        RealName = realName,
+                        Attribute = attribute,
+                        CardType = cardType,
+                        Types = types,
+                        Level = level,
+                        PendulumScale = pendScale,
+                        Atk = atk,
+                        Def = def,
+                        Lore = lore,
+                        TcgOnly = tcgOnly,
+                        OcgOnly = ocgOnly,
+                        Archetype = archetype,
+                        HasEffect = types.Contains("Effect"),                        
+                    };
+
+                    return card;
+
+                }else if (types.Contains("Link"))
+                {
+
+                    var card = new LinkMonster()
+                    {
+                        Name = name,
+                        RealName = realName,
+                        Attribute = attribute,
+                        CardType = cardType,
+                        Types = types,
+                        Links = link,
+                        LinkMarkers = linkMarkers,
+                        Atk = atk,
+                        Lore = lore,
+                        TcgOnly = tcgOnly,
+                        OcgOnly = ocgOnly,
+                        Archetype = archetype,
+                        HasEffect = types.Contains("Effect"),
+                    };
+
+                }
+                else
+                {
+
+                    var card = new RegularMonster()
+                    {
+                        Name = name,
+                        RealName = realName,
+                        Attribute = attribute,
+                        CardType = cardType,
+                        Types = types,
+                        Level = level,
+                        Lore = lore,
+                        Atk = atk,
+                        Def = def,
+                        HasEffect = types.Contains("Effect"),
+                        TcgOnly = tcgOnly,
+                        OcgOnly = ocgOnly,
+                    };
+
+                    return card;
+
+                }
+
+            }
+            else
+            {
+
+                var card = new SpellTrapCard()
+                {
+                    Name = name,
+                    RealName = realName,
+                    CardType = cardType,
+                    Property = property,
+                    Lore = lore,
+                    Archetype = archetype,
+                    TcgOnly = tcgOnly,
+                    OcgOnly = ocgOnly,
+                };
+
+                return card;
+
+            }
+
+            return new YuGiOhCard();
 
         }
 
@@ -110,14 +204,12 @@ namespace YuGiOhBot.Services
         {
 
             var searchTerms = cardName.Split(' ');
-            var card = new YuGiOhCard();
 
             //til that you can do something like this
-            string name, realName, attribute, cardType, level, atk, def, rank, pendScale,
-                linkMarkers, link, property, lore, archetype, ocgStatus, tcgAdvStatus, tcgTrnStatus;
+            string name, realName, attribute, types, cardType, level, atk, def, rank, pendScale,
+               linkMarkers, link, property, lore, archetype, ocgStatus, tcgAdvStatus, tcgTrnStatus;
             bool ocgOnly = false, tcgOnly = false;
-            List<string> types = new List<string>();
-            name = realName = attribute = cardType = level = atk = def = rank = pendScale =
+            name = realName = attribute = types = cardType = level = atk = def = rank = pendScale =
                 linkMarkers = link = property = lore = archetype = ocgStatus = tcgAdvStatus = tcgTrnStatus = string.Empty;
 
             using (var databaseConnection = new SqliteConnection(DatabasePath))
@@ -146,7 +238,7 @@ namespace YuGiOhBot.Services
                     {
 
                         databaseConnection.Close();
-                        return card;
+                        return new YuGiOhCard();
 
                     }
 
@@ -157,20 +249,21 @@ namespace YuGiOhBot.Services
                     if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("realName"))) realName = dataReader["realName"].ToString();
                     if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("attribute"))) attribute = dataReader["attribute"].ToString();
                     if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("cardType"))) cardType = dataReader["cardType"].ToString();
-                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("types"))) types = dataReader["types"].ToString().Split('/').Select(aType => aType.Trim()).ToList();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("types"))) types = dataReader["types"].ToString();
                     if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("level"))) level = dataReader["level"].ToString();
                     if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("atk"))) atk = dataReader["atk"].ToString();
                     if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("def"))) def = dataReader["def"].ToString();
                     if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("rank"))) rank = dataReader["rank"].ToString();
                     if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("pendulumScale"))) pendScale = dataReader["pendulumScale"].ToString();
                     if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("link"))) link = dataReader["link"].ToString();
-                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("property"))) property = dataReader["rank"].ToString();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("linkMarkers"))) linkMarkers = dataReader["linkMarkers"].ToString();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("property"))) property = dataReader["property"].ToString();
                     if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("lore"))) lore = dataReader["lore"].ToString();
-                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("archetype"))) archetype = dataReader["archetype"].ToString();
-                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("ocgStatus"))) rank = dataReader["ocgStatus"].ToString();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("ocgStatus"))) ocgStatus = dataReader["ocgStatus"].ToString();
                     if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("tcgAdvStatus"))) tcgAdvStatus = dataReader["tcgAdvStatus"].ToString();
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("tcgTrnStatus"))) tcgTrnStatus = dataReader["tcgTrnStatus"].ToString();
                     if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("ocgOnly"))) ocgOnly = dataReader["ocgOnly"].ToString().Equals("1");
-                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("tcgTrnStatus"))) tcgOnly = dataReader["tcgOnly"].ToString().Equals("1");
+                    if (!await dataReader.IsDBNullAsync(dataReader.GetOrdinal("tcgOnly"))) tcgOnly = dataReader["tcgOnly"].ToString().Equals("1");
 
                 }
 
@@ -178,26 +271,140 @@ namespace YuGiOhBot.Services
 
             }
 
-            if (tcgOnly) card.Format = "TCG";
-            else if (ocgOnly) card.Format = "OCG";
-            else card.Format = "TCG/OCG";
+            if (cardType.Equals("Monster"))
+            {
 
-            card.Name = name;
-            card.Description = lore;
-            card.IsEffect = cardType.Equals("Trap") || cardType.Equals("Spell") || types.Contains("Effect") || lore.Contains("Pendulum Effect") ? true : false; //yes, there are completely blank pendulum monsters, like Flash Knight
-            card.Level = level;
-            card.LeftPend = pendScale;
-            card.RightPend = pendScale;
-            card.Types = types;
-            card.Archetype = archetype;
-            card.Atk = atk;
-            card.Def = def;
-            card.Race = types.Count > 0 ? types.FirstOrDefault() : string.Empty; //it will always be the first thing declared in types
-            card.Attribute = attribute;
-            card.Prices = await GetPrices(name, realName);
-            card.ImageUrl = await GetImageUrl(name, realName);
+                //if(types.Contains("Link"))
+                if (types.Contains("Xyz"))
+                {
 
-            return card;
+                    var card = new XyzMonster()
+                    {
+                        Name = name,
+                        RealName = realName,
+                        Attribute = attribute,
+                        CardType = cardType,
+                        Types = types,
+                        Rank = rank,
+                        Atk = atk,
+                        Def = def,
+                        Lore = lore,
+                        TcgOnly = tcgOnly,
+                        OcgOnly = ocgOnly,
+                        Archetype = archetype,
+                        HasEffect = types.Contains("Effect"),
+                        ImageUrl = await GetImageUrl(name, realName),
+                        Prices = await GetPrices(name, realName),
+                    };
+
+                    return card;
+
+                }
+                else if (types.Contains("Pendulum"))
+                {
+
+                    var card = new PendulumMonster()
+                    {
+                        Name = name,
+                        RealName = realName,
+                        Attribute = attribute,
+                        CardType = cardType,
+                        Types = types,
+                        Level = level,
+                        PendulumScale = pendScale,
+                        Atk = atk,
+                        Def = def,
+                        Lore = lore,
+                        TcgOnly = tcgOnly,
+                        OcgOnly = ocgOnly,
+                        Archetype = archetype,
+                        HasEffect = types.Contains("Effect"),
+                        ImageUrl = await GetImageUrl(name, realName),
+                        Prices = await GetPrices(name, realName),
+                    };
+
+                    return card;
+
+                }
+                else if (types.Contains("Link"))
+                {
+
+                    var card = new LinkMonster()
+                    {
+                        Name = name,
+                        RealName = realName,
+                        Attribute = attribute,
+                        CardType = cardType,
+                        Types = types,
+                        Links = link,
+                        LinkMarkers = linkMarkers,
+                        Atk = atk,
+                        Lore = lore,
+                        TcgOnly = tcgOnly,
+                        OcgOnly = ocgOnly,
+                        Archetype = archetype,
+                        HasEffect = types.Contains("Effect"),
+                        ImageUrl = await GetImageUrl(name, realName),
+                        Prices = await GetPrices(name, realName),
+                    };
+
+                }
+                else
+                {
+
+                    var card = new RegularMonster()
+                    {
+                        Name = name,
+                        RealName = realName,
+                        Attribute = attribute,
+                        CardType = cardType,
+                        Types = types,
+                        Level = level,
+                        Lore = lore,
+                        Atk = atk,
+                        Def = def,
+                        HasEffect = types.Contains("Effect"),
+                        TcgOnly = tcgOnly,
+                        OcgOnly = ocgOnly,
+                        ImageUrl = await GetImageUrl(name, realName),
+                        Prices = await GetPrices(name, realName),
+                    };
+
+                    return card;
+
+                }
+
+            }
+            else
+            {
+
+                var card = new SpellTrapCard()
+                {
+                    Name = name,
+                    RealName = realName,
+                    CardType = cardType,
+                    Property = property,
+                    Lore = lore,
+                    HasEffect = true,
+                    Archetype = archetype,
+                    TcgOnly = tcgOnly,
+                    OcgOnly = ocgOnly,
+                    ImageUrl = await GetImageUrl(name, realName),
+                    Prices = await GetPrices(name, realName),
+                };
+
+                return card;
+
+            }
+
+            return new YuGiOhCard();
+
+        }
+
+        public async Task<YuGiOhCard> GetRandomCard()
+        {
+
+            throw new NotImplementedException();
 
         }
 
@@ -211,7 +418,7 @@ namespace YuGiOhBot.Services
             {
 
                 var unintentionalSanitization = cardName.Replace(" ", "%");
-                searchCommand.CommandText = IsArchetypeSearch ? $"select name from Card where (name like '%{unintentionalSanitization}%') or (lore like '%{unintentionalSanitization}%')" : $"select name from Card where name like '%{unintentionalSanitization}%'";
+                searchCommand.CommandText = IsArchetypeSearch ? $"select name from Card where (name like '%{unintentionalSanitization}%') or (lore like '%{unintentionalSanitization}%') or (realName like '%{unintentionalSanitization}%'" : $"select name from Card where (name like '%{unintentionalSanitization}%') or (realName like '%{unintentionalSanitization}%')";
 
                 await databaseConnection.OpenAsync();
 
@@ -304,7 +511,8 @@ namespace YuGiOhBot.Services
 
                 if (json.StartsWith("{\"status\":\"fail\""))
                 {
-
+                    
+                    //if card name fails, try with real name
                     if (!string.IsNullOrEmpty(realName))
                     {
 

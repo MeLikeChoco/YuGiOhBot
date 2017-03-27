@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using YuGiOhBot.Services;
+using YuGiOhBot.Services.CardObjects;
 
 namespace YuGiOhBot.Commands
 {
@@ -75,62 +76,56 @@ namespace YuGiOhBot.Commands
 
                 };
 
-                string lastType = card.Types.Last();
                 var organizedDescription = new StringBuilder();
-                organizedDescription.AppendLine($"\n**Format:** {card.Format}");
 
-                if (!string.IsNullOrEmpty(card.CardType)) organizedDescription.AppendLine($"**Card Type:** {card.CardType}");
+                if (!string.IsNullOrEmpty(card.RealName)) organizedDescription.AppendLine($"**Real Name:** {card.RealName}");
 
-                if(!(card.CardType.Equals("Spell") || card.CardType.Equals("Trap")))
+                organizedDescription.AppendLine($"**Format:** {GetFormat(card.TcgOnly, card.OcgOnly)}");
+                organizedDescription.AppendLine($"**Card Type:** {card.CardType}");
+
+                if (card is MonsterCard)
                 {
 
-                    organizedDescription.AppendLine($"**Attribute:** {card.Attribute}");
+                    var monster = card as MonsterCard;
+                    organizedDescription.AppendLine($"**Attribute:** {monster.Attribute}");
 
-                    if (card.Types.Contains("Xyz")) organizedDescription.AppendLine($"**Rank:** {card.Level}");
-                    else organizedDescription.AppendLine($"**Level:** {card.Level}");
+                    if (monster is XyzMonster)
+                    {
+                        var xyz = monster as XyzMonster;
+                        organizedDescription.AppendLine($"**Rank:** {xyz.Rank}");
+                    }
+                    else if (monster is LinkMonster)
+                    {
+                        var link = monster as LinkMonster;
+                        organizedDescription.AppendLine($"**Links:** {link.Links}");
+                        organizedDescription.AppendLine($"**Link Markers:** {link.LinkMarkers}");
+                    }
+                    else
+                    {
+                        var regular = monster as RegularMonster;
+                        organizedDescription.AppendLine($"**Level:** {regular.Level}");
+                    }
 
-                    if (!string.IsNullOrEmpty(card.LeftPend)) organizedDescription.AppendLine($"**Pendulum Scale:** {card.LeftPend}");
-
-                    organizedDescription.AppendLine($"**Types:** {string.Join(" / ", card.Types)}");
+                    if (monster is PendulumMonster)
+                    {
+                        var pendulum = monster as PendulumMonster;
+                        organizedDescription.AppendLine($"**Scale:** {pendulum.PendulumScale}");
+                    }
 
                 }
+                else
+                {
 
-                //if (!string.IsNullOrEmpty(card.Types.FirstOrDefault())) organizedDescription.AppendLine($"**Types:** {string.Join(" / ", card.Types)}");
+                    var spelltrap = card as SpellTrapCard;
+                    organizedDescription.AppendLine($"**Property:** {spelltrap.Property}");
 
-                //if the card even has a level
-                //if (!string.IsNullOrEmpty(card.Level))
-                //{
-
-                //    if (card.Types.Contains("Xyz")) organizedDescription.AppendLine($"**Rank:** {card.Level}");
-                //    else organizedDescription.AppendLine($"**Level:** {card.Level}");
-
-                //}
-
-                //if (!string.IsNullOrEmpty(card.LeftPend))
-                //{
-
-                //    //for now only 1 value is needed because there are no cards with different pendulum
-                //    //values on both ends (for now of course, you never know)
-                //    organizedDescription.AppendLine($"**Pedulum Scale:** {card.LeftPend}");
-                //    //organizedDescription.AppendLine($"**Left Pedulum Scale:** {card.LeftPend}");
-                //    //organizedDescription.AppendLine($"**Right Pedulum Scale:** {card.RightPend}");
-
-                //}
-
-                ////if the card is not a spell or a trap
-                //if (!(card.CardType.Equals("Spell") || card.CardType.Equals("Trap")))
-                //{
-
-                //    organizedDescription.AppendLine($"**Attribute:** {card.Attribute}");
-                //    organizedDescription.AppendLine($"**Race:** {card.Race}");
-
-                //}
+                }
 
                 eBuilder = new EmbedBuilder()
                 {
 
                     Author = authorBuilder,
-                    Color = WhatColorIsTheCard(card.Types, card.Name, card.CardType),
+                    Color = WhatColorIsTheCard(card),
                     ImageUrl = card.ImageUrl,
                     //ThumbnailUrl = card.ImageUrl,
                     Title = card.Name,
@@ -141,44 +136,49 @@ namespace YuGiOhBot.Commands
 
                 string description;
 
-                if (card.Description.StartsWith("Pendulum Effect"))
+                if (card.Lore.StartsWith("Pendulum Effect")) //not all pendulum monsters have an effect
                 {
 
-                    var tempArray = card.Description.Split(new string[] { "Monster Effect" }, StringSplitOptions.None);
+                    var tempArray = card.Lore.Split(new string[] { "Monster Effect" }, StringSplitOptions.None);
                     description = "__Pendulum Effect__\n" + tempArray[0].Replace("Pendulum Effect", "").Replace("\" ", "\"").Trim() + "\n__Monster Effect__\n" + tempArray[1].Replace("Monster Effect", "").Replace("\" ", "\"").Trim();
 
                 }
-                else description = card.Description;
+                else description = card.Lore;
 
                 eBuilder.AddField(x =>
                 {
 
-                    x.Name = card.IsEffect ? "Effect" : "Description";
+                    x.Name = card.HasEffect ? "Effect" : "Description";
                     x.Value = description;
                     x.IsInline = false;
 
                 });
 
-                if (!(string.IsNullOrEmpty(card.Atk) || string.IsNullOrEmpty(card.Def)))
+                if (card is MonsterCard)
                 {
 
+                    var monster = card as MonsterCard;
+                    
                     eBuilder.AddField(x =>
                     {
-
                         x.Name = "Attack";
-                        x.Value = card.Atk;
-                        x.IsInline = true;
-
+                        x.Value = monster.Atk;
+                        x.IsInline = !(monster is LinkMonster);
                     });
 
-                    eBuilder.AddField(x =>
+                    if(!(monster is LinkMonster))
                     {
 
-                        x.Name = "Defense";
-                        x.Value = card.Def;
-                        x.IsInline = true;
+                        var regular = monster as RegularMonster;
 
-                    });
+                        eBuilder.AddField(x =>
+                        {
+                            x.Name = "Defense";
+                            x.Value = regular.Def;
+                            x.IsInline = true;
+                        });
+
+                    }
 
                 }
 
@@ -334,39 +334,48 @@ namespace YuGiOhBot.Commands
 
                 };
 
-                string lastType = card.Types.Last();
                 var organizedDescription = new StringBuilder();
-                organizedDescription.AppendLine($"\n**Format:** {card.Format}");
 
-                if (!string.IsNullOrEmpty(card.CardType)) organizedDescription.AppendLine($"**Card Type:** {card.CardType}");
-                if (!string.IsNullOrEmpty(card.Types.FirstOrDefault())) organizedDescription.AppendLine($"**Types:** {string.Join(" / ", card.Types)}");
+                if (!string.IsNullOrEmpty(card.RealName)) organizedDescription.AppendLine($"**Real Name:** {card.RealName}");
 
-                //if the card even has a level
-                if (!string.IsNullOrEmpty(card.Level))
+                organizedDescription.AppendLine($"**Format:** {GetFormat(card.TcgOnly, card.OcgOnly)}");
+                organizedDescription.AppendLine($"**Card Type:** {card.CardType}");
+
+                if (card is MonsterCard)
                 {
 
-                    if (card.Types.Contains("Xyz")) organizedDescription.AppendLine($"**Rank:** {card.Level}");
-                    else organizedDescription.AppendLine($"**Level:** {card.Level}");
+                    var monster = card as MonsterCard;
+                    organizedDescription.AppendLine($"**Attribute:** {monster.Attribute}");
+
+                    if (monster is XyzMonster)
+                    {
+                        var xyz = monster as XyzMonster;
+                        organizedDescription.AppendLine($"**Rank:** {xyz.Rank}");
+                    }
+                    else if (monster is LinkMonster)
+                    {
+                        var link = monster as LinkMonster;
+                        organizedDescription.AppendLine($"**Links:** {link.Links}");
+                        organizedDescription.AppendLine($"**Link Markers:** {link.LinkMarkers}");
+                    }
+                    else
+                    {
+                        var regular = monster as RegularMonster;
+                        organizedDescription.AppendLine($"**Level:** {regular.Level}");
+                    }
+
+                    if (monster is PendulumMonster)
+                    {
+                        var pendulum = monster as PendulumMonster;
+                        organizedDescription.AppendLine($"**Scale:** {pendulum.PendulumScale}");
+                    }
 
                 }
-
-                if (!string.IsNullOrEmpty(card.LeftPend))
+                else
                 {
 
-                    //for now only 1 value is needed because there are no cards with different pendulum
-                    //values on both ends (for now of course, you never know)
-                    organizedDescription.AppendLine($"**Pedulum Scale:** {card.LeftPend}");
-                    //organizedDescription.AppendLine($"**Left Pedulum Scale:** {card.LeftPend}");
-                    //organizedDescription.AppendLine($"**Right Pedulum Scale:** {card.RightPend}");
-
-                }
-
-                //if the card is not a spell or a trap
-                if (!(card.CardType.Equals("Spell") || card.CardType.Equals("Trap")))
-                {
-
-                    organizedDescription.AppendLine($"**Attribute:** {card.Attribute}");
-                    organizedDescription.AppendLine($"**Race:** {card.Race}");
+                    var spelltrap = card as SpellTrapCard;
+                    organizedDescription.AppendLine($"**Property:** {spelltrap.Property}");
 
                 }
 
@@ -374,7 +383,7 @@ namespace YuGiOhBot.Commands
                 {
 
                     Author = authorBuilder,
-                    Color = WhatColorIsTheCard(card.Types, card.Name, card.CardType),
+                    Color = WhatColorIsTheCard(card),
                     ImageUrl = card.ImageUrl,
                     //ThumbnailUrl = card.ImageUrl,
                     Title = card.Name,
@@ -385,44 +394,49 @@ namespace YuGiOhBot.Commands
 
                 string description;
 
-                if (card.Description.StartsWith("Pendulum Effect"))
+                if (card.Lore.StartsWith("Pendulum Effect")) //not all pendulum monsters have an effect
                 {
 
-                    var tempArray = card.Description.Split(new string[] { "Monster Effect" }, StringSplitOptions.None);
-                    description = "__Pendulum Effect__\n" + tempArray[0].Replace("Pendulum Effect", "").Trim() + "\n__Monster Effect__\n" + tempArray[1].Replace("Monster Effect", "").Trim();
+                    var tempArray = card.Lore.Split(new string[] { "Monster Effect" }, StringSplitOptions.None);
+                    description = "__Pendulum Effect__\n" + tempArray[0].Replace("Pendulum Effect", "").Replace("\" ", "\"").Trim() + "\n__Monster Effect__\n" + tempArray[1].Replace("Monster Effect", "").Replace("\" ", "\"").Trim();
 
                 }
-                else description = card.Description;
+                else description = card.Lore;
 
                 eBuilder.AddField(x =>
                 {
 
-                    x.Name = card.IsEffect ? "Effect" : "Description";
+                    x.Name = card.HasEffect ? "Effect" : "Description";
                     x.Value = description;
                     x.IsInline = false;
 
                 });
 
-                if (!(string.IsNullOrEmpty(card.Atk) || string.IsNullOrEmpty(card.Def)))
+                if (card is MonsterCard)
                 {
 
+                    var monster = card as MonsterCard;
+
                     eBuilder.AddField(x =>
                     {
-
                         x.Name = "Attack";
-                        x.Value = card.Atk;
-                        x.IsInline = true;
-
+                        x.Value = monster.Atk;
+                        x.IsInline = !(monster is LinkMonster);
                     });
 
-                    eBuilder.AddField(x =>
+                    if (!(monster is LinkMonster))
                     {
 
-                        x.Name = "Defense";
-                        x.Value = card.Def;
-                        x.IsInline = true;
+                        var regular = monster as RegularMonster;
 
-                    });
+                        eBuilder.AddField(x =>
+                        {
+                            x.Name = "Defense";
+                            x.Value = regular.Def;
+                            x.IsInline = true;
+                        });
+
+                    }
 
                 }
 
@@ -515,7 +529,7 @@ namespace YuGiOhBot.Commands
                     });
 
                 }
-                
+
                 CacheService.YuGiOhCardCache.TryAdd(card.Name.ToLower(), eBuilder);
 
             }
@@ -660,7 +674,7 @@ namespace YuGiOhBot.Commands
             StringBuilder organizedResults;
             List<string> searchResults;
 
-            using (var typingState =  Context.Channel.EnterTypingState())
+            using (var typingState = Context.Channel.EnterTypingState())
             {
 
                 //<card names>
@@ -725,22 +739,43 @@ namespace YuGiOhBot.Commands
 
         }
 
-        private Color WhatColorIsTheCard(List<string> cardTypes, string cardName, string cardType)
+        private string GetFormat(bool tcgOnly, bool ocgOnly)
         {
 
-            if (cardName.Equals("Slifer the Sky Dragon")) return new Color(255, 0, 0);
-            else if (cardName.Equals("The Winged Dragon of Ra")) return new Color(255, 215, 0);
-            else if (cardName.Equals("Obelisk the Tormentor")) return new Color(50, 50, 153);
-            else if (cardTypes.Contains("Pendulum")) return new Color(175, 219, 205);
-            else if (cardType.Equals("Spell")) return new Color(29, 158, 116);
-            else if (cardType.Equals("Trap")) return new Color(188, 90, 132);
-            else if (cardTypes.Contains("XYZ")) return new Color(0, 0, 0);
-            else if (cardTypes.Contains("Token")) return new Color(192, 192, 192);
-            else if (cardTypes.Contains("Synchro")) return new Color(204, 204, 204);
-            else if (cardTypes.Contains("Fusion")) return new Color(160, 134, 183);
-            else if (cardTypes.Contains("Ritual")) return new Color(157, 181, 204);
-            else if (cardTypes.Contains("Effect")) return new Color(174, 121, 66);
-            else return new Color(216, 171, 12);
+            if (tcgOnly || ocgOnly)
+            {
+                if (ocgOnly) return "OCG";
+                else return "TCG";
+            }
+            else return "TCG/OCG";
+
+        }
+
+        private Color WhatColorIsTheCard(YuGiOhCard card)
+        {
+
+            if (card.Name.Equals("Slifer the Sky Dragon")) return new Color(255, 0, 0);
+            else if (card.Name.Equals("The Winged Dragon of Ra")) return new Color(255, 215, 0);
+            else if (card.Name.Equals("Obelisk the Tormentor")) return new Color(50, 50, 153);
+
+            if (card.CardType.Equals("Trap")) return new Color(188, 90, 132);
+            else if (card.CardType.Equals("Spell")) return new Color(188, 90, 132);
+
+            if (card is PendulumMonster) return new Color(175, 219, 205);
+            else if (card is XyzMonster) return new Color(0, 0, 0);
+            else if (card is RegularMonster)
+            {
+
+                var monster = card as RegularMonster;
+                if (monster.Types.Contains("Synchro")) return new Color(204, 204, 204);
+                else if (monster.Types.Contains("Fusion")) return new Color(160, 134, 183);
+                else if (monster.Types.Contains("Ritual")) return new Color(157, 181, 204);
+                else if (monster.Types.Contains("Effect")) return new Color(174, 121, 66);
+                else if (monster.Types.Contains("Token")) return new Color(192, 192, 192);
+
+            }
+
+            return new Color(216, 171, 12);
 
         }
 
