@@ -266,3 +266,4 @@ __pycache__/
 /rsakey
 /privatekeykapaa.ppk
 /YuGiOhBot/Databases/guildinformation.db
+/YuGiOhBot/Core/Client.cs
