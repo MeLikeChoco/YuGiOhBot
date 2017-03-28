@@ -267,3 +267,4 @@ __pycache__/
 /privatekeykapaa.ppk
 /YuGiOhBot/Databases/guildinformation.db
 /YuGiOhBot/Core/Client.cs
+/YuGiOhBot/Databases/YgoSqliteDb
