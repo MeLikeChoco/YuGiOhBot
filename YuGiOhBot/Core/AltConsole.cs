@@ -9,6 +9,7 @@ namespace YuGiOhBot.Core
     public static class AltConsole
     {
 
+        //if anything is uncessarily async, this would be it
         public static async Task PrintAsync(string firstBracket, string secondBracket, string message, Exception exception = null)
         {
 

@@ -50,7 +50,7 @@ namespace YuGiOhBot.Commands
 
                 YuGiOhCard card = await _service.GetCard(cardName);
 
-                if (card.Name.Equals(string.Empty))
+                if (string.IsNullOrEmpty(card.Name))
                 {
 
                     await ReplyAsync($"No card by the name {cardName} was found!");
@@ -139,8 +139,16 @@ namespace YuGiOhBot.Commands
                 if (card.Lore.StartsWith("Pendulum Effect")) //not all pendulum monsters have an effect
                 {
 
+                    var monster = card as MonsterCard;
                     var tempArray = card.Lore.Split(new string[] { "Monster Effect" }, StringSplitOptions.None);
-                    description = "__Pendulum Effect__\n" + tempArray[0].Replace("Pendulum Effect", "").Replace("\" ", "\"").Trim() + "\n__Monster Effect__\n" + tempArray[1].Replace("Monster Effect", "").Replace("\" ", "\"").Trim();
+                    description = $"{monster.Types}\n" + "__Pendulum Effect__\n" + tempArray[0].Replace("Pendulum Effect", "").Replace("\" ", "\"").Trim() + "\n__Monster Effect__\n" + tempArray[1].Replace("Monster Effect", "").Replace("\" ", "\"").Trim();
+
+                }
+                else if (card is MonsterCard)
+                {
+
+                    var monster = card as MonsterCard;
+                    description = $"{monster.Types}\n" + card.Lore;
 
                 }
                 else description = card.Lore;
@@ -168,13 +176,11 @@ namespace YuGiOhBot.Commands
 
                     if(!(monster is LinkMonster))
                     {
-
-                        var regular = monster as RegularMonster;
-
+                        
                         eBuilder.AddField(x =>
                         {
                             x.Name = "Defense";
-                            x.Value = regular.Def;
+                            x.Value = monster.Def;
                             x.IsInline = true;
                         });
 
@@ -209,14 +215,14 @@ namespace YuGiOhBot.Commands
                         organizedPrices.Append("**No prices to show.**");
 
                     }
-                    else if (card.Prices.data.Count > 8)
+                    else if (card.Prices.data.Count > 4)
                     {
 
                         List<Datum> prices = card.Prices.data;
 
-                        organizedPrices.AppendLine("**Showing the first 7 prices due to too many available.**");
+                        organizedPrices.AppendLine("**Showing the first 3 prices due to too many available.**");
 
-                        for (int counter = 0; counter < 8; counter++)
+                        for (int counter = 0; counter < 3; counter++)
                         {
 
                             Datum data = prices[counter];
@@ -231,7 +237,7 @@ namespace YuGiOhBot.Commands
                         }
 
                     }
-                    else if (card.Prices.data.Count < 8)
+                    else if (card.Prices.data.Count < 4)
                     {
 
                         foreach (Datum data in card.Prices.data)
@@ -467,14 +473,14 @@ namespace YuGiOhBot.Commands
                         organizedPrices.Append("**No prices to show.**");
 
                     }
-                    else if (card.Prices.data.Count > 8)
+                    else if (card.Prices.data.Count > 4)
                     {
 
                         List<Datum> prices = card.Prices.data;
 
                         organizedPrices.AppendLine("**Showing the first 7 prices due to too many available.**");
 
-                        for (int counter = 0; counter < 8; counter++)
+                        for (int counter = 0; counter < 3; counter++)
                         {
 
                             Datum data = prices[counter];
@@ -489,7 +495,249 @@ namespace YuGiOhBot.Commands
                         }
 
                     }
-                    else if (card.Prices.data.Count < 8)
+                    else if (card.Prices.data.Count < 4)
+                    {
+
+                        foreach (Datum data in card.Prices.data)
+                        {
+
+                            organizedPrices.AppendLine($"**Name:** {data.name}");
+                            organizedPrices.AppendLine($"\t\tRarity: {data.rarity}");
+                            //this is what redundancy looks like people, lmfao
+
+                            if (data.price_data.data == null)
+                            {
+
+                                organizedPrices.AppendLine($"\t\tError: No prices to display for this card variant.");
+
+                            }
+                            else
+                            {
+
+
+                                organizedPrices.AppendLine($"\t\tHigh: ${data.price_data.data.prices.high.ToString("0.00")}");
+                                organizedPrices.AppendLine($"\t\tLow: ${data.price_data.data.prices.low.ToString("0.00")}");
+                                organizedPrices.AppendLine($"\t\tAverage: ${data.price_data.data.prices.average.ToString("0.00")}");
+
+                            }
+
+                        }
+
+                    }
+
+                    eBuilder.AddField(x =>
+                    {
+
+                        x.Name = "Prices";
+                        x.Value = organizedPrices.ToString();
+                        x.IsInline = false;
+
+                    });
+
+                }
+
+                CacheService.YuGiOhCardCache.TryAdd(card.Name.ToLower(), eBuilder);
+
+            }
+
+            await ReplyAsync("", embed: eBuilder);
+
+        }
+
+        [Command("rcard"), Alias("r", "random", "rc")]
+        [Summary("Returns a random card!")]
+        public async Task RandomCardCommand()
+        {
+
+            EmbedBuilder eBuilder;
+
+            using (var typingState = Context.Channel.EnterTypingState())
+            {
+
+                YuGiOhCard card = await _service.GetRandomCard();
+
+                if (CacheService.YuGiOhCardCache.TryGetValue(card.Name.ToLower(), out eBuilder))
+                {
+
+                    await ReplyAsync("", embed: eBuilder);
+                    typingState.Dispose();
+                    return;
+
+                }
+
+                var authorBuilder = new EmbedAuthorBuilder()
+                {
+
+                    Name = "YuGiOh",
+                    IconUrl = "http://card-masters.com/cardmasters/wp-content/uploads/2013/08/yugioh-product-icon-lg.png",
+                    Url = "http://www.yugioh-card.com/en/"
+
+                };
+
+                var footerBuilder = new EmbedFooterBuilder()
+                {
+
+                    Text = "It's time to d-d-d-d-duel | Database made by chinhodado",
+                    IconUrl = "http://i722.photobucket.com/albums/ww227/omar_alami/icon_gold_classic_zps66eae1c7.png"
+
+                };
+
+                var organizedDescription = new StringBuilder();
+
+                if (!string.IsNullOrEmpty(card.RealName)) organizedDescription.AppendLine($"**Real Name:** {card.RealName}");
+
+                organizedDescription.AppendLine($"**Format:** {GetFormat(card.TcgOnly, card.OcgOnly)}");
+                organizedDescription.AppendLine($"**Card Type:** {card.CardType}");
+
+                if (card is MonsterCard)
+                {
+
+                    var monster = card as MonsterCard;
+                    organizedDescription.AppendLine($"**Attribute:** {monster.Attribute}");
+
+                    if (monster is XyzMonster)
+                    {
+                        var xyz = monster as XyzMonster;
+                        organizedDescription.AppendLine($"**Rank:** {xyz.Rank}");
+                    }
+                    else if (monster is LinkMonster)
+                    {
+                        var link = monster as LinkMonster;
+                        organizedDescription.AppendLine($"**Links:** {link.Links}");
+                        organizedDescription.AppendLine($"**Link Markers:** {link.LinkMarkers}");
+                    }
+                    else
+                    {
+                        var regular = monster as RegularMonster;
+                        organizedDescription.AppendLine($"**Level:** {regular.Level}");
+                    }
+
+                    if (monster is PendulumMonster)
+                    {
+                        var pendulum = monster as PendulumMonster;
+                        organizedDescription.AppendLine($"**Scale:** {pendulum.PendulumScale}");
+                    }
+
+                }
+                else
+                {
+
+                    var spelltrap = card as SpellTrapCard;
+                    organizedDescription.AppendLine($"**Property:** {spelltrap.Property}");
+
+                }
+
+                eBuilder = new EmbedBuilder()
+                {
+
+                    Author = authorBuilder,
+                    Color = WhatColorIsTheCard(card),
+                    ImageUrl = card.ImageUrl,
+                    //ThumbnailUrl = card.ImageUrl,
+                    Title = card.Name,
+                    Description = organizedDescription.ToString(),
+                    Footer = footerBuilder
+
+                };
+
+                string description;
+
+                if (card.Lore.StartsWith("Pendulum Effect")) //not all pendulum monsters have an effect
+                {
+
+                    var tempArray = card.Lore.Split(new string[] { "Monster Effect" }, StringSplitOptions.None);
+                    description = "__Pendulum Effect__\n" + tempArray[0].Replace("Pendulum Effect", "").Replace("\" ", "\"").Trim() + "\n__Monster Effect__\n" + tempArray[1].Replace("Monster Effect", "").Replace("\" ", "\"").Trim();
+
+                }
+                else description = card.Lore;
+
+                eBuilder.AddField(x =>
+                {
+
+                    x.Name = card.HasEffect ? "Effect" : "Description";
+                    x.Value = description;
+                    x.IsInline = false;
+
+                });
+
+                if (card is MonsterCard)
+                {
+
+                    var monster = card as MonsterCard;
+
+                    eBuilder.AddField(x =>
+                    {
+                        x.Name = "Attack";
+                        x.Value = monster.Atk;
+                        x.IsInline = !(monster is LinkMonster);
+                    });
+
+                    if (!(monster is LinkMonster))
+                    {
+
+                        var regular = monster as RegularMonster;
+
+                        eBuilder.AddField(x =>
+                        {
+                            x.Name = "Defense";
+                            x.Value = regular.Def;
+                            x.IsInline = true;
+                        });
+
+                    }
+
+                }
+
+                if (!string.IsNullOrEmpty(card.Archetype))
+                {
+
+                    eBuilder.AddField(x =>
+                    {
+
+                        x.Name = "Archetype(s)";
+                        x.Value = card.Archetype;
+                        x.IsInline = false;
+
+                    });
+
+                }
+
+                if (card.Prices.data != null)
+                {
+
+                    var organizedPrices = new StringBuilder();
+
+                    //debug usage
+                    //card.Prices.data.ForEach(d => Console.WriteLine(d.price_data.data.prices.average));
+                    if (card.Prices.data == null)
+                    {
+
+                        organizedPrices.Append("**No prices to show.**");
+
+                    }
+                    else if (card.Prices.data.Count > 4)
+                    {
+
+                        List<Datum> prices = card.Prices.data;
+
+                        organizedPrices.AppendLine("**Showing the first 3 prices due to too many available.**");
+
+                        for (int counter = 0; counter < 3; counter++)
+                        {
+
+                            Datum data = prices[counter];
+
+                            organizedPrices.AppendLine($"**Name:** {data.name}");
+                            organizedPrices.AppendLine($"\t\tRarity: {data.rarity}");
+                            //this is what redundancy looks like people, lmfao
+                            organizedPrices.AppendLine($"\t\tHigh: ${data.price_data.data.prices.high.ToString("0.00")}");
+                            organizedPrices.AppendLine($"\t\tLow: ${data.price_data.data.prices.low.ToString("0.00")}");
+                            organizedPrices.AppendLine($"\t\tAverage: ${data.price_data.data.prices.average.ToString("0.00")}");
+
+                        }
+
+                    }
+                    else if (card.Prices.data.Count < 4)
                     {
 
                         foreach (Datum data in card.Prices.data)
@@ -543,6 +791,14 @@ namespace YuGiOhBot.Commands
         public async Task CardSearchCommand([Remainder]string search)
         {
 
+            if (string.IsNullOrEmpty(search))
+            {
+
+                await ReplyAsync("Please search for something or else I will search the purple realm.");
+                return;
+
+            }
+
             StringBuilder organizedResults;
             List<string> searchResults;
 
@@ -550,7 +806,7 @@ namespace YuGiOhBot.Commands
             {
 
                 //<card names>
-                searchResults = await _service.SearchCards(search, false);
+                searchResults = await _service.SearchCards(search);
 
                 if (searchResults.Count == 0)
                 {
@@ -606,6 +862,14 @@ namespace YuGiOhBot.Commands
         [Summary("A lazy search of all cards that CONTAIN the words entered, it may be not be in any particular order")]
         public async Task LazySearchCommand([Remainder]string search)
         {
+
+            if (string.IsNullOrEmpty(search))
+            {
+
+                await ReplyAsync("Please don't enter the Shadow Realm as a search.");
+                return;
+
+            }
 
             StringBuilder organizedResults;
             List<string> searchResults;
@@ -671,14 +935,21 @@ namespace YuGiOhBot.Commands
         public async Task ArchetypeSearchCommand([Remainder]string archetype)
         {
 
+            if (string.IsNullOrEmpty(archetype))
+            {
+
+                await ReplyAsync("There is no archetype with a blank name, unless it's Marik's fantasies.");
+                return;
+
+            }
+
             StringBuilder organizedResults;
             List<string> searchResults;
 
             using (var typingState = Context.Channel.EnterTypingState())
             {
-
-                //<card names>
-                searchResults = await _service.SearchCards(archetype, true);
+                
+                searchResults = await _service.ArchetypeSearch(archetype);
 
                 if (searchResults.Count == 0)
                 {
@@ -730,12 +1001,109 @@ namespace YuGiOhBot.Commands
 
         }
 
-        [Command("random"), Alias("r")]
-        [Summary("Picks a random card to display, good for random decks")]
-        public async Task RandomCardCommand()
+        [Command("banlist"), Alias("bans")]
+        [Summary("Returns the current banlist")]
+        public async Task BanListCommand(string format = "")
         {
 
+            if(string.IsNullOrEmpty(format) || !int.TryParse(format, out int formatInt))
+            {
 
+                await ReplyAsync("That is not a valid format! ```http\n1 -> OCG\n2 -> TCG ADV\n3 -> TCG TRN```");
+                return;
+
+            }
+
+            if(!CacheService.DMChannelCache.TryGetValue(Context.User.Id, out IDMChannel channel))
+            {
+
+                var dm = await Context.User.CreateDMChannelAsync();
+                CacheService.DMChannelCache.TryAdd(Context.User.Id, dm);
+                channel = dm;
+
+            }
+
+            await ReplyAsync("Sending your dms to the purple realm...");
+
+            switch (formatInt)
+            {
+
+                case 1:
+                    {
+                                           
+                        var forbidden = $"```OCG Forbidden\n\n";
+                        _service.OcgBanList.TryGetValue("Forbidden", out List<string> forbiddenList);
+                        forbiddenList.ForEach(card => forbidden += $"{card}\n");
+                        forbidden += "```";
+
+                        var limited = $"```OCG Limited\n\n";
+                        _service.OcgBanList.TryGetValue("Limited", out List<string> limitedList);
+                        limitedList.ForEach(card => limited += $"{card}\n");
+                        limited += "```";
+
+                        var semilimited = $"```OCG Semi-Limited\n";
+                        _service.OcgBanList.TryGetValue("Semi-Limited", out List<string> semiList);
+                        semiList.ForEach(card => semilimited += $"{card}\n");
+                        semilimited += "```";
+
+                        await channel.SendMessageAsync(forbidden);
+                        await channel.SendMessageAsync(limited);
+                        await channel.SendMessageAsync(semilimited);
+                        break;
+
+                    }
+                case 2:
+                    {
+
+                        var forbidden = $"```TCG ADV Forbidden\n\n";
+                        _service.OcgBanList.TryGetValue("Forbidden", out List<string> forbiddenList);
+                        forbiddenList.ForEach(card => forbidden += $"{card}\n");
+                        forbidden += "```";
+
+                        var limited = $"```TCG ADV Limited\n\n";
+                        _service.OcgBanList.TryGetValue("Limited", out List<string> limitedList);
+                        limitedList.ForEach(card => limited += $"{card}\n");
+                        limited += "```";
+
+                        var semilimited = $"```TCG ADV Semi-Limited\n\n";
+                        _service.OcgBanList.TryGetValue("Semi-Limited", out List<string> semiList);
+                        semiList.ForEach(card => semilimited += $"{card}\n");
+                        semilimited += "```";
+
+                        await channel.SendMessageAsync(forbidden);
+                        await channel.SendMessageAsync(limited);
+                        await channel.SendMessageAsync(semilimited);
+                        break;
+
+                    }
+                case 3:
+                    {
+
+                        var forbidden = $"```TCG Traditional Forbidden\n\n";
+                        _service.OcgBanList.TryGetValue("Forbidden", out List<string> forbiddenList);
+                        forbiddenList.ForEach(card => forbidden += $"{card}\n");
+                        forbidden += "```";
+
+                        var limited = $"```TCG Traditional Limited\n\n";
+                        _service.OcgBanList.TryGetValue("Limited", out List<string> limitedList);
+                        limitedList.ForEach(card => limited += $"{card}\n");
+                        limited += "```";
+
+                        var semilimited = $"```TCG Traditional Semi-Limited\n\n";
+                        _service.OcgBanList.TryGetValue("Semi-Limited", out List<string> semiList);
+                        semiList.ForEach(card => semilimited += $"{card}\n");
+                        semilimited += "```";
+
+                        await channel.SendMessageAsync(forbidden);
+                        await channel.SendMessageAsync(limited);
+                        await channel.SendMessageAsync(semilimited);
+                        break;
+
+                    }
+                default:
+                    break;
+
+            }
 
         }
 
@@ -759,10 +1127,10 @@ namespace YuGiOhBot.Commands
             else if (card.Name.Equals("Obelisk the Tormentor")) return new Color(50, 50, 153);
 
             if (card.CardType.Equals("Trap")) return new Color(188, 90, 132);
-            else if (card.CardType.Equals("Spell")) return new Color(188, 90, 132);
+            else if (card.CardType.Equals("Spell")) return new Color(29, 158, 116);
 
             if (card is PendulumMonster) return new Color(175, 219, 205);
-            else if (card is XyzMonster) return new Color(0, 0, 0);
+            else if (card is XyzMonster) return new Color(0, 0, 1);
             else if (card is RegularMonster)
             {
 

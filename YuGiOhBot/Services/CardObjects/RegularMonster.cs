@@ -10,7 +10,6 @@ namespace YuGiOhBot.Services.CardObjects
     {
 
         public string Level { get; set; } = string.Empty;
-        public string Def { get; set; } = string.Empty;
 
     }
 }

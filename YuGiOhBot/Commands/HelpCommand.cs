@@ -33,10 +33,11 @@ namespace YuGiOhBot.Commands
 
             organizedHelp.AppendLine($"{"Commands".PadRight(30, ' ')} | Description");
             organizedHelp.AppendLine($"{"".PadRight(56, '-')}");
-            organizedHelp.AppendLine($"Note: Capitalization does not matter");
+            organizedHelp.AppendLine($"Note >> Capitalization does not matter");
             organizedHelp.AppendLine($"{"".PadRight(56, '-')}");
             organizedHelp.AppendLine($"{"card <card name>".PadRight(30, ' ')} | Searches card based on card name");
             organizedHelp.AppendLine($"{"lcard <card name>".PadRight(30, ' ')} | Coined lazy card, word order does not matter, gets the first available result");
+            organizedHelp.AppendLine($"{"rcard".PadRight(30, ' ')} | Returns a random card. Great for making random decks");
             organizedHelp.AppendLine($"{"search <search>".PadRight(30, ' ')} | Searches for cards based on search terms given");
             organizedHelp.AppendLine($"{"lsearch <search>".PadRight(30, ' ')} | Coined lazy search, word order does not matter, capitalization not needed");
             organizedHelp.AppendLine($"{"archetype <search>".PadRight(30, ' ')} | Attemps an archetype search");
@@ -44,8 +45,10 @@ namespace YuGiOhBot.Commands
             organizedHelp.AppendLine($"{"info".PadRight(30, ' ')} | Returns information on bot");
             organizedHelp.AppendLine($"{"uptime".PadRight(30, ' ')} | Returns the uptime of the bot");
             organizedHelp.AppendLine($"{"ping".PadRight(30, ' ')} | Returns the latency between bot and guild");
+            organizedHelp.AppendLine($"{"help".PadRight(30, ' ')} | The defacto help command");
+            organizedHelp.AppendLine($"{"feedback <feedback>".PadRight(30, ' ')} | Sends feedback to {Context.Client.GetApplicationInfoAsync().Result.Owner.Username}");
 
-            if(!(Context.Channel is IDMChannel) && (Context.User as SocketGuildUser).GuildPermissions.Administrator)
+            if (!(Context.Channel is IDMChannel) && (Context.User as SocketGuildUser).GuildPermissions.Administrator)
             {
 
                 organizedHelp.AppendLine($"{"prefix <prefix>".PadRight(30, ' ')} | Sets prefix for guild");

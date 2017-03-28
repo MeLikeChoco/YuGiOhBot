@@ -12,6 +12,7 @@ namespace YuGiOhBot.Services.CardObjects
         public string Attribute { get; set; } = string.Empty;
         public string Types { get; set; } = string.Empty;
         public string Atk { get; set; } = string.Empty;
+        public string Def { get; set; } = string.Empty;
 
     }
 }

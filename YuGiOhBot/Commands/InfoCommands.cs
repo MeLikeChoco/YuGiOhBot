@@ -25,6 +25,24 @@ namespace YuGiOhBot.Commands
 
         }
 
+        [Command("feedback")]
+        [Summary("Send feedback")]
+        public async Task FeedBackCommand([Remainder]string feedback)
+        {
+
+            if(feedback.Count() > 451)
+            {
+
+                await ReplyAsync("Shorter feedback please or it gets lost in the shadow realm.");
+                return;
+
+            }
+
+            var feedbackChannel = await Context.Client.GetChannelAsync(296117398132752384);
+            await (feedbackChannel as SocketTextChannel).SendMessageAsync($"{Context.User.Username} from {Context.Guild.Name} sent a feedback!\n{feedback}");
+
+        }
+
         [Command("prefix")]
         [Summary("Change command prefix")]
         [RequireContext(ContextType.Guild)]
