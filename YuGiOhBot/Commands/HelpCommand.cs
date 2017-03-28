@@ -39,7 +39,7 @@ namespace YuGiOhBot.Commands
             organizedHelp.AppendLine($"{"lcard <card name>".PadRight(30, ' ')} | Coined lazy card, word order does not matter, gets the first available result");
             organizedHelp.AppendLine($"{"rcard".PadRight(30, ' ')} | Returns a random card. Great for making random decks");
             organizedHelp.AppendLine($"{"search <search>".PadRight(30, ' ')} | Searches for cards based on search terms given");
-            organizedHelp.AppendLine($"{"lsearch <search>".PadRight(30, ' ')} | Coined lazy search, word order does not matter, capitalization not needed");
+            organizedHelp.AppendLine($"{"lsearch <search>".PadRight(30, ' ')} | Coined lazy search, word order does not matter");
             organizedHelp.AppendLine($"{"archetype <search>".PadRight(30, ' ')} | Attemps an archetype search");
             organizedHelp.AppendLine($"{"invite".PadRight(30, ' ')} | Sends invite link to dm");
             organizedHelp.AppendLine($"{"info".PadRight(30, ' ')} | Returns information on bot");
