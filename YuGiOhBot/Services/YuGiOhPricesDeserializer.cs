@@ -15,7 +15,6 @@ namespace YuGiOhBot.Services
 
     public class Data
     {
-        public List<string> listings { get; set; }
         public Prices prices { get; set; }
     }
 

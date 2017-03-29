@@ -268,3 +268,5 @@ __pycache__/
 /YuGiOhBot/Databases/guildinformation.db
 /YuGiOhBot/Core/Client.cs
 /YuGiOhBot/Databases/YgoSqliteDb
+/YuGiOhBot/Properties/launchSettings.json
+/YuGiOhBot/Tokens/DiscordTest.txt

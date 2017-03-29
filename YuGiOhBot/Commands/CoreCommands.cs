@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using YuGiOhBot.Services;
 using YuGiOhBot.Services.CardObjects;
+using YuGiOhBot.Core;
 
 namespace YuGiOhBot.Commands
 {
@@ -204,62 +205,94 @@ namespace YuGiOhBot.Commands
 
                 if (card.Prices.data != null)
                 {
-
-                    var organizedPrices = new StringBuilder();
-
-                    //debug usage
-                    //card.Prices.data.ForEach(d => Console.WriteLine(d.price_data.data.prices.average));
-                    if (card.Prices.data == null)
+                                        
+                    if (card.Prices.data.Count >= 4)
                     {
 
-                        organizedPrices.Append("**No prices to show.**");
-
-                    }
-                    else if (card.Prices.data.Count > 4)
-                    {
-
-                        List<Datum> prices = card.Prices.data;
-
-                        organizedPrices.AppendLine("**Showing the first 3 prices due to too many available.**");
-
-                        for (int counter = 0; counter < 3; counter++)
+                        eBuilder.AddField(x =>
                         {
 
-                            Datum data = prices[counter];
+                            x.Name = "Prices";
+                            x.Value = "**Showing the first 3 prices due to too many to show**";
+                            x.IsInline = false;
 
-                            organizedPrices.AppendLine($"**Name:** {data.name}");
-                            organizedPrices.AppendLine($"\t\tRarity: {data.rarity}");
-                            //this is what redundancy looks like people, lmfao
-                            organizedPrices.AppendLine($"\t\tHigh: ${data.price_data.data.prices.high.ToString("0.00")}");
-                            organizedPrices.AppendLine($"\t\tLow: ${data.price_data.data.prices.low.ToString("0.00")}");
-                            organizedPrices.AppendLine($"\t\tAverage: ${data.price_data.data.prices.average.ToString("0.00")}");
+                        });
 
-                        }
+                        List<Datum> prices = card.Prices.data.GetRange(0, 3);
 
-                    }
-                    else if (card.Prices.data.Count < 4)
-                    {
-
-                        foreach (Datum data in card.Prices.data)
+                        foreach(Datum info in prices)
                         {
 
-                            organizedPrices.AppendLine($"**Name:** {data.name}");
-                            organizedPrices.AppendLine($"\t\tRarity: {data.rarity}");
-                            //this is what redundancy looks like people, lmfao
-
-                            if (data.price_data.data == null)
+                            if (string.IsNullOrEmpty(info.price_data.message)) //check if there is an error message
                             {
 
-                                organizedPrices.AppendLine($"\t\tError: No prices to display for this card variant.");
+                                var tempString = $"Rarity: {info.rarity}\n" +
+                                $"Low: {info.price_data.data.prices.low.ToString("0.00")}\n" +
+                                $"Average: {info.price_data.data.prices.average.ToString("0.00")}\n" +
+                                $"High: {info.price_data.data.prices.high.ToString("0.00")}";
+
+                                eBuilder.AddField(x =>
+                                {
+
+                                    x.Name = info.name;
+                                    x.Value = tempString;
+                                    x.IsInline = false;
+
+                                });
 
                             }
                             else
                             {
 
+                                eBuilder.AddField(x =>
+                                {
 
-                                organizedPrices.AppendLine($"\t\tHigh: ${data.price_data.data.prices.high.ToString("0.00")}");
-                                organizedPrices.AppendLine($"\t\tLow: ${data.price_data.data.prices.low.ToString("0.00")}");
-                                organizedPrices.AppendLine($"\t\tAverage: ${data.price_data.data.prices.average.ToString("0.00")}");
+                                    x.Name = info.name;
+                                    x.Value = info.price_data.message;
+                                    x.IsInline = false;
+
+                                });
+
+                            }
+
+                        }
+
+                    }
+                    else if(card.Prices.data.Count < 4)
+                    {
+
+                        foreach (Datum info in card.Prices.data)
+                        {
+
+                            if (string.IsNullOrEmpty(info.price_data.message)) //check if there is an error message
+                            {
+
+                                var tempString = $"Rarity: {info.rarity}\n" +
+                                $"Low: {info.price_data.data.prices.low.ToString("0.00")}\n" +
+                                $"Average: {info.price_data.data.prices.average.ToString("0.00")}\n" +
+                                $"High: {info.price_data.data.prices.high.ToString("0.00")}";
+
+                                eBuilder.AddField(x =>
+                                {
+
+                                    x.Name = info.name;
+                                    x.Value = tempString;
+                                    x.IsInline = false;
+
+                                });
+
+                            }
+                            else
+                            {
+
+                                eBuilder.AddField(x =>
+                                {
+
+                                    x.Name = info.name;
+                                    x.Value = info.price_data.message;
+                                    x.IsInline = false;
+
+                                });
 
                             }
 
@@ -267,11 +300,15 @@ namespace YuGiOhBot.Commands
 
                     }
 
+                }
+                else if (card.Prices.data == null)
+                {
+
                     eBuilder.AddField(x =>
                     {
 
                         x.Name = "Prices";
-                        x.Value = organizedPrices.ToString();
+                        x.Value = "**No prices to show for this card!**";
                         x.IsInline = false;
 
                     });
@@ -432,13 +469,11 @@ namespace YuGiOhBot.Commands
 
                     if (!(monster is LinkMonster))
                     {
-
-                        var regular = monster as RegularMonster;
-
+                        
                         eBuilder.AddField(x =>
                         {
                             x.Name = "Defense";
-                            x.Value = regular.Def;
+                            x.Value = monster.Def;
                             x.IsInline = true;
                         });
 
@@ -463,34 +498,54 @@ namespace YuGiOhBot.Commands
                 if (card.Prices.data != null)
                 {
 
-                    var organizedPrices = new StringBuilder();
-
-                    //debug usage
-                    //card.Prices.data.ForEach(d => Console.WriteLine(d.price_data.data.prices.average));
-                    if (card.Prices.data == null)
+                    if (card.Prices.data.Count >= 4)
                     {
 
-                        organizedPrices.Append("**No prices to show.**");
-
-                    }
-                    else if (card.Prices.data.Count > 4)
-                    {
-
-                        List<Datum> prices = card.Prices.data;
-
-                        organizedPrices.AppendLine("**Showing the first 7 prices due to too many available.**");
-
-                        for (int counter = 0; counter < 3; counter++)
+                        eBuilder.AddField(x =>
                         {
 
-                            Datum data = prices[counter];
+                            x.Name = "Prices";
+                            x.Value = "**Showing the first 3 prices due to too many to show**";
+                            x.IsInline = false;
 
-                            organizedPrices.AppendLine($"**Name:** {data.name}");
-                            organizedPrices.AppendLine($"\t\tRarity: {data.rarity}");
-                            //this is what redundancy looks like people, lmfao
-                            organizedPrices.AppendLine($"\t\tHigh: ${data.price_data.data.prices.high.ToString("0.00")}");
-                            organizedPrices.AppendLine($"\t\tLow: ${data.price_data.data.prices.low.ToString("0.00")}");
-                            organizedPrices.AppendLine($"\t\tAverage: ${data.price_data.data.prices.average.ToString("0.00")}");
+                        });
+
+                        List<Datum> prices = card.Prices.data.GetRange(0, 3);
+
+                        foreach (Datum info in prices)
+                        {
+
+                            if (string.IsNullOrEmpty(info.price_data.message)) //check if there is an error message
+                            {
+
+                                var tempString = $"Rarity: {info.rarity}\n" +
+                                $"Low: {info.price_data.data.prices.low.ToString("0.00")}\n" +
+                                $"Average: {info.price_data.data.prices.average.ToString("0.00")}\n" +
+                                $"High: {info.price_data.data.prices.high.ToString("0.00")}";
+
+                                eBuilder.AddField(x =>
+                                {
+
+                                    x.Name = info.name;
+                                    x.Value = tempString;
+                                    x.IsInline = false;
+
+                                });
+
+                            }
+                            else
+                            {
+
+                                eBuilder.AddField(x =>
+                                {
+
+                                    x.Name = info.name;
+                                    x.Value = info.price_data.message;
+                                    x.IsInline = false;
+
+                                });
+
+                            }
 
                         }
 
@@ -498,26 +553,38 @@ namespace YuGiOhBot.Commands
                     else if (card.Prices.data.Count < 4)
                     {
 
-                        foreach (Datum data in card.Prices.data)
+                        foreach (Datum info in card.Prices.data)
                         {
 
-                            organizedPrices.AppendLine($"**Name:** {data.name}");
-                            organizedPrices.AppendLine($"\t\tRarity: {data.rarity}");
-                            //this is what redundancy looks like people, lmfao
-
-                            if (data.price_data.data == null)
+                            if (string.IsNullOrEmpty(info.price_data.message)) //check if there is an error message
                             {
 
-                                organizedPrices.AppendLine($"\t\tError: No prices to display for this card variant.");
+                                var tempString = $"Rarity: {info.rarity}\n" +
+                                $"Low: {info.price_data.data.prices.low.ToString("0.00")}\n" +
+                                $"Average: {info.price_data.data.prices.average.ToString("0.00")}\n" +
+                                $"High: {info.price_data.data.prices.high.ToString("0.00")}";
+
+                                eBuilder.AddField(x =>
+                                {
+
+                                    x.Name = info.name;
+                                    x.Value = tempString;
+                                    x.IsInline = false;
+
+                                });
 
                             }
                             else
                             {
 
+                                eBuilder.AddField(x =>
+                                {
 
-                                organizedPrices.AppendLine($"\t\tHigh: ${data.price_data.data.prices.high.ToString("0.00")}");
-                                organizedPrices.AppendLine($"\t\tLow: ${data.price_data.data.prices.low.ToString("0.00")}");
-                                organizedPrices.AppendLine($"\t\tAverage: ${data.price_data.data.prices.average.ToString("0.00")}");
+                                    x.Name = info.name;
+                                    x.Value = info.price_data.message;
+                                    x.IsInline = false;
+
+                                });
 
                             }
 
@@ -525,11 +592,15 @@ namespace YuGiOhBot.Commands
 
                     }
 
+                }
+                else if (card.Prices.data == null)
+                {
+
                     eBuilder.AddField(x =>
                     {
 
                         x.Name = "Prices";
-                        x.Value = organizedPrices.ToString();
+                        x.Value = "**No prices to show for this card!**";
                         x.IsInline = false;
 
                     });
@@ -564,6 +635,8 @@ namespace YuGiOhBot.Commands
                     return;
 
                 }
+
+                await AltConsole.PrintAsync("Command", "Random Card", $"Got {card.Name}");
 
                 var authorBuilder = new EmbedAuthorBuilder()
                 {
@@ -705,34 +778,54 @@ namespace YuGiOhBot.Commands
                 if (card.Prices.data != null)
                 {
 
-                    var organizedPrices = new StringBuilder();
-
-                    //debug usage
-                    //card.Prices.data.ForEach(d => Console.WriteLine(d.price_data.data.prices.average));
-                    if (card.Prices.data == null)
+                    if (card.Prices.data.Count >= 4)
                     {
 
-                        organizedPrices.Append("**No prices to show.**");
-
-                    }
-                    else if (card.Prices.data.Count > 4)
-                    {
-
-                        List<Datum> prices = card.Prices.data;
-
-                        organizedPrices.AppendLine("**Showing the first 3 prices due to too many available.**");
-
-                        for (int counter = 0; counter < 3; counter++)
+                        eBuilder.AddField(x =>
                         {
 
-                            Datum data = prices[counter];
+                            x.Name = "Prices";
+                            x.Value = "**Showing the first 3 prices due to too many to show**";
+                            x.IsInline = false;
 
-                            organizedPrices.AppendLine($"**Name:** {data.name}");
-                            organizedPrices.AppendLine($"\t\tRarity: {data.rarity}");
-                            //this is what redundancy looks like people, lmfao
-                            organizedPrices.AppendLine($"\t\tHigh: ${data.price_data.data.prices.high.ToString("0.00")}");
-                            organizedPrices.AppendLine($"\t\tLow: ${data.price_data.data.prices.low.ToString("0.00")}");
-                            organizedPrices.AppendLine($"\t\tAverage: ${data.price_data.data.prices.average.ToString("0.00")}");
+                        });
+
+                        List<Datum> prices = card.Prices.data.GetRange(0, 3);
+
+                        foreach (Datum info in prices)
+                        {
+
+                            if (string.IsNullOrEmpty(info.price_data.message)) //check if there is an error message
+                            {
+
+                                var tempString = $"Rarity: {info.rarity}\n" +
+                                $"Low: {info.price_data.data.prices.low.ToString("0.00")}\n" +
+                                $"Average: {info.price_data.data.prices.average.ToString("0.00")}\n" +
+                                $"High: {info.price_data.data.prices.high.ToString("0.00")}";
+
+                                eBuilder.AddField(x =>
+                                {
+
+                                    x.Name = info.name;
+                                    x.Value = tempString;
+                                    x.IsInline = false;
+
+                                });
+
+                            }
+                            else
+                            {
+
+                                eBuilder.AddField(x =>
+                                {
+
+                                    x.Name = info.name;
+                                    x.Value = info.price_data.message;
+                                    x.IsInline = false;
+
+                                });
+
+                            }
 
                         }
 
@@ -740,26 +833,38 @@ namespace YuGiOhBot.Commands
                     else if (card.Prices.data.Count < 4)
                     {
 
-                        foreach (Datum data in card.Prices.data)
+                        foreach (Datum info in card.Prices.data)
                         {
 
-                            organizedPrices.AppendLine($"**Name:** {data.name}");
-                            organizedPrices.AppendLine($"\t\tRarity: {data.rarity}");
-                            //this is what redundancy looks like people, lmfao
-
-                            if (data.price_data.data == null)
+                            if (string.IsNullOrEmpty(info.price_data.message)) //check if there is an error message
                             {
 
-                                organizedPrices.AppendLine($"\t\tError: No prices to display for this card variant.");
+                                var tempString = $"Rarity: {info.rarity}\n" +
+                                $"Low: {info.price_data.data.prices.low.ToString("0.00")}\n" +
+                                $"Average: {info.price_data.data.prices.average.ToString("0.00")}\n" +
+                                $"High: {info.price_data.data.prices.high.ToString("0.00")}";
+
+                                eBuilder.AddField(x =>
+                                {
+
+                                    x.Name = info.name;
+                                    x.Value = tempString;
+                                    x.IsInline = false;
+
+                                });
 
                             }
                             else
                             {
 
+                                eBuilder.AddField(x =>
+                                {
 
-                                organizedPrices.AppendLine($"\t\tHigh: ${data.price_data.data.prices.high.ToString("0.00")}");
-                                organizedPrices.AppendLine($"\t\tLow: ${data.price_data.data.prices.low.ToString("0.00")}");
-                                organizedPrices.AppendLine($"\t\tAverage: ${data.price_data.data.prices.average.ToString("0.00")}");
+                                    x.Name = info.name;
+                                    x.Value = info.price_data.message;
+                                    x.IsInline = false;
+
+                                });
 
                             }
 
@@ -767,11 +872,15 @@ namespace YuGiOhBot.Commands
 
                     }
 
+                }
+                else if (card.Prices.data == null)
+                {
+
                     eBuilder.AddField(x =>
                     {
 
                         x.Name = "Prices";
-                        x.Value = organizedPrices.ToString();
+                        x.Value = "**No prices to show for this card!**";
                         x.IsInline = false;
 
                     });
@@ -1131,6 +1240,7 @@ namespace YuGiOhBot.Commands
 
             if (card is PendulumMonster) return new Color(175, 219, 205);
             else if (card is XyzMonster) return new Color(0, 0, 1);
+            else if (card is LinkMonster) return new Color(17, 57, 146);
             else if (card is RegularMonster)
             {
 

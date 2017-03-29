@@ -9,7 +9,7 @@ namespace YuGiOhBot.Services.CardObjects
     public class YuGiOhCard
     {
 
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
         public string RealName { get; set; } = string.Empty;
         public string CardType { get; set; } = string.Empty;
         public string Lore { get; set; } = string.Empty;
