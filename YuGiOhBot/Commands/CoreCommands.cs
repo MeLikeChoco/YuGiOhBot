@@ -16,12 +16,14 @@ namespace YuGiOhBot.Commands
     public class CoreCommands : InteractiveModuleBase
     {
 
-        private YuGiOhServices _service;
+        private YuGiOhServices _yugiohService;
+        private GuildServices _guildService;
 
-        public CoreCommands(YuGiOhServices serviceParams)
+        public CoreCommands(YuGiOhServices serviceParams, GuildServices guildServiceParams)
         {
 
-            _service = serviceParams;
+            _yugiohService = serviceParams;
+            _guildService = guildServiceParams;
 
         }
 
@@ -49,7 +51,7 @@ namespace YuGiOhBot.Commands
             using (var typingState = Context.Channel.EnterTypingState())
             {
 
-                YuGiOhCard card = await _service.GetCard(cardName);
+                YuGiOhCard card = await _yugiohService.GetCard(cardName);
 
                 if (string.IsNullOrEmpty(card.Name))
                 {
@@ -59,6 +61,9 @@ namespace YuGiOhBot.Commands
                     return;
 
                 }
+
+                if (_guildService._minimalSettings.TryGetValue(Context.Guild.Id, out bool minimal)) { }
+                else minimal = false;
 
                 var authorBuilder = new EmbedAuthorBuilder()
                 {
@@ -122,18 +127,40 @@ namespace YuGiOhBot.Commands
 
                 }
 
-                eBuilder = new EmbedBuilder()
+                if (minimal)
                 {
 
-                    Author = authorBuilder,
-                    Color = WhatColorIsTheCard(card),
-                    ImageUrl = card.ImageUrl,
-                    //ThumbnailUrl = card.ImageUrl,
-                    Title = card.Name,
-                    Description = organizedDescription.ToString(),
-                    Footer = footerBuilder
+                    eBuilder = new EmbedBuilder()
+                    {
 
-                };
+                        Author = authorBuilder,
+                        Color = WhatColorIsTheCard(card),
+                        //ImageUrl = card.ImageUrl,
+                        ThumbnailUrl = card.ImageUrl,
+                        Title = card.Name,
+                        Description = organizedDescription.ToString(),
+                        Footer = footerBuilder
+
+                    };
+
+                }
+                else
+                {
+
+                    eBuilder = new EmbedBuilder()
+                    {
+
+                        Author = authorBuilder,
+                        Color = WhatColorIsTheCard(card),
+                        ImageUrl = card.ImageUrl,
+                        //ThumbnailUrl = card.ImageUrl,
+                        Title = card.Name,
+                        Description = organizedDescription.ToString(),
+                        Footer = footerBuilder
+
+                    };
+
+                }
 
                 string description;
 
@@ -167,7 +194,7 @@ namespace YuGiOhBot.Commands
                 {
 
                     var monster = card as MonsterCard;
-                    
+
                     eBuilder.AddField(x =>
                     {
                         x.Name = "Attack";
@@ -175,9 +202,9 @@ namespace YuGiOhBot.Commands
                         x.IsInline = !(monster is LinkMonster);
                     });
 
-                    if(!(monster is LinkMonster))
+                    if (!(monster is LinkMonster))
                     {
-                        
+
                         eBuilder.AddField(x =>
                         {
                             x.Name = "Defense";
@@ -203,115 +230,120 @@ namespace YuGiOhBot.Commands
 
                 }
 
-                if (card.Prices.data != null)
+                if (!minimal)
                 {
-                                        
-                    if (card.Prices.data.Count >= 4)
+
+                    if (card.Prices.data != null)
+                    {
+
+                        if (card.Prices.data.Count >= 4)
+                        {
+
+                            eBuilder.AddField(x =>
+                            {
+
+                                x.Name = "Prices";
+                                x.Value = "**Showing the first 3 prices due to too many to show**";
+                                x.IsInline = false;
+
+                            });
+
+                            List<Datum> prices = card.Prices.data.GetRange(0, 3);
+
+                            foreach (Datum info in prices)
+                            {
+
+                                if (string.IsNullOrEmpty(info.price_data.message)) //check if there is an error message
+                                {
+
+                                    var tempString = $"Rarity: {info.rarity}\n" +
+                                    $"Low: {info.price_data.data.prices.low.ToString("0.00")}\n" +
+                                    $"Average: {info.price_data.data.prices.average.ToString("0.00")}\n" +
+                                    $"High: {info.price_data.data.prices.high.ToString("0.00")}";
+
+                                    eBuilder.AddField(x =>
+                                    {
+
+                                        x.Name = info.name;
+                                        x.Value = tempString;
+                                        x.IsInline = false;
+
+                                    });
+
+                                }
+                                else
+                                {
+
+                                    eBuilder.AddField(x =>
+                                    {
+
+                                        x.Name = info.name;
+                                        x.Value = info.price_data.message;
+                                        x.IsInline = false;
+
+                                    });
+
+                                }
+
+                            }
+
+                        }
+                        else if (card.Prices.data.Count < 4)
+                        {
+
+                            foreach (Datum info in card.Prices.data)
+                            {
+
+                                if (string.IsNullOrEmpty(info.price_data.message)) //check if there is an error message
+                                {
+
+                                    var tempString = $"Rarity: {info.rarity}\n" +
+                                    $"Low: {info.price_data.data.prices.low.ToString("0.00")}\n" +
+                                    $"Average: {info.price_data.data.prices.average.ToString("0.00")}\n" +
+                                    $"High: {info.price_data.data.prices.high.ToString("0.00")}";
+
+                                    eBuilder.AddField(x =>
+                                    {
+
+                                        x.Name = info.name;
+                                        x.Value = tempString;
+                                        x.IsInline = false;
+
+                                    });
+
+                                }
+                                else
+                                {
+
+                                    eBuilder.AddField(x =>
+                                    {
+
+                                        x.Name = info.name;
+                                        x.Value = info.price_data.message;
+                                        x.IsInline = false;
+
+                                    });
+
+                                }
+
+                            }
+
+                        }
+
+                    }
+                    else if (card.Prices.data == null)
                     {
 
                         eBuilder.AddField(x =>
                         {
 
                             x.Name = "Prices";
-                            x.Value = "**Showing the first 3 prices due to too many to show**";
+                            x.Value = "**No prices to show for this card!**";
                             x.IsInline = false;
 
                         });
 
-                        List<Datum> prices = card.Prices.data.GetRange(0, 3);
-
-                        foreach(Datum info in prices)
-                        {
-
-                            if (string.IsNullOrEmpty(info.price_data.message)) //check if there is an error message
-                            {
-
-                                var tempString = $"Rarity: {info.rarity}\n" +
-                                $"Low: {info.price_data.data.prices.low.ToString("0.00")}\n" +
-                                $"Average: {info.price_data.data.prices.average.ToString("0.00")}\n" +
-                                $"High: {info.price_data.data.prices.high.ToString("0.00")}";
-
-                                eBuilder.AddField(x =>
-                                {
-
-                                    x.Name = info.name;
-                                    x.Value = tempString;
-                                    x.IsInline = false;
-
-                                });
-
-                            }
-                            else
-                            {
-
-                                eBuilder.AddField(x =>
-                                {
-
-                                    x.Name = info.name;
-                                    x.Value = info.price_data.message;
-                                    x.IsInline = false;
-
-                                });
-
-                            }
-
-                        }
-
                     }
-                    else if(card.Prices.data.Count < 4)
-                    {
-
-                        foreach (Datum info in card.Prices.data)
-                        {
-
-                            if (string.IsNullOrEmpty(info.price_data.message)) //check if there is an error message
-                            {
-
-                                var tempString = $"Rarity: {info.rarity}\n" +
-                                $"Low: {info.price_data.data.prices.low.ToString("0.00")}\n" +
-                                $"Average: {info.price_data.data.prices.average.ToString("0.00")}\n" +
-                                $"High: {info.price_data.data.prices.high.ToString("0.00")}";
-
-                                eBuilder.AddField(x =>
-                                {
-
-                                    x.Name = info.name;
-                                    x.Value = tempString;
-                                    x.IsInline = false;
-
-                                });
-
-                            }
-                            else
-                            {
-
-                                eBuilder.AddField(x =>
-                                {
-
-                                    x.Name = info.name;
-                                    x.Value = info.price_data.message;
-                                    x.IsInline = false;
-
-                                });
-
-                            }
-
-                        }
-
-                    }
-
-                }
-                else if (card.Prices.data == null)
-                {
-
-                    eBuilder.AddField(x =>
-                    {
-
-                        x.Name = "Prices";
-                        x.Value = "**No prices to show for this card!**";
-                        x.IsInline = false;
-
-                    });
 
                 }
 
@@ -340,7 +372,7 @@ namespace YuGiOhBot.Commands
             using (var typingState = Context.Channel.EnterTypingState())
             {
 
-                YuGiOhCard card = await _service.LazyGetCard(cardName);
+                YuGiOhCard card = await _yugiohService.LazyGetCard(cardName);
 
                 if (card.Name.Equals(string.Empty))
                 {
@@ -359,6 +391,9 @@ namespace YuGiOhBot.Commands
                     return;
 
                 }
+
+                if (_guildService._minimalSettings.TryGetValue(Context.Guild.Id, out bool minimal)) { }
+                else minimal = false;
 
                 var authorBuilder = new EmbedAuthorBuilder()
                 {
@@ -422,26 +457,56 @@ namespace YuGiOhBot.Commands
 
                 }
 
-                eBuilder = new EmbedBuilder()
+                if (minimal)
                 {
 
-                    Author = authorBuilder,
-                    Color = WhatColorIsTheCard(card),
-                    ImageUrl = card.ImageUrl,
-                    //ThumbnailUrl = card.ImageUrl,
-                    Title = card.Name,
-                    Description = organizedDescription.ToString(),
-                    Footer = footerBuilder
+                    eBuilder = new EmbedBuilder()
+                    {
 
-                };
+                        Author = authorBuilder,
+                        Color = WhatColorIsTheCard(card),
+                        //ImageUrl = card.ImageUrl,
+                        ThumbnailUrl = card.ImageUrl,
+                        Title = card.Name,
+                        Description = organizedDescription.ToString(),
+                        Footer = footerBuilder
+
+                    };
+
+                }
+                else
+                {
+
+                    eBuilder = new EmbedBuilder()
+                    {
+
+                        Author = authorBuilder,
+                        Color = WhatColorIsTheCard(card),
+                        ImageUrl = card.ImageUrl,
+                        //ThumbnailUrl = card.ImageUrl,
+                        Title = card.Name,
+                        Description = organizedDescription.ToString(),
+                        Footer = footerBuilder
+
+                    };
+
+                }
 
                 string description;
 
                 if (card.Lore.StartsWith("Pendulum Effect")) //not all pendulum monsters have an effect
                 {
 
+                    var monster = card as MonsterCard;
                     var tempArray = card.Lore.Split(new string[] { "Monster Effect" }, StringSplitOptions.None);
-                    description = "__Pendulum Effect__\n" + tempArray[0].Replace("Pendulum Effect", "").Replace("\" ", "\"").Trim() + "\n__Monster Effect__\n" + tempArray[1].Replace("Monster Effect", "").Replace("\" ", "\"").Trim();
+                    description = $"{monster.Types}\n" + "__Pendulum Effect__\n" + tempArray[0].Replace("Pendulum Effect", "").Replace("\" ", "\"").Trim() + "\n__Monster Effect__\n" + tempArray[1].Replace("Monster Effect", "").Replace("\" ", "\"").Trim();
+
+                }
+                else if (card is MonsterCard)
+                {
+
+                    var monster = card as MonsterCard;
+                    description = $"{monster.Types}\n" + card.Lore;
 
                 }
                 else description = card.Lore;
@@ -469,7 +534,7 @@ namespace YuGiOhBot.Commands
 
                     if (!(monster is LinkMonster))
                     {
-                        
+
                         eBuilder.AddField(x =>
                         {
                             x.Name = "Defense";
@@ -495,119 +560,122 @@ namespace YuGiOhBot.Commands
 
                 }
 
-                if (card.Prices.data != null)
+                if (!minimal)
                 {
 
-                    if (card.Prices.data.Count >= 4)
+                    if (card.Prices.data != null)
+                    {
+
+                        if (card.Prices.data.Count >= 4)
+                        {
+
+                            eBuilder.AddField(x =>
+                            {
+
+                                x.Name = "Prices";
+                                x.Value = "**Showing the first 3 prices due to too many to show**";
+                                x.IsInline = false;
+
+                            });
+
+                            List<Datum> prices = card.Prices.data.GetRange(0, 3);
+
+                            foreach (Datum info in prices)
+                            {
+
+                                if (string.IsNullOrEmpty(info.price_data.message)) //check if there is an error message
+                                {
+
+                                    var tempString = $"Rarity: {info.rarity}\n" +
+                                    $"Low: {info.price_data.data.prices.low.ToString("0.00")}\n" +
+                                    $"Average: {info.price_data.data.prices.average.ToString("0.00")}\n" +
+                                    $"High: {info.price_data.data.prices.high.ToString("0.00")}";
+
+                                    eBuilder.AddField(x =>
+                                    {
+
+                                        x.Name = info.name;
+                                        x.Value = tempString;
+                                        x.IsInline = false;
+
+                                    });
+
+                                }
+                                else
+                                {
+
+                                    eBuilder.AddField(x =>
+                                    {
+
+                                        x.Name = info.name;
+                                        x.Value = info.price_data.message;
+                                        x.IsInline = false;
+
+                                    });
+
+                                }
+
+                            }
+
+                        }
+                        else if (card.Prices.data.Count < 4)
+                        {
+
+                            foreach (Datum info in card.Prices.data)
+                            {
+
+                                if (string.IsNullOrEmpty(info.price_data.message)) //check if there is an error message
+                                {
+
+                                    var tempString = $"Rarity: {info.rarity}\n" +
+                                    $"Low: {info.price_data.data.prices.low.ToString("0.00")}\n" +
+                                    $"Average: {info.price_data.data.prices.average.ToString("0.00")}\n" +
+                                    $"High: {info.price_data.data.prices.high.ToString("0.00")}";
+
+                                    eBuilder.AddField(x =>
+                                    {
+
+                                        x.Name = info.name;
+                                        x.Value = tempString;
+                                        x.IsInline = false;
+
+                                    });
+
+                                }
+                                else
+                                {
+
+                                    eBuilder.AddField(x =>
+                                    {
+
+                                        x.Name = info.name;
+                                        x.Value = info.price_data.message;
+                                        x.IsInline = false;
+
+                                    });
+
+                                }
+
+                            }
+
+                        }
+
+                    }
+                    else if (card.Prices.data == null)
                     {
 
                         eBuilder.AddField(x =>
                         {
 
                             x.Name = "Prices";
-                            x.Value = "**Showing the first 3 prices due to too many to show**";
+                            x.Value = "**No prices to show for this card!**";
                             x.IsInline = false;
 
                         });
 
-                        List<Datum> prices = card.Prices.data.GetRange(0, 3);
-
-                        foreach (Datum info in prices)
-                        {
-
-                            if (string.IsNullOrEmpty(info.price_data.message)) //check if there is an error message
-                            {
-
-                                var tempString = $"Rarity: {info.rarity}\n" +
-                                $"Low: {info.price_data.data.prices.low.ToString("0.00")}\n" +
-                                $"Average: {info.price_data.data.prices.average.ToString("0.00")}\n" +
-                                $"High: {info.price_data.data.prices.high.ToString("0.00")}";
-
-                                eBuilder.AddField(x =>
-                                {
-
-                                    x.Name = info.name;
-                                    x.Value = tempString;
-                                    x.IsInline = false;
-
-                                });
-
-                            }
-                            else
-                            {
-
-                                eBuilder.AddField(x =>
-                                {
-
-                                    x.Name = info.name;
-                                    x.Value = info.price_data.message;
-                                    x.IsInline = false;
-
-                                });
-
-                            }
-
-                        }
-
-                    }
-                    else if (card.Prices.data.Count < 4)
-                    {
-
-                        foreach (Datum info in card.Prices.data)
-                        {
-
-                            if (string.IsNullOrEmpty(info.price_data.message)) //check if there is an error message
-                            {
-
-                                var tempString = $"Rarity: {info.rarity}\n" +
-                                $"Low: {info.price_data.data.prices.low.ToString("0.00")}\n" +
-                                $"Average: {info.price_data.data.prices.average.ToString("0.00")}\n" +
-                                $"High: {info.price_data.data.prices.high.ToString("0.00")}";
-
-                                eBuilder.AddField(x =>
-                                {
-
-                                    x.Name = info.name;
-                                    x.Value = tempString;
-                                    x.IsInline = false;
-
-                                });
-
-                            }
-                            else
-                            {
-
-                                eBuilder.AddField(x =>
-                                {
-
-                                    x.Name = info.name;
-                                    x.Value = info.price_data.message;
-                                    x.IsInline = false;
-
-                                });
-
-                            }
-
-                        }
-
                     }
 
                 }
-                else if (card.Prices.data == null)
-                {
-
-                    eBuilder.AddField(x =>
-                    {
-
-                        x.Name = "Prices";
-                        x.Value = "**No prices to show for this card!**";
-                        x.IsInline = false;
-
-                    });
-
-                }
-
-                CacheService.YuGiOhCardCache.TryAdd(card.Name.ToLower(), eBuilder);
 
             }
 
@@ -625,7 +693,9 @@ namespace YuGiOhBot.Commands
             using (var typingState = Context.Channel.EnterTypingState())
             {
 
-                YuGiOhCard card = await _service.GetRandomCard();
+                YuGiOhCard card = await _yugiohService.GetRandomCard();
+
+                await AltConsole.PrintAsync("Command", "Random Card", $"Got {card.Name}");
 
                 if (CacheService.YuGiOhCardCache.TryGetValue(card.Name.ToLower(), out eBuilder))
                 {
@@ -636,7 +706,8 @@ namespace YuGiOhBot.Commands
 
                 }
 
-                await AltConsole.PrintAsync("Command", "Random Card", $"Got {card.Name}");
+                if (_guildService._minimalSettings.TryGetValue(Context.Guild.Id, out bool minimal)) { }
+                else minimal = false;
 
                 var authorBuilder = new EmbedAuthorBuilder()
                 {
@@ -700,26 +771,56 @@ namespace YuGiOhBot.Commands
 
                 }
 
-                eBuilder = new EmbedBuilder()
+                if (minimal)
                 {
 
-                    Author = authorBuilder,
-                    Color = WhatColorIsTheCard(card),
-                    ImageUrl = card.ImageUrl,
-                    //ThumbnailUrl = card.ImageUrl,
-                    Title = card.Name,
-                    Description = organizedDescription.ToString(),
-                    Footer = footerBuilder
+                    eBuilder = new EmbedBuilder()
+                    {
 
-                };
+                        Author = authorBuilder,
+                        Color = WhatColorIsTheCard(card),
+                        //ImageUrl = card.ImageUrl,
+                        ThumbnailUrl = card.ImageUrl,
+                        Title = card.Name,
+                        Description = organizedDescription.ToString(),
+                        Footer = footerBuilder
+
+                    };
+
+                }
+                else
+                {
+
+                    eBuilder = new EmbedBuilder()
+                    {
+
+                        Author = authorBuilder,
+                        Color = WhatColorIsTheCard(card),
+                        ImageUrl = card.ImageUrl,
+                        //ThumbnailUrl = card.ImageUrl,
+                        Title = card.Name,
+                        Description = organizedDescription.ToString(),
+                        Footer = footerBuilder
+
+                    };
+
+                }
 
                 string description;
 
                 if (card.Lore.StartsWith("Pendulum Effect")) //not all pendulum monsters have an effect
                 {
 
+                    var monster = card as MonsterCard;
                     var tempArray = card.Lore.Split(new string[] { "Monster Effect" }, StringSplitOptions.None);
-                    description = "__Pendulum Effect__\n" + tempArray[0].Replace("Pendulum Effect", "").Replace("\" ", "\"").Trim() + "\n__Monster Effect__\n" + tempArray[1].Replace("Monster Effect", "").Replace("\" ", "\"").Trim();
+                    description = $"{monster.Types}\n" + "__Pendulum Effect__\n" + tempArray[0].Replace("Pendulum Effect", "").Replace("\" ", "\"").Trim() + "\n__Monster Effect__\n" + tempArray[1].Replace("Monster Effect", "").Replace("\" ", "\"").Trim();
+
+                }
+                else if (card is MonsterCard)
+                {
+
+                    var monster = card as MonsterCard;
+                    description = $"{monster.Types}\n" + card.Lore;
 
                 }
                 else description = card.Lore;
@@ -748,12 +849,10 @@ namespace YuGiOhBot.Commands
                     if (!(monster is LinkMonster))
                     {
 
-                        var regular = monster as RegularMonster;
-
                         eBuilder.AddField(x =>
                         {
                             x.Name = "Defense";
-                            x.Value = regular.Def;
+                            x.Value = monster.Def;
                             x.IsInline = true;
                         });
 
@@ -775,115 +874,120 @@ namespace YuGiOhBot.Commands
 
                 }
 
-                if (card.Prices.data != null)
+                if (!minimal)
                 {
 
-                    if (card.Prices.data.Count >= 4)
+                    if (card.Prices.data != null)
+                    {
+
+                        if (card.Prices.data.Count >= 4)
+                        {
+
+                            eBuilder.AddField(x =>
+                            {
+
+                                x.Name = "Prices";
+                                x.Value = "**Showing the first 3 prices due to too many to show**";
+                                x.IsInline = false;
+
+                            });
+
+                            List<Datum> prices = card.Prices.data.GetRange(0, 3);
+
+                            foreach (Datum info in prices)
+                            {
+
+                                if (string.IsNullOrEmpty(info.price_data.message)) //check if there is an error message
+                                {
+
+                                    var tempString = $"Rarity: {info.rarity}\n" +
+                                    $"Low: {info.price_data.data.prices.low.ToString("0.00")}\n" +
+                                    $"Average: {info.price_data.data.prices.average.ToString("0.00")}\n" +
+                                    $"High: {info.price_data.data.prices.high.ToString("0.00")}";
+
+                                    eBuilder.AddField(x =>
+                                    {
+
+                                        x.Name = info.name;
+                                        x.Value = tempString;
+                                        x.IsInline = false;
+
+                                    });
+
+                                }
+                                else
+                                {
+
+                                    eBuilder.AddField(x =>
+                                    {
+
+                                        x.Name = info.name;
+                                        x.Value = info.price_data.message;
+                                        x.IsInline = false;
+
+                                    });
+
+                                }
+
+                            }
+
+                        }
+                        else if (card.Prices.data.Count < 4)
+                        {
+
+                            foreach (Datum info in card.Prices.data)
+                            {
+
+                                if (string.IsNullOrEmpty(info.price_data.message)) //check if there is an error message
+                                {
+
+                                    var tempString = $"Rarity: {info.rarity}\n" +
+                                    $"Low: {info.price_data.data.prices.low.ToString("0.00")}\n" +
+                                    $"Average: {info.price_data.data.prices.average.ToString("0.00")}\n" +
+                                    $"High: {info.price_data.data.prices.high.ToString("0.00")}";
+
+                                    eBuilder.AddField(x =>
+                                    {
+
+                                        x.Name = info.name;
+                                        x.Value = tempString;
+                                        x.IsInline = false;
+
+                                    });
+
+                                }
+                                else
+                                {
+
+                                    eBuilder.AddField(x =>
+                                    {
+
+                                        x.Name = info.name;
+                                        x.Value = info.price_data.message;
+                                        x.IsInline = false;
+
+                                    });
+
+                                }
+
+                            }
+
+                        }
+
+                    }
+                    else if (card.Prices.data == null)
                     {
 
                         eBuilder.AddField(x =>
                         {
 
                             x.Name = "Prices";
-                            x.Value = "**Showing the first 3 prices due to too many to show**";
+                            x.Value = "**No prices to show for this card!**";
                             x.IsInline = false;
 
                         });
 
-                        List<Datum> prices = card.Prices.data.GetRange(0, 3);
-
-                        foreach (Datum info in prices)
-                        {
-
-                            if (string.IsNullOrEmpty(info.price_data.message)) //check if there is an error message
-                            {
-
-                                var tempString = $"Rarity: {info.rarity}\n" +
-                                $"Low: {info.price_data.data.prices.low.ToString("0.00")}\n" +
-                                $"Average: {info.price_data.data.prices.average.ToString("0.00")}\n" +
-                                $"High: {info.price_data.data.prices.high.ToString("0.00")}";
-
-                                eBuilder.AddField(x =>
-                                {
-
-                                    x.Name = info.name;
-                                    x.Value = tempString;
-                                    x.IsInline = false;
-
-                                });
-
-                            }
-                            else
-                            {
-
-                                eBuilder.AddField(x =>
-                                {
-
-                                    x.Name = info.name;
-                                    x.Value = info.price_data.message;
-                                    x.IsInline = false;
-
-                                });
-
-                            }
-
-                        }
-
                     }
-                    else if (card.Prices.data.Count < 4)
-                    {
-
-                        foreach (Datum info in card.Prices.data)
-                        {
-
-                            if (string.IsNullOrEmpty(info.price_data.message)) //check if there is an error message
-                            {
-
-                                var tempString = $"Rarity: {info.rarity}\n" +
-                                $"Low: {info.price_data.data.prices.low.ToString("0.00")}\n" +
-                                $"Average: {info.price_data.data.prices.average.ToString("0.00")}\n" +
-                                $"High: {info.price_data.data.prices.high.ToString("0.00")}";
-
-                                eBuilder.AddField(x =>
-                                {
-
-                                    x.Name = info.name;
-                                    x.Value = tempString;
-                                    x.IsInline = false;
-
-                                });
-
-                            }
-                            else
-                            {
-
-                                eBuilder.AddField(x =>
-                                {
-
-                                    x.Name = info.name;
-                                    x.Value = info.price_data.message;
-                                    x.IsInline = false;
-
-                                });
-
-                            }
-
-                        }
-
-                    }
-
-                }
-                else if (card.Prices.data == null)
-                {
-
-                    eBuilder.AddField(x =>
-                    {
-
-                        x.Name = "Prices";
-                        x.Value = "**No prices to show for this card!**";
-                        x.IsInline = false;
-
-                    });
 
                 }
 
@@ -915,7 +1019,7 @@ namespace YuGiOhBot.Commands
             {
 
                 //<card names>
-                searchResults = await _service.SearchCards(search);
+                searchResults = await _yugiohService.SearchCards(search);
 
                 if (searchResults.Count == 0)
                 {
@@ -963,6 +1067,7 @@ namespace YuGiOhBot.Commands
 
             }
 
+
             await CardCommand(searchResults[searchNumber - 1]);
 
         }
@@ -987,7 +1092,7 @@ namespace YuGiOhBot.Commands
             {
 
                 //<card names>
-                searchResults = await _service.LazySearchCards(search);
+                searchResults = await _yugiohService.LazySearchCards(search);
 
                 if (searchResults.Count == 0)
                 {
@@ -1057,8 +1162,8 @@ namespace YuGiOhBot.Commands
 
             using (var typingState = Context.Channel.EnterTypingState())
             {
-                
-                searchResults = await _service.ArchetypeSearch(archetype);
+
+                searchResults = await _yugiohService.ArchetypeSearch(archetype);
 
                 if (searchResults.Count == 0)
                 {
@@ -1115,7 +1220,7 @@ namespace YuGiOhBot.Commands
         public async Task BanListCommand(string format = "")
         {
 
-            if(string.IsNullOrEmpty(format) || !int.TryParse(format, out int formatInt))
+            if (string.IsNullOrEmpty(format) || !int.TryParse(format, out int formatInt))
             {
 
                 await ReplyAsync("That is not a valid format! ```http\n1 -> OCG\n2 -> TCG ADV\n3 -> TCG TRN```");
@@ -1123,7 +1228,7 @@ namespace YuGiOhBot.Commands
 
             }
 
-            if(!CacheService.DMChannelCache.TryGetValue(Context.User.Id, out IDMChannel channel))
+            if (!CacheService.DMChannelCache.TryGetValue(Context.User.Id, out IDMChannel channel))
             {
 
                 var dm = await Context.User.CreateDMChannelAsync();
@@ -1139,19 +1244,19 @@ namespace YuGiOhBot.Commands
 
                 case 1:
                     {
-                                           
+
                         var forbidden = $"```OCG Forbidden\n\n";
-                        _service.OcgBanList.TryGetValue("Forbidden", out List<string> forbiddenList);
+                        _yugiohService.OcgBanList.TryGetValue("Forbidden", out List<string> forbiddenList);
                         forbiddenList.ForEach(card => forbidden += $"{card}\n");
                         forbidden += "```";
 
                         var limited = $"```OCG Limited\n\n";
-                        _service.OcgBanList.TryGetValue("Limited", out List<string> limitedList);
+                        _yugiohService.OcgBanList.TryGetValue("Limited", out List<string> limitedList);
                         limitedList.ForEach(card => limited += $"{card}\n");
                         limited += "```";
 
                         var semilimited = $"```OCG Semi-Limited\n";
-                        _service.OcgBanList.TryGetValue("Semi-Limited", out List<string> semiList);
+                        _yugiohService.OcgBanList.TryGetValue("Semi-Limited", out List<string> semiList);
                         semiList.ForEach(card => semilimited += $"{card}\n");
                         semilimited += "```";
 
@@ -1165,17 +1270,17 @@ namespace YuGiOhBot.Commands
                     {
 
                         var forbidden = $"```TCG ADV Forbidden\n\n";
-                        _service.OcgBanList.TryGetValue("Forbidden", out List<string> forbiddenList);
+                        _yugiohService.OcgBanList.TryGetValue("Forbidden", out List<string> forbiddenList);
                         forbiddenList.ForEach(card => forbidden += $"{card}\n");
                         forbidden += "```";
 
                         var limited = $"```TCG ADV Limited\n\n";
-                        _service.OcgBanList.TryGetValue("Limited", out List<string> limitedList);
+                        _yugiohService.OcgBanList.TryGetValue("Limited", out List<string> limitedList);
                         limitedList.ForEach(card => limited += $"{card}\n");
                         limited += "```";
 
                         var semilimited = $"```TCG ADV Semi-Limited\n\n";
-                        _service.OcgBanList.TryGetValue("Semi-Limited", out List<string> semiList);
+                        _yugiohService.OcgBanList.TryGetValue("Semi-Limited", out List<string> semiList);
                         semiList.ForEach(card => semilimited += $"{card}\n");
                         semilimited += "```";
 
@@ -1189,17 +1294,17 @@ namespace YuGiOhBot.Commands
                     {
 
                         var forbidden = $"```TCG Traditional Forbidden\n\n";
-                        _service.OcgBanList.TryGetValue("Forbidden", out List<string> forbiddenList);
+                        _yugiohService.OcgBanList.TryGetValue("Forbidden", out List<string> forbiddenList);
                         forbiddenList.ForEach(card => forbidden += $"{card}\n");
                         forbidden += "```";
 
                         var limited = $"```TCG Traditional Limited\n\n";
-                        _service.OcgBanList.TryGetValue("Limited", out List<string> limitedList);
+                        _yugiohService.OcgBanList.TryGetValue("Limited", out List<string> limitedList);
                         limitedList.ForEach(card => limited += $"{card}\n");
                         limited += "```";
 
                         var semilimited = $"```TCG Traditional Semi-Limited\n\n";
-                        _service.OcgBanList.TryGetValue("Semi-Limited", out List<string> semiList);
+                        _yugiohService.OcgBanList.TryGetValue("Semi-Limited", out List<string> semiList);
                         semiList.ForEach(card => semilimited += $"{card}\n");
                         semilimited += "```";
 

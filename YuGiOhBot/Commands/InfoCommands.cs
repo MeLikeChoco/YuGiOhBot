@@ -25,12 +25,51 @@ namespace YuGiOhBot.Commands
 
         }
 
+        [Command("minimal")]
+        [Summary("Get the guild minimal setting")]
+        [RequireContext(ContextType.Guild)]
+        [Priority(0)]
+        public async Task GetMinimalCommand()
+        {
+
+            if (_guildService._minimalSettings.TryGetValue(Context.Guild.Id, out bool guildSetting))
+            {
+
+                await ReplyAsync($"Minimal setting is currently: {guildSetting}");
+                return;
+
+            }
+            else await ReplyAsync($"Minimal setting is currently: false");
+
+        }
+
+        [Command("minimal")]
+        [Summary("Set the card commands to feed less information")]
+        [RequireContext(ContextType.Guild)]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        [Priority(1)]
+        public async Task MinimalCommand(string minimal)
+        {
+            
+            if (!bool.TryParse(minimal, out bool setting))
+            {
+                
+                await ReplyAsync($"Use true/false to set minimal card settings!");
+                return;
+
+            }
+
+            await _guildService.SetMinimal(Context.Guild.Id, setting);
+            await ReplyAsync($"Minimal setting set to: {minimal}");
+
+        }
+
         [Command("feedback")]
         [Summary("Send feedback")]
         public async Task FeedBackCommand([Remainder]string feedback)
         {
 
-            if(feedback.Count() > 451)
+            if (feedback.Count() > 451)
             {
 
                 await ReplyAsync("Shorter feedback please or it gets lost in the shadow realm.");
@@ -50,7 +89,7 @@ namespace YuGiOhBot.Commands
         public async Task PrefixCommand([Remainder]string prefix)
         {
 
-            if(string.IsNullOrEmpty(prefix) || string.IsNullOrWhiteSpace(prefix))
+            if (string.IsNullOrEmpty(prefix) || string.IsNullOrWhiteSpace(prefix))
             {
 
                 await ReplyAsync("You need something as your prefix.");
@@ -110,7 +149,7 @@ namespace YuGiOhBot.Commands
                 {
 
                     IconUrl = "http://2static2.fjcdn.com/thumbnails/comments/Ahegao+_0eaf3dbc104f428d0d2c548c7a62c78b.jpg",
-                    Text = $"A shitty bot made by {owner} aka MeLikeChoco"
+                    Text = $"A YuGiOh bot made by {owner} aka MeLikeChoco"
 
                 };
 
@@ -168,6 +207,16 @@ namespace YuGiOhBot.Commands
                     x.Name = "Would you like a donation?";
                     x.Value = "I think about it, but it would mean nothing because if I wanted to stop working on it for no reason, " +
                     "your donations would go to waste.";
+                    x.IsInline = false;
+
+                });
+
+                eBuilder.AddField(x =>
+                {
+
+                    x.Name = "Credits";
+                    x.Value = "I can not thank Chinhodadao enough for making this bot possible. Without his database, I would not have " +
+                    "been able to make this as flexible as it is now.";
                     x.IsInline = false;
 
                 });

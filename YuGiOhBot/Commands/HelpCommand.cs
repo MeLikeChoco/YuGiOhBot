@@ -47,6 +47,7 @@ namespace YuGiOhBot.Commands
             organizedHelp.AppendLine($"{"ping".PadRight(30, ' ')} | Returns the latency between bot and guild");
             organizedHelp.AppendLine($"{"help".PadRight(30, ' ')} | The defacto help command");
             organizedHelp.AppendLine($"{"feedback <feedback>".PadRight(30, ' ')} | Sends feedback to {Context.Client.GetApplicationInfoAsync().Result.Owner.Username}");
+            organizedHelp.AppendLine($"{"minimal <true/false>".PadRight(30, ' ')} | Sets minimal card settings for guild");
 
             if (!(Context.Channel is IDMChannel) && (Context.User as SocketGuildUser).GuildPermissions.Administrator)
             {
@@ -54,7 +55,8 @@ namespace YuGiOhBot.Commands
                 organizedHelp.AppendLine($"{"prefix <prefix>".PadRight(30, ' ')} | Sets prefix for guild");
 
             }
-
+            
+            organizedHelp.AppendLine($"{"".PadRight(56, '-')}");
             organizedHelp.AppendLine("```");
 
             if(CacheService.DMChannelCache.TryGetValue(Context.User.Id, out IDMChannel channel)) await channel.SendMessageAsync(organizedHelp.ToString());
