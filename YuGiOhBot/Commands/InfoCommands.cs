@@ -16,15 +16,6 @@ namespace YuGiOhBot.Commands
     public class InfoCommands : ModuleBase
     {
 
-        private GuildServices _guildService;
-
-        public InfoCommands(GuildServices guildServiceParams)
-        {
-
-            _guildService = guildServiceParams;
-
-        }
-
         [Command("minimal")]
         [Summary("Get the guild minimal setting")]
         [RequireContext(ContextType.Guild)]
@@ -32,7 +23,7 @@ namespace YuGiOhBot.Commands
         public async Task GetMinimalCommand()
         {
 
-            if (_guildService._minimalSettings.TryGetValue(Context.Guild.Id, out bool guildSetting))
+            if (GuildServices.MinimalSettings.TryGetValue(Context.Guild.Id, out bool guildSetting))
             {
 
                 await ReplyAsync($"Minimal setting is currently: {guildSetting}");
@@ -59,7 +50,7 @@ namespace YuGiOhBot.Commands
 
             }
 
-            await _guildService.SetMinimal(Context.Guild.Id, setting);
+            await GuildServices.SetMinimal(Context.Guild.Id, setting);
             await ReplyAsync($"Minimal setting set to: {minimal}");
 
         }
@@ -97,7 +88,7 @@ namespace YuGiOhBot.Commands
 
             }
 
-            await _guildService.SetPrefix(Context.Guild.Id, prefix);
+            await GuildServices.SetPrefix(Context.Guild.Id, prefix);
             await ReplyAsync($"Prefix has been set to: {prefix}");
 
         }

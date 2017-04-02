@@ -8,20 +8,20 @@ using System.Collections.Concurrent;
 
 namespace YuGiOhBot.Services
 {
-    public class GuildServices
+    public static class GuildServices
     {
 
         private const string DatabasePath = "Data Source=Databases/guildinformation.db";
         private const string PrefixTable = "prefixes";
         private const string MinimalTable = "minimalCardSetting";
-        public ConcurrentDictionary<ulong, string> _guildPrefixes { get; private set; }
-        public ConcurrentDictionary<ulong, bool> _minimalSettings { get; private set; }
+        public static ConcurrentDictionary<ulong, string> GuildPrefixes { get; private set; }
+        public static ConcurrentDictionary<ulong, bool> MinimalSettings { get; private set; }
 
-        public async Task InitializeService()
+        public static async Task InitializeService()
         {
 
-            _guildPrefixes = new ConcurrentDictionary<ulong, string>();
-            _minimalSettings = new ConcurrentDictionary<ulong, bool>();
+            GuildPrefixes = new ConcurrentDictionary<ulong, string>();
+            MinimalSettings = new ConcurrentDictionary<ulong, bool>();
 
             using (var database = new SqliteConnection(DatabasePath))
             {
@@ -42,7 +42,7 @@ namespace YuGiOhBot.Services
                         while (await dataReader.ReadAsync())
                         {
 
-                            _guildPrefixes.TryAdd(ulong.Parse(dataReader.GetString(idOrd)), dataReader.GetString(prefixOrd));
+                            GuildPrefixes.TryAdd(ulong.Parse(dataReader.GetString(idOrd)), dataReader.GetString(prefixOrd));
 
                         }
 
@@ -65,7 +65,7 @@ namespace YuGiOhBot.Services
                         {
 
                             bool.TryParse(dataReader.GetString(settingOrd), out bool setting);
-                            _minimalSettings.TryAdd(ulong.Parse(dataReader.GetString(idOrd)), setting);
+                            MinimalSettings.TryAdd(ulong.Parse(dataReader.GetString(idOrd)), setting);
 
                         }
 
@@ -79,7 +79,7 @@ namespace YuGiOhBot.Services
 
         }
 
-        public async Task SetMinimal(ulong guildId, bool minimal)
+        public static async Task SetMinimal(ulong guildId, bool minimal)
         {
 
             bool doesExist;
@@ -132,11 +132,11 @@ namespace YuGiOhBot.Services
 
             }
 
-            _minimalSettings.AddOrUpdate(guildId, minimal, (id, oldminimal) => oldminimal = minimal);
+            MinimalSettings.AddOrUpdate(guildId, minimal, (id, oldminimal) => oldminimal = minimal);
 
         }
 
-        public async Task SetPrefix(ulong guildId, string prefix)
+        public static async Task SetPrefix(ulong guildId, string prefix)
         {
 
             var guildIdString = guildId.ToString();
@@ -198,7 +198,7 @@ namespace YuGiOhBot.Services
 
             }
 
-            _guildPrefixes.AddOrUpdate(guildId, prefix, (id, oldprefix) => oldprefix = prefix);
+            GuildPrefixes.AddOrUpdate(guildId, prefix, (id, oldprefix) => oldprefix = prefix);
 
         }
 

@@ -11,7 +11,9 @@ using System.Linq;
 using System.Globalization;
 using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
+using MoreLinq;
 using YuGiOhBot.Services.CardObjects;
+using Discord.WebSocket;
 
 namespace YuGiOhBot.Services
 {
@@ -22,6 +24,7 @@ namespace YuGiOhBot.Services
         private const string CardTable = "Card";
         private const string BasePricesUrl = "http://yugiohprices.com/api/get_card_prices/";
         private const string BaseImagesUrl = "http://yugiohprices.com/api/card_image/";
+        public List<string> CardList { get; private set; }
         public ConcurrentDictionary<string, List<string>> OcgBanList { get; private set; }
         public ConcurrentDictionary<string, List<string>> TcgBanList { get; private set; }
         public ConcurrentDictionary<string, List<string>> TrnBanList { get; private set; }
@@ -668,6 +671,41 @@ namespace YuGiOhBot.Services
 
         }
 
+        public async Task<string> LazyGetCardName(string cardName)
+        {
+
+            var searchTerms = cardName.Split(' ');
+
+            using (var dbConnection = new SqliteConnection(DatabasePath))
+            using (SqliteCommand searchCmd = dbConnection.CreateCommand())
+            {
+
+                var buildCommand = new StringBuilder("select name from Card where ");
+
+                var lastTerm = searchTerms.Last();
+                foreach (var term in searchTerms)
+                {
+
+                    if (!term.Equals(lastTerm)) buildCommand = buildCommand.Append($"(name like '%{term}%') and ");
+                    else buildCommand = buildCommand.Append($"(name like '%{term}%') ");
+
+                }
+
+                buildCommand.Append($"order by name limit 1");
+
+                searchCmd.CommandText = buildCommand.ToString();
+
+                await dbConnection.OpenAsync();
+                string closestCard = (await searchCmd.ExecuteScalarAsync())?.ToString();
+
+                dbConnection.Close();
+
+                return closestCard;
+
+            }
+
+        }
+
         public async Task<List<string>> SearchCards(string cardName)
         {
 
@@ -1017,6 +1055,35 @@ namespace YuGiOhBot.Services
                 }
 
                 databaseConnection.Close();
+
+            }
+
+        }
+
+        public async Task InitializeCardList()
+        {
+
+            CardList = new List<string>();
+
+            using (var dbConnection = new SqliteConnection(DatabasePath))
+            using (SqliteCommand addCardCommand = dbConnection.CreateCommand())
+            {
+
+                addCardCommand.CommandText = "select name from Card";
+
+                await dbConnection.OpenAsync();
+
+                using (SqliteDataReader dataReader = await addCardCommand.ExecuteReaderAsync())
+                {
+
+                    int nameOrd = dataReader.GetOrdinal("name");
+
+                    while(await dataReader.ReadAsync())
+                        CardList.Add(dataReader.GetString(nameOrd).ToLower());
+
+                }
+
+                dbConnection.Close();
 
             }
 

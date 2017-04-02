@@ -41,6 +41,7 @@ namespace YuGiOhBot.Commands
             organizedHelp.AppendLine($"{"search <search>".PadRight(30, ' ')} | Searches for cards based on search terms given");
             organizedHelp.AppendLine($"{"lsearch <search>".PadRight(30, ' ')} | Coined lazy search, word order does not matter");
             organizedHelp.AppendLine($"{"archetype <search>".PadRight(30, ' ')} | Attemps an archetype search");
+            organizedHelp.AppendLine($"{"banlist <1/2/3>".PadRight(30, ' ')} | Returns the current banlist WARNING: big message");
             organizedHelp.AppendLine($"{"invite".PadRight(30, ' ')} | Sends invite link to dm");
             organizedHelp.AppendLine($"{"info".PadRight(30, ' ')} | Returns information on bot");
             organizedHelp.AppendLine($"{"uptime".PadRight(30, ' ')} | Returns the uptime of the bot");
