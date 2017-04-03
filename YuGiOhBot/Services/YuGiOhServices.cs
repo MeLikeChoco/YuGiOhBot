@@ -1087,6 +1087,8 @@ namespace YuGiOhBot.Services
 
             }
 
+            await AltConsole.PrintAsync("Service", "YuGiOh", $"There are {CardList.Count} cards!");
+
         }
 
     }

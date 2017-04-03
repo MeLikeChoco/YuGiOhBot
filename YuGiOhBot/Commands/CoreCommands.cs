@@ -43,6 +43,34 @@ namespace YuGiOhBot.Commands
             if (CacheService.YuGiOhCardCache.TryGetValue(cardName.ToLower(), out EmbedBuilder eBuilder))
             {
 
+                if(GuildServices.MinimalSettings.TryGetValue(Context.Guild.Id, out bool minimal) && minimal)
+                {
+
+                    if (minimal)
+                    {
+                        string imgUrl = eBuilder.ImageUrl;
+
+                        if (!string.IsNullOrEmpty(imgUrl))
+                        {
+                            eBuilder.ImageUrl = null;
+                            eBuilder.ThumbnailUrl = imgUrl;
+                        }
+                    }
+
+                }
+                else
+                {
+
+                    string thumbUrl = eBuilder.ThumbnailUrl;
+
+                    if (!string.IsNullOrEmpty(thumbUrl))
+                    {
+                        eBuilder.ThumbnailUrl = null;
+                        eBuilder.ImageUrl = thumbUrl;
+                    }
+
+                }
+
                 await ReplyAsync("", embed: eBuilder);
                 return;
 
@@ -103,8 +131,35 @@ namespace YuGiOhBot.Commands
                 if (CacheService.YuGiOhCardCache.TryGetValue(card.Name.ToLower(), out eBuilder))
                 {
 
+                    if (GuildServices.MinimalSettings.TryGetValue(Context.Guild.Id, out bool min) && min)
+                    {
+
+                        if (min)
+                        {
+                            string imgUrl = eBuilder.ImageUrl;
+
+                            if (!string.IsNullOrEmpty(imgUrl))
+                            {
+                                eBuilder.ImageUrl = null;
+                                eBuilder.ThumbnailUrl = imgUrl;
+                            }
+                        }
+
+                    }
+                    else
+                    {
+
+                        string thumbUrl = eBuilder.ThumbnailUrl;
+
+                        if (!string.IsNullOrEmpty(thumbUrl))
+                        {
+                            eBuilder.ThumbnailUrl = null;
+                            eBuilder.ImageUrl = thumbUrl;
+                        }
+
+                    }
+
                     await ReplyAsync("", embed: eBuilder);
-                    typingState.Dispose();
                     return;
 
                 }
@@ -115,8 +170,6 @@ namespace YuGiOhBot.Commands
                 await _chatService.SendCard(Context.Channel, card, minimal);
 
             }
-
-            await ReplyAsync("", embed: eBuilder);
 
         }
 
@@ -137,9 +190,33 @@ namespace YuGiOhBot.Commands
                 if (CacheService.YuGiOhCardCache.TryGetValue(card.Name.ToLower(), out eBuilder))
                 {
 
-                    await ReplyAsync("", embed: eBuilder);
-                    typingState.Dispose();
-                    return;
+                    if (GuildServices.MinimalSettings.TryGetValue(Context.Guild.Id, out bool min) && min)
+                    {
+
+                        if (min)
+                        {
+                            string imgUrl = eBuilder.ImageUrl;
+
+                            if (!string.IsNullOrEmpty(imgUrl))
+                            {
+                                eBuilder.ImageUrl = null;
+                                eBuilder.ThumbnailUrl = imgUrl;
+                            }
+                        }
+
+                    }
+                    else
+                    {
+
+                        string thumbUrl = eBuilder.ThumbnailUrl;
+
+                        if (!string.IsNullOrEmpty(thumbUrl))
+                        {
+                            eBuilder.ThumbnailUrl = null;
+                            eBuilder.ImageUrl = thumbUrl;
+                        }
+
+                    }
 
                 }
 
@@ -148,9 +225,7 @@ namespace YuGiOhBot.Commands
 
                 await _chatService.SendCard(Context.Channel, card, minimal);
 
-            }
-
-            await ReplyAsync("", embed: eBuilder);
+            }            
 
         }
 
@@ -176,7 +251,7 @@ namespace YuGiOhBot.Commands
                 //<card names>
                 searchResults = await _yugiohService.SearchCards(search);
 
-                if (searchResults.Count == 0)
+                if (searchResults.FirstOrDefault() == null)
                 {
 
                     await ReplyAsync($"Nothing was found with the search of {search}!");
@@ -249,7 +324,7 @@ namespace YuGiOhBot.Commands
                 //<card names>
                 searchResults = await _yugiohService.LazySearchCards(search);
 
-                if (searchResults.Count == 0)
+                if (searchResults.FirstOrDefault() == null)
                 {
 
                     await ReplyAsync($"Nothing was found with the search of {search}!");

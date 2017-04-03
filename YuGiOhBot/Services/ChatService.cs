@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using YuGiOhBot.Services.CardObjects;
 using YuGiOhBot.Services;
 using MoreLinq;
+using YuGiOhBot.Core;
 
 namespace YuGiOhBot.Services
 {
@@ -17,7 +18,7 @@ namespace YuGiOhBot.Services
     {
 
         private YuGiOhServices _yugiohService;
-        private const string InlinePattern = ".*\\[\\[.+\\]\\].*";
+        private const string InlinePattern = @"(\[\[.+?\]\])";
 
         public ChatService(YuGiOhServices yugiohServiceParams)
         {
@@ -321,43 +322,98 @@ namespace YuGiOhBot.Services
         public async Task InlineCardSearch(SocketMessage message)
         {
 
-            string content = message.Content;
+            if (message.Author.IsBot)
+                return;
+
+            string content = message?.Content;
+
+            if (string.IsNullOrEmpty(content))
+                return;
+
             ISocketMessageChannel channel = message.Channel;
+            MatchCollection m = Regex.Matches(content, InlinePattern);
 
-            if (Regex.Match(content, InlinePattern).Success)
+            if (m.Count != 0)
             {
-
-                int start = content.IndexOf("[[") + 2;
-                int end = content.IndexOf("]]", start) - 2;
-                string cardName = content.Substring(start, end);
 
                 using (channel.EnterTypingState())
                 {
 
-                    string closestCard = await _yugiohService.LazyGetCardName(cardName);
+                    if (channel is SocketGuildChannel)
+                        await AltConsole.PrintAsync("Service", "Chat", $"{(channel as SocketGuildChannel).Guild.Name}");
 
-                    if (string.IsNullOrEmpty(closestCard))
-                        closestCard = _yugiohService.CardList.MinBy(card => Compute(card, cardName));
-
-                    bool minimal;
-
-                    if (channel is SocketGuildChannel) //check if channel is not a dm channel
-                        GuildServices.MinimalSettings.TryGetValue((channel as SocketGuildChannel).Guild.Id, out minimal);
-                    else
-                        minimal = false;
-
-                    if (CacheService.YuGiOhCardCache.TryGetValue(closestCard, out EmbedBuilder eBuilder))
-                        await channel.SendMessageAsync("", embed: eBuilder);
-                    else
+                    await AltConsole.PrintAsync("Service", "Chat", $"Inline card recieved, message was: {content}");
+                    //had to use m.OfType<Match>() due to matches not implementing generic IEnumerable
+                    //thanks stackoverflow :D
+                    Parallel.ForEach(m.OfType<Match>(), async (match) =>
                     {
 
-                        var correctCard = await _yugiohService.GetCard(closestCard);
-                        await SendCard(channel, correctCard, minimal);
+                        string cardName = match.ToString();
+                        cardName = cardName.Substring(2, cardName.Length - 4).ToLower();
+                        var input = cardName.Split(' ');
 
-                    }
+                        //check if the card list contains anything from the input and return that instead
+                        //ex. kaiju slumber would return Interrupted Kaiju Slumber
+                        //note: it has problems such as "red eyes" will return Hundred Eyes Dragon instead of Red-Eyes Dragon
+                        //how to accurately solve this problem is not easy
+                        string closestCard = _yugiohService.CardList.FirstOrDefault(card => input.All(i => card.Contains(i)));
+                        //string closestCard = await _yugiohService.LazyGetCardName(cardName);
+
+                        if (string.IsNullOrEmpty(closestCard))
+                            closestCard = _yugiohService.CardList.MinBy(card => Compute(card, cardName));
+
+                        bool minimal;
+
+                        if (channel is SocketGuildChannel)
+                        {
+                            if (GuildServices.MinimalSettings.TryGetValue((channel as SocketGuildChannel).Guild.Id, out minimal)) { }
+                            else
+                                minimal = false;
+                        }
+                        else
+                            minimal = false;
+
+                        if (CacheService.YuGiOhCardCache.TryGetValue(closestCard, out EmbedBuilder eBuilder))
+                        {
+
+                            if (minimal)
+                            {
+                                string imgUrl = eBuilder.ImageUrl;
+
+                                if (!string.IsNullOrEmpty(imgUrl))
+                                {
+                                    eBuilder.ImageUrl = null;
+                                    eBuilder.ThumbnailUrl = imgUrl;
+                                }
+                            }
+                            else
+                            {
+
+                                string thumbUrl = eBuilder.ThumbnailUrl;
+
+                                if (!string.IsNullOrEmpty(thumbUrl))
+                                {
+                                    eBuilder.ThumbnailUrl = null;
+                                    eBuilder.ImageUrl = thumbUrl;
+                                }
+
+                            }
+
+                            await channel.SendMessageAsync("", embed: eBuilder);
+
+                        }
+                        else
+                        {
+
+                            var correctCard = await _yugiohService.GetCard(closestCard);
+                            await SendCard(channel, correctCard, minimal);
+
+                        }
+
+
+                    });
 
                 }
-
             }
 
         }

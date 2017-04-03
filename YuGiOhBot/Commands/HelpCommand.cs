@@ -41,7 +41,7 @@ namespace YuGiOhBot.Commands
             organizedHelp.AppendLine($"{"search <search>".PadRight(30, ' ')} | Searches for cards based on search terms given");
             organizedHelp.AppendLine($"{"lsearch <search>".PadRight(30, ' ')} | Coined lazy search, word order does not matter");
             organizedHelp.AppendLine($"{"archetype <search>".PadRight(30, ' ')} | Attemps an archetype search");
-            organizedHelp.AppendLine($"{"banlist <1/2/3>".PadRight(30, ' ')} | Returns the current banlist WARNING: big message");
+            organizedHelp.AppendLine($"{"banlist <1/2/3>".PadRight(30, ' ')} | Returns the current banlist WARNING >> big message");
             organizedHelp.AppendLine($"{"invite".PadRight(30, ' ')} | Sends invite link to dm");
             organizedHelp.AppendLine($"{"info".PadRight(30, ' ')} | Returns information on bot");
             organizedHelp.AppendLine($"{"uptime".PadRight(30, ' ')} | Returns the uptime of the bot");
@@ -56,7 +56,10 @@ namespace YuGiOhBot.Commands
                 organizedHelp.AppendLine($"{"prefix <prefix>".PadRight(30, ' ')} | Sets prefix for guild");
 
             }
-            
+
+            organizedHelp.AppendLine($"I also have inline declaration of cards. For example, \"I like [[blue-eyes]]\" will give you a Blue-Eyes card! You can use multiple" +
+                $" inline declarations such as \"[[red-eyes]] will beat [[blue-eyes]]\"!");
+
             organizedHelp.AppendLine($"{"".PadRight(56, '-')}");
             organizedHelp.AppendLine("```");
 
