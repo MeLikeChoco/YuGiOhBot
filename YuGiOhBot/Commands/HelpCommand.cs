@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using YuGiOhBot.Services;
+using YuGiOhBot.Attributes;
 
 namespace YuGiOhBot.Commands
 {
@@ -24,6 +25,7 @@ namespace YuGiOhBot.Commands
         }
 
         [Command("help"), Alias("h")]
+        [Cooldown(10)]
         [Summary("HALP ME")]
         public async Task TheHelpCommand()
         {
@@ -63,15 +65,8 @@ namespace YuGiOhBot.Commands
             organizedHelp.AppendLine($"{"".PadRight(56, '-')}");
             organizedHelp.AppendLine("```");
 
-            if(CacheService.DMChannelCache.TryGetValue(Context.User.Id, out IDMChannel channel)) await channel.SendMessageAsync(organizedHelp.ToString());
-            else
-            {
-
-                IDMChannel dmChannel = await Context.User.CreateDMChannelAsync();
-                CacheService.DMChannelCache.TryAdd(Context.User.Id, dmChannel);
-                await dmChannel.SendMessageAsync(organizedHelp.ToString());
-
-            }
+            IDMChannel channel = await Context.User.CreateDMChannelAsync();
+            await channel.SendMessageAsync(organizedHelp.ToString());
 
         }
 

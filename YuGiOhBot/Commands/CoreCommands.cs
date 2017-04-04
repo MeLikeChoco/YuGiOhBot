@@ -458,14 +458,7 @@ namespace YuGiOhBot.Commands
 
             }
 
-            if (!CacheService.DMChannelCache.TryGetValue(Context.User.Id, out IDMChannel channel))
-            {
-
-                var dm = await Context.User.CreateDMChannelAsync();
-                CacheService.DMChannelCache.TryAdd(Context.User.Id, dm);
-                channel = dm;
-
-            }
+            var channel = await Context.User.CreateDMChannelAsync();
 
             await ReplyAsync("Sending your dms to the purple realm...");
 

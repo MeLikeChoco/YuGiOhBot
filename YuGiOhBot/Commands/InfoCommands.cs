@@ -10,6 +10,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using YuGiOhBot.Services;
+using YuGiOhBot.Attributes;
 
 namespace YuGiOhBot.Commands
 {
@@ -105,6 +106,7 @@ namespace YuGiOhBot.Commands
         }
 
         [Command("info")]
+        [Cooldown(10)]
         [Summary("Returns info on the system the bot is on and the bot itself")]
         public async Task InfoCommand()
         {
