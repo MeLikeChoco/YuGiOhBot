@@ -46,6 +46,7 @@ namespace YuGiOhBot.Commands
             organizedHelp.AppendLine($"{"banlist <1/2/3>".PadRight(30, ' ')} | Returns the current banlist WARNING >> big message");
             organizedHelp.AppendLine($"{"invite".PadRight(30, ' ')} | Sends invite link to dm");
             organizedHelp.AppendLine($"{"info".PadRight(30, ' ')} | Returns information on bot");
+            organizedHelp.AppendLine($"{"stats".PadRight(30, ' ')} | Returns stats on the bot");
             organizedHelp.AppendLine($"{"uptime".PadRight(30, ' ')} | Returns the uptime of the bot");
             organizedHelp.AppendLine($"{"ping".PadRight(30, ' ')} | Returns the latency between bot and guild");
             organizedHelp.AppendLine($"{"help".PadRight(30, ' ')} | The defacto help command");
