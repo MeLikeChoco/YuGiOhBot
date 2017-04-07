@@ -314,7 +314,12 @@ namespace YuGiOhBot.Services
 
             }
 
-            await channel.SendMessageAsync("", embed: eBuilder);
+            try
+            {
+                await channel.SendMessageAsync("", embed: eBuilder);
+            }
+            catch { }
+
             CacheService.YuGiOhCardCache.TryAdd(card.Name.ToLower(), eBuilder);
 
         }
