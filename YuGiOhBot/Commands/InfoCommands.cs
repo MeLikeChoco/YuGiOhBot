@@ -31,7 +31,7 @@ namespace YuGiOhBot.Commands
                 return;
 
             }
-            else await ReplyAsync($"Minimal setting is currently: false");
+            else await ReplyAsync($"Minimal setting is currently: False");
 
         }
 
