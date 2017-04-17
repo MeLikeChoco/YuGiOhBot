@@ -317,10 +317,7 @@ namespace YuGiOhBot.Services
 
         public async Task InlineCardSearch(SocketMessage message)
         {
-
-            var stopwatch = new Stopwatch();
-            stopwatch.Start();
-
+            
             if (message.Author.IsBot)
                 return;
 
@@ -331,9 +328,13 @@ namespace YuGiOhBot.Services
 
             ISocketMessageChannel channel = message.Channel;
             MatchCollection m = Regex.Matches(content, InlinePattern);
+            Stopwatch stopwatch;
 
             if (m.Count != 0)
             {
+
+                stopwatch = new Stopwatch();
+                stopwatch.Start();
 
                 using (channel.EnterTypingState())
                 {
@@ -420,10 +421,11 @@ namespace YuGiOhBot.Services
                     });
 
                 }
-            }
 
-            stopwatch.Stop();
-            await AltConsole.PrintAsync("Command", "Stopwatch", $"Inline search completed in {stopwatch.Elapsed.TotalSeconds} seconds");
+                stopwatch.Stop();
+                await AltConsole.PrintAsync("Command", "Stopwatch", $"Inline search completed in {stopwatch.Elapsed.TotalSeconds} seconds");
+
+            }
 
         }
 
