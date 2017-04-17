@@ -53,13 +53,13 @@ namespace YuGiOhBot.Services
                 using (SqliteCommand getMinimal = database.CreateCommand())
                 {
 
-                    getMinimal.CommandText = $"select * from {PrefixTable}";
+                    getMinimal.CommandText = $"select * from {MinimalTable}";
 
                     using (SqliteDataReader dataReader = await getMinimal.ExecuteReaderAsync())
                     {
 
                         int idOrd = dataReader.GetOrdinal("id");
-                        int settingOrd = dataReader.GetOrdinal("prefix");
+                        int settingOrd = dataReader.GetOrdinal("setting");
 
                         while (await dataReader.ReadAsync())
                         {
