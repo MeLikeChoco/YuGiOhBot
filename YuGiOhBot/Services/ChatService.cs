@@ -8,9 +8,9 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using YuGiOhBot.Services.CardObjects;
-using YuGiOhBot.Services;
 using MoreLinq;
 using YuGiOhBot.Core;
+using System.Diagnostics;
 
 namespace YuGiOhBot.Services
 {
@@ -221,9 +221,7 @@ namespace YuGiOhBot.Services
                         {
 
                             var tempString = $"Rarity: {info.rarity}\n" +
-                            $"Low: {info.price_data.data.prices.low.ToString("0.00")}\n" +
-                            $"Average: {info.price_data.data.prices.average.ToString("0.00")}\n" +
-                            $"High: {info.price_data.data.prices.high.ToString("0.00")}";
+                            $"Average Price: ${info.price_data.data.prices.average.ToString("0.00")}";
 
                             eBuilder.AddField(x =>
                             {
@@ -262,9 +260,7 @@ namespace YuGiOhBot.Services
                         {
 
                             var tempString = $"Rarity: {info.rarity}\n" +
-                            $"Low: {info.price_data.data.prices.low.ToString("0.00")}\n" +
-                            $"Average: {info.price_data.data.prices.average.ToString("0.00")}\n" +
-                            $"High: {info.price_data.data.prices.high.ToString("0.00")}";
+                            $"Average Price: ${info.price_data.data.prices.average.ToString("0.00")}";
 
                             eBuilder.AddField(x =>
                             {
@@ -322,6 +318,9 @@ namespace YuGiOhBot.Services
         public async Task InlineCardSearch(SocketMessage message)
         {
 
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+
             if (message.Author.IsBot)
                 return;
 
@@ -356,7 +355,7 @@ namespace YuGiOhBot.Services
                         //ex. kaiju slumber would return Interrupted Kaiju Slumber
                         //note: it has problems such as "red eyes" will return Hundred Eyes Dragon instead of Red-Eyes Dragon
                         //how to accurately solve this problem is not easy
-                        IEnumerable<string> listOfClosestCards = _yugiohService.CardList.Where(card => input.All(i => card.Contains(i)));
+                        IEnumerable<string> listOfClosestCards = _yugiohService.CardList.AsParallel().WithExecutionMode(ParallelExecutionMode.ForceParallelism).Where(card => input.All(i => card.Contains(i)));
                         string closestCard;
 
                         if (listOfClosestCards.Count() != 0)
@@ -368,7 +367,7 @@ namespace YuGiOhBot.Services
 
                         }
                         else
-                            closestCard = _yugiohService.CardList.MinBy(card => Compute(card, cardName));
+                            closestCard = _yugiohService.CardList.AsParallel().WithExecutionMode(ParallelExecutionMode.ForceParallelism).MinBy(card => Compute(card, cardName));
 
                         bool minimal;
 
@@ -417,12 +416,14 @@ namespace YuGiOhBot.Services
                             await SendCard(channel, correctCard, minimal);
 
                         }
-
-
+                        
                     });
 
                 }
             }
+
+            stopwatch.Stop();
+            await AltConsole.PrintAsync("Command", "Stopwatch", $"Inline search completed in {stopwatch.Elapsed.TotalSeconds} seconds");
 
         }
 
