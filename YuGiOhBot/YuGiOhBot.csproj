@@ -7,7 +7,7 @@
 
   <ItemGroup>
     <PackageReference Include="Discord.Addons.InteractiveCommands" Version="1.2.2" />
-    <PackageReference Include="Discord.Net" Version="1.0.0-rc2-00678" />
+    <PackageReference Include="Discord.Net" Version="1.0.0-rc2-00699" />
     <PackageReference Include="Microsoft.Data.SQLite" Version="1.1.0" />
     <PackageReference Include="morelinq" Version="2.3.0" />
     <PackageReference Include="WS4NetCore" Version="1.0.0-a" />
@@ -33,6 +33,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Tokens\Discord.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Tokens\DiscordBotList.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Tokens\DiscordBots.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Tokens\DiscordTest.txt">

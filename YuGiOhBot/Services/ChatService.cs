@@ -197,120 +197,115 @@ namespace YuGiOhBot.Services
 
             }
 
-            if (!minimal)
+            if (card.Prices.data != null)
             {
 
-                if (card.Prices.data != null)
-                {
-
-                    if (card.Prices.data.Count >= 4)
-                    {
-
-                        eBuilder.AddField(x =>
-                        {
-
-                            x.Name = "Prices";
-                            x.Value = "**Showing the first 3 prices due to too many to show**";
-                            x.IsInline = false;
-
-                        });
-
-                        List<Datum> prices = card.Prices.data.GetRange(0, 3);
-
-                        foreach (Datum info in prices)
-                        {
-
-                            if (string.IsNullOrEmpty(info.price_data.message)) //check if there is an error message
-                            {
-
-                                var tempString = $"Rarity: {info.rarity}\n" +
-                                $"Low: {info.price_data.data.prices.low.ToString("0.00")}\n" +
-                                $"Average: {info.price_data.data.prices.average.ToString("0.00")}\n" +
-                                $"High: {info.price_data.data.prices.high.ToString("0.00")}";
-
-                                eBuilder.AddField(x =>
-                                {
-
-                                    x.Name = info.name;
-                                    x.Value = tempString;
-                                    x.IsInline = false;
-
-                                });
-
-                            }
-                            else
-                            {
-
-                                eBuilder.AddField(x =>
-                                {
-
-                                    x.Name = info.name;
-                                    x.Value = info.price_data.message;
-                                    x.IsInline = false;
-
-                                });
-
-                            }
-
-                        }
-
-                    }
-                    else if (card.Prices.data.Count < 4)
-                    {
-
-                        foreach (Datum info in card.Prices.data)
-                        {
-
-                            if (string.IsNullOrEmpty(info.price_data.message)) //check if there is an error message
-                            {
-
-                                var tempString = $"Rarity: {info.rarity}\n" +
-                                $"Low: {info.price_data.data.prices.low.ToString("0.00")}\n" +
-                                $"Average: {info.price_data.data.prices.average.ToString("0.00")}\n" +
-                                $"High: {info.price_data.data.prices.high.ToString("0.00")}";
-
-                                eBuilder.AddField(x =>
-                                {
-
-                                    x.Name = info.name;
-                                    x.Value = tempString;
-                                    x.IsInline = false;
-
-                                });
-
-                            }
-                            else
-                            {
-
-                                eBuilder.AddField(x =>
-                                {
-
-                                    x.Name = info.name;
-                                    x.Value = info.price_data.message;
-                                    x.IsInline = false;
-
-                                });
-
-                            }
-
-                        }
-
-                    }
-
-                }
-                else if (card.Prices.data == null)
+                if (card.Prices.data.Count >= 4)
                 {
 
                     eBuilder.AddField(x =>
                     {
 
                         x.Name = "Prices";
-                        x.Value = "**No prices to show for this card!**";
+                        x.Value = "**Showing the first 3 prices due to too many to show**";
                         x.IsInline = false;
 
                     });
 
+                    List<Datum> prices = card.Prices.data.GetRange(0, 3);
+
+                    foreach (Datum info in prices)
+                    {
+
+                        if (string.IsNullOrEmpty(info.price_data.message)) //check if there is an error message
+                        {
+
+                            var tempString = $"Rarity: {info.rarity}\n" +
+                            $"Low: {info.price_data.data.prices.low.ToString("0.00")}\n" +
+                            $"Average: {info.price_data.data.prices.average.ToString("0.00")}\n" +
+                            $"High: {info.price_data.data.prices.high.ToString("0.00")}";
+
+                            eBuilder.AddField(x =>
+                            {
+
+                                x.Name = info.name;
+                                x.Value = tempString;
+                                x.IsInline = false;
+
+                            });
+
+                        }
+                        else
+                        {
+
+                            eBuilder.AddField(x =>
+                            {
+
+                                x.Name = info.name;
+                                x.Value = info.price_data.message;
+                                x.IsInline = false;
+
+                            });
+
+                        }
+
+                    }
+
                 }
+                else if (card.Prices.data.Count < 4)
+                {
+
+                    foreach (Datum info in card.Prices.data)
+                    {
+
+                        if (string.IsNullOrEmpty(info.price_data.message)) //check if there is an error message
+                        {
+
+                            var tempString = $"Rarity: {info.rarity}\n" +
+                            $"Low: {info.price_data.data.prices.low.ToString("0.00")}\n" +
+                            $"Average: {info.price_data.data.prices.average.ToString("0.00")}\n" +
+                            $"High: {info.price_data.data.prices.high.ToString("0.00")}";
+
+                            eBuilder.AddField(x =>
+                            {
+
+                                x.Name = info.name;
+                                x.Value = tempString;
+                                x.IsInline = false;
+
+                            });
+
+                        }
+                        else
+                        {
+
+                            eBuilder.AddField(x =>
+                            {
+
+                                x.Name = info.name;
+                                x.Value = info.price_data.message;
+                                x.IsInline = false;
+
+                            });
+
+                        }
+
+                    }
+
+                }
+
+            }
+            else if (card.Prices.data == null)
+            {
+
+                eBuilder.AddField(x =>
+                {
+
+                    x.Name = "Prices";
+                    x.Value = "**No prices to show for this card!**";
+                    x.IsInline = false;
+
+                });
 
             }
 
@@ -354,17 +349,25 @@ namespace YuGiOhBot.Services
                     {
 
                         string cardName = match.ToString();
-                        cardName = cardName.Substring(2, cardName.Length - 4).ToLower();
+                        cardName = cardName.Substring(2, cardName.Length - 4).ToLower(); //lose the brackets
                         var input = cardName.Split(' ');
 
                         //check if the card list contains anything from the input and return that instead
                         //ex. kaiju slumber would return Interrupted Kaiju Slumber
                         //note: it has problems such as "red eyes" will return Hundred Eyes Dragon instead of Red-Eyes Dragon
                         //how to accurately solve this problem is not easy
-                        string closestCard = _yugiohService.CardList.FirstOrDefault(card => input.All(i => card.Contains(i)));
-                        //string closestCard = await _yugiohService.LazyGetCardName(cardName);
+                        IEnumerable<string> listOfClosestCards = _yugiohService.CardList.Where(card => input.All(i => card.Contains(i)));
+                        string closestCard;
 
-                        if (string.IsNullOrEmpty(closestCard))
+                        if (listOfClosestCards.Count() != 0)
+                        {
+                            closestCard = listOfClosestCards.FirstOrDefault(card => card.Equals(cardName));
+
+                            if (string.IsNullOrEmpty(closestCard))
+                                closestCard = _yugiohService.CardList.FirstOrDefault(card => input.All(i => card.Contains(i)));
+
+                        }
+                        else
                             closestCard = _yugiohService.CardList.MinBy(card => Compute(card, cardName));
 
                         bool minimal;

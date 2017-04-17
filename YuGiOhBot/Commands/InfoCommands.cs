@@ -56,6 +56,27 @@ namespace YuGiOhBot.Commands
 
         }
 
+        [Command("minimal")]
+        [Summary("Set the card commands to feed less information")]
+        [RequireContext(ContextType.Guild)]
+        [RequireOwner]
+        [Priority(2)]
+        public async Task OwnerMinimalCommand(string minimal)
+        {
+
+            if (!bool.TryParse(minimal, out bool setting))
+            {
+
+                await ReplyAsync($"Use true/false to set minimal card settings!");
+                return;
+
+            }
+
+            await GuildServices.SetMinimal(Context.Guild.Id, setting);
+            await ReplyAsync($"Minimal setting set to: {minimal}");
+
+        }
+
         [Command("feedback")]
         [Summary("Send feedback")]
         public async Task FeedBackCommand([Remainder]string feedback)
