@@ -872,7 +872,7 @@ namespace YuGiOhBot.Services
             using (var http = new HttpClient())
             {
 
-                HttpResponseMessage response = await http.GetAsync($"{BaseImagesUrl}{cardName}");
+                HttpResponseMessage response = await http.GetAsync($"{BaseImagesUrl}{Uri.EscapeUriString(cardName)}");
 
                 if (!response.IsSuccessStatusCode)
                 {
