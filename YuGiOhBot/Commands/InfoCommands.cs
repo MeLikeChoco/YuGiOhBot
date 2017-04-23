@@ -11,11 +11,18 @@ using System.Text;
 using System.Threading.Tasks;
 using YuGiOhBot.Services;
 using YuGiOhBot.Attributes;
+using System.IO;
 
 namespace YuGiOhBot.Commands
 {
     public class InfoCommands : ModuleBase
     {
+
+        [Command("ultimateform")]
+        [Summary("SUMMON THE ULTIMATE FORM FOR THE BOT")]
+        [Cooldown(5)]
+        public async Task UltimateFormCommand()
+            => await Context.Channel.SendFileAsync(File.Open("Files/ultimateform.jpg", FileMode.Open), "jpg");
 
         [Command("minimal")]
         [Summary("Get the guild minimal setting")]

@@ -305,13 +305,14 @@ namespace YuGiOhBot.Services
 
             }
 
+            //add to cache before displaying in case of minimal settings
+            CacheService.YuGiOhCardCache.TryAdd(card.Name.ToLower(), eBuilder);
+
             try
             {
                 await channel.SendMessageAsync("", embed: eBuilder);
             }
-            catch { }
-
-            CacheService.YuGiOhCardCache.TryAdd(card.Name.ToLower(), eBuilder);
+            catch { await AltConsole.PrintAsync("Service", "Chat", "No permission to send message"); }
 
         }
 
@@ -336,95 +337,109 @@ namespace YuGiOhBot.Services
                 stopwatch = new Stopwatch();
                 stopwatch.Start();
 
-                using (channel.EnterTypingState())
+                try
                 {
 
-                    if (channel is SocketGuildChannel)
-                        await AltConsole.PrintAsync("Service", "Chat", $"{(channel as SocketGuildChannel).Guild.Name}");
-
-                    await AltConsole.PrintAsync("Service", "Chat", $"Inline card recieved, message was: {content}");
-                    //had to use m.OfType<Match>() due to matches not implementing generic IEnumerable
-                    //thanks stackoverflow :D
-                    Parallel.ForEach(m.OfType<Match>(), async (match) =>
+                    using (channel.EnterTypingState())
                     {
 
-                        string cardName = match.ToString();
-                        cardName = cardName.Substring(2, cardName.Length - 4).ToLower(); //lose the brackets
-                        var input = cardName.Split(' ');
-
-                        //check if the card list contains anything from the input and return that instead
-                        //ex. kaiju slumber would return Interrupted Kaiju Slumber
-                        //note: it has problems such as "red eyes" will return Hundred Eyes Dragon instead of Red-Eyes Dragon
-                        //how to accurately solve this problem is not easy
-                        IEnumerable<string> listOfClosestCards = _yugiohService.CardList.AsParallel().WithExecutionMode(ParallelExecutionMode.ForceParallelism).Where(card => input.All(i => card.Contains(i)));
-                        string closestCard;
-
-                        if (listOfClosestCards.Count() != 0)
-                        {
-                            closestCard = listOfClosestCards.FirstOrDefault(card => card.Equals(cardName));
-
-                            if (string.IsNullOrEmpty(closestCard))
-                                closestCard = _yugiohService.CardList.FirstOrDefault(card => input.All(i => card.Contains(i)));
-
-                        }
-                        else
-                            closestCard = _yugiohService.CardList.AsParallel().WithExecutionMode(ParallelExecutionMode.ForceParallelism).MinBy(card => Compute(card, cardName));
-
-                        bool minimal;
-
                         if (channel is SocketGuildChannel)
+                            await AltConsole.PrintAsync("Service", "Chat", $"{(channel as SocketGuildChannel).Guild.Name}");
+
+                        await AltConsole.PrintAsync("Service", "Chat", $"Inline card recieved, message was: {content}");
+                        //had to use m.OfType<Match>() due to matches not implementing generic IEnumerable
+                        //thanks stackoverflow :D
+                        Parallel.ForEach(m.OfType<Match>(), async (match) =>
                         {
-                            if (GuildServices.MinimalSettings.TryGetValue((channel as SocketGuildChannel).Guild.Id, out minimal)) { }
+
+                            string cardName = match.ToString();
+                            cardName = cardName.Substring(2, cardName.Length - 4).ToLower(); //lose the brackets
+                            var input = cardName.Split(' ');
+
+                            //check if the card list contains anything from the input and return that instead
+                            //ex. kaiju slumber would return Interrupted Kaiju Slumber
+                            //note: it has problems such as "red eyes" will return Hundred Eyes Dragon instead of Red-Eyes Dragon
+                            //how to accurately solve this problem is not easy
+                            IEnumerable<string> listOfClosestCards = _yugiohService.CardList.AsParallel().WithExecutionMode(ParallelExecutionMode.ForceParallelism).Where(card => input.All(i => card.Contains(i)));
+                            string closestCard;
+
+                            if (listOfClosestCards.Count() != 0)
+                            {
+                                closestCard = listOfClosestCards.FirstOrDefault(card => card.Equals(cardName));
+
+                                if (string.IsNullOrEmpty(closestCard))
+                                    closestCard = _yugiohService.CardList.FirstOrDefault(card => input.All(i => card.Contains(i)));
+
+                            }
+                            else
+                                closestCard = _yugiohService.CardList.AsParallel().WithExecutionMode(ParallelExecutionMode.ForceParallelism).MinBy(card => Compute(card, cardName));
+
+                            bool minimal;
+
+                            if (channel is SocketGuildChannel)
+                            {
+                                if (GuildServices.MinimalSettings.TryGetValue((channel as SocketGuildChannel).Guild.Id, out minimal)) { }
+                                else
+                                    minimal = false;
+                            }
                             else
                                 minimal = false;
-                        }
-                        else
-                            minimal = false;
 
-                        if (CacheService.YuGiOhCardCache.TryGetValue(closestCard, out EmbedBuilder eBuilder))
-                        {
-
-                            if (minimal)
+                            if (CacheService.YuGiOhCardCache.TryGetValue(closestCard, out EmbedBuilder eBuilder))
                             {
-                                string imgUrl = eBuilder.ImageUrl;
 
-                                if (!string.IsNullOrEmpty(imgUrl))
+                                if (minimal)
                                 {
-                                    eBuilder.ImageUrl = null;
-                                    eBuilder.ThumbnailUrl = imgUrl;
+                                    string imgUrl = eBuilder.ImageUrl;
+
+                                    if (!string.IsNullOrEmpty(imgUrl))
+                                    {
+                                        eBuilder.ImageUrl = null;
+                                        eBuilder.ThumbnailUrl = imgUrl;
+                                    }
                                 }
+                                else
+                                {
+
+                                    string thumbUrl = eBuilder.ThumbnailUrl;
+
+                                    if (!string.IsNullOrEmpty(thumbUrl))
+                                    {
+                                        eBuilder.ThumbnailUrl = null;
+                                        eBuilder.ImageUrl = thumbUrl;
+                                    }
+
+                                }
+
+                                try
+                                {
+                                    await channel.SendMessageAsync("", embed: eBuilder);
+                                }
+                                catch { await AltConsole.PrintAsync("Service", "Chat", "No permission to send message"); }
+
                             }
                             else
                             {
 
-                                string thumbUrl = eBuilder.ThumbnailUrl;
-
-                                if (!string.IsNullOrEmpty(thumbUrl))
-                                {
-                                    eBuilder.ThumbnailUrl = null;
-                                    eBuilder.ImageUrl = thumbUrl;
-                                }
+                                var correctCard = await _yugiohService.GetCard(closestCard);
+                                await SendCard(channel, correctCard, minimal);
 
                             }
 
-                            await channel.SendMessageAsync("", embed: eBuilder);
+                        });
 
-                        }
-                        else
-                        {
+                    }
 
-                            var correctCard = await _yugiohService.GetCard(closestCard);
-                            await SendCard(channel, correctCard, minimal);
-
-                        }
-                        
-                    });
+                    stopwatch.Stop();
+                    await AltConsole.PrintAsync("Command", "Stopwatch", $"Inline search completed in {stopwatch.Elapsed.TotalSeconds} seconds");
 
                 }
+                catch (Exception e)
+                {
 
-                stopwatch.Stop();
-                await AltConsole.PrintAsync("Command", "Stopwatch", $"Inline search completed in {stopwatch.Elapsed.TotalSeconds} seconds");
+                    await AltConsole.PrintAsync("Service", "Chat", "", e);
 
+                }
             }
 
         }

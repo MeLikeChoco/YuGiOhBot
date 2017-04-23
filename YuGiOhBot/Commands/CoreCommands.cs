@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using YuGiOhBot.Services;
 using YuGiOhBot.Services.CardObjects;
 using YuGiOhBot.Core;
+using MoreLinq;
 
 namespace YuGiOhBot.Commands
 {
@@ -469,17 +470,17 @@ namespace YuGiOhBot.Commands
                     {
 
                         var forbidden = $"```OCG Forbidden\n\n";
-                        _yugiohService.OcgBanList.TryGetValue("Forbidden", out List<string> forbiddenList);
+                        _yugiohService.OcgBanList.TryGetValue("Forbidden", out HashSet<string> forbiddenList);
                         forbiddenList.ForEach(card => forbidden += $"{card}\n");
                         forbidden += "```";
 
                         var limited = $"```OCG Limited\n\n";
-                        _yugiohService.OcgBanList.TryGetValue("Limited", out List<string> limitedList);
+                        _yugiohService.OcgBanList.TryGetValue("Limited", out HashSet<string> limitedList);
                         limitedList.ForEach(card => limited += $"{card}\n");
                         limited += "```";
 
                         var semilimited = $"```OCG Semi-Limited\n";
-                        _yugiohService.OcgBanList.TryGetValue("Semi-Limited", out List<string> semiList);
+                        _yugiohService.OcgBanList.TryGetValue("Semi-Limited", out HashSet<string> semiList);
                         semiList.ForEach(card => semilimited += $"{card}\n");
                         semilimited += "```";
 
@@ -493,17 +494,17 @@ namespace YuGiOhBot.Commands
                     {
 
                         var forbidden = $"```TCG ADV Forbidden\n\n";
-                        _yugiohService.OcgBanList.TryGetValue("Forbidden", out List<string> forbiddenList);
+                        _yugiohService.OcgBanList.TryGetValue("Forbidden", out HashSet<string> forbiddenList);
                         forbiddenList.ForEach(card => forbidden += $"{card}\n");
                         forbidden += "```";
 
                         var limited = $"```TCG ADV Limited\n\n";
-                        _yugiohService.OcgBanList.TryGetValue("Limited", out List<string> limitedList);
+                        _yugiohService.OcgBanList.TryGetValue("Limited", out HashSet<string> limitedList);
                         limitedList.ForEach(card => limited += $"{card}\n");
                         limited += "```";
 
                         var semilimited = $"```TCG ADV Semi-Limited\n\n";
-                        _yugiohService.OcgBanList.TryGetValue("Semi-Limited", out List<string> semiList);
+                        _yugiohService.OcgBanList.TryGetValue("Semi-Limited", out HashSet<string> semiList);
                         semiList.ForEach(card => semilimited += $"{card}\n");
                         semilimited += "```";
 
@@ -517,17 +518,17 @@ namespace YuGiOhBot.Commands
                     {
 
                         var forbidden = $"```TCG Traditional Forbidden\n\n";
-                        _yugiohService.OcgBanList.TryGetValue("Forbidden", out List<string> forbiddenList);
+                        _yugiohService.OcgBanList.TryGetValue("Forbidden", out HashSet<string> forbiddenList);
                         forbiddenList.ForEach(card => forbidden += $"{card}\n");
                         forbidden += "```";
 
                         var limited = $"```TCG Traditional Limited\n\n";
-                        _yugiohService.OcgBanList.TryGetValue("Limited", out List<string> limitedList);
+                        _yugiohService.OcgBanList.TryGetValue("Limited", out HashSet<string> limitedList);
                         limitedList.ForEach(card => limited += $"{card}\n");
                         limited += "```";
 
                         var semilimited = $"```TCG Traditional Semi-Limited\n\n";
-                        _yugiohService.OcgBanList.TryGetValue("Semi-Limited", out List<string> semiList);
+                        _yugiohService.OcgBanList.TryGetValue("Semi-Limited", out HashSet<string> semiList);
                         semiList.ForEach(card => semilimited += $"{card}\n");
                         semilimited += "```";
 

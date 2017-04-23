@@ -41,7 +41,13 @@ namespace YuGiOhBot.Attributes
                     {
 
                         TimeSpan remaining = TimeSpan.FromSeconds(_cooldown) - sw.Elapsed;
-                        context.Channel.SendMessageAsync($"Cooldown until next usage: {remaining.Seconds} seconds");
+
+                        try
+                        {
+                            context.Channel.SendMessageAsync($"Cooldown until next usage: {remaining.Seconds} seconds");
+                        }
+                        catch { }
+
                         AltConsole.PrintAsync("Precondition", "Cooldown", $"{context.Guild.Name} triggered cooldown message!").GetAwaiter().GetResult();
                         return Task.FromResult(PreconditionResult.FromError($"Cooldown until next usage: {remaining.Seconds} seconds"));
 

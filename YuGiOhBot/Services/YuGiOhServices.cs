@@ -24,10 +24,10 @@ namespace YuGiOhBot.Services
         private const string CardTable = "Card";
         private const string BasePricesUrl = "http://yugiohprices.com/api/get_card_prices/";
         private const string BaseImagesUrl = "http://yugiohprices.com/api/card_image/";
-        public List<string> CardList { get; private set; }
-        public ConcurrentDictionary<string, List<string>> OcgBanList { get; private set; }
-        public ConcurrentDictionary<string, List<string>> TcgBanList { get; private set; }
-        public ConcurrentDictionary<string, List<string>> TrnBanList { get; private set; }
+        public HashSet<string> CardList { get; private set; }
+        public ConcurrentDictionary<string, HashSet<string>> OcgBanList { get; private set; }
+        public ConcurrentDictionary<string, HashSet<string>> TcgBanList { get; private set; }
+        public ConcurrentDictionary<string, HashSet<string>> TrnBanList { get; private set; }
 
         public async Task<YuGiOhCard> GetCard(string cardName)
         {
@@ -836,6 +836,9 @@ namespace YuGiOhBot.Services
 
         }
 
+        //yes yes yes, i know, not reusing the same httpclient is bad practice yada yada yada
+        //i did not know this when i was first making this bot, too lazy to change it now
+        //i will definitely change it sometime though
         private async Task<YuGiOhPriceSerializer> GetPrices(string cardName, string realName)
         {
 
@@ -897,9 +900,9 @@ namespace YuGiOhBot.Services
         public async Task InitializeBanList()
         {
 
-            OcgBanList = new ConcurrentDictionary<string, List<string>>();
-            TcgBanList = new ConcurrentDictionary<string, List<string>>();
-            TrnBanList = new ConcurrentDictionary<string, List<string>>();
+            OcgBanList = new ConcurrentDictionary<string, HashSet<string>>();
+            TcgBanList = new ConcurrentDictionary<string, HashSet<string>>();
+            TrnBanList = new ConcurrentDictionary<string, HashSet<string>>();
             var forbidden = "Forbidden";
             var limited = "Limited";
             var semiLimited = "Semi-Limited";
@@ -914,9 +917,9 @@ namespace YuGiOhBot.Services
                     ocgBanCommand.CommandText = "select name,ocgStatus from Card where (not ocgStatus='U') and (not ocgStatus='Not yet released') and (not ocgStatus='Illegal') " +
                         "and (not ocgStatus='Legal') and (not ocgStatus='')";
 
-                    OcgBanList.TryAdd(forbidden, new List<string>());
-                    OcgBanList.TryAdd(limited, new List<string>());
-                    OcgBanList.TryAdd(semiLimited, new List<string>());
+                    OcgBanList.TryAdd(forbidden, new HashSet<string>());
+                    OcgBanList.TryAdd(limited, new HashSet<string>());
+                    OcgBanList.TryAdd(semiLimited, new HashSet<string>());
 
                     //open the database here
                     await databaseConnection.OpenAsync();
@@ -933,21 +936,21 @@ namespace YuGiOhBot.Services
                             if (dataReader.GetString(ocgStatusO).Equals(forbidden))
                             {
 
-                                OcgBanList.TryGetValue(forbidden, out List<string> banlist);
+                                OcgBanList.TryGetValue(forbidden, out HashSet<string> banlist);
                                 banlist.Add(dataReader.GetString(nameO));
 
                             }
                             else if (dataReader.GetString(ocgStatusO).Equals(limited))
                             {
 
-                                OcgBanList.TryGetValue(limited, out List<string> banlist);
+                                OcgBanList.TryGetValue(limited, out HashSet<string> banlist);
                                 banlist.Add(dataReader.GetString(nameO));
 
                             }
                             else
                             {
 
-                                OcgBanList.TryGetValue(semiLimited, out List<string> banlist);
+                                OcgBanList.TryGetValue(semiLimited, out HashSet<string> banlist);
                                 banlist.Add(dataReader.GetString(nameO));
 
                             }
@@ -965,9 +968,9 @@ namespace YuGiOhBot.Services
                     tcgBanCommand.CommandText = "select name,tcgAdvStatus from Card where (not tcgAdvStatus='U') and (not tcgAdvStatus='Not yet released') and (not tcgAdvStatus='Illegal') " +
                         "and (not tcgAdvStatus='Legal') and (not tcgAdvStatus='')";
 
-                    TcgBanList.TryAdd(forbidden, new List<string>());
-                    TcgBanList.TryAdd(limited, new List<string>());
-                    TcgBanList.TryAdd(semiLimited, new List<string>());
+                    TcgBanList.TryAdd(forbidden, new HashSet<string>());
+                    TcgBanList.TryAdd(limited, new HashSet<string>());
+                    TcgBanList.TryAdd(semiLimited, new HashSet<string>());
 
                     using (SqliteDataReader dataReader = await tcgBanCommand.ExecuteReaderAsync())
                     {
@@ -981,21 +984,21 @@ namespace YuGiOhBot.Services
                             if (dataReader.GetString(tcgStatusO).Equals(forbidden))
                             {
 
-                                TcgBanList.TryGetValue(forbidden, out List<string> banlist);
+                                TcgBanList.TryGetValue(forbidden, out HashSet<string> banlist);
                                 banlist.Add(dataReader.GetString(nameO));
 
                             }
                             else if (dataReader.GetString(tcgStatusO).Equals(limited))
                             {
 
-                                TcgBanList.TryGetValue(limited, out List<string> banlist);
+                                TcgBanList.TryGetValue(limited, out HashSet<string> banlist);
                                 banlist.Add(dataReader.GetString(nameO));
 
                             }
                             else
                             {
 
-                                TcgBanList.TryGetValue(semiLimited, out List<string> banlist);
+                                TcgBanList.TryGetValue(semiLimited, out HashSet<string> banlist);
                                 banlist.Add(dataReader.GetString(nameO));
 
                             }
@@ -1013,9 +1016,9 @@ namespace YuGiOhBot.Services
                     trnBanCommand.CommandText = "select name,tcgTrnStatus from Card where (not tcgTrnStatus='U') and (not tcgTrnStatus='Not yet released') and (not tcgTrnStatus='Illegal') " +
                         "and (not tcgTrnStatus='Legal') and (not tcgTrnStatus='')";
 
-                    TrnBanList.TryAdd(forbidden, new List<string>());
-                    TrnBanList.TryAdd(limited, new List<string>());
-                    TrnBanList.TryAdd(semiLimited, new List<string>());
+                    TrnBanList.TryAdd(forbidden, new HashSet<string>());
+                    TrnBanList.TryAdd(limited, new HashSet<string>());
+                    TrnBanList.TryAdd(semiLimited, new HashSet<string>());
 
                     using (SqliteDataReader dataReader = await trnBanCommand.ExecuteReaderAsync())
                     {
@@ -1029,21 +1032,21 @@ namespace YuGiOhBot.Services
                             if (dataReader.GetString(tcgStatusO).Equals(forbidden))
                             {
 
-                                TrnBanList.TryGetValue(forbidden, out List<string> banlist);
+                                TrnBanList.TryGetValue(forbidden, out HashSet<string> banlist);
                                 banlist.Add(dataReader.GetString(nameO));
 
                             }
                             else if (dataReader.GetString(tcgStatusO).Equals(limited))
                             {
 
-                                TrnBanList.TryGetValue(limited, out List<string> banlist);
+                                TrnBanList.TryGetValue(limited, out HashSet<string> banlist);
                                 banlist.Add(dataReader.GetString(nameO));
 
                             }
                             else
                             {
 
-                                TrnBanList.TryGetValue(semiLimited, out List<string> banlist);
+                                TrnBanList.TryGetValue(semiLimited, out HashSet<string> banlist);
                                 banlist.Add(dataReader.GetString(nameO));
 
                             }
@@ -1063,7 +1066,7 @@ namespace YuGiOhBot.Services
         public async Task InitializeCardList()
         {
 
-            CardList = new List<string>();
+            CardList = new HashSet<string>();
 
             using (var dbConnection = new SqliteConnection(DatabasePath))
             using (SqliteCommand addCardCommand = dbConnection.CreateCommand())
