@@ -36,14 +36,29 @@ namespace YuGiOhBot.Services
                 _http.DefaultRequestHeaders.Authorization = DiscordBotsAuth;
                 await AltConsole.PrintAsync("Service", "Discord Bots", "Sending information payload to Discord Bots...");
                 var payload = new StringContent($"{{\"server_count\": {_client.Guilds.Count}}}", Encoding.UTF8, "application/json");
-                HttpResponseMessage response = await _http.PostAsync(PostDiscordBotsAddress, payload);
+                HttpResponseMessage response;
+                try
+                {
+                    response = await _http.PostAsync(PostDiscordBotsAddress, payload);
+                }
+                catch
+                {
+                    response = new HttpResponseMessage(System.Net.HttpStatusCode.BadRequest);
+                }
                 await AltConsole.PrintAsync("Service", "Discord Bots", "Information payload sent.");
                 await AltConsole.PrintAsync("Service", "Discord Bots", $"The status was: {response.StatusCode}");
 
                 _http.DefaultRequestHeaders.Authorization = DiscordBotListAuth;
                 await AltConsole.PrintAsync("Service", "Discord Bots", "Sending information payload to Discord Bot List...");
                 payload = new StringContent($"{{\"server_count\": {_client.Guilds.Count}}}", Encoding.UTF8, "application/json");
-                response = await _http.PostAsync(PostDiscordBotListAddress, payload);
+                try
+                {
+                    response = await _http.PostAsync(PostDiscordBotListAddress, payload);
+                }
+                catch
+                {
+                    response = new HttpResponseMessage(System.Net.HttpStatusCode.BadRequest);
+                }
                 await AltConsole.PrintAsync("Service", "Discord Bots", "Information payload sent.");
                 await AltConsole.PrintAsync("Service", "Discord Bots", $"The status was: {response.StatusCode}");
 
