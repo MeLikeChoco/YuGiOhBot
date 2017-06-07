@@ -12,7 +12,7 @@ using YuGiOhBot.Attributes;
 namespace YuGiOhBot.Commands
 {
 
-    public class HelpCommand : ModuleBase
+    public class HelpCommand : ModuleBase<SocketCommandContext>
     {
 
         private CommandService _commandService;

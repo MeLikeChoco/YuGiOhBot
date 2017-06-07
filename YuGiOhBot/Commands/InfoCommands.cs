@@ -15,7 +15,7 @@ using System.IO;
 
 namespace YuGiOhBot.Commands
 {
-    public class InfoCommands : ModuleBase
+    public class InfoCommands : ModuleBase<SocketCommandContext>
     {
 
         [Command("ultimateform")]
@@ -97,7 +97,7 @@ namespace YuGiOhBot.Commands
 
             }
 
-            var feedbackChannel = await Context.Client.GetChannelAsync(296117398132752384);
+            var feedbackChannel = Context.Client.GetChannel(296117398132752384);
             await (feedbackChannel as SocketTextChannel).SendMessageAsync($"{Context.User.Username} from {Context.Guild.Name} sent a feedback!\n{feedback}");
 
         }

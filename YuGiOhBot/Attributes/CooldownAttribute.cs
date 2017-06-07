@@ -25,7 +25,7 @@ namespace YuGiOhBot.Attributes
         public CooldownAttribute(int cooldown)
             => _cooldown = cooldown;
 
-        public override Task<PreconditionResult> CheckPermissions(ICommandContext context, CommandInfo command, IDependencyMap map)
+        public override Task<PreconditionResult> CheckPermissions(ICommandContext context, CommandInfo command, IServiceProvider services)
         {
 
             if (!_cooldownList.Keys.Contains(command.Name))

@@ -36,5 +36,31 @@ namespace YuGiOhBot.Core
 
         }
 
+        public static void InLinePrint(string firstBracket, string secondBracket, string message, Exception exception = null)
+        {
+
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.Write($"{DateTime.Now.ToString()} ");
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.Write($"[{firstBracket}]");
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.Write($"[{secondBracket}] ");
+            Console.ForegroundColor = ConsoleColor.Gray;
+
+            if (exception == null)
+            {
+
+                Console.Write($"{message}\r");
+
+            }
+            else
+            {
+
+                Console.Write($"{message}\t\t{exception}\r");
+
+            }
+
+        }
+
     }
 }

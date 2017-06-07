@@ -18,8 +18,8 @@ namespace YuGiOhBot.Services.CardObjects
         public string OcgStatus { get; set; } = string.Empty;
         public string TcgStatus { get; set; } = string.Empty;
         public string TcgTrnStatus { get; set; } = string.Empty;
-        public bool OcgOnly { get; set; }
-        public bool TcgOnly { get; set; }
+        public string OcgOnly { get; set; }
+        public string TcgOnly { get; set; }
         public string ImageUrl { get; set; } = string.Empty;
         public YuGiOhPriceSerializer Prices { get; set; }
         

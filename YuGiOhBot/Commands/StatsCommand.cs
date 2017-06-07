@@ -11,7 +11,7 @@ using YuGiOhBot.Attributes;
 
 namespace YuGiOhBot.Commands
 {
-    public class StatsCommand : ModuleBase
+    public class StatsCommand : ModuleBase<SocketCommandContext>
     {
 
         [Command("stats")]
@@ -26,11 +26,11 @@ namespace YuGiOhBot.Commands
             int guildCount = guildList.Count;
             int textChannels = guildList.Sum(guild => guild.TextChannels.Count);
             int voiceChannels = guildList.Sum(guild => guild.VoiceChannels.Count);
-            string largestGuild = guildList.MaxBy(guild => guild.Users.Count).Name;
+            string largestGuild = guildList.MaxBy(guild => guild.MemberCount).Name;
             string guildMostChannels = guildList.MaxBy(guild => guild.Channels.Count).Name;
             string guildMostRoles = guildList.MaxBy(guild => guild.Roles.Count).Name;
-            int largestGuildCount = guildList.Max(guild => guild.Users.Count);
-            int averageUsers = (int)guildList.Average(guild => guild.Users.Count);
+            int largestGuildCount = guildList.Max(guild => guild.MemberCount);
+            int averageUsers = (int)guildList.Average(guild => guild.MemberCount);
             int roles = guildList.Sum(guild => guild.Roles.Count);
             int dmchannels = (Context.Client as DiscordSocketClient).DMChannels.Count;
             DateTime oldestGuild = guildList.Min(guild => guild.CreatedAt).Date;

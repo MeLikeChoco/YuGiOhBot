@@ -14,7 +14,7 @@ using MoreLinq;
 
 namespace YuGiOhBot.Commands
 {
-    public class CoreCommands : InteractiveModuleBase
+    public class CoreCommands : InteractiveModuleBase<SocketCommandContext>
     {
 
         private YuGiOhServices _yugiohService;
@@ -33,68 +33,25 @@ namespace YuGiOhBot.Commands
         public async Task CardCommand([Remainder]string cardName)
         {
 
-            if (string.IsNullOrEmpty(cardName))
+            if (GuildServices.MinimalSettings.TryGetValue(Context.Guild.Id, out bool isMinimal)) { }
+            else isMinimal = false;
+
+            using (var typingState = Context.Channel.EnterTypingState())
             {
 
-                await ReplyAsync("There is no card with no name, unless it's the shadow realm. Everyone is just a soul there.");
-                return;
-
-            }
-
-            if (CacheService.YuGiOhCardCache.TryGetValue(cardName.ToLower(), out EmbedBuilder eBuilder))
-            {
-
-                if(GuildServices.MinimalSettings.TryGetValue(Context.Guild.Id, out bool minimal) && minimal)
+                if(CacheService.CardCache.TryGetValue(cardName.ToLower(), out EmbedBuilder eBuilder))
                 {
 
-                    if (minimal)
-                    {
-                        string imgUrl = eBuilder.ImageUrl;
-
-                        if (!string.IsNullOrEmpty(imgUrl))
-                        {
-                            eBuilder.ImageUrl = null;
-                            eBuilder.ThumbnailUrl = imgUrl;
-                        }
-                    }
+                    await ReplyAsync("", embed: await _chatService.AddPriceAndImage(eBuilder, isMinimal));
 
                 }
                 else
                 {
 
-                    string thumbUrl = eBuilder.ThumbnailUrl;
-
-                    if (!string.IsNullOrEmpty(thumbUrl))
-                    {
-                        eBuilder.ThumbnailUrl = null;
-                        eBuilder.ImageUrl = thumbUrl;
-                    }
-
-                }
-
-                await ReplyAsync("", embed: eBuilder);
-                return;
-
-            }
-
-            using (var typingState = Context.Channel.EnterTypingState())
-            {
-
-                YuGiOhCard card = await _yugiohService.GetCard(cardName);
-
-                if (string.IsNullOrEmpty(card.Name))
-                {
-
                     await ReplyAsync($"No card by the name {cardName} was found!");
-                    typingState.Dispose();
                     return;
 
                 }
-
-                if (GuildServices.MinimalSettings.TryGetValue(Context.Guild.Id, out bool minimal)) { }
-                else minimal = false;
-
-                await _chatService.SendCard(Context.Channel, card, minimal);
 
             }
 
@@ -105,22 +62,12 @@ namespace YuGiOhBot.Commands
         public async Task LazyCardCommand([Remainder]string cardName)
         {
 
-            if (string.IsNullOrEmpty(cardName))
-            {
-
-                await ReplyAsync("There are no cards with a lack of name.");
-                return;
-
-            }
-
-            EmbedBuilder eBuilder;
-
             using (var typingState = Context.Channel.EnterTypingState())
             {
 
-                YuGiOhCard card = await _yugiohService.LazyGetCard(cardName);
+                EmbedBuilder eBuilder = _yugiohService.LazyGetCard(cardName.ToLower());
 
-                if (card.Name.Equals(string.Empty))
+                if (eBuilder == null)
                 {
 
                     await ReplyAsync($"No card by the name {cardName} was found!");
@@ -129,46 +76,10 @@ namespace YuGiOhBot.Commands
 
                 }
 
-                if (CacheService.YuGiOhCardCache.TryGetValue(card.Name.ToLower(), out eBuilder))
-                {
+                if (GuildServices.MinimalSettings.TryGetValue(Context.Guild.Id, out bool isMinimal)) { }
+                else isMinimal = false;
 
-                    if (GuildServices.MinimalSettings.TryGetValue(Context.Guild.Id, out bool min) && min)
-                    {
-
-                        if (min)
-                        {
-                            string imgUrl = eBuilder.ImageUrl;
-
-                            if (!string.IsNullOrEmpty(imgUrl))
-                            {
-                                eBuilder.ImageUrl = null;
-                                eBuilder.ThumbnailUrl = imgUrl;
-                            }
-                        }
-
-                    }
-                    else
-                    {
-
-                        string thumbUrl = eBuilder.ThumbnailUrl;
-
-                        if (!string.IsNullOrEmpty(thumbUrl))
-                        {
-                            eBuilder.ThumbnailUrl = null;
-                            eBuilder.ImageUrl = thumbUrl;
-                        }
-
-                    }
-
-                    await ReplyAsync("", embed: eBuilder);
-                    return;
-
-                }
-
-                if (GuildServices.MinimalSettings.TryGetValue(Context.Guild.Id, out bool minimal)) { }
-                else minimal = false;
-
-                await _chatService.SendCard(Context.Channel, card, minimal);
+                await ReplyAsync("", embed: await _chatService.AddPriceAndImage(eBuilder, isMinimal));
 
             }
 
@@ -179,52 +90,17 @@ namespace YuGiOhBot.Commands
         public async Task RandomCardCommand()
         {
 
-            EmbedBuilder eBuilder;
-
             using (var typingState = Context.Channel.EnterTypingState())
             {
 
-                YuGiOhCard card = await _yugiohService.GetRandomCard();
+                EmbedBuilder eBuilder = _yugiohService.GetRandomCard();
 
-                await AltConsole.PrintAsync("Command", "Random Card", $"Got {card.Name}");
+                await AltConsole.PrintAsync("Command", "Random Card", $"Got {eBuilder.Title}");
 
-                if (CacheService.YuGiOhCardCache.TryGetValue(card.Name.ToLower(), out eBuilder))
-                {
+                if (GuildServices.MinimalSettings.TryGetValue(Context.Guild.Id, out bool isMinimal)) { }
+                else isMinimal = false;
 
-                    if (GuildServices.MinimalSettings.TryGetValue(Context.Guild.Id, out bool min) && min)
-                    {
-
-                        if (min)
-                        {
-                            string imgUrl = eBuilder.ImageUrl;
-
-                            if (!string.IsNullOrEmpty(imgUrl))
-                            {
-                                eBuilder.ImageUrl = null;
-                                eBuilder.ThumbnailUrl = imgUrl;
-                            }
-                        }
-
-                    }
-                    else
-                    {
-
-                        string thumbUrl = eBuilder.ThumbnailUrl;
-
-                        if (!string.IsNullOrEmpty(thumbUrl))
-                        {
-                            eBuilder.ThumbnailUrl = null;
-                            eBuilder.ImageUrl = thumbUrl;
-                        }
-
-                    }
-
-                }
-
-                if (GuildServices.MinimalSettings.TryGetValue(Context.Guild.Id, out bool minimal)) { }
-                else minimal = false;
-
-                await _chatService.SendCard(Context.Channel, card, minimal);
+                await ReplyAsync("", embed: await _chatService.AddPriceAndImage(eBuilder, isMinimal));
 
             }            
 
@@ -235,14 +111,6 @@ namespace YuGiOhBot.Commands
         public async Task CardSearchCommand([Remainder]string search)
         {
 
-            if (string.IsNullOrEmpty(search))
-            {
-
-                await ReplyAsync("Please search for something or else I will search the purple realm.");
-                return;
-
-            }
-
             StringBuilder organizedResults;
             List<string> searchResults;
 
@@ -250,7 +118,7 @@ namespace YuGiOhBot.Commands
             {
 
                 //<card names>
-                searchResults = await _yugiohService.SearchCards(search);
+                searchResults = _yugiohService.SearchCards(search.ToLower());
 
                 if (searchResults.FirstOrDefault() == null)
                 {
@@ -298,7 +166,6 @@ namespace YuGiOhBot.Commands
 
             }
 
-
             await CardCommand(searchResults[searchNumber - 1]);
 
         }
@@ -323,7 +190,7 @@ namespace YuGiOhBot.Commands
             {
 
                 //<card names>
-                searchResults = await _yugiohService.LazySearchCards(search);
+                searchResults = _yugiohService.LazySearchCards(search);
 
                 if (searchResults.FirstOrDefault() == null)
                 {

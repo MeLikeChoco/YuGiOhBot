@@ -273,3 +273,5 @@ __pycache__/
 /YuGiOhBot/Tokens/DiscordBots.txt
 /YuGiOhBot/Tokens/DiscordBotList.txt
 /YuGiOhBot/Files/ultimateform.jpg
+/YuGiOhBot/Databases/ygodb.json
+/YuGiOhBot/Tokens/DiscordListBots.txt
