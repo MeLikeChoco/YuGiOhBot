@@ -87,7 +87,7 @@ namespace YuGiOhBot.Services
                 await connection.OpenAsync();
 
                 var results = await connection.QueryAsync<string>(query);
-                cards = results.Select(card => card.ToLower()).ToList();
+                cards = results.ToList();
 
                 connection.Close();
 

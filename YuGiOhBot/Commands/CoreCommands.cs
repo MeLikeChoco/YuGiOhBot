@@ -157,16 +157,10 @@ namespace YuGiOhBot.Commands
 
             IUserMessage response = await WaitForMessage(Context.User, Context.Channel, TimeSpan.FromSeconds(60));
 
-            if (!int.TryParse(response.Content, out int searchNumber)) return;
-            else if (searchNumber > searchResults.Count)
-            {
-
+            if (int.TryParse(response.Content, out int searchNumber) && searchNumber < searchResults.Count)
+                await CardCommand(searchResults[searchNumber - 1]);
+            else
                 await ReplyAsync($"{Context.User.Mention} Not a valid search!");
-                return;
-
-            }
-
-            await CardCommand(searchResults[searchNumber - 1]);
 
         }
 
@@ -229,16 +223,10 @@ namespace YuGiOhBot.Commands
 
             IUserMessage response = await WaitForMessage(Context.User, Context.Channel, TimeSpan.FromSeconds(60));
 
-            if (!int.TryParse(response.Content, out int searchNumber)) return;
-            else if (searchNumber > searchResults.Count)
-            {
-
+            if (int.TryParse(response.Content, out int searchNumber) && searchNumber < searchResults.Count)
+                await CardCommand(searchResults[searchNumber - 1]);
+            else
                 await ReplyAsync($"{Context.User.Mention} Not a valid search!");
-                return;
-
-            }
-
-            await CardCommand(searchResults[searchNumber - 1]);
 
         }
 
@@ -300,16 +288,10 @@ namespace YuGiOhBot.Commands
 
             IUserMessage response = await WaitForMessage(Context.User, Context.Channel, TimeSpan.FromSeconds(60));
 
-            if (!int.TryParse(response.Content, out int searchNumber)) return;
-            else if (searchNumber > searchResults.Count)
-            {
-
+            if (int.TryParse(response.Content, out int searchNumber) && searchNumber < searchResults.Count)
+                await CardCommand(searchResults[searchNumber - 1]);
+            else
                 await ReplyAsync($"{Context.User.Mention} Not a valid search!");
-                return;
-
-            }
-
-            await CardCommand(searchResults[searchNumber - 1]);
 
         }
 
