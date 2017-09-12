@@ -27,7 +27,25 @@ namespace YuGiOhV2.Services
 
             Print("Beginning cache initialization...");
 
+            //made a seperate method so other classes may update the embeds when I want them to
+            Initialize();
+
+            Print("Finished cache initialization...");
+
+        }
+
+        public void Initialize()
+        {
+
             var objects = AquireGoodies();
+
+            AquireFancyMessages(objects);
+
+        }
+
+        private void AquireFancyMessages(IEnumerable<Card> objects)
+        {
+
             var counter = 0;
             var total = objects.Count();
             var tempDict = new ConcurrentDictionary<string, EmbedBuilder>();
@@ -52,8 +70,6 @@ namespace YuGiOhV2.Services
 
             Cards = new Dictionary<string, EmbedBuilder>(tempDict);
             Names = new HashSet<string>(tempNames);
-
-            Print("Finished cache initialization...");
 
         }
 
@@ -80,7 +96,26 @@ namespace YuGiOhV2.Services
 
             };
 
-            if(card is Monster)
+            if (card is Monster)
+            {
+
+                var monster = card as Monster;
+
+                if (monster.Lore.StartsWith("Pendulum Effect"))
+                {
+
+                    var effects = monster.Lore.Split("Monster Effect");
+
+                    body.AddField("Pendulum Effect", effects.First().Substring(15).Trim());
+                    body.AddField($"[ {monster.Types} ]", effects[1].Trim());
+
+                }
+                else
+                    body.AddField($"[ {monster.Types} ]", monster.Lore);
+
+            }
+
+            if (card is Monster)
             {
 
                 var monster = card as Monster;
@@ -260,7 +295,7 @@ namespace YuGiOhV2.Services
 
         }
 
-        public IEnumerable<Card> AquireGoodies()
+        private IEnumerable<Card> AquireGoodies()
         {
 
             using (var db = new SqliteConnection(DbString))

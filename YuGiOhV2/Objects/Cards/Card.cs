@@ -18,8 +18,28 @@ namespace YuGiOhV2.Objects.Cards
         public int TcgOnly { get; set; }
         public string ImageUrl { get; set; }
         public string Url { get; set; }
-        
-        public bool HasEffect { get {  } }
+
+        public bool HasEffect
+        {
+            get
+            {
+
+                if (this is SpellTrap)
+                    return true;
+                else
+                {
+
+                    var monster = this as Monster;
+
+                    if (monster.Types.Contains("Effect"))
+                        return true;
+                    else
+                        return false;
+
+                }
+
+            }
+        }
 
     }
 }
