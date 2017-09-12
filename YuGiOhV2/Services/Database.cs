@@ -17,7 +17,7 @@ namespace YuGiOhV2.Services
 
         private const string DbPath = "Data Source = Databases/guilds.db";
 
-        public ConcurrentDictionary<ulong, Settings> Settings;
+        public ConcurrentDictionary<ulong, Setting> Settings;
 
         public Database(IEnumerable<SocketGuild> guilds)
         {
@@ -27,19 +27,19 @@ namespace YuGiOhV2.Services
 
                 db.Open();
 
-                var settings = db.GetAll<Settings>().ToList();
-                var unregGuilds = guilds.Where(guild => !settings.Any(setting => guild.Id == setting.Id));
+                var settings = db.GetAll<Setting>().ToList();
+                var unregGuilds = guilds.Where(guild => settings.Any(setting => setting.Id == guild.Id)).ToList();
 
                 foreach(var guild in unregGuilds)
                 {
 
-                    var setting = new Settings(guild);
+                    var setting = new Setting(guild);
                     db.Insert(setting);
                     settings.Add(setting);
 
                 }
 
-                Settings = new ConcurrentDictionary<ulong, Settings>(settings.ToDictionary(setting => setting.Id, setting => setting));
+                Settings = new ConcurrentDictionary<ulong, Setting>(settings.ToDictionary(setting => setting.Id, setting => setting));
 
                 db.Close();
 
@@ -50,7 +50,7 @@ namespace YuGiOhV2.Services
         public async Task AddGuild(SocketGuild guild)
         {
 
-            var setting = new Settings(guild);
+            var setting = new Setting(guild);
 
             using (var db = new SqliteConnection(DbPath))
             {

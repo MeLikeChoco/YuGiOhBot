@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace YuGiOhV2.Objects
 {
-    public class Settings
+    public class Setting
     {
 
         [ExplicitKey]
@@ -16,12 +16,23 @@ namespace YuGiOhV2.Objects
         public string Prefix { get; set; } = "y!";
         public bool Minimal { get; set; } = false;
 
-        public Settings(SocketGuild guild)
+        public Setting(SocketGuild guild)
         {
 
             Id = guild.Id;
 
         }
+
+        public Setting(ulong id, string prefix, bool minimal)
+        {
+
+            Id = id;
+            Prefix = prefix;
+            Minimal = minimal;
+
+        }
+        
+        public Setting() { }
 
     }
 }

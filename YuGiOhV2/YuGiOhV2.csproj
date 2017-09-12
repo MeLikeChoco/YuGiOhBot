@@ -8,7 +8,6 @@
   <ItemGroup>
     <Folder Include="Files\Attributes\" />
     <Folder Include="Files\Properties\" />
-    <Folder Include="Databases\" />
   </ItemGroup>
 
   <ItemGroup>

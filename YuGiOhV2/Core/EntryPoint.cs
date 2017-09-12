@@ -10,7 +10,7 @@ namespace YuGiOhV2.Core
     public class EntryPoint
     {
 
-        private static CancellationTokenSource TkSource;
+        //private static CancellationTokenSource TkSource;
 
         public static void Main(string[] args)
             => new EntryPoint().Run().GetAwaiter().GetResult();
