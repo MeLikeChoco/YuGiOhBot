@@ -13,12 +13,13 @@ namespace YuGiOhV2.Objects.Cards
         public string RealName { get; set; }
         public string CardType { get; set; }
         public string Lore { get; set; }
-        public bool HasEffect { get; set; }
         public string Archetype { get; set; }
         public int OcgOnly { get; set; }
         public int TcgOnly { get; set; }
         public string ImageUrl { get; set; }
         public string Url { get; set; }
+        
+        public bool HasEffect { get {  } }
 
     }
 }

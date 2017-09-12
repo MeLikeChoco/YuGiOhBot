@@ -95,12 +95,65 @@ namespace YuGiOhV2.Services
             if (!string.IsNullOrEmpty(card.Archetype))
                 body.AddField(card.Archetype.Split("/").Length > 1 ? "Archetypes" : "Archetype", card.Archetype.Replace(" /", ","));
 
+            return body;
+
         }
 
         private string GenDescription(Card card)
         {
 
-            
+            string desc = "";
+
+            if (!string.IsNullOrEmpty(card.RealName))
+                desc += $"**Real Name:** {card.RealName}\n";
+
+            desc += "**Format:** ";
+
+            if (card.TcgOnly == 1)
+                desc += "TCG\n";
+            else if (card.OcgOnly == 1)
+                desc += "OCG\n";
+            else
+                desc += "TCG/OCG\n";
+
+            desc += $"**Card Type:** {card.CardType}\n";
+
+            if (card is Monster)
+            {
+
+                var monster = card as Monster;
+                desc += $"**Attribute:** {monster.Attribute}\n";
+
+                if (monster is Xyz)
+                {
+                    var xyz = monster as Xyz;
+                    desc += $"**Rank:** {xyz.Rank}\n";
+                }
+                else if (monster is Link)
+                {
+                    var link = monster as Link;
+                    desc += $"**Links:** {link.Links}\n" +
+                        $"**Link Markers:** {link.LinkMarkers}";
+                }
+                else
+                {
+                    var regular = monster as RegularMonster;
+                    desc += $"**Level:** {regular.Level}\n";
+                }
+
+                if (!string.IsNullOrEmpty(monster.Scale))
+                    desc += $"**Scale:** {monster.Scale}\n";
+
+            }
+            else
+            {
+
+                var spelltrap = card as SpellTrap;
+                desc += $"**Property:** {spelltrap.Property}";
+
+            }
+
+            return desc;
 
         }
 
@@ -125,7 +178,7 @@ namespace YuGiOhV2.Services
 
                 if (monster is Link)
                     return new Color(0, 0, 139);
-                else if (monster is Pendulum)
+                else if (!string.IsNullOrEmpty(monster.Scale))
                     return new Color(150, 208, 189);
                 else if (monster is Xyz)
                     return new Color(0, 0, 1);
@@ -218,9 +271,9 @@ namespace YuGiOhV2.Services
                 Print("Getting regular monsters...");
                 var regulars = db.Query<RegularMonster>("select * from Card where level not like '' and pendulumScale like ''");
                 Print("Getting xyz monsters...");
-                var xyz = db.Query<Xyz>("select * from Card where types like '%Xyz%'");
+                var xyz = db.Query<Xyz>("select * from Card where types like '%Xyz%'"); //includes xyz pendulums
                 Print("Getting pendulum monsters...");
-                var pendulums = db.Query<Pendulum>("select * from Card where types like '%Pendulum%'");
+                var pendulums = db.Query<RegularMonster>("select * from Card where types like '%Pendulum%' and types not like '%Xyz%'"); //does not include xyz pendulums
                 Print("Getting link monsters...");
                 var links = db.Query<Link>("select * from Card where types like '%Link%'");
                 Print("Getting spell and traps...");

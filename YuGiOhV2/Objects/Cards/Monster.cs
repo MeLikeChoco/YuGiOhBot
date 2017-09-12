@@ -13,6 +13,7 @@ namespace YuGiOhV2.Objects.Cards
         public string Types { get; set; }
         public string Atk { get; set; }
         public string Def { get; set; }
+        public string Scale { get; set; } //I blame xyz pendulums
 
     }
 }
