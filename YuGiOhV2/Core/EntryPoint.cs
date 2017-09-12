@@ -20,7 +20,9 @@ namespace YuGiOhV2.Core
 
             AltConsole.Print("Info", "Entry Point", "Welcome to YuGiOh Bot V2");
 
-            new Events();
+            var events = new Events();
+
+            await events.GetReadyForBlastOff();
 
             await Task.Delay(-1);
 

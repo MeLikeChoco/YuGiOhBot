@@ -4,6 +4,7 @@ using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -17,13 +18,13 @@ namespace YuGiOhV2.Core
 
         private DiscordSocketClient _client;
         private CommandService _commands;
+        private Database _database;
         private IServiceProvider _services;
 
         private static readonly DiscordSocketConfig ClientConfig = new DiscordSocketConfig()
         {
 
             AlwaysDownloadUsers = true,
-            ConnectionTimeout = 10000,
             LogLevel = LogSeverity.Verbose,
             MessageCacheSize = 1000
 
@@ -40,7 +41,7 @@ namespace YuGiOhV2.Core
         public Events()
         {
 
-            Print("Registering events...");
+            Print("Initializing events...");
 
             _client = new DiscordSocketClient(ClientConfig);
             _commands = new CommandService(CommandConfig);
@@ -49,17 +50,62 @@ namespace YuGiOhV2.Core
                 .BuildServiceProvider();
 
             RegisterLogging();
-            RegisterCommands();
 
-            Print("Finished registering events.");
+            Print("Finished initializing events.");
 
         }
 
-        private void RegisterCommands()
+        public async Task GetReadyForBlastOff()
         {
 
+            await RevEngines();
+            await LoadDatabase();
+            //await RegisterCommands();
+
+        }        
+
+        private async Task RevEngines()
+        {
+
+            var isTest = Environment.GetCommandLineArgs().FirstOrDefault()?.ToLower();
+            string token;
+
+            if (isTest == "true")
+                token = File.ReadAllText("Files/Bot Tokens/Test.txt");
+            else
+                token = File.ReadAllText("Files/Bot Tokens/Test.txt");
+
+            Print("Logging in...");
+            await _client.LoginAsync(TokenType.Bot, token);
+            Print("Logged in.");
+            Print("Starting client...");
+            await _client.StartAsync();
+            Print("ITS UP AND RUNNING BOIIIIIIIIIIIIIIS");
+
+        }
+
+        private async Task RegisterCommands()
+        {
+
+            Print("Registering commands...");
+
             _client.MessageReceived += HandleCommand;
-            _commands.AddModulesAsync(Assembly.GetEntryAssembly()).Wait(); //this will 99.9999999% likely succeed
+            await _commands.AddModulesAsync(Assembly.GetEntryAssembly());
+
+            Print("Commands registered.");
+
+        }
+
+        private async Task LoadDatabase()
+        {
+
+            Print("Waiting for guilds to load...");
+            await Task.Delay(10000);
+            Print("Guilds loaded.");
+
+            Print("Loading database...");
+            _database = new Database(_client.Guilds);
+            Print("Finished loading database.");
 
         }
 
@@ -82,7 +128,7 @@ namespace YuGiOhV2.Core
 
         }
 
-        public void Print(string message)
+        private void Print(string message)
             => AltConsole.Print("Info", "Events", message);
 
     }

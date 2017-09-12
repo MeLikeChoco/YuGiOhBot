@@ -1,4 +1,5 @@
 ﻿using Dapper.Contrib.Extensions;
+using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +15,13 @@ namespace YuGiOhV2.Objects
         public ulong Id { get; set; }
         public string Prefix { get; set; } = "y!";
         public bool Minimal { get; set; } = false;
+
+        public Settings(SocketGuild guild)
+        {
+
+            Id = guild.Id;
+
+        }
 
     }
 }

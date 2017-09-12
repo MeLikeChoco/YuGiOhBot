@@ -19,7 +19,7 @@ namespace YuGiOhV2.Services
         public Dictionary<string, EmbedBuilder> Cards { get; private set; }
         public HashSet<string> Names { get; private set; }
 
-        private const string DbString = "Data Source = ygo.db";
+        private const string DbString = "Data Source = Databases/ygo.db";
         private static readonly ParallelOptions POptions = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount };
 
         public Cache()

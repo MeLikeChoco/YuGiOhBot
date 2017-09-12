@@ -8,14 +8,23 @@
   <ItemGroup>
     <Folder Include="Files\Attributes\" />
     <Folder Include="Files\Properties\" />
+    <Folder Include="Databases\" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Dapper" Version="1.50.2" />
     <PackageReference Include="Dapper.Contrib" Version="1.50.0" />
     <PackageReference Include="DeepCloner" Version="0.10.1" />
     <PackageReference Include="Discord.Addons.InteractiveCommands" Version="1.2.4" />
     <PackageReference Include="Discord.Net" Version="2.0.0-alpha-build-00828" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="2.0.0" />
+    <PackageReference Include="morelinq" Version="2.7.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Databases\guilds.db">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
