@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -12,8 +12,10 @@
 
   <ItemGroup>
     <PackageReference Include="Dapper.Contrib" Version="1.50.0" />
+    <PackageReference Include="DeepCloner" Version="0.10.1" />
     <PackageReference Include="Discord.Addons.InteractiveCommands" Version="1.2.4" />
-    <PackageReference Include="Discord.Net" Version="1.0.2" />
+    <PackageReference Include="Discord.Net" Version="2.0.0-alpha-build-00828" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="2.0.0" />
   </ItemGroup>
 
 </Project>

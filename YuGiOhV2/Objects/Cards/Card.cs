@@ -18,6 +18,7 @@ namespace YuGiOhV2.Objects.Cards
         public int OcgOnly { get; set; }
         public int TcgOnly { get; set; }
         public string ImageUrl { get; set; }
+        public string Url { get; set; }
 
     }
 }
