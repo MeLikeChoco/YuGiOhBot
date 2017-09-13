@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using YuGiOhV2.Objects.Deserializers;
 
 namespace YuGiOhV2.Services
 {
@@ -17,13 +18,15 @@ namespace YuGiOhV2.Services
 
         private Cache _cache;
         private Database _database;
+        private  static Web _web;
         private const string Pattern = @"(\[\[.+?\]\])";
 
-        public Chat(Cache cache, Database database)
+        public Chat(Cache cache, Database database, Web web)
         {
 
             _cache = cache;
             _database = database;
+            _web = web;
 
         }
 
@@ -44,8 +47,6 @@ namespace YuGiOhV2.Services
                 using (channel.EnterTypingState())
                 {
                     
-                    watch.Start();
-
                     if((channel is SocketTextChannel))
                     {
 
@@ -59,6 +60,8 @@ namespace YuGiOhV2.Services
 
                     foreach(var match in mCollection)
                     {
+
+                        watch.Start();
 
                         string cardName = match.ToString();
                         cardName = cardName.Substring(2, cardName.Length - 4).ToLower(); //lose the brackets
@@ -84,33 +87,36 @@ namespace YuGiOhV2.Services
 
                         }
 
+                        var time = watch.Elapsed;
+
+                        watch.Stop();
+                        AltConsole.Print("Info", "Inline", $"{cardName} took {time.TotalSeconds} seconds to complete.");
+
                         var embed = _cache.Cards[closestCard];
 
                         try
                         {
 
-                            await channel.SendMessageAsync("", embed: (await EditEmbed(embed, minimal)).Build());
+                            await channel.SendMessageAsync("", embed: (await EditEmbed(embed, minimal, time)).Build());
 
                         }
                         catch { AltConsole.Print("Service", "Chat", "No permission to send message"); }
 
                     }
 
-                    var time = watch.Elapsed;
-
-                    watch.Stop();
-                    AltConsole.Print("Info", "Inline", $"Took {time.TotalSeconds} seconds to complete.");
-
                 }
 
             }
 
-        }
+        } //look at em brackets
 
-        public static async Task<EmbedBuilder> EditEmbed(EmbedBuilder embed, bool minimal)
+        public static async Task<EmbedBuilder> EditEmbed(EmbedBuilder embed, bool minimal, TimeSpan searchTime)
         {
 
             var clone = embed.DeepClone();
+            var rounded = Math.Round(searchTime.TotalSeconds, 5, MidpointRounding.ToEven);
+
+            clone.Footer.WithText($"Search time: {rounded} seconds");
 
             if(minimal)
             {
@@ -122,7 +128,56 @@ namespace YuGiOhV2.Services
             else
             {
 
-                //add logic for prices
+                var realName = "";
+
+                if (clone.Description.Contains("Real Name"))
+                {
+
+                    var indexOne = clone.Description.IndexOf(':');
+                    var indexTwo = clone.Description.IndexOf("**Format");
+                    realName = clone.Description.Substring(indexOne, indexTwo).Trim();
+
+                }
+                else
+                    realName = clone.Author.Name;
+
+                var response = await _web.GetPrices(clone.Author.Name, realName);
+
+                if (response.Data != null)
+                {
+
+                    List<Datum> prices;
+
+                    if (response.Data.Count >= 4)
+                    {
+
+                        clone.AddField("Prices", "**Showing the first 3 prices due to too many to show**");
+
+                        prices = response.Data.GetRange(0, 3);
+
+                    }
+                    else
+                        prices = response.Data;
+
+                    foreach (Datum info in prices)
+                    {
+
+                        if (string.IsNullOrEmpty(info.PriceData.Message))
+                        {
+
+                            clone.AddField(info.Name,
+                                $"Rarity:{info.Rarity}\n" +
+                                $"Average Price: {info.PriceData.Data.Prices.Average.ToString("0.00")}");
+
+                        }
+                        else
+                            clone.AddField(info.Name, info.PriceData.Message);
+
+                    }
+
+                }
+                else
+                    clone.AddField("Prices", "**No prices to show for this card!**");
 
             }
 

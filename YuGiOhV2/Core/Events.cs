@@ -105,7 +105,7 @@ namespace YuGiOhV2.Core
 
             Print("Registering commands...");
 
-            _chat = new Chat(_cache, _database);
+            _chat = new Chat(_cache, _database, new Web());
 
             _client.MessageReceived += HandleCommand;
             _client.MessageReceived += _chat.SOMEONEGETTINGACARDBOIS;

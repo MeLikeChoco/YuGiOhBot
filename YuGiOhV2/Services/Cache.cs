@@ -55,6 +55,8 @@ namespace YuGiOhV2.Services
 
             Print("Generating them fancy embed messages...");
 
+            var test = new object();
+
             Parallel.ForEach(objects, POptions, cardobj =>
             {
 
@@ -64,12 +66,20 @@ namespace YuGiOhV2.Services
                 tempUpper.Add(name);
                 tempLower.Add(name.ToLower());
                 tempDict[name.ToLower()] = embed;
-                InlinePrint($"Progress: {Interlocked.Increment(ref counter)}/{total}");
+
+                lock (test)
+                {
+
+                    var current = Interlocked.Increment(ref counter);
+
+                    if(current != total)
+                        InlinePrint($"Progress: {current}/{total}");
+                    else
+                        Print($"Progress: {current}/{total}");
+
+                }
 
             });
-
-            //reset console cursor
-            Console.CursorTop = Console.WindowTop + Console.WindowHeight - 1;
 
             Print("Finished generating embeds.");
 
@@ -97,7 +107,7 @@ namespace YuGiOhV2.Services
                 Author = author,
                 Footer = footer,
                 Color = GetColor(card),
-                ImageUrl = card.ImageUrl,
+                ImageUrl = card.Img,
                 Description = GenDescription(card)
 
             };
@@ -120,6 +130,8 @@ namespace YuGiOhV2.Services
                     body.AddField($"[ {monster.Types} ]", monster.Lore);
 
             }
+            else
+                body.AddField("Effect", card.Lore);
 
             if (card is Monster)
             {
@@ -322,7 +334,7 @@ namespace YuGiOhV2.Services
 
                 db.Close();
 
-                return regulars.Concat<Card>(xyz).Concat(pendulums).Concat(links).Concat(spelltraps);
+                return regulars.Concat<Card>(xyz).Concat(pendulums).Concat(links).Concat(spelltraps).Where(card => !card.Name.Contains("Token"));
 
             }
 
