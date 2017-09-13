@@ -1,4 +1,5 @@
 ﻿using Discord;
+using Discord.Addons.Interactive;
 using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
@@ -47,9 +48,6 @@ namespace YuGiOhV2.Core
 
             _client = new DiscordSocketClient(ClientConfig);
             _commands = new CommandService(CommandConfig);
-            _services = new ServiceCollection()
-                .AddSingleton<Cache>()
-                .BuildServiceProvider();
             _cache = new Cache();
 
             RegisterLogging();
@@ -63,6 +61,7 @@ namespace YuGiOhV2.Core
 
             await RevEngines();
             await LoadDatabase();
+            await BuildServices();
             await RegisterCommands();
 
         }
@@ -97,6 +96,18 @@ namespace YuGiOhV2.Core
             Print("Loading database...");
             _database = new Database(_client.Guilds);
             Print("Finished loading database.");
+
+        }
+
+        private async Task BuildServices()
+        {
+
+            _services = new ServiceCollection()
+                .AddSingleton(_client)
+                .AddSingleton(_cache)
+                .AddSingleton(_database)
+                .AddSingleton<InteractiveService>()
+                .BuildServiceProvider();
 
         }
 

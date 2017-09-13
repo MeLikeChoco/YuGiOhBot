@@ -110,13 +110,21 @@ namespace YuGiOhV2.Services
 
         } //look at em brackets
 
-        public static async Task<EmbedBuilder> EditEmbed(EmbedBuilder embed, bool minimal, TimeSpan searchTime)
+        public static async Task<EmbedBuilder> EditEmbed(EmbedBuilder embed, bool minimal, TimeSpan? searchTime = null)
         {
 
             var clone = embed.DeepClone();
-            var rounded = Math.Round(searchTime.TotalSeconds, 5, MidpointRounding.ToEven);
+            TimeSpan time;
 
-            clone.Footer.WithText($"Search time: {rounded} seconds");
+            if (searchTime != null)
+            {
+                
+                time = searchTime.Value;
+                var rounded = Math.Round(time.TotalSeconds, 5, MidpointRounding.ToEven);
+
+                clone.Footer.WithText($"Search time: {rounded} seconds");
+
+            }
 
             if(minimal)
             {
