@@ -17,6 +17,7 @@ namespace YuGiOhV2.Services
     {
 
         public Dictionary<string, EmbedBuilder> Cards { get; private set; }
+        public Dictionary<string, string> Images { get; private set; }
         public HashSet<string> Uppercase { get; private set; }
         public HashSet<string> Lowercase { get; private set; }
 
@@ -50,6 +51,7 @@ namespace YuGiOhV2.Services
             var counter = 0;
             var total = objects.Count();
             var tempDict = new ConcurrentDictionary<string, EmbedBuilder>();
+            var tempImages = new ConcurrentDictionary<string, string>();
             var tempUpper = new ConcurrentBag<string>();
             var tempLower = new ConcurrentBag<string>();
 
@@ -66,6 +68,7 @@ namespace YuGiOhV2.Services
                 tempUpper.Add(name);
                 tempLower.Add(name.ToLower());
                 tempDict[name.ToLower()] = embed;
+                tempImages[name.ToLower()] = cardobj.Img;
 
                 lock (test)
                 {
