@@ -67,7 +67,7 @@ namespace YuGiOhV2.Services
 
                 tempUpper.Add(name);
                 tempLower.Add(name.ToLower());
-                tempDict[name.ToLower()] = embed;
+                tempDict[name] = embed;
                 tempImages[name.ToLower()] = cardobj.Img;
 
                 lock (test)
@@ -86,7 +86,7 @@ namespace YuGiOhV2.Services
 
             Print("Finished generating embeds.");
 
-            Cards = new Dictionary<string, EmbedBuilder>(tempDict);
+            Cards = new Dictionary<string, EmbedBuilder>(tempDict, StringComparer.InvariantCultureIgnoreCase);
             Uppercase = new HashSet<string>(tempUpper);
             Lowercase = new HashSet<string>(tempLower);
 

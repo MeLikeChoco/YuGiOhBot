@@ -53,5 +53,37 @@ namespace YuGiOhV2.Modules
         public async Task PrefixCommand()
             => await ReplyAsync($"**Prefix:** {_setting.Prefix}");
 
+        [Command("minimal")]
+        public async Task SetMinimalCommand([Remainder]string input)
+        {
+
+            if (bool.TryParse(input, out var minimal))
+            {
+
+                try
+                {
+
+                    await _db.SetMinimal(Context.Guild.Id, minimal);
+                    await ReplyAsync($"Minimal has been set to `{minimal}`");
+
+                }
+                catch (Exception e)
+                {
+
+                    AltConsole.Print("Error", "Prefix", "BAH GAWD SOMETHING WRONG WITH SETTING MINIMAL", e);
+                    await ReplyAsync("There was an error in setting the minimal setting. Please report error with `y!feedback <message>`");
+
+                }
+
+            }
+            else
+                await ReplyAsync("This command only accepts `true` or `false`");
+
+        }
+
+        [Command("minimal")]
+        public async Task MinimalCommand()
+            => await ReplyAndDeleteAsync($"**Minimal:** {_setting.Minimal}");
+
     }
 }
