@@ -17,7 +17,8 @@ namespace YuGiOhV2.Services
     {
 
         public Dictionary<string, EmbedBuilder> Cards { get; private set; }
-        public HashSet<string> Names { get; private set; }
+        public HashSet<string> Uppercase { get; private set; }
+        public HashSet<string> Lowercase { get; private set; }
 
         private const string DbString = "Data Source = Databases/ygo.db";
         private static readonly ParallelOptions POptions = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount };
@@ -49,7 +50,8 @@ namespace YuGiOhV2.Services
             var counter = 0;
             var total = objects.Count();
             var tempDict = new ConcurrentDictionary<string, EmbedBuilder>();
-            var tempNames = new ConcurrentBag<string>();
+            var tempUpper = new ConcurrentBag<string>();
+            var tempLower = new ConcurrentBag<string>();
 
             Print("Generating them fancy embed messages...");
 
@@ -59,7 +61,8 @@ namespace YuGiOhV2.Services
                 var name = cardobj.Name;
                 var embed = GenFancyMessage(cardobj);
 
-                tempNames.Add(name);
+                tempUpper.Add(name);
+                tempLower.Add(name.ToLower());
                 tempDict[name.ToLower()] = embed;
                 InlinePrint($"Progress: {Interlocked.Increment(ref counter)}/{total}");
 
@@ -68,8 +71,11 @@ namespace YuGiOhV2.Services
             //reset console cursor
             Console.CursorTop = Console.WindowTop + Console.WindowHeight - 1;
 
+            Print("Finished generating embeds.");
+
             Cards = new Dictionary<string, EmbedBuilder>(tempDict);
-            Names = new HashSet<string>(tempNames);
+            Uppercase = new HashSet<string>(tempUpper);
+            Lowercase = new HashSet<string>(tempLower);
 
         }
 

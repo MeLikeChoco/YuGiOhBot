@@ -19,6 +19,8 @@ namespace YuGiOhV2.Core
         private DiscordSocketClient _client;
         private CommandService _commands;
         private Database _database;
+        private Chat _chat;
+        private Cache _cache;
         private IServiceProvider _services;
 
         private static readonly DiscordSocketConfig ClientConfig = new DiscordSocketConfig()
@@ -48,6 +50,7 @@ namespace YuGiOhV2.Core
             _services = new ServiceCollection()
                 .AddSingleton<Cache>()
                 .BuildServiceProvider();
+            _cache = new Cache();
 
             RegisterLogging();
 
@@ -60,9 +63,9 @@ namespace YuGiOhV2.Core
 
             await RevEngines();
             await LoadDatabase();
-            //await RegisterCommands();
+            await RegisterCommands();
 
-        }        
+        }
 
         private async Task RevEngines()
         {
@@ -84,18 +87,6 @@ namespace YuGiOhV2.Core
 
         }
 
-        private async Task RegisterCommands()
-        {
-
-            Print("Registering commands...");
-
-            _client.MessageReceived += HandleCommand;
-            await _commands.AddModulesAsync(Assembly.GetEntryAssembly());
-
-            Print("Commands registered.");
-
-        }
-
         private async Task LoadDatabase()
         {
 
@@ -109,10 +100,70 @@ namespace YuGiOhV2.Core
 
         }
 
-        private async Task HandleCommand(SocketMessage possibleCmd)
+        private async Task RegisterCommands()
         {
 
+            Print("Registering commands...");
 
+            _chat = new Chat(_cache, _database);
+
+            _client.MessageReceived += HandleCommand;
+            _client.MessageReceived += _chat.SOMEONEGETTINGACARDBOIS;
+            await _commands.AddModulesAsync(Assembly.GetEntryAssembly());
+
+            Print("Commands registered.");
+
+        }
+
+        private async Task HandleCommand(SocketMessage message)
+        {
+
+            if (!(message is SocketUserMessage)
+                || message.Author.IsBot
+                || string.IsNullOrEmpty(message.Content))
+                return;
+
+            ulong id = 1;
+            string prefix = "y!";
+
+            if (!(message.Channel is SocketDMChannel))
+            {
+
+                id = (message.Channel as SocketTextChannel).Guild.Id;
+                prefix = _database.Settings[id].Prefix;
+
+            }
+
+            var possibleCmd = message as SocketUserMessage;
+            var argPos = 0;
+
+            if ((possibleCmd.HasStringPrefix(prefix, ref argPos) || possibleCmd.HasMentionPrefix(_client.CurrentUser, ref argPos))
+                && possibleCmd.Content.Trim() != prefix)
+            {
+
+                var context = new SocketCommandContext(_client, possibleCmd);
+
+                AltConsole.Print("Info", "Command", $"{possibleCmd.Author.Username} from {(possibleCmd.Channel as SocketTextChannel).Guild.Name}");
+                AltConsole.Print("Info", "Command", $"{possibleCmd.Content}");
+
+                var result = await _commands.ExecuteAsync(context, argPos, _services);
+
+                if (!result.IsSuccess)
+                {
+
+                    if (result.ErrorReason.ToLower().Contains("unknown command"))
+                        return;
+
+                    await context.Channel.SendMessageAsync("There was an error in the command.");
+                    //await context.Channel.SendMessageAsync("https://goo.gl/JieFJM");
+
+                    AltConsole.Print("Error", "Error", result.ErrorReason);
+                    //debug purposes
+                    //await context.Channel.SendMessageAsync($"**Error:** {result.ErrorReason}");
+
+                }
+
+            }
 
         }
 
@@ -120,7 +171,7 @@ namespace YuGiOhV2.Core
         {
 
             _client.Log += (message)
-                => Task.Run(() 
+                => Task.Run(()
                 => AltConsole.Print(message.Severity.ToString(), message.Source, message.Message, message.Exception));
             _commands.Log += (message)
                 => Task.Run(()

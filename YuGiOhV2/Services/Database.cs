@@ -28,7 +28,7 @@ namespace YuGiOhV2.Services
                 db.Open();
 
                 var settings = db.GetAll<Setting>().ToList();
-                var unregGuilds = guilds.Where(guild => settings.Any(setting => setting.Id == guild.Id)).ToList();
+                var unregGuilds = guilds.Where(guild => !settings.Any(setting => setting.Id == guild.Id)).ToList();
 
                 foreach(var guild in unregGuilds)
                 {
