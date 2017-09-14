@@ -60,7 +60,8 @@ namespace YuGiOhV2.Modules
         public async Task SearchCommand([Remainder]string search)
         {
 
-            var cards = _cache.Names.Where(name => name.Contains(search));
+            var lower = search.ToLower();
+            var cards = _cache.Uppercase.Where(name => name.ToLower().Contains(lower));
             var amount = cards.Count();
 
             if (cards.Count() != 0)
