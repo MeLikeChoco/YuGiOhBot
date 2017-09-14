@@ -91,14 +91,26 @@ namespace YuGiOhV2.Modules
 
         }
 
-        [Command("image")]
+        [Command("image"), Alias("i")]
         public async Task ImageCommand([Remainder]string card)
         {
 
-            var link = _cache.Images[card];
-            var stream = await _web.GetStream(link);
+            if (_cache.Images.ContainsKey(card))
+            {
 
-            await Context.Channel.SendFileAsync(stream, "png");
+                using (Context.Channel.EnterTypingState())
+                {
+
+                    var link = _cache.Images[card];
+                    var stream = await _web.GetStream(link);
+
+                    await Context.Channel.SendFileAsync(stream, $"{card.ToLower().Replace(" ", "")}.png");
+
+                }
+
+            }
+            else
+                await NoResultError(card);
 
         }
 
