@@ -19,6 +19,7 @@ namespace YuGiOhV2.Services
         public Dictionary<string, EmbedBuilder> Cards { get; private set; }
         public Dictionary<string, HashSet<string>> Archetypes { get; private set; }
         public Dictionary<string, string> Images { get; private set; }
+        public HashSet<string> Names { get; set; }
         public HashSet<string> Uppercase { get; private set; }
         public HashSet<string> Lowercase { get; private set; }
 
@@ -53,6 +54,7 @@ namespace YuGiOhV2.Services
             var total = objects.Count();
             var tempDict = new ConcurrentDictionary<string, EmbedBuilder>();
             var tempImages = new ConcurrentDictionary<string, string>();
+            var tempNames = new ConcurrentBag<string>();
             var tempUpper = new ConcurrentBag<string>();
             var tempLower = new ConcurrentBag<string>();
             Archetypes = new Dictionary<string, HashSet<string>>(StringComparer.InvariantCultureIgnoreCase);
@@ -69,6 +71,8 @@ namespace YuGiOhV2.Services
 
                 tempUpper.Add(name);
                 tempLower.Add(name.ToLower());
+                tempNames.Add(cardobj.Name);
+
                 tempDict[name] = embed;
                 tempImages[name.ToLower()] = cardobj.Img;
 
@@ -101,6 +105,7 @@ namespace YuGiOhV2.Services
             Print("Finished generating embeds.");
 
             Cards = new Dictionary<string, EmbedBuilder>(tempDict, StringComparer.InvariantCultureIgnoreCase);
+            Names = new HashSet<string>(tempNames, StringComparer.InvariantCultureIgnoreCase);
             Uppercase = new HashSet<string>(tempUpper);
             Lowercase = new HashSet<string>(tempLower);
 
@@ -163,7 +168,7 @@ namespace YuGiOhV2.Services
             }
 
             if (!string.IsNullOrEmpty(card.Archetype))
-                body.AddField(card.Archetype.Split("/").Length > 1 ? "Archetypes" : "Archetype", card.Archetype.Replace(" ,", ","));
+                body.AddField(card.Archetype.Split(",").Length > 1 ? "Archetypes" : "Archetype", card.Archetype.Replace(" ,", ","));
 
             return body;
 

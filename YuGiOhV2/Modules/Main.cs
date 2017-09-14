@@ -55,6 +55,20 @@ namespace YuGiOhV2.Modules
             await SendEmbed(embed, _minimal);
 
         }
+        
+        [Command("search")]
+        public async Task SearchCommand([Remainder]string search)
+        {
+
+            var cards = _cache.Names.Where(name => name.Contains(search));
+            var amount = cards.Count();
+
+            if (cards.Count() != 0)
+                await RecieveInput(amount, cards);
+            else
+                await NoResultError(search);
+
+        }
 
         [Command("archetype")]
         public async Task ArchetypeCommand([Remainder]string archetype)
@@ -66,24 +80,31 @@ namespace YuGiOhV2.Modules
                 var cards = _cache.Archetypes[archetype];
                 var amount = cards.Count();
 
-                if (amount > 50)
-                {
-
-                    await TooManyError();
-                    return;
-
-                }
-
-                await ReplyAndDeleteAsync(GetFormattedList($"There are {amount} results based on your search!", cards), timeout: TimeSpan.FromSeconds(60));
-
-                var input = await NextMessageAsync(true, true, TimeSpan.FromSeconds(60));
-
-                if (int.TryParse(input.Content, out var selection) && (selection < amount || selection < 1))
-                    await CardCommand(cards.ElementAt(selection - 1));
+                await RecieveInput(amount, cards);
 
             }
             else
                 await NoResultError(archetype);
+
+        }
+
+        public async Task RecieveInput(int amount, IEnumerable<string> cards)
+        {
+
+            if (amount > 50)
+            {
+
+                await TooManyError();
+                return;
+
+            }
+
+            await ReplyAndDeleteAsync(GetFormattedList($"There are {amount} results based on your search!", cards), timeout: TimeSpan.FromSeconds(60));
+
+            var input = await NextMessageAsync(true, true, TimeSpan.FromSeconds(60));
+
+            if (int.TryParse(input.Content, out var selection) && (selection < amount || selection < 1))
+                await CardCommand(cards.ElementAt(selection - 1));
 
         }
 
