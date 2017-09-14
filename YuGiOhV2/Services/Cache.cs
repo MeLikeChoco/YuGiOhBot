@@ -75,7 +75,7 @@ namespace YuGiOhV2.Services
                 lock (aLock)
                 {
 
-                    var archetypes = cardobj.Archetype.Split(" / ");
+                    var archetypes = cardobj.Archetype.Split(" , ");
 
                     foreach(var archetype in archetypes)
                     {
@@ -163,7 +163,7 @@ namespace YuGiOhV2.Services
             }
 
             if (!string.IsNullOrEmpty(card.Archetype))
-                body.AddField(card.Archetype.Split("/").Length > 1 ? "Archetypes" : "Archetype", card.Archetype.Replace(" /", ","));
+                body.AddField(card.Archetype.Split("/").Length > 1 ? "Archetypes" : "Archetype", card.Archetype.Replace(" ,", ","));
 
             return body;
 

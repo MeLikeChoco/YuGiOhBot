@@ -99,6 +99,7 @@ namespace YuGiOhV2.Modules
             {
 
                 builder.AppendLine($"{counter}. {card}");
+                counter++;
 
             }
 
