@@ -30,5 +30,8 @@ namespace YuGiOhV2.Modules
 
         }
 
+        public async Task TooManyError()
+            => await ReplyAsync("Too many results were returned, please refine your search!");
+
     }
 }

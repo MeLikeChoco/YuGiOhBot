@@ -29,9 +29,6 @@
     <None Update="Databases\guilds.db">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Databases\ygo.db">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 
 </Project>

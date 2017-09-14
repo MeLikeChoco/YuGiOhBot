@@ -57,10 +57,55 @@ namespace YuGiOhV2.Modules
         }
 
         [Command("archetype")]
-        public async Task ArchetypeCommand()
+        public async Task ArchetypeCommand([Remainder]string archetype)
         {
 
+            if (_cache.Archetypes.ContainsKey(archetype))
+            {
 
+                var cards = _cache.Archetypes[archetype];
+                var amount = cards.Count();
+
+                if (amount > 50)
+                {
+
+                    await TooManyError();
+                    return;
+
+                }
+
+                await ReplyAndDeleteAsync(GetFormattedList($"There are {amount} results based on your search!", cards), timeout: TimeSpan.FromSeconds(60));
+
+                var input = await NextMessageAsync(true, true, TimeSpan.FromSeconds(60));
+
+                if (int.TryParse(input.Content, out var selection) && (selection < amount || selection < 1))
+                    await CardCommand(cards.ElementAt(selection - 1));
+
+            }
+            else
+                await NoResultError(archetype);
+
+        }
+
+        public string GetFormattedList(string top, IEnumerable<string> cards)
+        {
+
+            var builder = new StringBuilder($"```top");
+            var counter = 1;
+
+            builder.AppendLine();
+
+            foreach (var card in cards)
+            {
+
+                builder.AppendLine($"{counter}. {card}");
+
+            }
+
+            builder.AppendLine();
+            builder.Append("Hit a number to see that result! Expires in 60 seconds!```");
+
+            return builder.ToString();
 
         }
 

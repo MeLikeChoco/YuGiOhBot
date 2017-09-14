@@ -17,6 +17,7 @@ namespace YuGiOhV2.Services
     {
 
         public Dictionary<string, EmbedBuilder> Cards { get; private set; }
+        public Dictionary<string, HashSet<string>> Archetypes { get; private set; }
         public Dictionary<string, string> Images { get; private set; }
         public HashSet<string> Uppercase { get; private set; }
         public HashSet<string> Lowercase { get; private set; }
@@ -54,10 +55,11 @@ namespace YuGiOhV2.Services
             var tempImages = new ConcurrentDictionary<string, string>();
             var tempUpper = new ConcurrentBag<string>();
             var tempLower = new ConcurrentBag<string>();
+            Archetypes = new Dictionary<string, HashSet<string>>(StringComparer.InvariantCultureIgnoreCase);
 
             Print("Generating them fancy embed messages...");
 
-            var test = new object();
+            var aLock = new object();
 
             Parallel.ForEach(objects, POptions, cardobj =>
             {
@@ -70,12 +72,24 @@ namespace YuGiOhV2.Services
                 tempDict[name] = embed;
                 tempImages[name.ToLower()] = cardobj.Img;
 
-                lock (test)
+                lock (aLock)
                 {
+
+                    var archetypes = cardobj.Archetype.Split(" / ");
+
+                    foreach(var archetype in archetypes)
+                    {
+
+                        if (!Archetypes.ContainsKey(archetype))
+                            Archetypes.Add(archetype, new HashSet<string>() { name });
+                        else
+                            Archetypes[archetype].Add(name);
+
+                    }
 
                     var current = Interlocked.Increment(ref counter);
 
-                    if(current != total)
+                    if (current != total)
                         InlinePrint($"Progress: {current}/{total}");
                     else
                         Print($"Progress: {current}/{total}");
