@@ -15,13 +15,15 @@ namespace YuGiOhV2.Modules
 
         private Cache _cache;
         private Database _db;
+        private Web _web;
         private bool _minimal;
 
-        public Main(Cache cache, Database db)
+        public Main(Cache cache, Database db, Web web)
         {
 
             _cache = cache;
             _db = db;
+            _web = web;
 
         }
 
@@ -56,7 +58,7 @@ namespace YuGiOhV2.Modules
 
         }
         
-        [Command("search")]
+        [Command("search"), Alias("s")]
         public async Task SearchCommand([Remainder]string search)
         {
 
@@ -71,7 +73,7 @@ namespace YuGiOhV2.Modules
 
         }
 
-        [Command("archetype")]
+        [Command("archetype"), Alias("a")]
         public async Task ArchetypeCommand([Remainder]string archetype)
         {
 
@@ -86,6 +88,17 @@ namespace YuGiOhV2.Modules
             }
             else
                 await NoResultError(archetype);
+
+        }
+
+        [Command("image")]
+        public async Task ImageCommand([Remainder]string card)
+        {
+
+            var link = _cache.Images[card];
+            var stream = await _web.GetStream(link);
+
+            await Context.Channel.SendFileAsync(stream, "png");
 
         }
 

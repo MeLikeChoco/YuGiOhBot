@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -33,6 +34,19 @@ namespace YuGiOhV2.Services
                 response = await GetDeserializedContent<YuGiOhPrices>($"{PricesBaseUrl}{Uri.EscapeUriString(realName)}");
 
             return response;
+
+        }
+
+        public async Task<Stream> GetStream(string url)
+        {
+
+            var stream = await _http.GetStreamAsync(url);
+            var copy = new MemoryStream();
+
+            await stream.CopyToAsync(copy);
+            copy.Seek(0, SeekOrigin.Begin);
+
+            return copy;
 
         }
 

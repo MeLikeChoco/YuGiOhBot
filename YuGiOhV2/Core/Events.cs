@@ -107,6 +107,7 @@ namespace YuGiOhV2.Core
                 .AddSingleton(_cache)
                 .AddSingleton(_database)
                 .AddSingleton<InteractiveService>()
+                .AddSingleton<Web>()
                 .BuildServiceProvider();
 
         }
