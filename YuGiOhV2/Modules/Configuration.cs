@@ -1,4 +1,5 @@
-﻿using Discord.Commands;
+﻿using Discord;
+using Discord.Commands;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +11,7 @@ using YuGiOhV2.Services;
 namespace YuGiOhV2.Modules
 {
     [RequireContext(ContextType.Guild)]
+    [RequireUserPermission(GuildPermission.Administrator)]
     public class Configuration : CustomBase
     {
 

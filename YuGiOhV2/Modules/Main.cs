@@ -48,7 +48,7 @@ namespace YuGiOhV2.Modules
 
         }
 
-        [Command("random")]
+        [Command("random"), Alias("rcard", "r")]
         public async Task RandomCommand()
         {
 

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 using YuGiOhV2.Objects.Deserializers;
@@ -22,6 +23,18 @@ namespace YuGiOhV2.Services
         {
 
             _http = new HttpClient();
+
+        }
+
+        public async Task Post(string url, string content, string authorization = null)
+        {
+
+            var payload = new StringContent(content);
+
+            if (!string.IsNullOrEmpty(authorization))
+                _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(authorization);
+
+            await _http.PostAsync(url, payload);
 
         }
 

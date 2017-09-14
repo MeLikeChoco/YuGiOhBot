@@ -20,14 +20,16 @@ namespace YuGiOhV2.Core
         private DiscordSocketClient _client;
         private CommandService _commands;
         private Database _database;
+        private Stats _stats;
         private Chat _chat;
         private Cache _cache;
+        private Web _web;
+        private InteractiveService _interactive;
         private IServiceProvider _services;
 
         private static readonly DiscordSocketConfig ClientConfig = new DiscordSocketConfig()
         {
-
-            AlwaysDownloadUsers = true,
+            
             LogLevel = LogSeverity.Verbose,
             MessageCacheSize = 1000
 
@@ -49,6 +51,8 @@ namespace YuGiOhV2.Core
             _client = new DiscordSocketClient(ClientConfig);
             _commands = new CommandService(CommandConfig);
             _cache = new Cache();
+            _web = new Web();
+            _interactive = new InteractiveService(_client);
 
             RegisterLogging();
 
@@ -61,7 +65,8 @@ namespace YuGiOhV2.Core
 
             await RevEngines();
             await LoadDatabase();
-            await BuildServices();
+            LoadStats();
+            BuildServices();
             await RegisterCommands();
 
         }
@@ -99,17 +104,25 @@ namespace YuGiOhV2.Core
 
         }
 
-        private async Task BuildServices()
+        private void LoadStats()
+        {
+
+            _stats = new Stats(_client, _web);
+
+        }
+
+        private void BuildServices()
         {
 
             _services = new ServiceCollection()
                 .AddSingleton(_client)
                 .AddSingleton(_cache)
                 .AddSingleton(_database)
-                .AddSingleton<InteractiveService>()
-                .AddSingleton<Web>()
+                .AddSingleton(_interactive)
+                .AddSingleton(_web)
+                .AddSingleton(_stats)
                 .BuildServiceProvider();
-
+            
         }
 
         private async Task RegisterCommands()
