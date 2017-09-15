@@ -174,7 +174,7 @@ namespace YuGiOhV2.Services
                         {
 
                             clone.AddField(info.Name,
-                                $"Rarity:{info.Rarity}\n" +
+                                $"Rarity: {info.Rarity}\n" +
                                 $"Average Price: {info.PriceData.Data.Prices.Average.ToString("0.00")}");
 
                         }

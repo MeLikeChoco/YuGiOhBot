@@ -138,7 +138,7 @@ namespace YuGiOhV2.Modules
         {
 
             if (string.IsNullOrEmpty(top))
-                top = $"There are {cards.Count()} results based on your search!";
+                top = $"There are {cards.Count()} results based on your search!\n";
 
             var builder = new StringBuilder($"```{top}");
             var counter = 1;
