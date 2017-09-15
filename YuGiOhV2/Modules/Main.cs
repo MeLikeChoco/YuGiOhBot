@@ -66,7 +66,7 @@ namespace YuGiOhV2.Modules
             var cards = _cache.Uppercase.Where(name => name.ToLower().Contains(lower));
             var amount = cards.Count();
 
-            if (cards.Count() != 0)
+            if (amount != 0)
                 await RecieveInput(amount, cards);
             else
                 await NoResultError(search);
@@ -125,7 +125,7 @@ namespace YuGiOhV2.Modules
 
             }
 
-            await ReplyAndDeleteAsync(GetFormattedList($"There are {amount} results based on your search!", cards), timeout: TimeSpan.FromSeconds(60));
+            await ReplyAndDeleteAsync(GetFormattedList(cards), timeout: TimeSpan.FromSeconds(60));
 
             var input = await NextMessageAsync(true, true, TimeSpan.FromSeconds(60));
 
@@ -134,10 +134,13 @@ namespace YuGiOhV2.Modules
 
         }
 
-        public string GetFormattedList(string top, IEnumerable<string> cards)
+        public string GetFormattedList(IEnumerable<string> cards, string top = null)
         {
 
-            var builder = new StringBuilder($"```top");
+            if (string.IsNullOrEmpty(top))
+                top = $"There are {cards.Count()} results based on your search!";
+
+            var builder = new StringBuilder($"```{top}");
             var counter = 1;
 
             builder.AppendLine();

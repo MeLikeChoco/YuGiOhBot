@@ -75,15 +75,15 @@ namespace YuGiOhV2.Services
                         //ex. kaiju slumber would return Interrupted Kaiju Slumber
                         //note: it has problems such as "red eyes" will return Hundred Eyes Dragon instead of Red-Eyes Dragon
                         //how to accurately solve this problem is not easy                            
-                        string closestCard = _cache.Lowercase.AsParallel().FirstOrDefault(card => card.ToLower() == cardName);
+                        string closestCard = _cache.Lowercase.AsParallel().FirstOrDefault(card => card == cardName);
 
                         if (string.IsNullOrEmpty(closestCard))
                         {
 
-                            closestCard = _cache.Lowercase.AsParallel().FirstOrDefault(card => input.All(i => card.ToLower().Contains(i)));
+                            closestCard = _cache.Lowercase.AsParallel().FirstOrDefault(card => input.All(i => card.Contains(i)));
 
                             if (string.IsNullOrEmpty(closestCard))
-                                closestCard = _cache.Lowercase.AsParallel().MinBy(card => YetiLevenshtein(card.ToLower(), cardName));
+                                closestCard = _cache.Lowercase.AsParallel().MinBy(card => YetiLevenshtein(card, cardName));
 
                         }
 
@@ -274,10 +274,10 @@ namespace YuGiOhV2.Services
                 //throw new NotImplementedException();
                 if (xcost > 0)
                     //return l2 + 1 - 2*(memchr(s2, *s1, l2) != NULL);
-                    return l2 + 1 - 2 * memchrRPLC(s2, *s1, l2);
+                    return l2 + 1 - 2 * MemchrRPLC(s2, *s1, l2);
                 else
                     //return l2 - (memchr(s2, *s1, l2) != NULL);
-                    return l2 - memchrRPLC(s2, *s1, l2);
+                    return l2 - MemchrRPLC(s2, *s1, l2);
             }
 
             l1++;
@@ -388,7 +388,7 @@ namespace YuGiOhV2.Services
             return i;
         }
 
-        private unsafe int memchrRPLC(char* buffer, char c, int count)
+        private unsafe int MemchrRPLC(char* buffer, char c, int count)
         {
             char* p = buffer;
             char* e = buffer + count;

@@ -19,22 +19,22 @@ namespace YuGiOhV2.Services
 
         public ConcurrentDictionary<ulong, Setting> Settings;
 
-        public Database(IEnumerable<SocketGuild> guilds)
+        public async Task Initialize(IEnumerable<SocketGuild> guilds)
         {
 
             using (var db = new SqliteConnection(DbPath))
             {
 
-                db.Open();
+                await db.OpenAsync();
 
-                var settings = db.GetAll<Setting>().ToList();
+                var settings = (await db.GetAllAsync<Setting>()).ToList();
                 var unregGuilds = guilds.Where(guild => !settings.Any(setting => setting.Id == guild.Id)).ToList();
 
-                foreach(var guild in unregGuilds)
+                foreach (var guild in unregGuilds)
                 {
 
                     var setting = new Setting(guild);
-                    db.Insert(setting);
+                    await db.InsertAsync(setting);
                     settings.Add(setting);
 
                 }

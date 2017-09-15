@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -20,9 +21,19 @@ namespace YuGiOhV2.Core
 
             AltConsole.Print("Info", "Entry Point", "Welcome to YuGiOh Bot V2");
 
-            var events = new Events();
+            try
+            {
 
-            await events.GetReadyForBlastOff();
+                var events = new Events();
+
+                await events.GetReadyForBlastOff();
+
+            }catch(Exception e)
+            {
+
+                await File.WriteAllTextAsync("Error.txt", $"{e.Message}\n{e.StackTrace}");
+
+            }
 
             await Task.Delay(-1);
 

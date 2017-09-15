@@ -45,19 +45,11 @@ namespace YuGiOhV2.Services
 
             var client = state as DiscordSocketClient;
             var guilds = client.Guilds;
-
-            var userSet = new HashSet<ulong>(guilds.SelectMany(guild =>
-            {
-
-                guild.DownloadUsersAsync().GetAwaiter().GetResult();
-                return guild.Users.Where(user => !user.IsBot);
-
-            }).Select(user => user.Id));
                         
             var maxGuild = guilds.Where(guild => !guild.Name.Contains("Bot")).MaxBy(guild => guild.MemberCount);
             MaxGuild = maxGuild.Name;
             MaxGuildCount = maxGuild.MemberCount;
-            UniqueUserCount = userSet.Count;
+            UniqueUserCount = guilds.Sum(guild => guild.MemberCount);
             GuildCount = guilds.Count;
 
             Log("Finished calculating stats.");
@@ -85,6 +77,7 @@ namespace YuGiOhV2.Services
 
                 Log("Sending stats to black discord bots...");
                 await _web.Post($"https://bots.discord.pw/api/{_id}/stats", payload, await File.ReadAllTextAsync("Files/Bot List Tokens/Black.txt"));
+                Log("Success in sending stats to black discord bots.");
 
             }
             catch
@@ -99,6 +92,7 @@ namespace YuGiOhV2.Services
 
                 Log("Sending stats to blue discord bots...");
                 await _web.Post($"https://discordbots.org/api/{_id}/stats", payload, await File.ReadAllTextAsync("Files/Bot List Tokens/Blue.txt"));
+                Log("Success in sending stats to blue discord bots.");
 
             }
             catch

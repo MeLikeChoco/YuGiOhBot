@@ -30,6 +30,7 @@ namespace YuGiOhV2.Core
         private static readonly DiscordSocketConfig ClientConfig = new DiscordSocketConfig()
         {
             
+            //AlwaysDownloadUsers = true,
             LogLevel = LogSeverity.Verbose,
             MessageCacheSize = 1000
 
@@ -64,23 +65,23 @@ namespace YuGiOhV2.Core
         {
 
             await RevEngines();
-            await LoadDatabase();
-            LoadStats();
-            BuildServices();
-            await RegisterCommands();
+
+            _client.Ready += YouAintDoneYet;
 
         }
 
         private async Task RevEngines()
         {
 
-            var isTest = Environment.GetCommandLineArgs().FirstOrDefault()?.ToLower();
+            var isTest = Environment.GetCommandLineArgs().ElementAtOrDefault(1)?.ToLower();
             string token;
 
             if (isTest == "true")
                 token = File.ReadAllText("Files/Bot Tokens/Test.txt");
             else
-                token = File.ReadAllText("Files/Bot Tokens/Test.txt");
+                token = File.ReadAllText("Files/Bot Tokens/Legit.txt");
+
+            Print($"Test: {isTest ?? "false"}");
 
             Print("Logging in...");
             await _client.LoginAsync(TokenType.Bot, token);
@@ -91,15 +92,23 @@ namespace YuGiOhV2.Core
 
         }
 
+        private async Task YouAintDoneYet()
+        {
+
+            await LoadDatabase();
+            LoadStats();
+            BuildServices();
+
+            await RegisterCommands();
+
+        }
+
         private async Task LoadDatabase()
         {
 
-            Print("Waiting for guilds to load...");
-            await Task.Delay(10000);
-            Print("Guilds loaded.");
-
             Print("Loading database...");
-            _database = new Database(_client.Guilds);
+            _database = new Database();
+            await _database.Initialize(_client.Guilds);
             Print("Finished loading database.");
 
         }
