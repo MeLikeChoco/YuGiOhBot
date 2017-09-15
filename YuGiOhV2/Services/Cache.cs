@@ -221,9 +221,12 @@ namespace YuGiOhV2.Services
             {
 
                 var spelltrap = card as SpellTrap;
-                desc += $"**Property:** {spelltrap.Property}";
+                desc += $"**Property:** {spelltrap.Property}\n";
 
             }
+
+            if (!string.IsNullOrEmpty(card.Passcode))
+                desc += $"**Passcode:** {card.Passcode}";
 
             return desc;
 

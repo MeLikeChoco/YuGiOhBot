@@ -5,6 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+//The getinvite command can be intruding, however, I only use it to ask for feedback on the bot, else there is no other way to get 
+//any sort of information on what I could improve or add. Sure, I have the feedback command, but no one uses it.
+
 namespace YuGiOhV2.Modules
 {
     [RequireOwner]

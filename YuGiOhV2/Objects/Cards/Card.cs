@@ -18,6 +18,7 @@ namespace YuGiOhV2.Objects.Cards
         public int TcgOnly { get; set; }
         public string Img { get; set; }
         public string Url { get; set; }
+        public string Passcode { get; set; }
 
         public bool HasEffect
         {

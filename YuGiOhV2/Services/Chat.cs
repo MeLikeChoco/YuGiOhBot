@@ -120,7 +120,7 @@ namespace YuGiOhV2.Services
             {
                 
                 time = searchTime.Value;
-                var rounded = Math.Round(time.TotalSeconds, 5, MidpointRounding.ToEven);
+                var rounded = Math.Round(time.TotalSeconds, 5, MidpointRounding.ToEven).ToString("0.00000");
 
                 clone.Footer.WithText($"Search time: {rounded} seconds");
 
