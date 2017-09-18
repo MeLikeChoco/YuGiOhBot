@@ -80,10 +80,17 @@ namespace YuGiOhV2.Services
                         if (string.IsNullOrEmpty(closestCard))
                         {
 
-                            closestCard = _cache.Lowercase.AsParallel().FirstOrDefault(card => input.All(i => card.Contains(i)));
+                            closestCard = _cache.Lowercase.AsParallel().FirstOrDefault(card => card.Contains(cardName));
 
-                            if (string.IsNullOrEmpty(closestCard))
-                                closestCard = _cache.Lowercase.AsParallel().MinBy(card => YetiLevenshtein(card, cardName));
+                            if(string.IsNullOrEmpty(closestCard))
+                            {
+                                
+                                closestCard = _cache.Lowercase.AsParallel().FirstOrDefault(card => input.All(i => card.Contains(i)));
+
+                                if (string.IsNullOrEmpty(closestCard))
+                                    closestCard = _cache.Lowercase.AsParallel().MinBy(card => YetiLevenshtein(card, cardName));
+
+                            }
 
                         }
 
@@ -136,7 +143,7 @@ namespace YuGiOhV2.Services
             else
             {
 
-                var realName = "";
+                string realName;
 
                 if (clone.Description.Contains("Real Name"))
                 {

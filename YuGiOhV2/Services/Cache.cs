@@ -1,9 +1,12 @@
-﻿using Dapper;
+﻿using AngleSharp;
+using Dapper;
 using Discord;
 using Microsoft.Data.Sqlite;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -16,11 +19,16 @@ namespace YuGiOhV2.Services
     public class Cache
     {
 
+        public Dictionary<string, Card> Objects { get; private set; }
         public Dictionary<string, EmbedBuilder> Cards { get; private set; }
         public Dictionary<string, HashSet<string>> Archetypes { get; private set; }
         public Dictionary<string, string> Images { get; private set; }
+        public Dictionary<string, string> LowerToUpper { get; private set; }
         public HashSet<string> Uppercase { get; private set; }
         public HashSet<string> Lowercase { get; private set; }
+        public int FYeahYgoCardArtPosts { get; private set; }
+
+        public string TumblrKey { get; private set; }
 
         private const string DbString = "Data Source = Databases/ygo.db";
         private static readonly ParallelOptions POptions = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount };
@@ -46,13 +54,28 @@ namespace YuGiOhV2.Services
 
         }
 
+        public async Task GetAWESOMECARDART(Web web)
+        {
+
+            Print("Getting photo posts on FYeahYgoCardArt tumblr...");
+
+            TumblrKey = await File.ReadAllTextAsync("Files/OAuth/Tumblr.txt");
+            var posts = await web.GetDeserializedContent<JObject>($"https://api.tumblr.com/v2/blog/fyeahygocardart/posts/photo?api_key={TumblrKey}&limit=1");
+            FYeahYgoCardArtPosts = int.Parse(posts["response"]["total_posts"].ToString());
+
+            Print($"Got {FYeahYgoCardArtPosts} photos.");
+
+        }
+
         private void AquireFancyMessages(IEnumerable<Card> objects)
         {
 
             var counter = 0;
             var total = objects.Count();
+            var tempObjects = new ConcurrentDictionary<string, Card>();
             var tempDict = new ConcurrentDictionary<string, EmbedBuilder>();
             var tempImages = new ConcurrentDictionary<string, string>();
+            var tempLowerToUpper = new ConcurrentDictionary<string, string>();
             var tempUpper = new ConcurrentBag<string>();
             var tempLower = new ConcurrentBag<string>();
             Archetypes = new Dictionary<string, HashSet<string>>(StringComparer.InvariantCultureIgnoreCase);
@@ -70,8 +93,10 @@ namespace YuGiOhV2.Services
                 tempUpper.Add(name);
                 tempLower.Add(name.ToLower());
 
+                tempObjects[name] = cardobj;
                 tempDict[name] = embed;
                 tempImages[name] = cardobj.Img;
+                tempLowerToUpper[name.ToLower()] = name;
 
                 lock (aLock)
                 {
@@ -101,8 +126,10 @@ namespace YuGiOhV2.Services
 
             Print("Finished generating embeds.");
 
+            Objects = new Dictionary<string, Card>(tempObjects, StringComparer.InvariantCultureIgnoreCase);
             Cards = new Dictionary<string, EmbedBuilder>(tempDict, StringComparer.InvariantCultureIgnoreCase);
             Images = new Dictionary<string, string>(tempImages, StringComparer.InvariantCultureIgnoreCase);
+            LowerToUpper = new Dictionary<string, string>(tempLowerToUpper, StringComparer.InvariantCultureIgnoreCase);
             Uppercase = new HashSet<string>(tempUpper);
             Lowercase = new HashSet<string>(tempLower);
 
@@ -135,6 +162,12 @@ namespace YuGiOhV2.Services
             {
 
                 var monster = card as Monster;
+
+                //for some reason, newlines aren't properly recognized
+                monster.Lore = monster.Lore.Replace(@"\n", "\n");
+
+                //if (!string.IsNullOrEmpty(monster.Materials))
+                //    monster.Lore = monster.Lore.Replace($"{monster.Materials} ", $"{monster.Materials}");
 
                 if (monster.Lore.StartsWith("Pendulum Effect"))
                 {
@@ -213,8 +246,8 @@ namespace YuGiOhV2.Services
                     desc += $"**Level:** {regular.Level}\n";
                 }
 
-                if (!string.IsNullOrEmpty(monster.Scale))
-                    desc += $"**Scale:** {monster.Scale}\n";
+                if (!string.IsNullOrEmpty(monster.PendulumScale))
+                    desc += $"**Scale:** {monster.PendulumScale}\n";
 
             }
             else
@@ -224,6 +257,15 @@ namespace YuGiOhV2.Services
                 desc += $"**Property:** {spelltrap.Property}\n";
 
             }
+
+            if (card.OcgStatus != "U")
+                desc += $"**OCG:** {card.OcgStatus}\n";
+
+            if (card.TcgAdvStatus != "U")
+                desc += $"**TCG ADV:** {card.TcgAdvStatus}\n";
+
+            if (card.TcgTrnStatus != "U")
+                desc += $"**TCG TRAD:** {card.TcgTrnStatus}\n";
 
             if (!string.IsNullOrEmpty(card.Passcode))
                 desc += $"**Passcode:** {card.Passcode}";
@@ -253,7 +295,7 @@ namespace YuGiOhV2.Services
 
                 if (monster is Link)
                     return new Color(0, 0, 139);
-                else if (!string.IsNullOrEmpty(monster.Scale))
+                else if (!string.IsNullOrEmpty(monster.PendulumScale))
                     return new Color(150, 208, 189);
                 else if (monster is Xyz)
                     return new Color(0, 0, 1);

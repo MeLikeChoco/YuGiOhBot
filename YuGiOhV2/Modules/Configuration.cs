@@ -11,7 +11,6 @@ using YuGiOhV2.Services;
 namespace YuGiOhV2.Modules
 {
     [RequireContext(ContextType.Guild)]
-    [RequireUserPermission(GuildPermission.Administrator)]
     public class Configuration : CustomBase
     {
 
@@ -31,6 +30,7 @@ namespace YuGiOhV2.Modules
         }
 
         [Command("prefix")]
+        [RequireUserPermission(GuildPermission.Administrator)]
         public async Task SetPrefixCommand([Remainder]string prefix)
         {
 
@@ -52,10 +52,16 @@ namespace YuGiOhV2.Modules
         }
 
         [Command("prefix")]
+        [RequireOwner]
+        public Task SetPrefixCommandOwner([Remainder]string prefix)
+            => SetPrefixCommand(prefix);
+
+        [Command("prefix")]
         public async Task PrefixCommand()
             => await ReplyAsync($"**Prefix:** {_setting.Prefix}");
 
         [Command("minimal")]
+        [RequireUserPermission(GuildPermission.Administrator)]
         public async Task SetMinimalCommand([Remainder]string input)
         {
 
@@ -82,6 +88,11 @@ namespace YuGiOhV2.Modules
                 await ReplyAsync("This command only accepts `true` or `false`");
 
         }
+
+        [Command("minimal")]
+        [RequireOwner]
+        public Task MinimalCommandOwner(string input)
+            => SetMinimalCommand(input);
 
         [Command("minimal")]
         public async Task MinimalCommand()

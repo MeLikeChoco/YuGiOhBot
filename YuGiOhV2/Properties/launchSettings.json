@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "YuGiOhV2": {
+      "commandName": "Project",
+      "commandLineArgs": "true"
+    }
+  }
+}

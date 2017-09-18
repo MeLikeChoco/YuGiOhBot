@@ -1,4 +1,5 @@
-﻿using Discord.Commands;
+﻿using Discord;
+using Discord.Commands;
 using Discord.WebSocket;
 using MoreLinq;
 using System;
@@ -57,13 +58,13 @@ namespace YuGiOhV2.Modules
             await SendEmbed(embed, _minimal);
 
         }
-        
+
         [Command("search"), Alias("s")]
         public async Task SearchCommand([Remainder]string search)
         {
 
             var lower = search.ToLower();
-            var cards = _cache.Uppercase.Where(name => name.ToLower().Contains(lower));
+            var cards = _cache.LowerToUpper.Where(kv => kv.Key.Contains(search)).Select(kv => kv.Value);
             var amount = cards.Count();
 
             if (amount != 0)
@@ -91,7 +92,7 @@ namespace YuGiOhV2.Modules
 
         }
 
-        [Command("image"), Alias("i")]
+        [Command("image"), Alias("i", "img")]
         public async Task ImageCommand([Remainder]string card)
         {
 
@@ -114,6 +115,61 @@ namespace YuGiOhV2.Modules
 
         }
 
+        [Command("price"), Alias("prices", "p")]
+        public async Task PriceCommand([Remainder]string input)
+        {
+
+            if (_cache.LowerToUpper.ContainsKey(input))
+            {
+
+                using (Context.Channel.EnterTypingState())
+                {
+
+                    var name = _cache.LowerToUpper[input];
+                    var response = await _web.GetPrices(name);
+                    var data = response.Data.Where(d => string.IsNullOrEmpty(d.PriceData.Message)).ToList();
+
+                    var author = new EmbedAuthorBuilder()
+                        .WithIconUrl("https://vignette1.wikia.nocookie.net/yugioh/images/8/82/PotofGreed-TF04-JP-VG.jpg/revision/latest?cb=20120829225457")
+                        .WithName("YuGiOh Prices")
+                        .WithUrl($"https://yugiohprices.com/card_price?name={Uri.EscapeDataString(input)}");
+
+                    var body = new EmbedBuilder()
+                        .WithAuthor(author)
+                        .WithColor(new Color(33, 108, 42))
+                        .WithCurrentTimestamp();
+
+                    if (data.Count > 25)
+                    {
+
+                        body.WithDescription("**There are more than 25 results! Due to that, only the first 25 results are shown!**");
+                        data = data.GetRange(0, 25);
+
+                    }
+
+                    foreach (var datum in data)
+                    {
+
+                        var prices = datum.PriceData.Data.Prices;
+
+                        body.AddField(datum.Name,
+                            $"**Rarity:** {datum.Rarity}\n" +
+                            $"**Low:** ${prices.Low.ToString("0.00")}\n" +
+                            $"**High:** ${prices.High.ToString("0.00")}\n" +
+                            $"**Average:** ${prices.Average.ToString("0.00")}", true);
+
+                    }
+
+                    await ReplyAsync("", embed: body.Build());
+
+                }
+
+            }
+            else
+                await NoResultError(input);
+
+        }
+
         public async Task RecieveInput(int amount, IEnumerable<string> cards)
         {
 
@@ -129,7 +185,7 @@ namespace YuGiOhV2.Modules
 
             var input = await NextMessageAsync(true, true, TimeSpan.FromSeconds(60));
 
-            if (int.TryParse(input.Content, out var selection) && (selection < amount || selection < 1))
+            if (int.TryParse(input.Content, out var selection) && (selection <= amount || selection > 1))
                 await CardCommand(cards.ElementAt(selection - 1));
 
         }

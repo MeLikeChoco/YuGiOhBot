@@ -56,7 +56,7 @@ namespace YuGiOhV2.Services
 
            IsReady = true;
 
-            if (!_armedTimer)
+            if (!_armedTimer && Environment.GetCommandLineArgs().ElementAtOrDefault(1)?.ToLower() != "true")
             {
 
                 _sendStats = new Timer(SendStats, null, 0, 3600000);

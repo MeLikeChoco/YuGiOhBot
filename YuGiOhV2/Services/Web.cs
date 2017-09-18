@@ -1,6 +1,7 @@
-﻿using Newtonsoft.Json;
+﻿using AngleSharp.Dom.Html;
+using AngleSharp.Parser.Html;
+using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -15,6 +16,7 @@ namespace YuGiOhV2.Services
     {
 
         private HttpClient _http;
+        private HtmlParser _parser;
 
         private const string PricesBaseUrl = "http://yugiohprices.com/api/get_card_prices/";
         private const string ImagesBaseUrl = "http://yugiohprices.com/api/card_image/";
@@ -22,7 +24,23 @@ namespace YuGiOhV2.Services
         public Web()
         {
 
-            _http = new HttpClient();
+            _http = new HttpClient(new HttpClientHandler
+            {
+                UseProxy = false,
+                Proxy = null
+            });
+
+            _parser = new HtmlParser();
+
+        }
+
+        public async Task<IHtmlDocument> GetDom(string url)
+        {
+
+            var response = await Check(url).ConfigureAwait(false);
+            var html = await response.ReadAsStringAsync().ConfigureAwait(false);
+
+            return await _parser.ParseAsync(html);
 
         }
 
@@ -31,17 +49,23 @@ namespace YuGiOhV2.Services
 
             var payload = new StringContent(content);
 
-            if (!string.IsNullOrEmpty(authorization))
-                _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(authorization);
+            //if only httpclient had a way to easily set seperate authentication headers or global with thread safety :/
+            var message = new HttpRequestMessage(HttpMethod.Post, url)
+            {
+                Content = payload
+            };
 
-            await _http.PostAsync(url, payload);
+            if(!string.IsNullOrEmpty(authorization))
+                message.Headers.Authorization = new AuthenticationHeaderValue(authorization);
+
+            await _http.SendAsync(message, HttpCompletionOption.ResponseHeadersRead);
 
         }
 
-        public async Task<YuGiOhPrices> GetPrices(string name, string realName)
+        public async Task<YuGiOhPrices> GetPrices(string name, string realName = null)
         {
 
-            var response = await GetDeserializedContent<YuGiOhPrices>($"{PricesBaseUrl}{Uri.EscapeUriString(name)}");
+            var response = await GetDeserializedContent<YuGiOhPrices>($"{PricesBaseUrl}{Uri.EscapeUriString(name)}").ConfigureAwait(false);
 
             if ((response == null || response.Status == "fail") && !string.IsNullOrEmpty(realName))
                 response = await GetDeserializedContent<YuGiOhPrices>($"{PricesBaseUrl}{Uri.EscapeUriString(realName)}");
@@ -53,22 +77,44 @@ namespace YuGiOhV2.Services
         public async Task<Stream> GetStream(string url)
         {
 
-            var stream = await _http.GetStreamAsync(url);
-            var copy = new MemoryStream();
+            using (var response = await Check(url).ConfigureAwait(false))
+            using (var stream = await response.ReadAsStreamAsync().ConfigureAwait(false))
+            {
 
-            await stream.CopyToAsync(copy);
-            copy.Seek(0, SeekOrigin.Begin);
+                var copy = new MemoryStream();
 
-            return copy;
+                await stream.CopyToAsync(copy).ConfigureAwait(false);
+                copy.Seek(0, SeekOrigin.Begin);
+
+                return copy;
+
+            }
 
         }
 
-        private async Task<T> GetDeserializedContent<T>(string url)
+        public async Task<T> GetDeserializedContent<T>(string url)
         {
 
-            var json = await _http.GetStringAsync(url);
+            var response = await Check(url).ConfigureAwait(false);
+            var json = await response.ReadAsStringAsync().ConfigureAwait(false);
 
             return JsonConvert.DeserializeObject<T>(json);
+
+        }
+
+        private async Task<HttpContent> Check(string url)
+        {
+
+            HttpResponseMessage response;
+
+            do
+            {
+
+                response = await _http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
+
+            } while (!response.IsSuccessStatusCode);
+
+            return response.Content;
 
         }
 

@@ -3,6 +3,7 @@ using Discord.Addons.Interactive;
 using Discord.Commands;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,6 +13,9 @@ namespace YuGiOhV2.Modules
 {
     public class CustomBase : InteractiveBase<SocketCommandContext>
     {
+
+        public Task UploadAsync(Stream stream, string filename, string text = null)
+            => Context.Channel.SendFileAsync(stream, filename, text);
 
         public async Task SendEmbed(EmbedBuilder embed, bool minimal)
             => await ReplyAsync("", embed: (await Chat.EditEmbed(embed, minimal)).Build());
@@ -30,8 +34,8 @@ namespace YuGiOhV2.Modules
 
         }
 
-        public async Task TooManyError()
-            => await ReplyAsync("Too many results were returned, please refine your search!");
+        public Task TooManyError()
+            => ReplyAsync("Too many results were returned, please refine your search!");
 
     }
 }

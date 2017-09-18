@@ -15,11 +15,13 @@ namespace YuGiOhV2.Modules
     {
 
         private Stats _stats;
+        private Random _rand;
 
-        public Utility(Stats stats)
+        public Utility(Stats stats, Random rand)
         {
 
             _stats = stats;
+            _rand = rand;
 
         }
 
@@ -38,7 +40,7 @@ namespace YuGiOhV2.Modules
             var body = new EmbedBuilder()
                 .WithAuthor(author)
                 .WithFooter(footer)
-                .WithColor(new Color(Rand.NextInt(256), Rand.NextInt(256), Rand.NextInt(256)))
+                .WithColor(new Color(_rand.Next(256), _rand.Next(256), _rand.Next(256)))
                 .WithDescription(message);
 
             await (Context.Client.GetChannel(296117398132752384) as SocketTextChannel).SendMessageAsync("", embed: body.Build());
@@ -79,7 +81,7 @@ namespace YuGiOhV2.Modules
 
                 var body = new EmbedBuilder()
                     .WithAuthor(author)
-                    .WithColor(new Color(Rand.NextInt(256), Rand.NextInt(256), Rand.NextInt(256)))
+                    .WithColor(new Color(_rand.Next(256), _rand.Next(256), _rand.Next(256)))
                     .WithDescription(desc);
 
                 await ReplyAsync("", embed: body.Build());
@@ -89,6 +91,10 @@ namespace YuGiOhV2.Modules
                 await ReplyAsync("Statistics are still being calculated.");
 
         }
+
+        [Command("ping")]
+        public Task PingCommand()
+            => ReplyAsync($"**{Context.Client.Latency}ms**");
 
         private string GetUptime()
         {

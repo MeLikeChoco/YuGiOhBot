@@ -20,6 +20,10 @@ namespace YuGiOhV2.Objects.Cards
         public string Url { get; set; }
         public string Passcode { get; set; }
 
+        public string OcgStatus { get; set; }
+        public string TcgAdvStatus { get; set; }
+        public string TcgTrnStatus { get; set; }
+
         public bool HasEffect
         {
             get

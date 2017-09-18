@@ -51,8 +51,8 @@ namespace YuGiOhV2.Core
 
             _client = new DiscordSocketClient(ClientConfig);
             _commands = new CommandService(CommandConfig);
-            _cache = new Cache();
             _web = new Web();
+            _cache = new Cache();
             _interactive = new InteractiveService(_client);
 
             RegisterLogging();
@@ -95,10 +95,10 @@ namespace YuGiOhV2.Core
         private async Task YouAintDoneYet()
         {
 
+            await _cache.GetAWESOMECARDART(_web);
             await LoadDatabase();
             LoadStats();
             BuildServices();
-
             await RegisterCommands();
 
         }
@@ -130,6 +130,7 @@ namespace YuGiOhV2.Core
                 .AddSingleton(_interactive)
                 .AddSingleton(_web)
                 .AddSingleton(_stats)
+                .AddSingleton<Random>()
                 .BuildServiceProvider();
             
         }
