@@ -40,6 +40,7 @@ namespace YuGiOhV2.Modules
 
         [Command("guess")]
         [RequireContext(ContextType.Guild)]
+        [Summary("Starts an image/card guessing game!")]
         public async Task GuessCommand()
         {
 

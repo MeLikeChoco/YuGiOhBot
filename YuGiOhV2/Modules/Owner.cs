@@ -27,6 +27,7 @@ namespace YuGiOhV2.Modules
         }
 
         [Command("getinvite")]
+        [Summary("Gets invite to the default channel of the guild")]
         public async Task GetInviteCommand([Remainder]string name)
         {
 
@@ -49,6 +50,7 @@ namespace YuGiOhV2.Modules
         }
 
         [Command("megaphone")]
+        [Summary("Sends a message to all guilds USE WITH CAUTION")]
         public async Task MegaphoneCommand([Remainder]string message)
         {
 
@@ -70,11 +72,33 @@ namespace YuGiOhV2.Modules
         }
 
         [Command("reform")]
+        [Summary("Re-initialize the cache")]
         public Task ReformCache()
         {
             
             _cache.Initialize();
             return Task.CompletedTask;
+
+        }
+
+        [Command("tell")]
+        [Summary("Tell a specific channel on a guild something")]
+        public async Task TellCommand([Remainder]string input)
+        {
+
+            var guild = Context.Client.Guilds.FirstOrDefault(g => g.Name == input);
+
+            await ReplyAsync("Which channel would you like to use?");
+
+            var response = await NextMessageAsync();
+            var id = ulong.Parse(response.Content);
+            var channel = guild.GetTextChannel(id);
+
+            await ReplyAsync("What would you like to tell them?");
+
+            response = await NextMessageAsync();
+
+            await channel.SendMessageAsync(response.Content);
 
         }
     }

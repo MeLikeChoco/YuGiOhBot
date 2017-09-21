@@ -27,9 +27,11 @@ namespace YuGiOhV2.Core
         private InteractiveService _interactive;
         private IServiceProvider _services;
 
+        private bool _isInitialized = false;
+
         private static readonly DiscordSocketConfig ClientConfig = new DiscordSocketConfig()
         {
-            
+
             //AlwaysDownloadUsers = true,
             LogLevel = LogSeverity.Verbose,
             MessageCacheSize = 1000
@@ -66,7 +68,8 @@ namespace YuGiOhV2.Core
 
             await RevEngines();
 
-            _client.Ready += YouAintDoneYet;
+            if (!_isInitialized)
+                _client.Ready += YouAintDoneYet;
 
         }
 
@@ -101,6 +104,8 @@ namespace YuGiOhV2.Core
             BuildServices();
             await RegisterCommands();
 
+            _isInitialized = true;
+
         }
 
         private async Task LoadDatabase()
@@ -132,7 +137,7 @@ namespace YuGiOhV2.Core
                 .AddSingleton(_stats)
                 .AddSingleton<Random>()
                 .BuildServiceProvider();
-            
+
         }
 
         private async Task RegisterCommands()
@@ -147,6 +152,8 @@ namespace YuGiOhV2.Core
             await _commands.AddModulesAsync(Assembly.GetEntryAssembly());
 
             Print("Commands registered.");
+
+            _client.Ready -= YouAintDoneYet;
 
         }
 
@@ -178,7 +185,12 @@ namespace YuGiOhV2.Core
 
                 var context = new SocketCommandContext(_client, possibleCmd);
 
-                AltConsole.Print("Info", "Command", $"{possibleCmd.Author.Username} from {(possibleCmd.Channel as SocketTextChannel).Guild.Name}");
+                if (message.Channel is SocketDMChannel)
+                    AltConsole.Print("Info", "Command", $"{possibleCmd.Author.Username} in DM's");
+                else
+                    AltConsole.Print("Info", "Command", $"{possibleCmd.Author.Username} from {(possibleCmd.Channel as SocketTextChannel).Guild.Name}");
+
+
                 AltConsole.Print("Info", "Command", $"{possibleCmd.Content}");
 
                 var result = await _commands.ExecuteAsync(context, argPos, _services);
@@ -188,8 +200,11 @@ namespace YuGiOhV2.Core
 
                     if (result.ErrorReason.ToLower().Contains("unknown command"))
                         return;
+                    else if (result.ErrorReason.ToLower().Contains("you are currently in timeout"))
+                        await context.Channel.SendMessageAsync("Please wait 5 seconds between each type of paginator command!");
+                    else
+                        await context.Channel.SendMessageAsync("There was an error in the command.");
 
-                    await context.Channel.SendMessageAsync("There was an error in the command.");
                     //await context.Channel.SendMessageAsync("https://goo.gl/JieFJM");
 
                     AltConsole.Print("Error", "Error", result.ErrorReason);

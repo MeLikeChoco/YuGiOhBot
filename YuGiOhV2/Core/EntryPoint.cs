@@ -19,6 +19,7 @@ namespace YuGiOhV2.Core
         private async Task Run()
         {
 
+            AltConsole.Initialize();
             AltConsole.Print("Info", "Entry Point", "Welcome to YuGiOh Bot V2");
 
             try

@@ -1,5 +1,6 @@
 ﻿using AngleSharp;
 using Dapper;
+using Dapper.Contrib.Extensions;
 using Discord;
 using Microsoft.Data.Sqlite;
 using Newtonsoft.Json.Linq;
@@ -12,6 +13,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using YuGiOhV2.Extensions;
+using YuGiOhV2.Objects.Banlist;
 using YuGiOhV2.Objects.Cards;
 
 namespace YuGiOhV2.Services
@@ -26,6 +28,8 @@ namespace YuGiOhV2.Services
         public Dictionary<string, string> LowerToUpper { get; private set; }
         public HashSet<string> Uppercase { get; private set; }
         public HashSet<string> Lowercase { get; private set; }
+        public Banlist Banlist { get; private set; }
+
         public int FYeahYgoCardArtPosts { get; private set; }
 
         public string TumblrKey { get; private set; }
@@ -51,6 +55,7 @@ namespace YuGiOhV2.Services
             var objects = AquireGoodies();
 
             AquireFancyMessages(objects);
+            AquireTheUntouchables();
 
         }
 
@@ -377,6 +382,37 @@ namespace YuGiOhV2.Services
 
         }
 
+        private void AquireTheUntouchables()
+        {
+
+            var tempban = new Banlist();
+
+            using (var db = new SqliteConnection(DbString))
+            {
+
+                db.Open();
+
+                Print("Getting OCG banlist...");
+                tempban.OcgBanlist.Forbidden = db.Query<string>("select name from Card where ocgStatus like 'forbidden'");
+                tempban.OcgBanlist.Limited = db.Query<string>("select name from Card where ocgStatus like 'limited'");
+                tempban.OcgBanlist.SemiLimited = db.Query<string>("select name from Card where ocgStatus like 'semi-limited'");
+                Print("Getting TCG Adv banlist...");
+                tempban.TcgAdvBanlist.Forbidden = db.Query<string>("select name from Card where tcgAdvStatus like 'forbidden'");
+                tempban.TcgAdvBanlist.Limited = db.Query<string>("select name from Card where tcgAdvStatus like 'limited'");
+                tempban.TcgTradBanlist.SemiLimited = db.Query<string>("select name from Card where tcgAdvStatus like 'semi-limited'");
+                Print("Getting TCG Traditional banlist...");
+                tempban.TcgTradBanlist.Forbidden = db.Query<string>("select name from Card where tcgTrnStatus like 'forbidden'");
+                tempban.TcgTradBanlist.Limited = db.Query<string>("select name from Card where tcgTrnStatus like 'limited'");
+                tempban.TcgTradBanlist.SemiLimited = db.Query<string>("select name from Card where tcgTrnStatus like 'semi-limited'");
+
+                db.Close();
+
+            }
+
+            Banlist = tempban;
+
+        }
+
         private IEnumerable<Card> AquireGoodies()
         {
 
@@ -408,7 +444,7 @@ namespace YuGiOhV2.Services
             => AltConsole.Print("Info", "Cache", message);
 
         private void InlinePrint(string message)
-            => AltConsole.InlinePrint("Info", "Cache", message);
+            => AltConsole.InlinePrint("Info", "Cache", message, false);
 
     }
 

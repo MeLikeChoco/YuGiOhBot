@@ -31,6 +31,7 @@ namespace YuGiOhV2.Modules
 
         [Command("prefix")]
         [RequireUserPermission(GuildPermission.Administrator)]
+        [Summary("Sets the prefix for the bot in this guild!")]
         public async Task SetPrefixCommand([Remainder]string prefix)
         {
 
@@ -53,15 +54,18 @@ namespace YuGiOhV2.Modules
 
         [Command("prefix")]
         [RequireOwner]
+        [Summary("Sets the prefix for the bot in this guild!")]
         public Task SetPrefixCommandOwner([Remainder]string prefix)
             => SetPrefixCommand(prefix);
 
         [Command("prefix")]
+        [Summary("See the prefix the guild is using! Kinda useless tbh...")]
         public async Task PrefixCommand()
             => await ReplyAsync($"**Prefix:** {_setting.Prefix}");
 
         [Command("minimal")]
         [RequireUserPermission(GuildPermission.Administrator)]
+        [Summary("Set how much card info should be shown! (true/false)")]
         public async Task SetMinimalCommand([Remainder]string input)
         {
 
@@ -91,10 +95,12 @@ namespace YuGiOhV2.Modules
 
         [Command("minimal")]
         [RequireOwner]
+        [Summary("Set how much card info should be shown! (true/false)")]
         public Task MinimalCommandOwner(string input)
             => SetMinimalCommand(input);
 
         [Command("minimal")]
+        [Summary("Check how much card info is shown!")]
         public async Task MinimalCommand()
             => await ReplyAndDeleteAsync($"**Minimal:** {_setting.Minimal}");
 

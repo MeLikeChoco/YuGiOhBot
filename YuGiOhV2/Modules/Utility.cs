@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using YuGiOhV2.Extensions;
 using YuGiOhV2.Services;
 
 namespace YuGiOhV2.Modules
@@ -26,6 +27,7 @@ namespace YuGiOhV2.Modules
         }
 
         [Command("feedback")]
+        [Summary("Send feedback to the bot owner!")]
         public async Task FeedbackCommand([Remainder]string message)
         {
             
@@ -40,7 +42,7 @@ namespace YuGiOhV2.Modules
             var body = new EmbedBuilder()
                 .WithAuthor(author)
                 .WithFooter(footer)
-                .WithColor(new Color(_rand.Next(256), _rand.Next(256), _rand.Next(256)))
+                .WithColor(_rand.GetColor())
                 .WithDescription(message);
 
             await (Context.Client.GetChannel(296117398132752384) as SocketTextChannel).SendMessageAsync("", embed: body.Build());
@@ -48,20 +50,23 @@ namespace YuGiOhV2.Modules
         }
 
         [Command("invite")]
+        [Summary("Gets an invite to the bot!")]
         public async Task InviteCommand()
         {
 
             var id = Context.Client.GetApplicationInfoAsync().Result.Id;
 
             await ReplyAsync($"{Context.User.Mention} <https://discordapp.com/oauth2/authorize?client_id={id}&scope=bot&permissions=0>");
-
+            
         }
 
         [Command("uptime")]
+        [Summary("Gets the uptime of the bot!")]
         public async Task UptimeCommand() 
             => await ReplyAsync(GetUptime());
 
         [Command("stats")]
+        [Summary("Gets the statistics of the bot!")]
         public async Task StatsCommand()
         {
 
@@ -81,10 +86,10 @@ namespace YuGiOhV2.Modules
 
                 var body = new EmbedBuilder()
                     .WithAuthor(author)
-                    .WithColor(new Color(_rand.Next(256), _rand.Next(256), _rand.Next(256)))
+                    .WithColor(_rand.GetColor())
                     .WithDescription(desc);
 
-                await ReplyAsync("", embed: body.Build());
+                await SendEmbed(body);
 
             }
             else
@@ -93,6 +98,7 @@ namespace YuGiOhV2.Modules
         }
 
         [Command("ping")]
+        [Summary("Get the latency of the bot to the gateway!")]
         public Task PingCommand()
             => ReplyAsync($"**{Context.Client.Latency}ms**");
 

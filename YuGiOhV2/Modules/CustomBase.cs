@@ -14,11 +14,17 @@ namespace YuGiOhV2.Modules
     public class CustomBase : InteractiveBase<SocketCommandContext>
     {
 
+        public Task DirectMessageAsync(string message, Embed embed)
+            => Context.User.SendMessageAsync(message, embed: embed);
+
         public Task UploadAsync(Stream stream, string filename, string text = null)
             => Context.Channel.SendFileAsync(stream, filename, text);
 
-        public async Task SendEmbed(EmbedBuilder embed, bool minimal)
+        public async Task SendCardEmbed(EmbedBuilder embed, bool minimal)
             => await ReplyAsync("", embed: (await Chat.EditEmbed(embed, minimal)).Build());
+
+        public async Task SendEmbed(EmbedBuilder embed)
+            => await ReplyAsync("", embed: embed.Build());
 
         public async Task NoResultError(string input = null)
         {
