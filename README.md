@@ -11,13 +11,9 @@ Note >> Capitalization does not matter
 
 card <card name>               | Searches card based on card name
 
-lcard <card name>              | Coined lazy card, word order does not matter, gets the first available result
-
 rcard                          | Returns a random card. Great for making random decks
 
 search <search>                | Searches for cards based on search terms given
-
-lsearch <search>               | Coined lazy search, word order does not matter
 
 archetype <search>             | Attemps an archetype search
 
