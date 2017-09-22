@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using System;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -44,12 +45,12 @@ namespace YuGiOhV2.Services
 
         }
 
-        public async Task Post(string url, string content, string authorization = null)
+        public async Task<HttpResponseMessage> Post(string url, string content, string authorization = null, ContentType contentType = ContentType.Json)
         {
 
             var payload = new StringContent(content);
 
-            //if only httpclient had a way to easily set seperate authentication headers or global with thread safety :/
+            //if only httpclient had a way to easily set seperate authentication headers without doing this
             var message = new HttpRequestMessage(HttpMethod.Post, url)
             {
                 Content = payload
@@ -58,7 +59,21 @@ namespace YuGiOhV2.Services
             if(!string.IsNullOrEmpty(authorization))
                 message.Headers.Authorization = new AuthenticationHeaderValue(authorization);
 
-            await _http.SendAsync(message, HttpCompletionOption.ResponseHeadersRead);
+            switch (contentType)
+            {
+
+                case ContentType.Json:
+                    message.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+                    break;
+                default:
+                    message.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+                    break;
+
+            }
+
+            var response = await _http.SendAsync(message, HttpCompletionOption.ResponseHeadersRead);
+
+            return response;
 
         }
 
@@ -115,6 +130,13 @@ namespace YuGiOhV2.Services
             } while (!response.IsSuccessStatusCode);
 
             return response.Content;
+
+        }
+
+        public enum ContentType
+        {
+
+            Json
 
         }
 

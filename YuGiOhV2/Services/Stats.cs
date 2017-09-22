@@ -26,7 +26,7 @@ namespace YuGiOhV2.Services
         private Timer _sendStats;
         private ulong _id;
         private Web _web;
-        
+
         public Stats(DiscordSocketClient client, Web web)
         {
 
@@ -37,7 +37,7 @@ namespace YuGiOhV2.Services
             _calculateStats = new Timer(CalculateStats, client, 0, 3600000);
 
         }
-        
+
         private void CalculateStats(object state)
         {
 
@@ -45,7 +45,7 @@ namespace YuGiOhV2.Services
 
             var client = state as DiscordSocketClient;
             var guilds = client.Guilds;
-                        
+
             var maxGuild = guilds.Where(guild => !guild.Name.Contains("Bot")).MaxBy(guild => guild.MemberCount);
             MaxGuild = maxGuild.Name;
             MaxGuildCount = maxGuild.MemberCount;
@@ -54,7 +54,9 @@ namespace YuGiOhV2.Services
 
             Log("Finished calculating stats.");
 
-           IsReady = true;
+            IsReady = true;
+
+            //SendStats(null);
 
             if (!_armedTimer && Environment.GetCommandLineArgs().ElementAtOrDefault(1)?.ToLower() != "true")
             {
@@ -69,15 +71,15 @@ namespace YuGiOhV2.Services
         private async void SendStats(object state)
         {
 
-            //indenting or not, no difference, but i like to think it helps :(
-            var payload = JsonConvert.SerializeObject(new GuildCount(GuildCount), Formatting.Indented);
+            var payload = JsonConvert.SerializeObject(new GuildCount(GuildCount));
 
             try
             {
 
                 Log("Sending stats to black discord bots...");
-                await _web.Post($"https://bots.discord.pw/api/{_id}/stats", payload, await File.ReadAllTextAsync("Files/Bot List Tokens/Black.txt"));
-                Log("Success in sending stats to black discord bots.");
+                //var response = await _web.Post($"https://bots.discord.pw/api/bots/{_id}/stats", $"{{\"server_count\": {GuildCount}}}", await File.ReadAllTextAsync("Files/Bot List Tokens/Black.txt"));
+                var response = await _web.Post($"https://bots.discord.pw/api/bots/{_id}/stats", payload, await File.ReadAllTextAsync("Files/Bot List Tokens/Black.txt"));
+                Log($"Status: {response.StatusCode}");
 
             }
             catch
@@ -91,8 +93,9 @@ namespace YuGiOhV2.Services
             {
 
                 Log("Sending stats to blue discord bots...");
-                await _web.Post($"https://discordbots.org/api/{_id}/stats", payload, await File.ReadAllTextAsync("Files/Bot List Tokens/Blue.txt"));
-                Log("Success in sending stats to blue discord bots.");
+                //var response = await _web.Post($"https://discordbots.org/api/bots/{_id}/stats", $"{{\"server_count\": {GuildCount}}}", await File.ReadAllTextAsync("Files/Bot List Tokens/Blue.txt"));
+                var response = await _web.Post($"https://discordbots.org/api/bots/{_id}/stats", payload, await File.ReadAllTextAsync("Files/Bot List Tokens/Blue.txt"));
+                Log($"Status: {response.StatusCode}");
 
             }
             catch
