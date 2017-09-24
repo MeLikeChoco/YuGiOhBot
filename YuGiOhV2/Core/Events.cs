@@ -116,6 +116,8 @@ namespace YuGiOhV2.Core
             await _database.Initialize(_client.Guilds);
             Print("Finished loading database.");
 
+            _client.JoinedGuild += _database.AddGuild;
+
         }
 
         private void LoadStats()
@@ -158,7 +160,7 @@ namespace YuGiOhV2.Core
         }
 
         private async Task HandleCommand(SocketMessage message)
-        {
+        {            
 
             if (!(message is SocketUserMessage)
                 || message.Author.IsBot
