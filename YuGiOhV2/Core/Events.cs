@@ -204,8 +204,6 @@ namespace YuGiOhV2.Core
                         return;
                     else if (result.ErrorReason.ToLower().Contains("you are currently in timeout"))
                         await context.Channel.SendMessageAsync("Please wait 5 seconds between each type of paginator command!");
-                    else
-                        await context.Channel.SendMessageAsync("There was an error in the command.");
 
                     //await context.Channel.SendMessageAsync("https://goo.gl/JieFJM");
 

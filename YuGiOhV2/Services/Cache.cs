@@ -28,6 +28,12 @@ namespace YuGiOhV2.Services
         public Dictionary<string, string> LowerToUpper { get; private set; }
         public HashSet<string> Uppercase { get; private set; }
         public HashSet<string> Lowercase { get; private set; }
+
+        /// <summary>
+        /// Maps passcode to name
+        /// </summary>
+        public Dictionary<string, string> Passcodes { get; private set; }
+
         public Banlist Banlist { get; private set; }
 
         public int FYeahYgoCardArtPosts { get; private set; }
@@ -35,7 +41,7 @@ namespace YuGiOhV2.Services
         public string TumblrKey { get; private set; }
 
         private const string DbString = "Data Source = Databases/ygo.db";
-        private static readonly ParallelOptions POptions = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount };
+        private static readonly ParallelOptions _pOptions = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount };
 
         public Cache()
         {
@@ -83,13 +89,14 @@ namespace YuGiOhV2.Services
             var tempLowerToUpper = new ConcurrentDictionary<string, string>();
             var tempUpper = new ConcurrentBag<string>();
             var tempLower = new ConcurrentBag<string>();
+            var tempPasscodes = new ConcurrentDictionary<string, string>();
             Archetypes = new Dictionary<string, HashSet<string>>(StringComparer.InvariantCultureIgnoreCase);
 
             Print("Generating them fancy embed messages...");
 
             var aLock = new object();
 
-            Parallel.ForEach(objects, POptions, cardobj =>
+            Parallel.ForEach(objects, _pOptions, cardobj =>
             {
 
                 var name = cardobj.Name;
@@ -97,6 +104,9 @@ namespace YuGiOhV2.Services
 
                 tempUpper.Add(name);
                 tempLower.Add(name.ToLower());
+
+                if (!string.IsNullOrEmpty(cardobj.Passcode))
+                    tempPasscodes[cardobj.Passcode.TrimStart('0')] = cardobj.Name; //man, why you guys gotta include 0's in the beginning sometimes
 
                 tempObjects[name] = cardobj;
                 tempDict[name] = embed;
@@ -137,6 +147,7 @@ namespace YuGiOhV2.Services
             LowerToUpper = new Dictionary<string, string>(tempLowerToUpper, StringComparer.InvariantCultureIgnoreCase);
             Uppercase = new HashSet<string>(tempUpper);
             Lowercase = new HashSet<string>(tempLower);
+            Passcodes = new Dictionary<string, string>(tempPasscodes);
 
         }
 
@@ -282,11 +293,11 @@ namespace YuGiOhV2.Services
         private Color GetColor(Card card)
         {
 
-            if (card.Name == "Obelisk the Tormentor")
+            if (card.Name == "Obelisk the Tormentor (original)")
                 return new Color(50, 50, 153);
-            else if (card.Name == "Slifer the Sky Dragon")
+            else if (card.Name == "Slifer the Sky Dragon (original)")
                 return new Color(255, 0, 0);
-            else if (card.Name == "The Winged Dragon of Ra")
+            else if (card.Name == "The Winged Dragon of Ra (original)")
                 return new Color(255, 215, 0);
 
             if (card.CardType == "Spell")

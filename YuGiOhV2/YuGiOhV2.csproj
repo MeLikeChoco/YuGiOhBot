@@ -29,7 +29,7 @@
     <PackageReference Include="DeepCloner" Version="0.10.1" />
     <PackageReference Include="Discord.Addons.Interactive" Version="1.0.1" />
     <PackageReference Include="Discord.Addons.Preconditions" Version="1.0.0-rc" />
-    <PackageReference Include="Discord.Net" Version="2.0.0-alpha-build-00828" />
+    <PackageReference Include="Discord.Net" Version="2.0.0-alpha-build-00829" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="2.0.0" />
     <PackageReference Include="morelinq" Version="2.7.0" />
   </ItemGroup>

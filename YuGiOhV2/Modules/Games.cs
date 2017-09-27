@@ -7,6 +7,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -25,7 +26,8 @@ namespace YuGiOhV2.Modules
         private Random _rand;
         private Criteria<SocketMessage> _criteria;
 
-        private static ConcurrentDictionary<ulong, object> InProgress = new ConcurrentDictionary<ulong, object>();
+        //private static ConcurrentDictionary<ulong, object> _inProgress = new ConcurrentDictionary<ulong, object>();
+        private static ConcurrentDictionary<ulong, object> _inProgress = new ConcurrentDictionary<ulong, object>();
 
         public Games(Cache cache, Web web, Random random)
         {
@@ -44,44 +46,49 @@ namespace YuGiOhV2.Modules
         public async Task GuessCommand()
         {
 
-            if (!InProgress.ContainsKey(Context.Channel.Id))
-                InProgress[Context.Channel.Id] = null;
+            if (_inProgress.TryAdd(Context.Channel.Id, null))
+            {
+
+                //var art = await GetArt();
+
+                //Console.WriteLine(art.Value);
+
+                //using (var stream = await _web.GetStream(art.Value).ConfigureAwait(false))
+                //{
+
+                //    await UploadAsync(stream, $"{GenObufscatedString()}.png", ":stopwatch: You have **60** seconds to guess what card this art belongs to! Case sensitive!");
+                //    await stream.FlushAsync();
+
+                //}
+
+                var passcode = _cache.Passcodes.RandomSubset(1).First();
+                Console.WriteLine($"https://raw.githubusercontent.com/shadowfox87/YGOTCGOCGPics323x323/master/{passcode.Key}.png");
+
+                using (var stream = await GetArtGithub(passcode.Key))
+                    await UploadAsync(stream, $"{GenObufscatedString()}.png", ":stopwatch: You have **60** seconds to guess what card this art belongs to! Case sensitive!");
+
+                //_criteria.AddCriterion(new GuessCriteria(art.Key));
+                _criteria.AddCriterion(new GuessCriteria(passcode.Value));
+
+                var answer = await NextMessageAsync(_criteria, TimeSpan.FromSeconds(60));
+
+                if (answer != null)
+                {
+
+                    var author = answer.Author as SocketGuildUser;
+
+                    //await ReplyAsync($":trophy: The winner is **{author.Nickname ?? author.Username}**! The card was `{art.Key}`!");
+                    await ReplyAsync($":trophy: The winner is **{author.Nickname ?? author.Username}**! The card was `{passcode.Value}`!");
+
+                }
+                else
+                    await ReplyAsync($":stop_button: Ran out of time! The card was `{passcode.Value}`!");
+
+                _inProgress.Remove(Context.Channel.Id, out var blarg);
+
+            }
             else
-            {
-
-                await ReplyAsync(":game_die: There is a game in progress!");
-                return;
-
-            }
-
-            var art = await GetArt();
-
-            Console.WriteLine(art.Value);
-
-            using (var stream = await _web.GetStream(art.Value).ConfigureAwait(false))
-            {
-
-                await UploadAsync(stream, $"{GenObufscatedString()}.png", ":stopwatch: You have **60** seconds to guess what card this art belongs to! Case sensitive!");
-                await stream.FlushAsync();
-
-            }
-
-            _criteria.AddCriterion(new GuessCriteria(art.Key));
-
-            var answer = await NextMessageAsync(_criteria, TimeSpan.FromSeconds(60));
-
-            if (answer != null)
-            {
-
-                var author = answer.Author as SocketGuildUser;
-
-                await ReplyAsync($":trophy: The winner is **{author.Nickname ?? author.Username}**! The card was `{art.Key}`!");
-
-            }
-            else
-                await ReplyAsync($":stop_button: Ran out of time! The card was `{art.Key}`!");
-
-            InProgress.Remove(Context.Channel.Id, out var blarg);
+                await ReplyAsync($":game_die: There is a game in progress!");
 
         }
 
@@ -99,6 +106,14 @@ namespace YuGiOhV2.Modules
             }
 
             return str;
+
+        }
+
+        private Task<Stream> GetArtGithub(string passcode)
+        {
+
+            var url = $"https://raw.githubusercontent.com/shadowfox87/YGOTCGOCGPics323x323/master/{passcode}.png";
+            return _web.GetStream(url);
 
         }
 
