@@ -61,11 +61,33 @@ namespace YuGiOhV2.Modules
 
                 //}
 
-                var passcode = _cache.Passcodes.RandomSubset(1).First();
-                Console.WriteLine($"https://raw.githubusercontent.com/shadowfox87/YGOTCGOCGPics323x323/master/{passcode.Key}.png");
+                KeyValuePair<string, string> passcode;
+                Exception e;
 
-                using (var stream = await GetArtGithub(passcode.Key))
-                    await UploadAsync(stream, $"{GenObufscatedString()}.png", ":stopwatch: You have **60** seconds to guess what card this art belongs to! Case sensitive!");
+                do
+                {
+
+                    try
+                    {
+
+                        passcode = _cache.Passcodes.RandomSubset(1).First();
+
+                        Console.WriteLine($"https://raw.githubusercontent.com/shadowfox87/YGOTCGOCGPics323x323/master/{passcode.Key}.png");
+
+                        using (var stream = await GetArtGithub(passcode.Key))
+                            await UploadAsync(stream, $"{GenObufscatedString()}.png", ":stopwatch: You have **60** seconds to guess what card this art belongs to! Case sensitive!");
+
+                        e = null;
+
+                    }
+                    catch (NullReferenceException nullref)
+                    {
+
+                        e = nullref;
+
+                    }
+
+                } while (e != null);
 
                 //_criteria.AddCriterion(new GuessCriteria(art.Key));
                 _criteria.AddCriterion(new GuessCriteria(passcode.Value));

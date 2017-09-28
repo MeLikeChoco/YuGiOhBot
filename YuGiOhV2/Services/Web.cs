@@ -121,13 +121,18 @@ namespace YuGiOhV2.Services
         {
 
             HttpResponseMessage response;
+            var counter = 0;
 
             do
             {
 
                 response = await _http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
+                counter++;
 
-            } while (!response.IsSuccessStatusCode);
+            } while (!response.IsSuccessStatusCode && counter != 3);
+
+            if (response.StatusCode == HttpStatusCode.NotFound)
+                throw new NullReferenceException("Error 404");
 
             return response.Content;
 
