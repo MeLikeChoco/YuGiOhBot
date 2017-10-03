@@ -29,7 +29,7 @@ namespace YuGiOhV2.Core
 
         private bool _isInitialized = false;
 
-        private static readonly DiscordSocketConfig ClientConfig = new DiscordSocketConfig()
+        private static readonly DiscordSocketConfig _clientConfig = new DiscordSocketConfig()
         {
 
             //AlwaysDownloadUsers = true,
@@ -38,7 +38,7 @@ namespace YuGiOhV2.Core
 
         };
 
-        private static readonly CommandServiceConfig CommandConfig = new CommandServiceConfig()
+        private static readonly CommandServiceConfig _commandConfig = new CommandServiceConfig()
         {
 
             DefaultRunMode = RunMode.Async,
@@ -51,8 +51,8 @@ namespace YuGiOhV2.Core
 
             Print("Initializing events...");
 
-            _client = new DiscordSocketClient(ClientConfig);
-            _commands = new CommandService(CommandConfig);
+            _client = new DiscordSocketClient(_clientConfig);
+            _commands = new CommandService(_commandConfig);
             _web = new Web();
             _cache = new Cache();
             _interactive = new InteractiveService(_client);
@@ -98,7 +98,7 @@ namespace YuGiOhV2.Core
         private async Task YouAintDoneYet()
         {
 
-            await _cache.GetAWESOMECARDART(_web);
+            //await _cache.GetAWESOMECARDART(_web);
             await LoadDatabase();
             LoadStats();
             BuildServices();

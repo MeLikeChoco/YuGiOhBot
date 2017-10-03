@@ -25,7 +25,8 @@ namespace YuGiOhV2.Modules
 
             JumpDisplayOptions = JumpDisplayOptions.Never,
             DisplayInformationIcon = false,
-            Timeout = TimeSpan.FromMinutes(60)
+            FooterFormat = "This message will be deleted in 10 minutes! | Page {0}/{1}",
+            Timeout = TimeSpan.FromMinutes(10)
 
         };
 
@@ -40,12 +41,15 @@ namespace YuGiOhV2.Modules
 
         [Command("help")]
         [Summary("Get help on commands based on input!")]
-        public async Task SpecificHelpCommand([Remainder]string input)
+        public Task SpecificHelpCommand([Remainder]string input)
         {
 
             var commands = _commands.Commands
                 .Where(command => command.Name == input)
-                .Where(command => command.CheckPreconditionsAsync(Context).Result.IsSuccess);
+                .Where(command => CheckPrecond(command));
+
+            if(commands.Count() == 0)
+                return NoResultError("commands", input);
 
             var str = $"```fix\n";
 
@@ -67,7 +71,7 @@ namespace YuGiOhV2.Modules
 
             str += "```";
 
-            await ReplyAsync(str.Trim());
+            return ReplyAsync(str.Trim());
             
         }
 
@@ -95,7 +99,7 @@ namespace YuGiOhV2.Modules
 
             if (Context.User.Id == (await Context.Client.GetApplicationInfoAsync()).Owner.Id &&
                 Context.Guild.Id == 171432768767524864)
-                commands = _commands.Commands.Where(command => command.CheckPreconditionsAsync(Context).Result.IsSuccess);
+                commands = _commands.Commands.Where(command => CheckPrecond(command));
             else
                 commands = _commands.Commands
                     .Where(command => !command.Preconditions.Any(precondition => precondition is RequireOwnerAttribute))
@@ -134,12 +138,8 @@ namespace YuGiOhV2.Modules
 
         }
 
-        public async Task<bool> CheckPrecond(CommandInfo command)
-        {
-
-            return await command.CheckPreconditionsAsync(Context) == PreconditionResult.FromSuccess();
-
-        }
+        public bool CheckPrecond(CommandInfo command)
+            => command.CheckPreconditionsAsync(Context).Result.IsSuccess;
 
     }
 }

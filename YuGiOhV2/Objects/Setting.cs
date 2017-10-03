@@ -15,6 +15,7 @@ namespace YuGiOhV2.Objects
         public ulong Id { get; set; }
         public string Prefix { get; set; } = "y!";
         public bool Minimal { get; set; } = false;
+        public int GuessTime { get; set; } = 60;
 
         public Setting(SocketGuild guild)
         {
@@ -23,12 +24,13 @@ namespace YuGiOhV2.Objects
 
         }
 
-        public Setting(ulong id, string prefix, bool minimal)
+        public Setting(ulong id, string prefix, bool minimal, int guessTime)
         {
 
             Id = id;
             Prefix = prefix;
             Minimal = minimal;
+            GuessTime = guessTime;
 
         }
         

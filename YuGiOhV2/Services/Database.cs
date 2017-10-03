@@ -99,5 +99,22 @@ namespace YuGiOhV2.Services
 
         }
 
+        public async Task SetGuessTime(ulong id, int seconds)
+        {
+
+            var setting = Settings[id];
+            setting.GuessTime = seconds;
+
+            using (var db = new SqliteConnection(DbPath))
+            {
+
+                await db.OpenAsync();
+                await db.UpdateAsync(setting);
+                db.Close();
+
+            }
+
+        }
+
     }
 }

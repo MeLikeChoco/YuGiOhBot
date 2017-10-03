@@ -199,7 +199,7 @@ namespace YuGiOhV2.Services
 
             }
             else
-                body.AddField("Effect", card.Lore);
+                body.AddField("Effect", card.Lore.Replace(@"\n", "\n"));
 
             if (card is Monster)
             {

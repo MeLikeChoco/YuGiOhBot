@@ -26,17 +26,20 @@ namespace YuGiOhV2.Modules
         public async Task SendEmbed(EmbedBuilder embed)
             => await ReplyAsync("", embed: embed.Build());
 
-        public async Task NoResultError(string input = null)
+        public Task NoResultError(string input = null)
+            => NoResultError("cards", input);
+
+        public Task NoResultError(string objects = "cards", string input = null)
         {
 
-            var str = "Nothing was found with the given input";
+            var str = $"No {objects} were found with the given input";
 
             if (!string.IsNullOrEmpty(input))
                 str += $" ({input})";
 
             str += "!";
 
-            await ReplyAsync(str);            
+            return ReplyAsync(str);
 
         }
 

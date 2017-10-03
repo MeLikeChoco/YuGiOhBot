@@ -102,6 +102,21 @@ namespace YuGiOhV2.Modules
         public Task PingCommand()
             => ReplyAsync($"**{Context.Client.Latency}ms**");
 
+        [Command("info")]
+        [Summary("Get info on the bot!")]
+        public Task InfoCommand()
+        {
+
+            var body = new EmbedBuilder()
+                .WithColor(_rand.GetColor())
+                .WithDescription($"**Discord API Version:** {DiscordConfig.APIVersion}\n" +
+                $"**Operating System:** {Environment.OSVersion.VersionString}\n" +
+                $"**Processor Count:** {Environment.ProcessorCount}\n");
+
+            return SendEmbed(body);
+
+        }
+
         private string GetUptime()
         {
 

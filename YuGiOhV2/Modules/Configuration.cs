@@ -29,6 +29,28 @@ namespace YuGiOhV2.Modules
             _setting = _db.Settings[Context.Guild.Id];
         }
 
+        [Command("guesstime")]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        [Summary("Sets the amount of seconds for the guessing game!")]
+        public async Task SetGuessTimeCommand(int seconds)
+        {
+
+            await _db.SetGuessTime(Context.Guild.Id, seconds);
+            await ReplyAsync($"The time for guess game has been set to `{seconds}` seconds!");
+
+        }
+
+        [Command("guesstime")]
+        [RequireOwner]
+        [Summary("Sets the amount of seconds for the guessing game!")]
+        public Task SetGuessTimeCommandOwner(int seconds)
+            => SetGuessTimeCommand(seconds);
+
+        [Command("guesstime")]
+        [Summary("Get the amount of seconds for the guessing game!")]
+        public Task GetGuessTimeCommand()
+            => ReplyAsync($"**Guess time:** {_setting.GuessTime} seconds");
+
         [Command("prefix")]
         [RequireUserPermission(GuildPermission.Administrator)]
         [Summary("Sets the prefix for the bot in this guild!")]
