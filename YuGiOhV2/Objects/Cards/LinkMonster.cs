@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 namespace YuGiOhV2.Objects.Cards
 {
-    public class Link : Monster
+    public class LinkMonster : Monster
     {
-
-        public string Links { get; set; }
+                
+        public string Link { get; set; }
         public string LinkMarkers { get; set; }
 
     }

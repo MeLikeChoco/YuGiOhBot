@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace YuGiOhV2.Objects.Cards
 {
-    public class Card
+    public abstract class Card
     {
 
         public string Name { get; set; }

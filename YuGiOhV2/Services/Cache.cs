@@ -169,10 +169,17 @@ namespace YuGiOhV2.Services
                 Author = author,
                 Footer = footer,
                 Color = GetColor(card),
-                ImageUrl = card.Img,
                 Description = GenDescription(card)
 
             };
+
+            try
+            {
+
+                body.ImageUrl = card.Img;
+
+            }
+            catch { }
 
             if (card is Monster)
             {
@@ -208,7 +215,7 @@ namespace YuGiOhV2.Services
 
                 body.AddField("Attack", monster.Atk, true);
 
-                if (!(monster is Link))
+                if (!(monster is LinkMonster))
                     body.AddField("Defence", monster.Def, true);
 
             }
@@ -250,11 +257,11 @@ namespace YuGiOhV2.Services
                     var xyz = monster as Xyz;
                     desc += $"**Rank:** {xyz.Rank}\n";
                 }
-                else if (monster is Link)
+                else if (monster is LinkMonster)
                 {
-                    var link = monster as Link;
-                    desc += $"**Links:** {link.Links}\n" +
-                        $"**Link Markers:** {link.LinkMarkers}";
+                    var link = monster as LinkMonster;
+                    desc += $"**Links:** {link.Link}\n" +
+                        $"**Link Markers:** {link.LinkMarkers}\n";
                 }
                 else
                 {
@@ -309,7 +316,7 @@ namespace YuGiOhV2.Services
 
                 var monster = card as Monster;
 
-                if (monster is Link)
+                if (monster is LinkMonster)
                     return new Color(0, 0, 139);
                 else if (!string.IsNullOrEmpty(monster.PendulumScale))
                     return new Color(150, 208, 189);
@@ -439,7 +446,7 @@ namespace YuGiOhV2.Services
                 Print("Getting pendulum monsters...");
                 var pendulums = db.Query<RegularMonster>("select * from Card where types like '%Pendulum%' and types not like '%Xyz%'"); //does not include xyz pendulums
                 Print("Getting link monsters...");
-                var links = db.Query<Link>("select * from Card where types like '%Link%'");
+                var links = db.Query<LinkMonster>("select * from Card where types like '%Link%'");
                 Print("Getting spell and traps...");
                 var spelltraps = db.Query<SpellTrap>("select * from Card where cardType like '%Spell%' or cardType like '%Trap%'");
 
