@@ -11,23 +11,20 @@ namespace YuGiOhV2.Modules
 {
     public class Utility : CustomBase
     {
+        private readonly Random _rand;
 
-        private Stats _stats;
-        private Random _rand;
+        private readonly Stats _stats;
 
         public Utility(Stats stats, Random rand)
         {
-
             _stats = stats;
             _rand = rand;
-
         }
 
         [Command("feedback")]
         [Summary("Send feedback to the bot owner!")]
-        public async Task FeedbackCommand([Remainder]string message)
+        public async Task FeedbackCommand([Remainder] string message)
         {
-            
             var author = new EmbedAuthorBuilder()
                 .WithName(Context.User.Username)
                 .WithIconUrl(Context.User.GetAvatarUrl());
@@ -42,34 +39,33 @@ namespace YuGiOhV2.Modules
                 .WithColor(_rand.GetColor())
                 .WithDescription(message);
 
-            await (Context.Client.GetChannel(296117398132752384) as SocketTextChannel).SendMessageAsync("", embed: body.Build());
-
+            await (Context.Client.GetChannel(296117398132752384) as SocketTextChannel).SendMessageAsync("",
+                embed: body.Build());
         }
 
         [Command("invite")]
         [Summary("Gets an invite to the bot!")]
         public async Task InviteCommand()
         {
-
             var id = Context.Client.GetApplicationInfoAsync().Result.Id;
 
-            await ReplyAsync($"{Context.User.Mention} <https://discordapp.com/oauth2/authorize?client_id={id}&scope=bot&permissions=0>");
-            
+            await ReplyAsync(
+                $"{Context.User.Mention} <https://discordapp.com/oauth2/authorize?client_id={id}&scope=bot&permissions=0>");
         }
 
         [Command("uptime")]
         [Summary("Gets the uptime of the bot!")]
-        public async Task UptimeCommand() 
-            => await ReplyAsync(GetUptime());
+        public async Task UptimeCommand()
+        {
+            await ReplyAsync(GetUptime());
+        }
 
         [Command("stats")]
         [Summary("Gets the statistics of the bot!")]
         public async Task StatsCommand()
         {
-
             if (_stats.IsReady)
             {
-
                 var bot = Context.Client.CurrentUser;
 
                 var author = new EmbedAuthorBuilder()
@@ -77,9 +73,9 @@ namespace YuGiOhV2.Modules
                     .WithName("Statistics");
 
                 var desc = $"This bot is present on **{_stats.GuildCount}** guilds.\n" +
-                    $"**{_stats.MaxGuild}** is the largest guild with **{_stats.MaxGuildCount}** users.\n" +
-                    $"**{_stats.UniqueUserCount}** users are in the same guild as this bot.\n" +
-                    $"{GetUptime()}";
+                           $"**{_stats.MaxGuild}** is the largest guild with **{_stats.MaxGuildCount}** users.\n" +
+                           $"**{_stats.UniqueUserCount}** users are in the same guild as this bot.\n" +
+                           $"{GetUptime()}";
 
                 var body = new EmbedBuilder()
                     .WithAuthor(author)
@@ -87,36 +83,35 @@ namespace YuGiOhV2.Modules
                     .WithDescription(desc);
 
                 await SendEmbed(body);
-
             }
             else
+            {
                 await ReplyAsync("Statistics are still being calculated.");
-
+            }
         }
 
         [Command("ping")]
         [Summary("Get the latency of the bot to the gateway!")]
         public Task PingCommand()
-            => ReplyAsync($"**{Context.Client.Latency}ms**");
+        {
+            return ReplyAsync($"**{Context.Client.Latency}ms**");
+        }
 
         [Command("info")]
         [Summary("Get info on the bot!")]
         public Task InfoCommand()
         {
-
             var body = new EmbedBuilder()
                 .WithColor(_rand.GetColor())
                 .WithDescription($"**Discord API Version:** {DiscordConfig.APIVersion}\n" +
-                $"**Operating System:** {Environment.OSVersion.VersionString}\n" +
-                $"**Processor Count:** {Environment.ProcessorCount}\n");
+                                 $"**Operating System:** {Environment.OSVersion.VersionString}\n" +
+                                 $"**Processor Count:** {Environment.ProcessorCount}\n");
 
             return SendEmbed(body);
-
         }
 
         private string GetUptime()
         {
-
             var time = DateTime.Now.Subtract(Process.GetCurrentProcess().StartTime);
             var str = "The bot has been up for ";
 
@@ -133,8 +128,6 @@ namespace YuGiOhV2.Modules
                 str += $"**{time.Seconds}** seconds.";
 
             return str;
-
         }
-
     }
 }

@@ -14,55 +14,47 @@ namespace YuGiOhV2.Services
 {
     public class Chat
     {
-
-        private Cache _cache;
-        private Database _database;
-        private  static Web _web;
         private const string Pattern = @"(\[\[.+?\]\])";
+        private static Web _web;
+
+        private readonly Cache _cache;
+        private readonly Database _database;
 
         public Chat(Cache cache, Database database, Web web)
         {
-
             _cache = cache;
             _database = database;
             _web = web;
-
         }
 
         public async Task SOMEONEGETTINGACARDBOIS(SocketMessage message)
         {
-
             if (message.Author.IsBot || string.IsNullOrEmpty(message.Content))
                 return;
 
             var mCollection = Regex.Matches(message.Content, Pattern);
             var watch = new Stopwatch();
             var channel = message.Channel;
-            bool minimal = false;
+            var minimal = false;
 
-            if(mCollection.Count > 0 && mCollection.Count < 4)
-            {
-
+            if (mCollection.Count > 0 && mCollection.Count < 4)
                 using (channel.EnterTypingState())
                 {
-                    
-                    if((channel is SocketTextChannel))
+                    if (channel is SocketTextChannel)
                     {
-
-                        AltConsole.Print("Info", "Command", $"{message.Author.Username} from {(channel as SocketTextChannel).Guild.Name}");
+                        AltConsole.Print("Info", "Command",
+                            $"{message.Author.Username} from {(channel as SocketTextChannel).Guild.Name}");
                         var id = (channel as SocketTextChannel).Guild.Id;
                         minimal = _database.Settings[id].Minimal;
-
                     }
 
                     AltConsole.Print("Info", "Inline", $"{message.Content}");
 
-                    foreach(var match in mCollection)
+                    foreach (var match in mCollection)
                     {
-
                         watch.Start();
 
-                        string cardName = match.ToString();
+                        var cardName = match.ToString();
                         cardName = cardName.Substring(2, cardName.Length - 4).ToLower(); //lose the brackets
 
                         if (string.IsNullOrEmpty(cardName)) //return if there is no input
@@ -74,23 +66,21 @@ namespace YuGiOhV2.Services
                         //ex. kaiju slumber would return Interrupted Kaiju Slumber
                         //note: it has problems such as "red eyes" will return Hundred Eyes Dragon instead of Red-Eyes Dragon
                         //how to accurately solve this problem is not easy                            
-                        string closestCard = _cache.Lowercase.AsParallel().FirstOrDefault(card => card == cardName);
+                        var closestCard = _cache.Lowercase.AsParallel().FirstOrDefault(card => card == cardName);
 
                         if (string.IsNullOrEmpty(closestCard))
                         {
-
                             closestCard = _cache.Lowercase.AsParallel().FirstOrDefault(card => card.Contains(cardName));
 
-                            if(string.IsNullOrEmpty(closestCard))
+                            if (string.IsNullOrEmpty(closestCard))
                             {
-                                
-                                closestCard = _cache.Lowercase.AsParallel().FirstOrDefault(card => input.All(i => card.Contains(i)));
+                                closestCard = _cache.Lowercase.AsParallel()
+                                    .FirstOrDefault(card => input.All(i => card.Contains(i)));
 
                                 if (string.IsNullOrEmpty(closestCard))
-                                    closestCard = _cache.Lowercase.AsParallel().MinBy(card => YetiLevenshtein(card, cardName));
-
+                                    closestCard = _cache.Lowercase.AsParallel()
+                                        .MinBy(card => YetiLevenshtein(card, cardName));
                             }
-
                         }
 
                         var time = watch.Elapsed;
@@ -102,101 +92,81 @@ namespace YuGiOhV2.Services
 
                         try
                         {
-
                             await channel.SendMessageAsync("", embed: (await EditEmbed(embed, minimal, time)).Build());
-
                         }
-                        catch { AltConsole.Print("Service", "Chat", "No permission to send message"); }
-
+                        catch
+                        {
+                            AltConsole.Print("Service", "Chat", "No permission to send message");
+                        }
                     }
-
                 }
-
-            }
-
         } //look at em brackets
 
         public static async Task<EmbedBuilder> EditEmbed(EmbedBuilder embed, bool minimal, TimeSpan? searchTime = null)
         {
-
             var clone = embed.DeepClone();
             TimeSpan time;
 
             if (searchTime != null)
             {
-                
                 time = searchTime.Value;
                 var rounded = Math.Round(time.TotalSeconds, 5, MidpointRounding.ToEven).ToString("0.00000");
 
                 clone.Footer.WithText($"Search time: {rounded} seconds");
-
             }
 
-            if(minimal)
+            if (minimal)
             {
-
                 clone.ThumbnailUrl = clone.ImageUrl;
                 clone.ImageUrl = null;
-
             }
             else
             {
-
                 string realName;
 
                 if (clone.Description.Contains("Real Name"))
                 {
-
                     var indexOne = clone.Description.IndexOf(':');
-                    var indexTwo = clone.Description.IndexOf("**Format");
+                    var indexTwo = clone.Description.IndexOf("**Format", StringComparison.Ordinal);
                     realName = clone.Description.Substring(indexOne, indexTwo).Trim();
-
                 }
                 else
+                {
                     realName = clone.Author.Name;
+                }
 
                 var response = await _web.GetPrices(clone.Author.Name, realName);
 
                 if (response.Data != null)
                 {
-
                     List<Datum> prices;
 
                     if (response.Data.Count >= 4)
                     {
-
                         clone.AddField("Prices", "**Showing the first 3 prices due to too many to show**");
 
                         prices = response.Data.GetRange(0, 3);
-
                     }
                     else
-                        prices = response.Data;
-
-                    foreach (Datum info in prices)
                     {
+                        prices = response.Data;
+                    }
 
+                    foreach (var info in prices)
                         if (string.IsNullOrEmpty(info.PriceData.Message))
-                        {
-
                             clone.AddField(info.Name,
                                 $"Rarity: {info.Rarity}\n" +
                                 $"Average Price: {info.PriceData.Data.Prices.Average.ToString("0.00")}");
-
-                        }
                         else
                             clone.AddField(info.Name, info.PriceData.Message);
-
-                    }
-
                 }
                 else
+                {
                     clone.AddField("Prices", "**No prices to show for this card!**");
-
+                }
             }
 
             return clone;
-
         }
 
         //dont even ask me what the fuck im doing
@@ -209,24 +179,10 @@ namespace YuGiOhV2.Services
             }
         }
 
-        private unsafe int YetiLevenshtein(string s1, string s2, int substitionCost)
-        {
-            int xc = substitionCost - 1;
-            if (xc < 0 || xc > 1)
-            {
-                throw new ArgumentException("", "substitionCost");
-            }
-
-            fixed (char* p1 = s1)
-            fixed (char* p2 = s2)
-            {
-                return YetiLevenshtein(p1, s1.Length, p2, s2.Length, xc);
-            }
-        }
-
         /// <summary>
-        /// Cetin Sert, David Necas
-        /// http://webcleaner.svn.sourceforge.net/viewvc/webcleaner/trunk/webcleaner2/wc/levenshtein.c?revision=6015&view=markup
+        ///     Cetin Sert, David Necas ///
+        ///     http://webcleaner.svn.sourceforge.net/viewvc/webcleaner/trunk/webcleaner2/wc/levenshtein.c?revision=6015&view
+        ///     =markup
         /// </summary>
         /// <param name="s1"></param>
         /// <param name="l1"></param>
@@ -266,8 +222,8 @@ namespace YuGiOhV2.Services
             /* make the inner cycle (i.e. string2) the longer one */
             if (l1 > l2)
             {
-                int nx = l1;
-                char* sx = s1;
+                var nx = l1;
+                var sx = s1;
                 l1 = l2;
                 l2 = nx;
                 s1 = s2;
@@ -306,22 +262,22 @@ namespace YuGiOhV2.Services
             {
                 for (i = 1; i < l1; i++)
                 {
-                    int* p = row + 1;
-                    char char1 = s1[i - 1];
-                    char* char2p = s2;
-                    int D = i;
-                    int x = i;
+                    var p = row + 1;
+                    var char1 = s1[i - 1];
+                    var char2P = s2;
+                    var d = i;
+                    var x = i;
                     while (p <= end)
                     {
-                        if (char1 == *(char2p++))
-                            x = --D;
+                        if (char1 == *char2P++)
+                            x = --d;
                         else
                             x++;
-                        D = *p;
-                        D++;
-                        if (x > D)
-                            x = D;
-                        *(p++) = x;
+                        d = *p;
+                        d++;
+                        if (x > d)
+                            x = d;
+                        *p++ = x;
                     }
                 }
             }
@@ -335,30 +291,30 @@ namespace YuGiOhV2.Services
                 for (i = 1; i < l1; i++)
                 {
                     int* p;
-                    char char1 = s1[i - 1];
+                    var char1 = s1[i - 1];
                     char* char2p;
-                    int D, x;
+                    int d, x;
                     /* skip the upper triangle */
                     if (i >= l1 - half)
                     {
-                        int offset = i - (l1 - half);
+                        var offset = i - (l1 - half);
                         int c3;
 
                         char2p = s2 + offset;
                         p = row + offset;
-                        c3 = *(p++) + ((char1 != *(char2p++)) ? 1 : 0);
+                        c3 = *p++ + (char1 != *char2p++ ? 1 : 0);
                         x = *p;
                         x++;
-                        D = x;
+                        d = x;
                         if (x > c3)
                             x = c3;
-                        *(p++) = x;
+                        *p++ = x;
                     }
                     else
                     {
                         p = row + 1;
                         char2p = s2;
-                        D = x = i;
+                        d = x = i;
                     }
                     /* skip the lower triangle */
                     if (i <= half + 1)
@@ -366,20 +322,20 @@ namespace YuGiOhV2.Services
                     /* main */
                     while (p <= end)
                     {
-                        int c3 = --D + ((char1 != *(char2p++)) ? 1 : 0);
+                        var c3 = --d + (char1 != *char2p++ ? 1 : 0);
                         x++;
                         if (x > c3)
                             x = c3;
-                        D = *p;
-                        D++;
-                        if (x > D)
-                            x = D;
-                        *(p++) = x;
+                        d = *p;
+                        d++;
+                        if (x > d)
+                            x = d;
+                        *p++ = x;
                     }
                     /* lower triangle sentinel */
                     if (i <= half)
                     {
-                        int c3 = --D + ((char1 != *char2p) ? 1 : 0);
+                        var c3 = --d + (char1 != *char2p ? 1 : 0);
                         x++;
                         if (x > c3)
                             x = c3;
@@ -394,15 +350,12 @@ namespace YuGiOhV2.Services
 
         private unsafe int MemchrRPLC(char* buffer, char c, int count)
         {
-            char* p = buffer;
-            char* e = buffer + count;
+            var p = buffer;
+            var e = buffer + count;
             while (p++ < e)
-            {
                 if (*p == c)
                     return 1;
-            }
             return 0;
         }
-
     }
 }

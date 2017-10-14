@@ -2,7 +2,6 @@
 {
     public abstract class Card
     {
-
         public string Name { get; set; }
         public string RealName { get; set; }
         public string CardType { get; set; }
@@ -22,7 +21,6 @@
         {
             get
             {
-
                 if (this is SpellTrap)
                     return true;
                 var monster = this as Monster;
@@ -32,6 +30,5 @@
                 return false;
             }
         }
-
     }
 }

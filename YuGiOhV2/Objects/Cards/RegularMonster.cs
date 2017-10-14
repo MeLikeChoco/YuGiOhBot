@@ -2,8 +2,6 @@
 {
     public class RegularMonster : Monster
     {
-
         public string Level { get; set; }
-
     }
 }

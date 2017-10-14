@@ -9,25 +9,33 @@ namespace YuGiOhV2.Modules
 {
     public class CustomBase : InteractiveBase<SocketCommandContext>
     {
-
         public Task DirectMessageAsync(string message, Embed embed)
-            => Context.User.SendMessageAsync(message, embed: embed);
+        {
+            return Context.User.SendMessageAsync(message, embed: embed);
+        }
 
         public Task UploadAsync(Stream stream, string filename, string text = null)
-            => Context.Channel.SendFileAsync(stream, filename, text);
+        {
+            return Context.Channel.SendFileAsync(stream, filename, text);
+        }
 
         public async Task SendCardEmbed(EmbedBuilder embed, bool minimal)
-            => await ReplyAsync("", embed: (await Chat.EditEmbed(embed, minimal)).Build());
+        {
+            await ReplyAsync("", embed: (await Chat.EditEmbed(embed, minimal)).Build());
+        }
 
         public async Task SendEmbed(EmbedBuilder embed)
-            => await ReplyAsync("", embed: embed.Build());
+        {
+            await ReplyAsync("", embed: embed.Build());
+        }
 
         public Task NoResultError(string input = null)
-            => NoResultError("cards", input);
+        {
+            return NoResultError("cards", input);
+        }
 
         public Task NoResultError(string objects = "cards", string input = null)
         {
-
             var str = $"No {objects} were found with the given input";
 
             if (!string.IsNullOrEmpty(input))
@@ -36,11 +44,11 @@ namespace YuGiOhV2.Modules
             str += "!";
 
             return ReplyAsync(str);
-
         }
 
         public Task TooManyError()
-            => ReplyAsync("Too many results were returned, please refine your search!");
-
+        {
+            return ReplyAsync("Too many results were returned, please refine your search!");
+        }
     }
 }

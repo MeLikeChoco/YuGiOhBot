@@ -14,64 +14,51 @@ namespace YuGiOhV2.Modules
 {
     public class Help : CustomBase
     {
-
-        private CommandService _commands;
-        private Random _rand;
-        private Database _db;
-
         private static readonly PaginatedAppearanceOptions AOptions = new PaginatedAppearanceOptions
         {
-
             JumpDisplayOptions = JumpDisplayOptions.Never,
             DisplayInformationIcon = false,
             FooterFormat = "This message will be deleted in 10 minutes! | Page {0}/{1}",
             Timeout = TimeSpan.FromMinutes(10)
-
         };
+
+        private readonly CommandService _commands;
+        private Database _db;
+        private readonly Random _rand;
 
         public Help(CommandService commands, Random rand, Database db)
         {
-
             _commands = commands;
             _rand = rand;
             _db = db;
-
         }
 
         [Command("help")]
         [Summary("Get help on commands based on input!")]
-        public Task SpecificHelpCommand([Remainder]string input)
+        public Task SpecificHelpCommand([Remainder] string input)
         {
-
             var commands = _commands.Commands
                 .Where(command => command.Name == input)
                 .Where(command => CheckPrecond(command));
 
-            if(commands.Count() == 0)
+            if (commands.Count() == 0)
                 return NoResultError("commands", input);
 
             var str = $"```fix\n";
 
-            foreach(var command in commands)
+            foreach (var command in commands)
             {
-
                 str += $"{command.Name} ";
 
-                foreach(var parameter in command.Parameters)
-                {
-
+                foreach (var parameter in command.Parameters)
                     str += $"<{parameter.Name}> ";
 
-                }
-
                 str += $"\n{command.Summary}\n\n";
-
             }
 
             str += "```";
 
             return ReplyAsync(str.Trim());
-            
         }
 
         [Command("help")]
@@ -79,7 +66,6 @@ namespace YuGiOhV2.Modules
         [Ratelimit(1, 0.084, Measure.Minutes)]
         public async Task HelpCommand()
         {
-
             var messages = new List<string>();
             var author = new EmbedAuthorBuilder()
                 .WithIconUrl(Context.Client.CurrentUser.GetAvatarUrl())
@@ -87,11 +73,9 @@ namespace YuGiOhV2.Modules
 
             var paginatedMessage = new PaginatedMessage
             {
-
                 Author = author,
                 Color = _rand.GetColor(),
                 Options = AOptions
-
             };
 
             IEnumerable<CommandInfo> commands;
@@ -108,37 +92,29 @@ namespace YuGiOhV2.Modules
 
             foreach (var group in groups)
             {
-
                 var str = "";
 
                 foreach (var command in group)
                 {
-
                     str += $"**Command:** {command.Name} ";
 
                     foreach (var parameter in command.Parameters)
-                    {
-
                         str += $"<{parameter.Name}> ";
 
-                    }
-
                     str += $"\n{command.Summary}\n\n";
-
                 }
 
                 messages.Add(str.Trim());
-
             }
 
             paginatedMessage.Pages = messages;
 
             await PagedReplyAsync(paginatedMessage);
-
         }
 
         public bool CheckPrecond(CommandInfo command)
-            => command.CheckPreconditionsAsync(Context).Result.IsSuccess;
-
+        {
+            return command.CheckPreconditionsAsync(Context).Result.IsSuccess;
+        }
     }
 }

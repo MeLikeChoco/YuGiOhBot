@@ -7,9 +7,9 @@ namespace YuGiOhV2.Objects.Criterion
 {
     public class EnsureNotBot : ICriterion<SocketMessage>
     {
-
         public Task<bool> JudgeAsync(SocketCommandContext sourceContext, SocketMessage parameter)
-            => Task.FromResult(!parameter.Author.IsBot);
-
+        {
+            return Task.FromResult(!parameter.Author.IsBot);
+        }
     }
 }

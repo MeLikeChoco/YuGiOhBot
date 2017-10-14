@@ -7,22 +7,16 @@ namespace YuGiOhV2.Objects.Criterion
 {
     public class GuessCriteria : ICriterion<SocketMessage>
     {
-
-        private string _answer;
+        private readonly string _answer;
 
         public GuessCriteria(string answer)
         {
-
             _answer = answer;
-
         }
 
         public Task<bool> JudgeAsync(SocketCommandContext sourceContext, SocketMessage parameter)
         {
-
             return Task.FromResult(parameter.Content == _answer);
-
         }
-
     }
 }

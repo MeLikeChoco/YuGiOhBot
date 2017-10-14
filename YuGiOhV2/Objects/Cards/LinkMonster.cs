@@ -2,9 +2,7 @@
 {
     public class LinkMonster : Monster
     {
-                
         public string Link { get; set; }
         public string LinkMarkers { get; set; }
-
     }
 }

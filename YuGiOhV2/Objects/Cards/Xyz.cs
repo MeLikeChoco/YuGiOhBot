@@ -2,8 +2,6 @@
 {
     public class Xyz : Monster
     {
-
         public string Rank { get; set; }
-
     }
 }

@@ -8,46 +8,36 @@ namespace YuGiOhV2.Objects.Banlist
 {
     public class Banlist
     {
+        public Banlist()
+        {
+            OcgBanlist = new Ocg();
+            TcgAdvBanlist = new TcgAdv();
+            TcgTradBanlist = new TcgTrad();
+        }
 
         public Ocg OcgBanlist { get; set; }
         public TcgAdv TcgAdvBanlist { get; set; }
         public TcgTrad TcgTradBanlist { get; set; }
-
-        public Banlist()
-        {
-
-            OcgBanlist = new Ocg();
-            TcgAdvBanlist = new TcgAdv();
-            TcgTradBanlist = new TcgTrad();
-
-        }
-
     }
 
     public class Ocg : IFormat
     {
-
         public IEnumerable<string> Forbidden { get; set; }
         public IEnumerable<string> Limited { get; set; }
         public IEnumerable<string> SemiLimited { get; set; }
-
     }
 
     public class TcgAdv : IFormat
     {
-
         public IEnumerable<string> Forbidden { get; set; }
         public IEnumerable<string> Limited { get; set; }
         public IEnumerable<string> SemiLimited { get; set; }
-
     }
 
     public class TcgTrad : IFormat
     {
-        
         public IEnumerable<string> Forbidden { get; set; }
         public IEnumerable<string> Limited { get; set; }
         public IEnumerable<string> SemiLimited { get; set; }
-
     }
 }

@@ -16,6 +16,20 @@ namespace YuGiOhV2.Services
 {
     public class Cache
     {
+        private const string DbString = "Data Source = Databases/ygo.db";
+
+        private static readonly ParallelOptions _pOptions =
+            new ParallelOptions {MaxDegreeOfParallelism = Environment.ProcessorCount};
+
+        public Cache()
+        {
+            Print("Beginning cache initialization...");
+
+            //made a seperate method so other classes may update the embeds when I want them to
+            Initialize();
+
+            Print("Finished cache initialization...");
+        }
 
         public Dictionary<string, Card> Objects { get; private set; }
         public Dictionary<string, EmbedBuilder> Cards { get; private set; }
@@ -26,7 +40,7 @@ namespace YuGiOhV2.Services
         public HashSet<string> Lowercase { get; private set; }
 
         /// <summary>
-        /// Maps passcode to name
+        ///     Maps passcode to name
         /// </summary>
         public Dictionary<string, string> Passcodes { get; private set; }
 
@@ -36,47 +50,28 @@ namespace YuGiOhV2.Services
 
         public string TumblrKey { get; private set; }
 
-        private const string DbString = "Data Source = Databases/ygo.db";
-        private static readonly ParallelOptions _pOptions = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount };
-
-        public Cache()
-        {
-
-            Print("Beginning cache initialization...");
-
-            //made a seperate method so other classes may update the embeds when I want them to
-            Initialize();
-
-            Print("Finished cache initialization...");
-
-        }
-
         public void Initialize()
         {
-
             var objects = AquireGoodies();
 
             AquireFancyMessages(objects);
             AquireTheUntouchables();
-
         }
 
         public async Task GetAWESOMECARDART(Web web)
         {
-
             Print("Getting photo posts on FYeahYgoCardArt tumblr...");
 
             TumblrKey = await File.ReadAllTextAsync("Files/OAuth/Tumblr.txt");
-            var posts = await web.GetDeserializedContent<JObject>($"https://api.tumblr.com/v2/blog/fyeahygocardart/posts/photo?api_key={TumblrKey}&limit=1");
+            var posts = await web.GetDeserializedContent<JObject>(
+                $"https://api.tumblr.com/v2/blog/fyeahygocardart/posts/photo?api_key={TumblrKey}&limit=1");
             FYeahYgoCardArtPosts = int.Parse(posts["response"]["total_posts"].ToString());
 
             Print($"Got {FYeahYgoCardArtPosts} photos.");
-
         }
 
         private void AquireFancyMessages(IEnumerable<Card> objects)
         {
-
             var counter = 0;
             var total = objects.Count();
             var tempObjects = new ConcurrentDictionary<string, Card>();
@@ -94,7 +89,6 @@ namespace YuGiOhV2.Services
 
             Parallel.ForEach(objects, _pOptions, cardobj =>
             {
-
                 var name = cardobj.Name;
                 var embed = GenFancyMessage(cardobj);
 
@@ -102,7 +96,8 @@ namespace YuGiOhV2.Services
                 tempLower.Add(name.ToLower());
 
                 if (!string.IsNullOrEmpty(cardobj.Passcode))
-                    tempPasscodes[cardobj.Passcode.TrimStart('0')] = cardobj.Name; //man, why you guys gotta include 0's in the beginning sometimes
+                    tempPasscodes[cardobj.Passcode.TrimStart('0')] =
+                        cardobj.Name; //man, why you guys gotta include 0's in the beginning sometimes
 
                 tempObjects[name] = cardobj;
                 tempDict[name] = embed;
@@ -111,18 +106,13 @@ namespace YuGiOhV2.Services
 
                 lock (aLock)
                 {
-
                     var archetypes = cardobj.Archetype.Split(" , ");
 
                     foreach (var archetype in archetypes)
-                    {
-
                         if (!Archetypes.ContainsKey(archetype))
-                            Archetypes.Add(archetype, new HashSet<string> { name });
+                            Archetypes.Add(archetype, new HashSet<string> {name});
                         else
                             Archetypes[archetype].Add(name);
-
-                    }
 
                     var current = Interlocked.Increment(ref counter);
 
@@ -130,9 +120,7 @@ namespace YuGiOhV2.Services
                         InlinePrint($"Progress: {current}/{total}");
                     else
                         Print($"Progress: {current}/{total}");
-
                 }
-
             });
 
             Print("Finished generating embeds.");
@@ -144,42 +132,38 @@ namespace YuGiOhV2.Services
             Uppercase = new HashSet<string>(tempUpper);
             Lowercase = new HashSet<string>(tempLower);
             Passcodes = new Dictionary<string, string>(tempPasscodes);
-
         }
 
         private EmbedBuilder GenFancyMessage(Card card)
         {
-
             var author = new EmbedAuthorBuilder()
                 .WithIconUrl(GetIconUrl(card))
                 .WithName(card.Name)
                 .WithUrl(card.Url);
 
             var footer = new EmbedFooterBuilder()
-                .WithIconUrl("http://1.bp.blogspot.com/-a3KasYvDBaY/VCQXuTjmb2I/AAAAAAAACZM/oQ6Hw71kLQQ/s1600/Cursed%2BHexagram.png")
+                .WithIconUrl(
+                    "http://1.bp.blogspot.com/-a3KasYvDBaY/VCQXuTjmb2I/AAAAAAAACZM/oQ6Hw71kLQQ/s1600/Cursed%2BHexagram.png")
                 .WithText("Yu-Gi-Oh!");
 
             var body = new EmbedBuilder
             {
-
                 Author = author,
                 Footer = footer,
                 Color = GetColor(card),
                 Description = GenDescription(card)
-
             };
 
             try
             {
-
                 body.ImageUrl = card.Img;
-
             }
-            catch { }
+            catch
+            {
+            }
 
             if (card is Monster)
             {
-
                 var monster = card as Monster;
 
                 //for some reason, newlines aren't properly recognized
@@ -190,43 +174,41 @@ namespace YuGiOhV2.Services
 
                 if (monster.Lore.StartsWith("Pendulum Effect"))
                 {
-
                     var effects = monster.Lore.Split("Monster Effect");
 
                     body.AddField("Pendulum Effect", effects.First().Substring(15).Trim());
                     body.AddField($"[ {monster.Types} ]", effects[1].Trim());
-
                 }
                 else
+                {
                     body.AddField($"[ {monster.Types} ]", monster.Lore);
-
+                }
             }
             else
+            {
                 body.AddField("Effect", card.Lore.Replace(@"\n", "\n"));
+            }
 
             if (card is Monster)
             {
-
                 var monster = card as Monster;
 
                 body.AddField("Attack", monster.Atk, true);
 
                 if (!(monster is LinkMonster))
                     body.AddField("Defence", monster.Def, true);
-
             }
 
             if (!string.IsNullOrEmpty(card.Archetype))
-                body.AddField(card.Archetype.Split(",").Length > 1 ? "Archetypes" : "Archetype", card.Archetype.Replace(" ,", ","));
+                body.AddField(card.Archetype.Split(",").Length > 1 ? "Archetypes" : "Archetype",
+                    card.Archetype.Replace(" ,", ","));
 
             return body;
-
         }
 
         private string GenDescription(Card card)
         {
-
-            string desc = "";
+            var desc = "";
 
             if (!string.IsNullOrEmpty(card.RealName))
                 desc += $"**Real Name:** {card.RealName}\n";
@@ -244,7 +226,6 @@ namespace YuGiOhV2.Services
 
             if (card is Monster)
             {
-
                 var monster = card as Monster;
                 desc += $"**Attribute:** {monster.Attribute}\n";
 
@@ -257,7 +238,7 @@ namespace YuGiOhV2.Services
                 {
                     var link = monster as LinkMonster;
                     desc += $"**Links:** {link.Link}\n" +
-                        $"**Link Markers:** {link.LinkMarkers}\n";
+                            $"**Link Markers:** {link.LinkMarkers}\n";
                 }
                 else
                 {
@@ -267,14 +248,11 @@ namespace YuGiOhV2.Services
 
                 if (!string.IsNullOrEmpty(monster.PendulumScale))
                     desc += $"**Scale:** {monster.PendulumScale}\n";
-
             }
             else
             {
-
                 var spelltrap = card as SpellTrap;
                 desc += $"**Property:** {spelltrap.Property}\n";
-
             }
 
             if (card.OcgStatus != "U")
@@ -290,7 +268,6 @@ namespace YuGiOhV2.Services
                 desc += $"**Passcode:** {card.Passcode}";
 
             return desc;
-
         }
 
         private Color GetColor(Card card)
@@ -305,9 +282,7 @@ namespace YuGiOhV2.Services
             if (card.CardType == "Spell")
                 return new Color(29, 158, 116);
             if (card.CardType == "Trap")
-            {
                 return new Color(188, 90, 132);
-            }
             var monster = card as Monster;
 
             if (monster is LinkMonster)
@@ -329,41 +304,43 @@ namespace YuGiOhV2.Services
 
         private string GetIconUrl(Card card)
         {
-
             if (card is SpellTrap)
             {
-
                 var spelltrap = card as SpellTrap;
 
                 switch (spelltrap.Property)
                 {
-
                     case "Ritual":
-                        return "http://1.bp.blogspot.com/-AuufBN2P_2Q/UxXrMJAkPJI/AAAAAAAAByQ/ZFuEQPj-UtQ/s1600/Ritual.png";
+                        return
+                            "http://1.bp.blogspot.com/-AuufBN2P_2Q/UxXrMJAkPJI/AAAAAAAAByQ/ZFuEQPj-UtQ/s1600/Ritual.png";
                     case "Quick-Play":
-                        return "http://4.bp.blogspot.com/-4neFVlt9xyk/UxXrMO1cynI/AAAAAAAAByY/WWRyA3beAl4/s1600/Quick-Play.png";
+                        return
+                            "http://4.bp.blogspot.com/-4neFVlt9xyk/UxXrMO1cynI/AAAAAAAAByY/WWRyA3beAl4/s1600/Quick-Play.png";
                     case "Field":
-                        return "http://1.bp.blogspot.com/-3elroOLxcrM/UxXrK5AzXuI/AAAAAAAABxo/qrMUuciJm8s/s1600/Field.png";
+                        return
+                            "http://1.bp.blogspot.com/-3elroOLxcrM/UxXrK5AzXuI/AAAAAAAABxo/qrMUuciJm8s/s1600/Field.png";
                     case "Equip":
-                        return "http://1.bp.blogspot.com/-_7q4XTlAX_g/UxXrKeKbppI/AAAAAAAABxY/uHl2cPYY6PA/s1600/Equip.png";
+                        return
+                            "http://1.bp.blogspot.com/-_7q4XTlAX_g/UxXrKeKbppI/AAAAAAAABxY/uHl2cPYY6PA/s1600/Equip.png";
                     case "Counter":
-                        return "http://3.bp.blogspot.com/-EoqEY8ef698/UxXrJRfgnPI/AAAAAAAABxA/e9-pD6CSdwk/s1600/Counter.png";
+                        return
+                            "http://3.bp.blogspot.com/-EoqEY8ef698/UxXrJRfgnPI/AAAAAAAABxA/e9-pD6CSdwk/s1600/Counter.png";
                     case "Continuous":
-                        return "http://3.bp.blogspot.com/-O_1NZeHQBSk/UxXrJfY0EEI/AAAAAAAABxI/vKg5txOFlog/s1600/Continuous.png";
+                        return
+                            "http://3.bp.blogspot.com/-O_1NZeHQBSk/UxXrJfY0EEI/AAAAAAAABxI/vKg5txOFlog/s1600/Continuous.png";
                     default:
                         if (spelltrap.CardType == "Spell")
-                            return "http://2.bp.blogspot.com/-RS2Go77CqUw/UxXrMaDiM-I/AAAAAAAAByU/cjc2OyyUzvM/s1600/Spell.png";
+                            return
+                                "http://2.bp.blogspot.com/-RS2Go77CqUw/UxXrMaDiM-I/AAAAAAAAByU/cjc2OyyUzvM/s1600/Spell.png";
                         else
-                            return "http://3.bp.blogspot.com/-o8wNPTv-VVw/UxXrNA8kTMI/AAAAAAAAByw/uXwjDLJZPxI/s1600/Trap.png";
-
+                            return
+                                "http://3.bp.blogspot.com/-o8wNPTv-VVw/UxXrNA8kTMI/AAAAAAAAByw/uXwjDLJZPxI/s1600/Trap.png";
                 }
-
             }
             var monster = card as Monster;
 
             switch (monster.Attribute)
             {
-
                 case "WIND":
                     return "http://1.bp.blogspot.com/-ndLNmGIXXKk/UxXrNXeUH-I/AAAAAAAABys/rdoqo1Bkhnk/s1600/Wind.png";
                 case "DARK":
@@ -379,75 +356,82 @@ namespace YuGiOhV2.Services
                 case "DIVINE":
                     return "http://1.bp.blogspot.com/-xZZF5E2NXi4/UxXrJwDWkaI/AAAAAAAABxg/EG-7ajL9WGc/s1600/Divine.png";
                 default:
-                    return "http://3.bp.blogspot.com/-12VDHRVnjYk/VHdt3uHWbdI/AAAAAAAACyA/fOgzigv-9XU/s1600/Level.png"; //its a star, rofl
-
+                    return
+                        "http://3.bp.blogspot.com/-12VDHRVnjYk/VHdt3uHWbdI/AAAAAAAACyA/fOgzigv-9XU/s1600/Level.png"; //its a star, rofl
             }
         }
 
         private void AquireTheUntouchables()
         {
-
             var tempban = new Banlist();
 
             using (var db = new SqliteConnection(DbString))
             {
-
                 db.Open();
 
                 Print("Getting OCG banlist...");
-                tempban.OcgBanlist.Forbidden = db.Query<string>("select name from Card where ocgStatus like 'forbidden'");
+                tempban.OcgBanlist.Forbidden =
+                    db.Query<string>("select name from Card where ocgStatus like 'forbidden'");
                 tempban.OcgBanlist.Limited = db.Query<string>("select name from Card where ocgStatus like 'limited'");
-                tempban.OcgBanlist.SemiLimited = db.Query<string>("select name from Card where ocgStatus like 'semi-limited'");
+                tempban.OcgBanlist.SemiLimited =
+                    db.Query<string>("select name from Card where ocgStatus like 'semi-limited'");
                 Print("Getting TCG Adv banlist...");
-                tempban.TcgAdvBanlist.Forbidden = db.Query<string>("select name from Card where tcgAdvStatus like 'forbidden'");
-                tempban.TcgAdvBanlist.Limited = db.Query<string>("select name from Card where tcgAdvStatus like 'limited'");
-                tempban.TcgTradBanlist.SemiLimited = db.Query<string>("select name from Card where tcgAdvStatus like 'semi-limited'");
+                tempban.TcgAdvBanlist.Forbidden =
+                    db.Query<string>("select name from Card where tcgAdvStatus like 'forbidden'");
+                tempban.TcgAdvBanlist.Limited =
+                    db.Query<string>("select name from Card where tcgAdvStatus like 'limited'");
+                tempban.TcgTradBanlist.SemiLimited =
+                    db.Query<string>("select name from Card where tcgAdvStatus like 'semi-limited'");
                 Print("Getting TCG Traditional banlist...");
-                tempban.TcgTradBanlist.Forbidden = db.Query<string>("select name from Card where tcgTrnStatus like 'forbidden'");
-                tempban.TcgTradBanlist.Limited = db.Query<string>("select name from Card where tcgTrnStatus like 'limited'");
-                tempban.TcgTradBanlist.SemiLimited = db.Query<string>("select name from Card where tcgTrnStatus like 'semi-limited'");
+                tempban.TcgTradBanlist.Forbidden =
+                    db.Query<string>("select name from Card where tcgTrnStatus like 'forbidden'");
+                tempban.TcgTradBanlist.Limited =
+                    db.Query<string>("select name from Card where tcgTrnStatus like 'limited'");
+                tempban.TcgTradBanlist.SemiLimited =
+                    db.Query<string>("select name from Card where tcgTrnStatus like 'semi-limited'");
 
                 db.Close();
-
             }
 
             Banlist = tempban;
-
         }
 
         private IEnumerable<Card> AquireGoodies()
         {
-
             using (var db = new SqliteConnection(DbString))
             {
-
                 db.Open();
 
                 Print("Getting regular monsters...");
-                var regulars = db.Query<RegularMonster>("select * from Card where level not like '' and pendulumScale like ''");
+                var regulars =
+                    db.Query<RegularMonster>("select * from Card where level not like '' and pendulumScale like ''");
                 Print("Getting xyz monsters...");
                 var xyz = db.Query<Xyz>("select * from Card where types like '%Xyz%'"); //includes xyz pendulums
                 Print("Getting pendulum monsters...");
-                var pendulums = db.Query<RegularMonster>("select * from Card where types like '%Pendulum%' and types not like '%Xyz%'"); //does not include xyz pendulums
+                var pendulums =
+                    db.Query<RegularMonster>(
+                        "select * from Card where types like '%Pendulum%' and types not like '%Xyz%'"); //does not include xyz pendulums
                 Print("Getting link monsters...");
                 var links = db.Query<LinkMonster>("select * from Card where types like '%Link%'");
                 Print("Getting spell and traps...");
-                var spelltraps = db.Query<SpellTrap>("select * from Card where cardType like '%Spell%' or cardType like '%Trap%'");
+                var spelltraps =
+                    db.Query<SpellTrap>("select * from Card where cardType like '%Spell%' or cardType like '%Trap%'");
 
                 db.Close();
 
-                return regulars.Concat<Card>(xyz).Concat(pendulums).Concat(links).Concat(spelltraps).Where(card => !card.Name.Contains("Token"));
-
+                return regulars.Concat<Card>(xyz).Concat(pendulums).Concat(links).Concat(spelltraps)
+                    .Where(card => !card.Name.Contains("Token"));
             }
-
         }
 
         private void Print(string message)
-            => AltConsole.Print("Info", "Cache", message);
+        {
+            AltConsole.Print("Info", "Cache", message);
+        }
 
         private void InlinePrint(string message)
-            => AltConsole.InlinePrint("Info", "Cache", message, false);
-
+        {
+            AltConsole.InlinePrint("Info", "Cache", message, false);
+        }
     }
-
 }
