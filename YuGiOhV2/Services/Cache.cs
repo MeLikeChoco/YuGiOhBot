@@ -1,6 +1,4 @@
-﻿using AngleSharp;
-using Dapper;
-using Dapper.Contrib.Extensions;
+﻿using Dapper;
 using Discord;
 using Microsoft.Data.Sqlite;
 using Newtonsoft.Json.Linq;
@@ -9,10 +7,8 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using YuGiOhV2.Extensions;
 using YuGiOhV2.Objects.Banlist;
 using YuGiOhV2.Objects.Cards;
 

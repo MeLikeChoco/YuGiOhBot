@@ -1,10 +1,7 @@
-﻿using Dapper;
-using Discord.WebSocket;
+﻿using Discord.WebSocket;
 using Microsoft.Data.Sqlite;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using YuGiOhV2.Objects;
 using Dapper.Contrib.Extensions;

@@ -1,15 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace YuGiOhV2
 {
     public static class AltConsole
     {
-        
+
         private static StreamWriter _logger;
         private static object _loggerLock;
 
@@ -58,7 +54,7 @@ namespace YuGiOhV2
 
             }
 
-            if(log)
+            if (log)
                 Log(message);
 
         }
@@ -89,8 +85,8 @@ namespace YuGiOhV2
                 Console.WriteLine($"{message}\t\t{exception}");
 
             }
-            
-            if(log)
+
+            if (log)
                 Log(message);
 
         }

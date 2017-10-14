@@ -1,5 +1,4 @@
-﻿using AngleSharp;
-using Discord.Addons.Interactive;
+﻿using Discord.Addons.Interactive;
 using Discord.Commands;
 using Discord.WebSocket;
 using MoreLinq;
@@ -7,7 +6,6 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Text;
