@@ -1,14 +1,14 @@
-﻿using Discord;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Discord;
 using Discord.Addons.Interactive;
 using Discord.Addons.Preconditions;
 using Discord.Commands;
 using Discord.WebSocket;
 using MoreLinq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using YuGiOhV2.Extensions;
 using YuGiOhV2.Objects.Banlist;
 using YuGiOhV2.Objects.Criterion;
@@ -258,7 +258,7 @@ namespace YuGiOhV2.Modules
                 .WithIconUrl(Context.Client.CurrentUser.GetAvatarUrl())
                 .WithName($"There are {amount} results from your search!");
 
-            var paginator = new PaginatedMessage()
+            var paginator = new PaginatedMessage
             {
 
                 Author = author,

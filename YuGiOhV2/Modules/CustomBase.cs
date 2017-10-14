@@ -1,8 +1,8 @@
-﻿using Discord;
+﻿using System.IO;
+using System.Threading.Tasks;
+using Discord;
 using Discord.Addons.Interactive;
 using Discord.Commands;
-using System.IO;
-using System.Threading.Tasks;
 using YuGiOhV2.Services;
 
 namespace YuGiOhV2.Modules

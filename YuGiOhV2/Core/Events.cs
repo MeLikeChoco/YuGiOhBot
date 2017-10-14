@@ -1,13 +1,13 @@
-﻿using Discord;
-using Discord.Addons.Interactive;
-using Discord.Commands;
-using Discord.WebSocket;
-using Microsoft.Extensions.DependencyInjection;
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Discord;
+using Discord.Addons.Interactive;
+using Discord.Commands;
+using Discord.WebSocket;
+using Microsoft.Extensions.DependencyInjection;
 using YuGiOhV2.Services;
 
 namespace YuGiOhV2.Core
@@ -25,9 +25,9 @@ namespace YuGiOhV2.Core
         private InteractiveService _interactive;
         private IServiceProvider _services;
 
-        private bool _isInitialized = false;
+        private bool _isInitialized;
 
-        private static readonly DiscordSocketConfig _clientConfig = new DiscordSocketConfig()
+        private static readonly DiscordSocketConfig _clientConfig = new DiscordSocketConfig
         {
 
             //AlwaysDownloadUsers = true,
@@ -36,7 +36,7 @@ namespace YuGiOhV2.Core
 
         };
 
-        private static readonly CommandServiceConfig _commandConfig = new CommandServiceConfig()
+        private static readonly CommandServiceConfig _commandConfig = new CommandServiceConfig
         {
 
             DefaultRunMode = RunMode.Async,
@@ -200,7 +200,7 @@ namespace YuGiOhV2.Core
 
                     if (result.ErrorReason.ToLower().Contains("unknown command"))
                         return;
-                    else if (result.ErrorReason.ToLower().Contains("you are currently in timeout"))
+                    if (result.ErrorReason.ToLower().Contains("you are currently in timeout"))
                         await context.Channel.SendMessageAsync("Please wait 5 seconds between each type of paginator command!");
 
                     //await context.Channel.SendMessageAsync("https://goo.gl/JieFJM");
@@ -218,10 +218,10 @@ namespace YuGiOhV2.Core
         private void RegisterLogging()
         {
 
-            _client.Log += (message)
+            _client.Log += message
                 => Task.Run(()
                 => AltConsole.Print(message.Severity.ToString(), message.Source, message.Message, message.Exception));
-            _commands.Log += (message)
+            _commands.Log += message
                 => Task.Run(()
                 => AltConsole.Print(message.Severity.ToString(), message.Source, message.Message, message.Exception));
 

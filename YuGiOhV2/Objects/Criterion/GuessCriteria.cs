@@ -1,5 +1,5 @@
-﻿using Discord.Addons.Interactive;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
+using Discord.Addons.Interactive;
 using Discord.Commands;
 using Discord.WebSocket;
 

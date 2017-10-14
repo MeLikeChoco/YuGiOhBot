@@ -1,7 +1,7 @@
-﻿using Discord.Commands;
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Discord.Commands;
 using YuGiOhV2.Services;
 
 //The getinvite command can be intruding, however, I only use it to ask for feedback on the bot, else there is no other way to get 

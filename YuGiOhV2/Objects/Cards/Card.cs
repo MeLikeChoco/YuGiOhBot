@@ -25,18 +25,11 @@
 
                 if (this is SpellTrap)
                     return true;
-                else
-                {
+                var monster = this as Monster;
 
-                    var monster = this as Monster;
-
-                    if (monster.Types.Contains("Effect"))
-                        return true;
-                    else
-                        return false;
-
-                }
-
+                if (monster.Types.Contains("Effect"))
+                    return true;
+                return false;
             }
         }
 

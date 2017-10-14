@@ -1,9 +1,4 @@
-﻿using Discord.Addons.Interactive;
-using Discord.Commands;
-using Discord.WebSocket;
-using MoreLinq;
-using Newtonsoft.Json.Linq;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -11,6 +6,11 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Discord.Addons.Interactive;
+using Discord.Commands;
+using Discord.WebSocket;
+using MoreLinq;
+using Newtonsoft.Json.Linq;
 using YuGiOhV2.Objects;
 using YuGiOhV2.Objects.Criterion;
 using YuGiOhV2.Objects.Deserializers;
@@ -131,33 +131,27 @@ namespace YuGiOhV2.Modules
 
             var indexToDisplay = card.Select(c =>
             {
-
                 if (char.IsLetterOrDigit(c))
                     return "\\_ ";
-                else if (char.IsWhiteSpace(c))
+                if (char.IsWhiteSpace(c))
                     return "   ";
-                else
-                    return c.ToString();
-
+                return c.ToString();
             }).ToDictionary(s => counter++, s => s);
 
             var display = string.Join("", indexToDisplay.Values);
 
             var check = new StringBuilder(string.Join("", card.Select(c =>
             {
-
                 if (char.IsLetterOrDigit(c))
                     return ' ';
-                else
-                    return c;
-
+                return c;
             })));
 
             //await ReplyAsync(card);
             await ReplyAsync($"You have **5** minutes to figure this card out!\n{display}");
 
             var cts = new CancellationTokenSource();
-            var timer = new Timer(new TimerCallback((token) => (token as CancellationTokenSource).Cancel()), cts, TimeSpan.FromSeconds(300), TimeSpan.FromSeconds(300));
+            var timer = new Timer(token => (token as CancellationTokenSource).Cancel(), cts, TimeSpan.FromSeconds(300), TimeSpan.FromSeconds(300));
             var lower = card.ToLower();
             var hanging = 0;
             SocketGuildUser winner = null;
@@ -179,9 +173,9 @@ namespace YuGiOhV2.Modules
 
                     if (content == null)
                         continue;
-                    else if (content.Length != 1)
+                    if (content.Length != 1)
                         continue;
-                    else if (guesses.Contains(content))
+                    if (guesses.Contains(content))
                         await ReplyAsync($"You already guessed `{content}`!");
                     else if (!lower.Contains(content))
                     {
@@ -211,7 +205,6 @@ namespace YuGiOhV2.Modules
                             winner = input.Author as SocketGuildUser;
 
                     }
-
                 } while (check.ToString() != card);
 
             }, cts.Token);

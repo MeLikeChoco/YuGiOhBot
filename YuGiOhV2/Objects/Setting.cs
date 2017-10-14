@@ -9,7 +9,7 @@ namespace YuGiOhV2.Objects
         [ExplicitKey]
         public ulong Id { get; set; }
         public string Prefix { get; set; } = "y!";
-        public bool Minimal { get; set; } = false;
+        public bool Minimal { get; set; }
         public int GuessTime { get; set; } = 60;
 
         public Setting(SocketGuild guild)

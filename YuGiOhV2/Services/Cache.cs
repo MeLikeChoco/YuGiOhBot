@@ -1,14 +1,14 @@
-﻿using Dapper;
-using Discord;
-using Microsoft.Data.Sqlite;
-using Newtonsoft.Json.Linq;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Dapper;
+using Discord;
+using Microsoft.Data.Sqlite;
+using Newtonsoft.Json.Linq;
 using YuGiOhV2.Objects.Banlist;
 using YuGiOhV2.Objects.Cards;
 
@@ -114,11 +114,11 @@ namespace YuGiOhV2.Services
 
                     var archetypes = cardobj.Archetype.Split(" , ");
 
-                    foreach(var archetype in archetypes)
+                    foreach (var archetype in archetypes)
                     {
 
                         if (!Archetypes.ContainsKey(archetype))
-                            Archetypes.Add(archetype, new HashSet<string>() { name });
+                            Archetypes.Add(archetype, new HashSet<string> { name });
                         else
                             Archetypes[archetype].Add(name);
 
@@ -159,7 +159,7 @@ namespace YuGiOhV2.Services
                 .WithIconUrl("http://1.bp.blogspot.com/-a3KasYvDBaY/VCQXuTjmb2I/AAAAAAAACZM/oQ6Hw71kLQQ/s1600/Cursed%2BHexagram.png")
                 .WithText("Yu-Gi-Oh!");
 
-            var body = new EmbedBuilder()
+            var body = new EmbedBuilder
             {
 
                 Author = author,
@@ -295,42 +295,36 @@ namespace YuGiOhV2.Services
 
         private Color GetColor(Card card)
         {
-
             if (card.Name == "Obelisk the Tormentor (original)")
                 return new Color(50, 50, 153);
-            else if (card.Name == "Slifer the Sky Dragon (original)")
+            if (card.Name == "Slifer the Sky Dragon (original)")
                 return new Color(255, 0, 0);
-            else if (card.Name == "The Winged Dragon of Ra (original)")
+            if (card.Name == "The Winged Dragon of Ra (original)")
                 return new Color(255, 215, 0);
 
             if (card.CardType == "Spell")
                 return new Color(29, 158, 116);
-            else if (card.CardType == "Trap")
-                return new Color(188, 90, 132);
-            else
+            if (card.CardType == "Trap")
             {
-
-                var monster = card as Monster;
-
-                if (monster is LinkMonster)
-                    return new Color(0, 0, 139);
-                else if (!string.IsNullOrEmpty(monster.PendulumScale))
-                    return new Color(150, 208, 189);
-                else if (monster is Xyz)
-                    return new Color(0, 0, 1);
-                else if (monster.Types.Contains("Fusion"))
-                    return new Color(160, 134, 183);
-                else if (monster.Types.Contains("Synchro"))
-                    return new Color(204, 204, 204);
-                else if (monster.Types.Contains("Ritual"))
-                    return new Color(157, 181, 204);
-                else if (monster.Types.Contains("Effect"))
-                    return new Color(255, 139, 83);
-                else
-                    return new Color(253, 230, 138);
-
+                return new Color(188, 90, 132);
             }
+            var monster = card as Monster;
 
+            if (monster is LinkMonster)
+                return new Color(0, 0, 139);
+            if (!string.IsNullOrEmpty(monster.PendulumScale))
+                return new Color(150, 208, 189);
+            if (monster is Xyz)
+                return new Color(0, 0, 1);
+            if (monster.Types.Contains("Fusion"))
+                return new Color(160, 134, 183);
+            if (monster.Types.Contains("Synchro"))
+                return new Color(204, 204, 204);
+            if (monster.Types.Contains("Ritual"))
+                return new Color(157, 181, 204);
+            if (monster.Types.Contains("Effect"))
+                return new Color(255, 139, 83);
+            return new Color(253, 230, 138);
         }
 
         private string GetIconUrl(Card card)
@@ -365,35 +359,29 @@ namespace YuGiOhV2.Services
                 }
 
             }
-            else
+            var monster = card as Monster;
+
+            switch (monster.Attribute)
             {
 
-                var monster = card as Monster;
-
-                switch (monster.Attribute)
-                {
-
-                    case "WIND":
-                        return "http://1.bp.blogspot.com/-ndLNmGIXXKk/UxXrNXeUH-I/AAAAAAAABys/rdoqo1Bkhnk/s1600/Wind.png";
-                    case "DARK":
-                        return "http://1.bp.blogspot.com/-QUU5KSFMYig/UxXrJZoOOfI/AAAAAAAABxE/7p8CLfWdTXA/s1600/Dark.png";
-                    case "LIGHT":
-                        return "http://1.bp.blogspot.com/-MxQabegkthM/UxXrLHywzrI/AAAAAAAABx8/h86nYieq9nc/s1600/Light.png";
-                    case "EARTH":
-                        return "http://2.bp.blogspot.com/-5fLcEnHAA9M/UxXrKAcSUII/AAAAAAAABxc/5fEingbdyXQ/s1600/Earth.png";
-                    case "FIRE":
-                        return "http://4.bp.blogspot.com/-sS0-GqQ19gQ/UxXrLIymRVI/AAAAAAAAByA/aOAdiLerXoQ/s1600/Fire.png";
-                    case "WATER":
-                        return "http://4.bp.blogspot.com/-A43QT1n8o5k/UxXrNJcG-fI/AAAAAAAAByo/0KFlRXQbZjI/s1600/Water.png";
-                    case "DIVINE":
-                        return "http://1.bp.blogspot.com/-xZZF5E2NXi4/UxXrJwDWkaI/AAAAAAAABxg/EG-7ajL9WGc/s1600/Divine.png";
-                    default:
-                        return "http://3.bp.blogspot.com/-12VDHRVnjYk/VHdt3uHWbdI/AAAAAAAACyA/fOgzigv-9XU/s1600/Level.png"; //its a star, rofl
-
-                }
+                case "WIND":
+                    return "http://1.bp.blogspot.com/-ndLNmGIXXKk/UxXrNXeUH-I/AAAAAAAABys/rdoqo1Bkhnk/s1600/Wind.png";
+                case "DARK":
+                    return "http://1.bp.blogspot.com/-QUU5KSFMYig/UxXrJZoOOfI/AAAAAAAABxE/7p8CLfWdTXA/s1600/Dark.png";
+                case "LIGHT":
+                    return "http://1.bp.blogspot.com/-MxQabegkthM/UxXrLHywzrI/AAAAAAAABx8/h86nYieq9nc/s1600/Light.png";
+                case "EARTH":
+                    return "http://2.bp.blogspot.com/-5fLcEnHAA9M/UxXrKAcSUII/AAAAAAAABxc/5fEingbdyXQ/s1600/Earth.png";
+                case "FIRE":
+                    return "http://4.bp.blogspot.com/-sS0-GqQ19gQ/UxXrLIymRVI/AAAAAAAAByA/aOAdiLerXoQ/s1600/Fire.png";
+                case "WATER":
+                    return "http://4.bp.blogspot.com/-A43QT1n8o5k/UxXrNJcG-fI/AAAAAAAAByo/0KFlRXQbZjI/s1600/Water.png";
+                case "DIVINE":
+                    return "http://1.bp.blogspot.com/-xZZF5E2NXi4/UxXrJwDWkaI/AAAAAAAABxg/EG-7ajL9WGc/s1600/Divine.png";
+                default:
+                    return "http://3.bp.blogspot.com/-12VDHRVnjYk/VHdt3uHWbdI/AAAAAAAACyA/fOgzigv-9XU/s1600/Level.png"; //its a star, rofl
 
             }
-
         }
 
         private void AquireTheUntouchables()

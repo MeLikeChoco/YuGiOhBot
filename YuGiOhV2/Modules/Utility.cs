@@ -1,9 +1,9 @@
-﻿using Discord;
-using Discord.Commands;
-using Discord.WebSocket;
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using Discord;
+using Discord.Commands;
+using Discord.WebSocket;
 using YuGiOhV2.Extensions;
 using YuGiOhV2.Services;
 

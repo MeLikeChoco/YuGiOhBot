@@ -1,12 +1,12 @@
-﻿using Discord;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Discord;
 using Discord.Addons.Interactive;
 using Discord.Addons.Preconditions;
 using Discord.Commands;
 using MoreLinq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using YuGiOhV2.Extensions;
 using YuGiOhV2.Services;
 
@@ -19,7 +19,7 @@ namespace YuGiOhV2.Modules
         private Random _rand;
         private Database _db;
 
-        private static readonly PaginatedAppearanceOptions AOptions = new PaginatedAppearanceOptions()
+        private static readonly PaginatedAppearanceOptions AOptions = new PaginatedAppearanceOptions
         {
 
             JumpDisplayOptions = JumpDisplayOptions.Never,
@@ -85,7 +85,7 @@ namespace YuGiOhV2.Modules
                 .WithIconUrl(Context.Client.CurrentUser.GetAvatarUrl())
                 .WithName("HALP, IVE FALLEN AND CANT GET UP");
 
-            var paginatedMessage = new PaginatedMessage()
+            var paginatedMessage = new PaginatedMessage
             {
 
                 Author = author,

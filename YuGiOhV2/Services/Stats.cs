@@ -1,10 +1,10 @@
-﻿using Discord.WebSocket;
-using MoreLinq;
-using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using Discord.WebSocket;
+using MoreLinq;
+using Newtonsoft.Json;
 using YuGiOhV2.Objects.Serializers;
 
 namespace YuGiOhV2.Services

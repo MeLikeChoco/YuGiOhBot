@@ -1,7 +1,7 @@
-﻿using Discord.Addons.Interactive;
-using Discord.WebSocket;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
+using Discord.Addons.Interactive;
 using Discord.Commands;
+using Discord.WebSocket;
 
 namespace YuGiOhV2.Objects.Criterion
 {

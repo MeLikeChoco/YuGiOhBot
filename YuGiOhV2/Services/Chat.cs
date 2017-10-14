@@ -1,13 +1,13 @@
-﻿using Discord;
-using Discord.WebSocket;
-using Force.DeepCloner;
-using MoreLinq;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Discord;
+using Discord.WebSocket;
+using Force.DeepCloner;
+using MoreLinq;
 using YuGiOhV2.Objects.Deserializers;
 
 namespace YuGiOhV2.Services
@@ -281,9 +281,7 @@ namespace YuGiOhV2.Services
                 if (xcost > 0)
                     //return l2 + 1 - 2*(memchr(s2, *s1, l2) != NULL);
                     return l2 + 1 - 2 * MemchrRPLC(s2, *s1, l2);
-                else
-                    //return l2 - (memchr(s2, *s1, l2) != NULL);
-                    return l2 - MemchrRPLC(s2, *s1, l2);
+                return l2 - MemchrRPLC(s2, *s1, l2);
             }
 
             l1++;
@@ -295,7 +293,7 @@ namespace YuGiOhV2.Services
             int* row = stackalloc int[l2];
             if (l2 < 0)
                 //if (!row)
-                return (int)(-1);
+                return -1;
             end = row + l2 - 1;
             for (i = 0; i < l2 - (xcost > 0 ? 0 : half); i++)
                 row[i] = i;

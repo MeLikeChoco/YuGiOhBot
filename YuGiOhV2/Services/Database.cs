@@ -1,11 +1,11 @@
-﻿using Discord.WebSocket;
-using Microsoft.Data.Sqlite;
+﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using YuGiOhV2.Objects;
 using Dapper.Contrib.Extensions;
-using System.Collections.Concurrent;
+using Discord.WebSocket;
+using Microsoft.Data.Sqlite;
+using YuGiOhV2.Objects;
 
 namespace YuGiOhV2.Services
 {
