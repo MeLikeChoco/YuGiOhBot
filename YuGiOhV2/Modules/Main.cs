@@ -296,17 +296,17 @@ namespace YuGiOhV2.Modules
             foreach(var group in groups)
             {
 
-                var str = "";
+                var str = new StringBuilder();
 
                 foreach(var card in group)
                 {
 
-                    str += $"{counter}. {card}\n";
+                    str.AppendLine($"{counter}. {card}");
                     counter++;
 
                 }
 
-                descriptions.Add(str.Trim());
+                descriptions.Add(str.ToString().Trim());
 
             }
 
