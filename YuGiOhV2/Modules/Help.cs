@@ -48,30 +48,30 @@ namespace YuGiOhV2.Modules
                 .Where(command => command.Name == input)
                 .Where(command => CheckPrecond(command));
 
-            if(commands.Count() == 0)
+            if(commands.Any())
                 return NoResultError("commands", input);
 
-            var str = $"```fix\n";
+            var str = new StringBuilder($"```fix\n");
 
             foreach(var command in commands)
             {
 
-                str += $"{command.Name} ";
+                str.Append($"{command.Name} ");
 
                 foreach(var parameter in command.Parameters)
                 {
 
-                    str += $"<{parameter.Name}> ";
+                    str.Append($"<{parameter.Name}> ");
 
                 }
 
-                str += $"\n{command.Summary}\n\n";
+                str.AppendLine($"\n{command.Summary}\n");
 
             }
 
-            str += "```";
+            str.Append("```");
 
-            return ReplyAsync(str.Trim());
+            return ReplyAsync(str.ToString().Trim());
             
         }
 
@@ -102,33 +102,33 @@ namespace YuGiOhV2.Modules
                 commands = _commands.Commands.Where(command => CheckPrecond(command));
             else
                 commands = _commands.Commands
-                    .Where(command => !command.Preconditions.Any(precondition => precondition is RequireOwnerAttribute))
-                    .Where(command => command.CheckPreconditionsAsync(Context).Result.IsSuccess);
+                    .Where(command => !command.Preconditions.Any(precondition => precondition is RequireOwnerAttribute) && 
+                                       command.CheckPreconditionsAsync(Context).GetAwaiter().GetResult().IsSuccess);
 
             var groups = commands.Batch(5);
 
             foreach (var group in groups)
             {
 
-                var str = "";
+                var str = new StringBuilder();
 
                 foreach (var command in group)
                 {
 
-                    str += $"**Command:** {command.Name} ";
+                    str.Append($"**Command:** {command.Name} ");
 
                     foreach (var parameter in command.Parameters)
                     {
 
-                        str += $"<{parameter.Name}> ";
+                        str.Append($"<{parameter.Name}> ");
 
                     }
 
-                    str += $"\n{command.Summary}\n\n";
+                    str.AppendLine($"\n{command.Summary}\n");
 
                 }
 
-                messages.Add(str.Trim());
+                messages.Add(str.ToString().Trim());
 
             }
 
@@ -139,7 +139,7 @@ namespace YuGiOhV2.Modules
         }
 
         public bool CheckPrecond(CommandInfo command)
-            => command.CheckPreconditionsAsync(Context).Result.IsSuccess;
+            => command.CheckPreconditionsAsync(Context).GetAwaiter().GetResult().IsSuccess;
 
     }
 }
