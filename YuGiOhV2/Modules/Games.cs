@@ -115,11 +115,11 @@ namespace YuGiOhV2.Modules
                 else
                     await ReplyAsync($":stop_button: Ran out of time! The card was `{passcode.Value}`!");
 
-                _inProgress.Remove(Context.Channel.Id, out var blarg);
-
             }
             else
                 await ReplyAsync($":game_die: There is a game in progress!");
+
+            _inProgress.TryRemove(Context.Channel.Id, out var blarg);
 
         }
 
