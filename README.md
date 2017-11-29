@@ -38,3 +38,7 @@ minimal <true/false>           | Sets minimal card settings for guild
 I also have inline declaration of cards. For example, "I like [[blue-eyes]]" will give you a Blue-Eyes card! You can use multiple inline declarations such as "[[red-eyes]] will beat [[blue-eyes]]"!
 
 --------------------------------------------------------
+
+<a href="https://discordbots.org/bot/293526797600030720">
+  <img src="https://discordbots.org/api/widget/293526797600030720.png" alt="Discord Bots" />
+</a>
