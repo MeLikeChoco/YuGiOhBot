@@ -14,6 +14,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using YuGiOhV2.Extensions;
 using YuGiOhV2.Objects.Banlist;
+using YuGiOhV2.Objects.BoosterPacks;
 using YuGiOhV2.Objects.Cards;
 
 namespace YuGiOhV2.Services
@@ -23,6 +24,7 @@ namespace YuGiOhV2.Services
 
         public Dictionary<string, Card> Objects { get; private set; }
         public Dictionary<string, EmbedBuilder> Cards { get; private set; }
+        public Dictionary<string, Booster> BoosterPacks { get; private set; }
         public Dictionary<string, HashSet<string>> Archetypes { get; private set; }
         public Dictionary<string, string> Images { get; private set; }
         public Dictionary<string, string> LowerToUpper { get; private set; }
@@ -42,6 +44,7 @@ namespace YuGiOhV2.Services
 
         private const string DbString = "Data Source = Databases/ygo.db";
         private static readonly ParallelOptions _pOptions = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount };
+        private static SqliteConnection _db = new SqliteConnection(DbString);
 
         public Cache()
         {
@@ -62,6 +65,7 @@ namespace YuGiOhV2.Services
 
             AquireFancyMessages(objects);
             AquireTheUntouchables();
+            AquireGoodiePacks();
 
         }
 
@@ -118,7 +122,7 @@ namespace YuGiOhV2.Services
 
                     var archetypes = cardobj.Archetype.Split(" , ");
 
-                    foreach(var archetype in archetypes)
+                    foreach (var archetype in archetypes)
                     {
 
                         if (!Archetypes.ContainsKey(archetype))
@@ -181,10 +185,8 @@ namespace YuGiOhV2.Services
             }
             catch { }
 
-            if (card is Monster)
+            if (card is Monster monster)
             {
-
-                var monster = card as Monster;
 
                 //for some reason, newlines aren't properly recognized
                 monster.Lore = monster.Lore.Replace(@"\n", "\n");
@@ -204,21 +206,14 @@ namespace YuGiOhV2.Services
                 else
                     body.AddField($"[ {monster.Types} ]", monster.Lore);
 
-            }
-            else
-                body.AddField("Effect", card.Lore.Replace(@"\n", "\n"));
-
-            if (card is Monster)
-            {
-
-                var monster = card as Monster;
-
                 body.AddField("Attack", monster.Atk, true);
 
                 if (!(monster is LinkMonster))
                     body.AddField("Defence", monster.Def, true);
 
             }
+            else
+                body.AddField("Effect", card.Lore.Replace(@"\n", "\n"));
 
             if (!string.IsNullOrEmpty(card.Archetype))
                 body.AddField(card.Archetype.Split(",").Length > 1 ? "Archetypes" : "Archetype", card.Archetype.Replace(" ,", ","));
@@ -246,40 +241,25 @@ namespace YuGiOhV2.Services
 
             desc += $"**Card Type:** {card.CardType}\n";
 
-            if (card is Monster)
+            if (card is Monster monster)
             {
 
-                var monster = card as Monster;
                 desc += $"**Attribute:** {monster.Attribute}\n";
 
-                if (monster is Xyz)
-                {
-                    var xyz = monster as Xyz;
+                if (monster is Xyz xyz)
                     desc += $"**Rank:** {xyz.Rank}\n";
-                }
-                else if (monster is LinkMonster)
-                {
-                    var link = monster as LinkMonster;
+                else if (monster is LinkMonster link)
                     desc += $"**Links:** {link.Link}\n" +
                         $"**Link Markers:** {link.LinkMarkers}\n";
-                }
                 else
-                {
-                    var regular = monster as RegularMonster;
-                    desc += $"**Level:** {regular.Level}\n";
-                }
+                    desc += $"**Level:** {(monster as RegularMonster).Level}\n";
 
                 if (!string.IsNullOrEmpty(monster.PendulumScale))
                     desc += $"**Scale:** {monster.PendulumScale}\n";
 
             }
             else
-            {
-
-                var spelltrap = card as SpellTrap;
-                desc += $"**Property:** {spelltrap.Property}\n";
-
-            }
+                desc += $"**Property:** {(card as SpellTrap).Property}\n";
 
             if (card.OcgStatus != "U")
                 desc += $"**OCG:** {card.OcgStatus}\n";
@@ -340,10 +320,8 @@ namespace YuGiOhV2.Services
         private string GetIconUrl(Card card)
         {
 
-            if (card is SpellTrap)
+            if (card is SpellTrap spelltrap)
             {
-
-                var spelltrap = card as SpellTrap;
 
                 switch (spelltrap.Property)
                 {
@@ -405,27 +383,22 @@ namespace YuGiOhV2.Services
 
             var tempban = new Banlist();
 
-            using (var db = new SqliteConnection(DbString))
-            {
+            _db.Open();
 
-                db.Open();
+            Print("Getting OCG banlist...");
+            tempban.OcgBanlist.Forbidden = _db.Query<string>("select name from Card where ocgStatus like 'forbidden'");
+            tempban.OcgBanlist.Limited = _db.Query<string>("select name from Card where ocgStatus like 'limited'");
+            tempban.OcgBanlist.SemiLimited = _db.Query<string>("select name from Card where ocgStatus like 'semi-limited'");
+            Print("Getting TCG Adv banlist...");
+            tempban.TcgAdvBanlist.Forbidden = _db.Query<string>("select name from Card where tcgAdvStatus like 'forbidden'");
+            tempban.TcgAdvBanlist.Limited = _db.Query<string>("select name from Card where tcgAdvStatus like 'limited'");
+            tempban.TcgTradBanlist.SemiLimited = _db.Query<string>("select name from Card where tcgAdvStatus like 'semi-limited'");
+            Print("Getting TCG Traditional banlist...");
+            tempban.TcgTradBanlist.Forbidden = _db.Query<string>("select name from Card where tcgTrnStatus like 'forbidden'");
+            tempban.TcgTradBanlist.Limited = _db.Query<string>("select name from Card where tcgTrnStatus like 'limited'");
+            tempban.TcgTradBanlist.SemiLimited = _db.Query<string>("select name from Card where tcgTrnStatus like 'semi-limited'");
 
-                Print("Getting OCG banlist...");
-                tempban.OcgBanlist.Forbidden = db.Query<string>("select name from Card where ocgStatus like 'forbidden'");
-                tempban.OcgBanlist.Limited = db.Query<string>("select name from Card where ocgStatus like 'limited'");
-                tempban.OcgBanlist.SemiLimited = db.Query<string>("select name from Card where ocgStatus like 'semi-limited'");
-                Print("Getting TCG Adv banlist...");
-                tempban.TcgAdvBanlist.Forbidden = db.Query<string>("select name from Card where tcgAdvStatus like 'forbidden'");
-                tempban.TcgAdvBanlist.Limited = db.Query<string>("select name from Card where tcgAdvStatus like 'limited'");
-                tempban.TcgTradBanlist.SemiLimited = db.Query<string>("select name from Card where tcgAdvStatus like 'semi-limited'");
-                Print("Getting TCG Traditional banlist...");
-                tempban.TcgTradBanlist.Forbidden = db.Query<string>("select name from Card where tcgTrnStatus like 'forbidden'");
-                tempban.TcgTradBanlist.Limited = db.Query<string>("select name from Card where tcgTrnStatus like 'limited'");
-                tempban.TcgTradBanlist.SemiLimited = db.Query<string>("select name from Card where tcgTrnStatus like 'semi-limited'");
-
-                db.Close();
-
-            }
+            _db.Close();
 
             Banlist = tempban;
 
@@ -434,27 +407,36 @@ namespace YuGiOhV2.Services
         private IEnumerable<Card> AquireGoodies()
         {
 
-            using (var db = new SqliteConnection(DbString))
-            {
+            _db.Open();
 
-                db.Open();
+            Print("Getting regular monsters...");
+            var regulars = _db.Query<RegularMonster>("select * from Card where level not like '' and pendulumScale like ''");
+            Print("Getting xyz monsters...");
+            var xyz = _db.Query<Xyz>("select * from Card where types like '%Xyz%'"); //includes xyz pendulums
+            Print("Getting pendulum monsters...");
+            var pendulums = _db.Query<RegularMonster>("select * from Card where types like '%Pendulum%' and types not like '%Xyz%'"); //does not include xyz pendulums
+            Print("Getting link monsters...");
+            var links = _db.Query<LinkMonster>("select * from Card where types like '%Link%'");
+            Print("Getting spell and traps...");
+            var spelltraps = _db.Query<SpellTrap>("select * from Card where cardType like '%Spell%' or cardType like '%Trap%'");
 
-                Print("Getting regular monsters...");
-                var regulars = db.Query<RegularMonster>("select * from Card where level not like '' and pendulumScale like ''");
-                Print("Getting xyz monsters...");
-                var xyz = db.Query<Xyz>("select * from Card where types like '%Xyz%'"); //includes xyz pendulums
-                Print("Getting pendulum monsters...");
-                var pendulums = db.Query<RegularMonster>("select * from Card where types like '%Pendulum%' and types not like '%Xyz%'"); //does not include xyz pendulums
-                Print("Getting link monsters...");
-                var links = db.Query<LinkMonster>("select * from Card where types like '%Link%'");
-                Print("Getting spell and traps...");
-                var spelltraps = db.Query<SpellTrap>("select * from Card where cardType like '%Spell%' or cardType like '%Trap%'");
+            _db.Close();
 
-                db.Close();
+            return regulars.Concat<Card>(xyz).Concat(pendulums).Concat(links).Concat(spelltraps).Where(card => !card.Name.Contains("Token"));
 
-                return regulars.Concat<Card>(xyz).Concat(pendulums).Concat(links).Concat(spelltraps).Where(card => !card.Name.Contains("Token"));
+        }
 
-            }
+        private void AquireGoodiePacks()
+        {
+
+            _db.Open();
+
+            var boosterPacks = _db.Query<Booster>("select * from Booster");
+
+            _db.Close();
+
+            boosterPacks = boosterPacks.GroupBy(bp => bp.Name).Select(group => group.First()).Where(bp => bp.Cards != null);
+            BoosterPacks = new Dictionary<string, Booster>(boosterPacks.ToDictionary(bp => bp.Name, bp => bp), StringComparer.InvariantCultureIgnoreCase);
 
         }
 

@@ -1,6 +1,5 @@
 ﻿using Discord;
 using Discord.Addons.Interactive;
-using Discord.Addons.Preconditions;
 using Discord.Commands;
 using Discord.WebSocket;
 using MoreLinq;
@@ -61,7 +60,23 @@ namespace YuGiOhV2.Modules
 
         }
 
-        [Command("card")]
+        [Command("booster")]
+        [Summary("Gets information on a booster pack!")]
+        public async Task BoosterCommand([Remainder]string input)
+        {
+
+            if (_cache.BoosterPacks.TryGetValue(input, out var booster))
+            {
+
+                await ReplyAsync(booster.Cards);
+
+            }
+            else
+                await NoResultError(input);
+
+        }
+
+        [Command("card"), Alias("c")]
         [Summary("Gets a card! No proper capitalization needed!")]
         public async Task CardCommand([Remainder]string input)
         {
@@ -85,7 +100,6 @@ namespace YuGiOhV2.Modules
         }
 
         [Command("search"), Alias("s")]
-        [Ratelimit(1, 0.084, Measure.Minutes)]
         [Summary("Returns results based on your input! No proper capitalization needed!")]
         public async Task SearchCommand([Remainder]string input)
         {
@@ -104,7 +118,6 @@ namespace YuGiOhV2.Modules
         }
 
         [Command("archetype"), Alias("a")]
-        [Ratelimit(1, 0.084, Measure.Minutes)]
         [Summary("Returns results based on your input! No proper capitalization needed!")]
         public async Task ArchetypeCommand([Remainder]string input)
         {

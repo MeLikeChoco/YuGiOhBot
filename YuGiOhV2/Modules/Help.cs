@@ -1,6 +1,5 @@
 ﻿using Discord;
 using Discord.Addons.Interactive;
-using Discord.Addons.Preconditions;
 using Discord.Commands;
 using MoreLinq;
 using System;
@@ -77,7 +76,6 @@ namespace YuGiOhV2.Modules
 
         [Command("help")]
         [Summary("Defacto help command!")]
-        [Ratelimit(1, 0.084, Measure.Minutes)]
         public async Task HelpCommand()
         {
 

@@ -24,14 +24,13 @@
 
   <ItemGroup>
     <PackageReference Include="AngleSharp" Version="0.9.9" />
-    <PackageReference Include="Dapper" Version="1.50.2" />
-    <PackageReference Include="Dapper.Contrib" Version="1.50.0" />
-    <PackageReference Include="DeepCloner" Version="0.10.1" />
+    <PackageReference Include="Dapper" Version="1.50.4" />
+    <PackageReference Include="Dapper.Contrib" Version="1.50.4" />
+    <PackageReference Include="DeepCloner" Version="0.10.2" />
     <PackageReference Include="Discord.Addons.Interactive" Version="1.0.1" />
-    <PackageReference Include="Discord.Addons.Preconditions" Version="1.0.0-rc" />
-    <PackageReference Include="Discord.Net" Version="2.0.0-alpha-build-00840" />
+    <PackageReference Include="Discord.Net" Version="2.0.0-beta-00858" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="2.0.0" />
-    <PackageReference Include="morelinq" Version="2.8.0" />
+    <PackageReference Include="morelinq" Version="2.9.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -39,7 +38,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Databases\ygo.db">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Files\Bot List Tokens\Black.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
