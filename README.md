@@ -7,6 +7,8 @@ Commands                       | Description
 
 Note >> Capitalization does not matter
 
+Prefix >> y!
+
 --------------------------------------------------------
 
 card <card name>               | Searches card based on card name
