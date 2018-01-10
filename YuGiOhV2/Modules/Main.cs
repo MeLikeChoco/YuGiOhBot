@@ -34,7 +34,7 @@ namespace YuGiOhV2.Modules
             DisplayInformationIcon = false,
             Timeout = TimeSpan.FromSeconds(60),
             JumpDisplayOptions = JumpDisplayOptions.Never,
-            FooterFormat = "Enter a number to see that result! Expires in 60 seconds! | Page {0}/{1}"            
+            FooterFormat = "Enter a number to see that result! Expires in 60 seconds! | Page {0}/{1}"
 
         };
 
@@ -68,7 +68,21 @@ namespace YuGiOhV2.Modules
             if (_cache.BoosterPacks.TryGetValue(input, out var booster))
             {
 
-                await ReplyAsync(booster.Cards);
+                var cards = booster.Open();
+                var cardNumberLength = 0;
+
+                if (cards.All(card => card.CardNumber != null))
+                    cardNumberLength = cards.Max(card => card.CardNumber.Length);
+
+                var cardNameLength = cards.Max(card => card.Name.Length);
+                var builder = new StringBuilder("```");
+
+                foreach (var card in cards)
+                    builder.AppendLine($"{card.CardNumber?.PadRight(cardNumberLength + 3)}{card.Name.PadRight(cardNameLength + 3)}{card.Rarity}");
+
+                builder.Append("```");
+
+                await ReplyAsync(builder.ToString());
 
             }
             else
@@ -133,7 +147,7 @@ namespace YuGiOhV2.Modules
             }
             else
                 await NoResultError(input);
-            
+
         }
 
         [Command("image"), Alias("i", "img")]
@@ -279,7 +293,7 @@ namespace YuGiOhV2.Modules
                 Color = _rand.GetColor(),
                 Pages = GenDescriptions(cards),
                 Options = AOptions
-                
+
             };
 
             _criteria.AddCriterion(new IntegerCriteria(amount));
@@ -306,12 +320,12 @@ namespace YuGiOhV2.Modules
             var descriptions = new List<string>(3);
             var counter = 1;
 
-            foreach(var group in groups)
+            foreach (var group in groups)
             {
 
                 var str = new StringBuilder();
 
-                foreach(var card in group)
+                foreach (var card in group)
                 {
 
                     str.AppendLine($"{counter}. {card}");

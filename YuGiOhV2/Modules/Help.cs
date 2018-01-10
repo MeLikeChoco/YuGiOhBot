@@ -44,10 +44,9 @@ namespace YuGiOhV2.Modules
         {
 
             var commands = _commands.Commands
-                .Where(command => command.Name == input)
-                .Where(command => CheckPrecond(command));
+                .Where(command => command.Name == input && CheckPrecond(command));
 
-            if(commands.Any())
+            if(!commands.Any())
                 return NoResultError("commands", input);
 
             var str = new StringBuilder($"```fix\n");

@@ -23,12 +23,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="AngleSharp" Version="0.9.9" />
+    <PackageReference Include="AngleSharp" Version="0.9.9.1" />
     <PackageReference Include="Dapper" Version="1.50.4" />
     <PackageReference Include="Dapper.Contrib" Version="1.50.4" />
     <PackageReference Include="DeepCloner" Version="0.10.2" />
     <PackageReference Include="Discord.Addons.Interactive" Version="1.0.1" />
-    <PackageReference Include="Discord.Net" Version="2.0.0-beta-00858" />
+    <PackageReference Include="Discord.Net" Version="2.0.0-beta-00875" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="2.0.0" />
     <PackageReference Include="morelinq" Version="2.9.0" />
   </ItemGroup>

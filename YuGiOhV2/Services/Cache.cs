@@ -16,6 +16,7 @@ using YuGiOhV2.Extensions;
 using YuGiOhV2.Objects.Banlist;
 using YuGiOhV2.Objects.BoosterPacks;
 using YuGiOhV2.Objects.Cards;
+using YuGiOhV2.Objects.Exceptions;
 
 namespace YuGiOhV2.Services
 {
@@ -104,7 +105,20 @@ namespace YuGiOhV2.Services
             {
 
                 var name = cardobj.Name;
-                var embed = GenFancyMessage(cardobj);
+                EmbedBuilder embed;
+
+                try
+                {
+
+                    embed = GenFancyMessage(cardobj);
+
+                }
+                catch (Exception ex)
+                {
+
+                    throw new EmbedGenerationException(name, ex);
+
+                }
 
                 tempUpper.Add(name);
                 tempLower.Add(name.ToLower());
@@ -386,15 +400,15 @@ namespace YuGiOhV2.Services
             _db.Open();
 
             Print("Getting OCG banlist...");
-            tempban.OcgBanlist.Forbidden = _db.Query<string>("select name from Card where ocgStatus like 'forbidden'");
+            tempban.OcgBanlist.Forbidden = _db.Query<string>("select name from Card where ocgStatus like 'forbidden' or ocgStatus like 'illegal'");
             tempban.OcgBanlist.Limited = _db.Query<string>("select name from Card where ocgStatus like 'limited'");
             tempban.OcgBanlist.SemiLimited = _db.Query<string>("select name from Card where ocgStatus like 'semi-limited'");
             Print("Getting TCG Adv banlist...");
-            tempban.TcgAdvBanlist.Forbidden = _db.Query<string>("select name from Card where tcgAdvStatus like 'forbidden'");
+            tempban.TcgAdvBanlist.Forbidden = _db.Query<string>("select name from Card where tcgAdvStatus like 'forbidden' or tcgAdvStatus like 'illegal'");
             tempban.TcgAdvBanlist.Limited = _db.Query<string>("select name from Card where tcgAdvStatus like 'limited'");
             tempban.TcgTradBanlist.SemiLimited = _db.Query<string>("select name from Card where tcgAdvStatus like 'semi-limited'");
             Print("Getting TCG Traditional banlist...");
-            tempban.TcgTradBanlist.Forbidden = _db.Query<string>("select name from Card where tcgTrnStatus like 'forbidden'");
+            tempban.TcgTradBanlist.Forbidden = _db.Query<string>("select name from Card where tcgTrnStatus like 'forbidden' or tcgTrnStatus like 'illegal'");
             tempban.TcgTradBanlist.Limited = _db.Query<string>("select name from Card where tcgTrnStatus like 'limited'");
             tempban.TcgTradBanlist.SemiLimited = _db.Query<string>("select name from Card where tcgTrnStatus like 'semi-limited'");
 
@@ -435,7 +449,7 @@ namespace YuGiOhV2.Services
 
             _db.Close();
 
-            boosterPacks = boosterPacks.GroupBy(bp => bp.Name).Select(group => group.First()).Where(bp => bp.Cards != null);
+            boosterPacks = boosterPacks.GroupBy(bp => bp.Name).Select(group => group.First()).Where(bp => bp.Cards != null && bp.IsEllegible());
             BoosterPacks = new Dictionary<string, Booster>(boosterPacks.ToDictionary(bp => bp.Name, bp => bp), StringComparer.InvariantCultureIgnoreCase);
 
         }

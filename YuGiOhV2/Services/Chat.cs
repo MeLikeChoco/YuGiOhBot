@@ -161,14 +161,14 @@ namespace YuGiOhV2.Services
                 if (response.Data != null)
                 {
 
-                    List<Datum> prices;
+                    IEnumerable<Datum> prices;
 
                     if (response.Data.Count >= 4)
                     {
 
                         clone.AddField("Prices", "**Showing the first 3 prices due to too many to show**");
 
-                        prices = response.Data.GetRange(0, 3);
+                        prices = response.Data.Take(3);
 
                     }
                     else
