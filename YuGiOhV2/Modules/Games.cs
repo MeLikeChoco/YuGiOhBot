@@ -156,6 +156,7 @@ namespace YuGiOhV2.Modules
             })));
 
             //await ReplyAsync(card);
+            AltConsole.Print("Command", "Hangman", $"{card}");
             await ReplyAsync($"You have **5** minutes to figure this card out!\n{display}");
 
             var cts = new CancellationTokenSource();
@@ -172,9 +173,9 @@ namespace YuGiOhV2.Modules
                 do
                 {
 
-                    var input = await NextMessageAsync(_criteria);
+                    var input = await Task.Run(async () => await NextMessageAsync(_criteria), cts.Token);
 
-                    if (cts.Token.IsCancellationRequested)
+                    if (cts.Token.IsCancellationRequested && input == null)
                         break;
 
                     var content = input.Content?.ToLower();
