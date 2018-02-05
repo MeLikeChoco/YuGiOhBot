@@ -26,6 +26,7 @@ namespace YuGiOhV2.Core
         private Chat _chat;
         private Cache _cache;
         private Web _web;
+        private Config _config;
         private InteractiveService _interactive;
         private IServiceProvider _services;
 
@@ -58,6 +59,7 @@ namespace YuGiOhV2.Core
             _web = new Web();
             _cache = new Cache();
             _interactive = new InteractiveService(_client);
+            _config = Config.Instance;
 
             RegisterLogging();
 
@@ -105,6 +107,7 @@ namespace YuGiOhV2.Core
             LoadStats();
             BuildServices();
             await RegisterCommands();
+            await _client.SetGameAsync($"Support guild/server: {_config.GuildInvite}");
 
             _isInitialized = true;
 
@@ -139,7 +142,7 @@ namespace YuGiOhV2.Core
                 .AddSingleton(_interactive)
                 .AddSingleton(_web)
                 .AddSingleton(_stats)
-                .AddSingleton(Config.Instance)
+                .AddSingleton(_config)
                 .AddSingleton<Random>()
                 .BuildServiceProvider();
 
