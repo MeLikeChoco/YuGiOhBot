@@ -24,8 +24,8 @@ namespace YuGiOhV2.Modules
 
             JumpDisplayOptions = JumpDisplayOptions.Never,
             DisplayInformationIcon = false,
-            FooterFormat = "This message will be deleted in 10 minutes! | Page {0}/{1}",
-            Timeout = TimeSpan.FromMinutes(10)
+            FooterFormat = "This message will be deleted in 3 minutes! | Page {0}/{1}",
+            Timeout = TimeSpan.FromMinutes(3)
 
         };
 
@@ -69,7 +69,7 @@ namespace YuGiOhV2.Modules
 
             str.Append("```");
 
-            return ReplyAsync(str.ToString().Trim());
+            return ReplyAsync(str.ToString());
             
         }
 
@@ -81,7 +81,8 @@ namespace YuGiOhV2.Modules
             var messages = new List<string>();
             var author = new EmbedAuthorBuilder()
                 .WithIconUrl(Context.Client.CurrentUser.GetAvatarUrl())
-                .WithName("HALP, IVE FALLEN AND CANT GET UP");
+                .WithName($"Click for support guild/server!")
+                .WithUrl("https://discord.gg/cVhvrEa");
 
             var paginatedMessage = new PaginatedMessage()
             {
@@ -125,7 +126,7 @@ namespace YuGiOhV2.Modules
 
                 }
 
-                messages.Add(str.ToString().Trim());
+                messages.Add(str.ToString());
 
             }
 

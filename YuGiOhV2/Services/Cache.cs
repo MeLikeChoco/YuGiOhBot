@@ -220,10 +220,12 @@ namespace YuGiOhV2.Services
                 else
                     body.AddField($"[ {monster.Types} ]", monster.Lore);
 
-                body.AddField("Attack", monster.Atk, true);
+                const string UnknownValue = "???";
+
+                body.AddField("Attack", string.IsNullOrEmpty(monster.Atk) ? UnknownValue : monster.Atk, true);
 
                 if (!(monster is LinkMonster))
-                    body.AddField("Defence", monster.Def, true);
+                    body.AddField("Defence", string.IsNullOrEmpty(monster.Def) ? UnknownValue : monster.Def, true);
 
             }
             else

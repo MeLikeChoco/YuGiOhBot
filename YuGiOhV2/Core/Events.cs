@@ -76,10 +76,10 @@ namespace YuGiOhV2.Core
         private async Task RevEngines()
         {
 
-            var isTest = Environment.GetCommandLineArgs().ElementAtOrDefault(1)?.ToLower();
+            var isTest = Environment.GetCommandLineArgs().ElementAtOrDefault(1);
             string token;
 
-            if (isTest == "true")
+            if (!string.IsNullOrEmpty(isTest) && isTest.Equals("true", StringComparison.OrdinalIgnoreCase))
                 token = File.ReadAllText("Files/Bot Tokens/Test.txt");
             else
                 token = File.ReadAllText("Files/Bot Tokens/Legit.txt");

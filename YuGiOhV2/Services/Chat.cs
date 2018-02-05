@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using YuGiOhV2.Objects.Comparers;
 using YuGiOhV2.Objects.Deserializers;
 
 namespace YuGiOhV2.Services
@@ -18,7 +19,9 @@ namespace YuGiOhV2.Services
 
         private Cache _cache;
         private Database _database;
-        private  static Web _web;
+        private static Web _web;
+        private IgnoreCaseComparer _ignoreCaseComparer;
+
         private const string Pattern = @"(\[\[.+?\]\])";
 
         public Chat(Cache cache, Database database, Web web)
@@ -27,6 +30,7 @@ namespace YuGiOhV2.Services
             _cache = cache;
             _database = database;
             _web = web;
+            _ignoreCaseComparer = new IgnoreCaseComparer();
 
         }
 
@@ -73,26 +77,18 @@ namespace YuGiOhV2.Services
 
                         //check if the card list contains anything from the input and return that instead
                         //ex. kaiju slumber would return Interrupted Kaiju Slumber
-                        //note: it has problems such as "red eyes" will return Hundred Eyes Dragon instead of Red-Eyes Dragon
+                        //note: it has problems such as "red eyes" will return Hundred Eyes Dragon instead of Red-Eyes B. Dragon
                         //how to accurately solve this problem is not easy                            
                         string closestCard = _cache.Lowercase.AsParallel().FirstOrDefault(card => card == cardName);
 
                         if (string.IsNullOrEmpty(closestCard))
-                        {
-
                             closestCard = _cache.Lowercase.AsParallel().FirstOrDefault(card => card.Contains(cardName));
 
-                            if(string.IsNullOrEmpty(closestCard))
-                            {
-                                
-                                closestCard = _cache.Lowercase.AsParallel().FirstOrDefault(card => input.All(i => card.Contains(i)));
+                        if (string.IsNullOrEmpty(closestCard))
+                            closestCard = _cache.Lowercase.AsParallel().FirstOrDefault(card => input.All(i => card.Contains(i)));
 
-                                if (string.IsNullOrEmpty(closestCard))
-                                    closestCard = _cache.Lowercase.AsParallel().MinBy(card => YetiLevenshtein(card, cardName));
-
-                            }
-
-                        }
+                        if (string.IsNullOrEmpty(closestCard))
+                            closestCard = _cache.Lowercase.AsParallel().MinBy(card => YetiLevenshtein(card, cardName));
 
                         var time = watch.Elapsed;
 
