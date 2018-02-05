@@ -19,12 +19,12 @@ namespace YuGiOhV2.Modules
     public class Main : CustomBase
     {
 
-        private Cache _cache;
-        private Database _db;
-        private Web _web;
-        private Random _rand;
+        public Cache Cache { get; set; }
+        public Database Database { get; set; }
+        public Web Web { get; set; }
+        public Random Rand { get; set; }
+
         private bool _minimal;
-        private BaseCriteria _criteria;
         private CancellationTokenSource _cts;
         private IUserMessage _display;
 
@@ -38,23 +38,14 @@ namespace YuGiOhV2.Modules
 
         };
 
-        public Main(Cache cache, Database db, Web web, Random rand)
-        {
-
-            _cache = cache;
-            _db = db;
-            _web = web;
-            _rand = rand;
-            _criteria = new BaseCriteria();
-            _cts = new CancellationTokenSource();
-
-        }
+        public Main()
+            => _cts = new CancellationTokenSource();
 
         protected override void BeforeExecute(CommandInfo command)
         {
 
             if (!(Context.Channel is SocketDMChannel))
-                _minimal = _db.Settings[Context.Guild.Id].Minimal;
+                _minimal = Database.Settings[Context.Guild.Id].Minimal;
             else
                 _minimal = false;
 
@@ -65,7 +56,7 @@ namespace YuGiOhV2.Modules
         public async Task BoosterCommand([Remainder]string input)
         {
 
-            if (_cache.BoosterPacks.TryGetValue(input, out var booster))
+            if (Cache.BoosterPacks.TryGetValue(input, out var booster))
             {
 
                 var cards = booster.Open();
@@ -95,7 +86,7 @@ namespace YuGiOhV2.Modules
         public async Task CardCommand([Remainder]string input)
         {
 
-            if (_cache.Cards.TryGetValue(input, out var embed))
+            if (Cache.Cards.TryGetValue(input, out var embed))
                 await SendCardEmbed(embed, _minimal);
             else
                 await NoResultError(input);
@@ -107,7 +98,7 @@ namespace YuGiOhV2.Modules
         public async Task RandomCommand()
         {
 
-            var embed = _cache.Cards.RandomSubset(1).First().Value;
+            var embed = Cache.Cards.RandomSubset(1).First().Value;
 
             await SendCardEmbed(embed, _minimal);
 
@@ -119,7 +110,7 @@ namespace YuGiOhV2.Modules
         {
 
             var lower = input.ToLower();
-            var cards = _cache.LowerToUpper.Where(kv => kv.Key.Contains(lower)).Select(kv => kv.Value);
+            var cards = Cache.LowerToUpper.Where(kv => kv.Key.Contains(lower)).Select(kv => kv.Value);
             var amount = cards.Count();
 
             if (amount == 1)
@@ -136,10 +127,10 @@ namespace YuGiOhV2.Modules
         public async Task ArchetypeCommand([Remainder]string input)
         {
 
-            if (_cache.Archetypes.ContainsKey(input))
+            if (Cache.Archetypes.ContainsKey(input))
             {
 
-                var cards = _cache.Archetypes[input];
+                var cards = Cache.Archetypes[input];
                 var amount = cards.Count();
 
                 await RecieveInput(amount, cards, _cts.Token);
@@ -155,14 +146,14 @@ namespace YuGiOhV2.Modules
         public async Task ImageCommand([Remainder]string card)
         {
 
-            if (_cache.Images.ContainsKey(card))
+            if (Cache.Images.ContainsKey(card))
             {
 
                 using (Context.Channel.EnterTypingState())
                 {
 
-                    var link = _cache.Images[card];
-                    var stream = await _web.GetStream(link);
+                    var link = Cache.Images[card];
+                    var stream = await Web.GetStream(link);
 
                     await Context.Channel.SendFileAsync(stream, $"{card.ToLower().Replace(" ", "")}.png");
 
@@ -179,14 +170,14 @@ namespace YuGiOhV2.Modules
         public async Task PriceCommand([Remainder]string card)
         {
 
-            if (_cache.LowerToUpper.ContainsKey(card))
+            if (Cache.LowerToUpper.ContainsKey(card))
             {
 
                 using (Context.Channel.EnterTypingState())
                 {
 
-                    var name = _cache.LowerToUpper[card];
-                    var response = await _web.GetPrices(name);
+                    var name = Cache.LowerToUpper[card];
+                    var response = await Web.GetPrices(name);
                     var data = response.Data.Where(d => string.IsNullOrEmpty(d.PriceData.Message)).ToList();
 
                     var author = new EmbedAuthorBuilder()
@@ -242,15 +233,15 @@ namespace YuGiOhV2.Modules
 
                 case "ocg":
                 case "1":
-                    banlist = _cache.Banlist.OcgBanlist;
+                    banlist = Cache.Banlist.OcgBanlist;
                     break;
                 case "tcgadv":
                 case "2":
-                    banlist = _cache.Banlist.TcgAdvBanlist;
+                    banlist = Cache.Banlist.TcgAdvBanlist;
                     break;
                 case "tcgtrad":
                 case "3":
-                    banlist = _cache.Banlist.TcgTradBanlist;
+                    banlist = Cache.Banlist.TcgTradBanlist;
                     break;
                 default:
                     await ReplyAsync("The valid formats are OCG or 1, TCGADV or 2, TCGTRAD or 3!");
@@ -272,7 +263,7 @@ namespace YuGiOhV2.Modules
 
             var body = new EmbedBuilder()
                 .WithAuthor(author)
-                .WithColor(_rand.GetColor())
+                .WithColor(Rand.GetColor())
                 .WithDescription(cards.Aggregate((sentence, next) => $"{sentence}\n{next}"));
 
             return body.Build();
@@ -290,19 +281,19 @@ namespace YuGiOhV2.Modules
             {
 
                 Author = author,
-                Color = _rand.GetColor(),
+                Color = Rand.GetColor(),
                 Pages = GenDescriptions(cards),
                 Options = AOptions
 
             };
 
-            _criteria.AddCriterion(new IntegerCriteria(amount));
+            var criteria = new BaseCriteria().AddCriterion(new IntegerCriteria(amount));
 
             _display = await PagedReplyAsync(paginator, false).ConfigureAwait(false);
 
             Context.Client.MessageDeleted += CheckMessage;
 
-            var input = await NextMessageAsync(_criteria, TimeSpan.FromSeconds(60));
+            var input = await NextMessageAsync(criteria, TimeSpan.FromSeconds(60));
 
             if (token.IsCancellationRequested)
                 return;

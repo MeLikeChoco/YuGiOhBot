@@ -3,6 +3,7 @@ using Discord.Addons.Interactive;
 using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,6 +11,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using YuGiOhV2.Objects;
 using YuGiOhV2.Services;
 
 namespace YuGiOhV2.Core
@@ -137,6 +139,7 @@ namespace YuGiOhV2.Core
                 .AddSingleton(_interactive)
                 .AddSingleton(_web)
                 .AddSingleton(_stats)
+                .AddSingleton(Config.Instance)
                 .AddSingleton<Random>()
                 .BuildServiceProvider();
 

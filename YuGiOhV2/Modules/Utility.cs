@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using YuGiOhV2.Extensions;
+using YuGiOhV2.Objects;
 using YuGiOhV2.Services;
 
 namespace YuGiOhV2.Modules
@@ -15,16 +16,9 @@ namespace YuGiOhV2.Modules
     public class Utility : CustomBase
     {
 
-        private Stats _stats;
-        private Random _rand;
-
-        public Utility(Stats stats, Random rand)
-        {
-
-            _stats = stats;
-            _rand = rand;
-
-        }
+        public Stats Stats { get; set; }
+        public Random Rand { get; set; }
+        public Config Config { get; set; }
 
         [Command("feedback")]
         [Summary("Send feedback to the bot owner!")]
@@ -42,11 +36,11 @@ namespace YuGiOhV2.Modules
             var body = new EmbedBuilder()
                 .WithAuthor(author)
                 .WithFooter(footer)
-                .WithColor(_rand.GetColor())
+                .WithColor(Rand.GetColor())
                 .WithDescription(message);
 
-            await (Context.Client.GetChannel(410084557170409483) as SocketTextChannel).SendMessageAsync("", embed: body.Build());
-            await ReplyAsync("Feedback was sent!");
+            await (Context.Client.GetChannel(Config.FeedbackChannel) as SocketTextChannel).SendMessageAsync("", embed: body.Build());
+            await ReplyAsync($"Feedback was sent!\n**Support guild/server: <{Config.GuildInvite}>**");
 
         }
 
@@ -57,7 +51,7 @@ namespace YuGiOhV2.Modules
 
             var id = Context.Client.GetApplicationInfoAsync().Result.Id;
 
-            await ReplyAsync($"{Context.User.Mention} <https://discordapp.com/oauth2/authorize?client_id={id}&scope=bot&permissions=0>");
+            await ReplyAsync($"{Context.User.Mention} <{Config.BotInvite}>");
             
         }
 
@@ -71,7 +65,7 @@ namespace YuGiOhV2.Modules
         public async Task StatsCommand()
         {
 
-            if (_stats.IsReady)
+            if (Stats.IsReady)
             {
 
                 var bot = Context.Client.CurrentUser;
@@ -80,14 +74,14 @@ namespace YuGiOhV2.Modules
                     .WithIconUrl(bot.GetAvatarUrl())
                     .WithName("Statistics");
 
-                var desc = $"This bot is present on **{_stats.GuildCount}** guilds.\n" +
-                    $"**{_stats.MaxGuild}** is the largest guild with **{_stats.MaxGuildCount}** users.\n" +
-                    $"**{_stats.UniqueUserCount}** users are in the same guild as this bot.\n" +
+                var desc = $"This bot is present on **{Stats.GuildCount}** guilds.\n" +
+                    $"**{Stats.MaxGuild}** is the largest guild with **{Stats.MaxGuildCount}** users.\n" +
+                    $"**{Stats.UniqueUserCount}** users are in the same guild as this bot.\n" +
                     $"{GetUptime()}";
 
                 var body = new EmbedBuilder()
                     .WithAuthor(author)
-                    .WithColor(_rand.GetColor())
+                    .WithColor(Rand.GetColor())
                     .WithDescription(desc);
 
                 await SendEmbed(body);
@@ -109,7 +103,7 @@ namespace YuGiOhV2.Modules
         {
 
             var body = new EmbedBuilder()
-                .WithColor(_rand.GetColor())
+                .WithColor(Rand.GetColor())
                 .WithDescription($"**Discord API Version:** {DiscordConfig.APIVersion}\n" +
                 $"**Operating System:** {Environment.OSVersion.VersionString}\n" +
                 $"**Processor Count:** {Environment.ProcessorCount}\n");

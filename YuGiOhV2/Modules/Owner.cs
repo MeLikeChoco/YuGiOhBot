@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using YuGiOhV2.Objects;
 using YuGiOhV2.Services;
 
 //The getinvite command can be intruding, however, I only use it to ask for feedback on the bot, else there is no other way to get 
@@ -15,16 +16,9 @@ namespace YuGiOhV2.Modules
     public class Owner : CustomBase
     {
 
-        private Cache _cache;
-        private Web _web;
-
-        public Owner(Cache cache, Web web)
-        {
-
-            _cache = cache;
-            _web = web;
-
-        }
+        public Cache Cache { get; set; }
+        public Web Web { get; set; }
+        public Config Config { get; set; }
 
         [Command("getinvite")]
         [Summary("Gets invite to the default channel of the guild")]
@@ -76,7 +70,17 @@ namespace YuGiOhV2.Modules
         public Task ReformCache()
         {
             
-            _cache.Initialize();
+            Cache.Initialize();
+            return Task.CompletedTask;
+
+        }
+
+        [Command("reload")]
+        [Summary("Reload the config")]
+        public Task ReloadCommand()
+        {
+
+            Config.Reload();
             return Task.CompletedTask;
 
         }

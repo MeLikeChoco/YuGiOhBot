@@ -14,20 +14,11 @@ namespace YuGiOhV2.Modules
     public class Configuration : CustomBase
     {
 
-        private Database _db;
-        private Setting _setting;
-
-        public Configuration(Database db)
-        {
-
-            _db = db;
-
-        }
+        public Database Database { get; set; }
+        public Setting Setting { get; set; }
 
         protected override void BeforeExecute(CommandInfo command)
-        {
-            _setting = _db.Settings[Context.Guild.Id];
-        }
+            => Setting = Database.Settings[Context.Guild.Id];
 
         [Command("guesstime")]
         [RequireUserPermission(GuildPermission.Administrator)]
@@ -35,7 +26,7 @@ namespace YuGiOhV2.Modules
         public async Task SetGuessTimeCommand(int seconds)
         {
 
-            await _db.SetGuessTime(Context.Guild.Id, seconds);
+            await Database.SetGuessTime(Context.Guild.Id, seconds);
             await ReplyAsync($"The time for guess game has been set to `{seconds}` seconds!");
 
         }
@@ -49,7 +40,7 @@ namespace YuGiOhV2.Modules
         [Command("guesstime")]
         [Summary("Get the amount of seconds for the guessing game!")]
         public Task GetGuessTimeCommand()
-            => ReplyAsync($"**Guess time:** {_setting.GuessTime} seconds");
+            => ReplyAsync($"**Guess time:** {Setting.GuessTime} seconds");
 
         [Command("prefix")]
         [RequireUserPermission(GuildPermission.Administrator)]
@@ -60,7 +51,7 @@ namespace YuGiOhV2.Modules
             try
             {
 
-                await _db.SetPrefix(Context.Guild.Id, prefix);
+                await Database.SetPrefix(Context.Guild.Id, prefix);
                 await ReplyAsync($"Prefix has been set to `{prefix}`");
 
             }
@@ -83,7 +74,7 @@ namespace YuGiOhV2.Modules
         [Command("prefix")]
         [Summary("See the prefix the guild is using! Kinda useless tbh...")]
         public async Task PrefixCommand()
-            => await ReplyAsync($"**Prefix:** {_setting.Prefix}");
+            => await ReplyAsync($"**Prefix:** {Setting.Prefix}");
 
         [Command("minimal")]
         [RequireUserPermission(GuildPermission.Administrator)]
@@ -97,7 +88,7 @@ namespace YuGiOhV2.Modules
                 try
                 {
 
-                    await _db.SetMinimal(Context.Guild.Id, minimal);
+                    await Database.SetMinimal(Context.Guild.Id, minimal);
                     await ReplyAsync($"Minimal has been set to `{minimal}`");
 
                 }
@@ -124,7 +115,7 @@ namespace YuGiOhV2.Modules
         [Command("minimal")]
         [Summary("Check how much card info is shown!")]
         public async Task MinimalCommand()
-            => await ReplyAndDeleteAsync($"**Minimal:** {_setting.Minimal}");
+            => await ReplyAndDeleteAsync($"**Minimal:** {Setting.Minimal}");
 
     }
 }

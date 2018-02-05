@@ -24,31 +24,20 @@ namespace YuGiOhV2.Modules
     public class Games : CustomBase
     {
 
-        private Cache _cache;
-        private Web _web;
-        private Random _rand;
-        private Criteria<SocketMessage> _criteria;
-        private Database _database;
-        private Setting _setting;
+        public Cache Cache { get; set; }
+        public Web Web { get; set; }
+        public Random Rand { get; set; }
+        public Database Database { get; set; }
+        public Setting Setting { get; set; }
 
+        private static readonly Criteria<SocketMessage> _criteria = new Criteria<SocketMessage>()
+                .AddCriterion(new EnsureSourceChannelCriterion())
+                .AddCriterion(new EnsureNotBot());
         //private static ConcurrentDictionary<ulong, object> _inProgress = new ConcurrentDictionary<ulong, object>();
         private static ConcurrentDictionary<ulong, object> _inProgress = new ConcurrentDictionary<ulong, object>();
 
-        public Games(Cache cache, Web web, Random random, Database database)
-        {
-
-            _cache = cache;
-            _rand = random;
-            _web = web;
-            _criteria = new Criteria<SocketMessage>()
-                .AddCriterion(new EnsureSourceChannelCriterion())
-                .AddCriterion(new EnsureNotBot());
-            _database = database;
-
-        }
-
         protected override void BeforeExecute(CommandInfo command)
-            => _setting = _database.Settings[Context.Guild.Id];
+            => Setting = Database.Settings[Context.Guild.Id];
 
         [Command("guess")]
         [Summary("Starts an image/card guessing game!")]
@@ -79,12 +68,12 @@ namespace YuGiOhV2.Modules
                     try
                     {
 
-                        passcode = _cache.Passcodes.RandomSubset(1).First();
+                        passcode = Cache.Passcodes.RandomSubset(1).First();
 
                         Console.WriteLine($"https://raw.githubusercontent.com/shadowfox87/YGOTCGOCGPics323x323/master/{passcode.Key}.png");
 
                         using (var stream = await GetArtGithub(passcode.Key))
-                            await UploadAsync(stream, $"{GenObufscatedString()}.png", $":stopwatch: You have **{_setting.GuessTime}** seconds to guess what card this art belongs to! Case sensitive!");
+                            await UploadAsync(stream, $"{GenObufscatedString()}.png", $":stopwatch: You have **{Setting.GuessTime}** seconds to guess what card this art belongs to! Case sensitive!");
 
                         e = null;
 
@@ -101,7 +90,7 @@ namespace YuGiOhV2.Modules
                 //_criteria.AddCriterion(new GuessCriteria(art.Key));
                 _criteria.AddCriterion(new GuessCriteria(passcode.Value));
 
-                var answer = await NextMessageAsync(_criteria, TimeSpan.FromSeconds(_setting.GuessTime));
+                var answer = await NextMessageAsync(_criteria, TimeSpan.FromSeconds(Setting.GuessTime));
 
                 if (answer != null)
                 {
@@ -128,7 +117,7 @@ namespace YuGiOhV2.Modules
         public async Task HangmanCommand()
         {
 
-            var card = _cache.Uppercase.RandomSubset(1, _rand).First();
+            var card = Cache.Uppercase.RandomSubset(1, Rand).First();
             var counter = 0;
 
             var indexToDisplay = card.Select(c =>
@@ -276,10 +265,10 @@ namespace YuGiOhV2.Modules
 
             var str = "";
 
-            for (int i = 0; i < _rand.Next(10, 20); i++)
+            for (int i = 0; i < Rand.Next(10, 20); i++)
             {
 
-                var displacement = _rand.Next(0, 26);
+                var displacement = Rand.Next(0, 26);
                 str += (char)('a' + displacement);
 
             }
@@ -292,15 +281,15 @@ namespace YuGiOhV2.Modules
         {
 
             var url = $"https://raw.githubusercontent.com/shadowfox87/YGOTCGOCGPics323x323/master/{passcode}.png";
-            return _web.GetStream(url);
+            return Web.GetStream(url);
 
         }
 
         private async Task<KeyValuePair<string, string>> GetArt()
         {
 
-            var offset = _rand.Next(0, _cache.FYeahYgoCardArtPosts - 20);
-            var response = await _web.GetDeserializedContent<JObject>($"https://api.tumblr.com/v2/blog/fyeahygocardart/posts/photo?api_key={_cache.TumblrKey}&limit=20&offset={offset}");
+            var offset = Rand.Next(0, Cache.FYeahYgoCardArtPosts - 20);
+            var response = await Web.GetDeserializedContent<JObject>($"https://api.tumblr.com/v2/blog/fyeahygocardart/posts/photo?api_key={Cache.TumblrKey}&limit=20&offset={offset}");
             var post = response["response"]["posts"].ToObject<JArray>().RandomSubset(1).First().ToObject<YgoCardArtPost>();
             var key = post.Name;
             var value = post.Photos.First().OriginalSize.Url;

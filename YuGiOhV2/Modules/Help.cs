@@ -8,16 +8,18 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using YuGiOhV2.Extensions;
+using YuGiOhV2.Objects;
 using YuGiOhV2.Services;
 
 namespace YuGiOhV2.Modules
 {
     public class Help : CustomBase
     {
-
-        private CommandService _commands;
-        private Random _rand;
-        private Database _db;
+        
+        public CommandService Commands { get; set; }
+        public Random Rand { get; set; }
+        public Database Database { get; set; }
+        public Config Config { get; set; }
 
         private static readonly PaginatedAppearanceOptions AOptions = new PaginatedAppearanceOptions()
         {
@@ -29,21 +31,12 @@ namespace YuGiOhV2.Modules
 
         };
 
-        public Help(CommandService commands, Random rand, Database db)
-        {
-
-            _commands = commands;
-            _rand = rand;
-            _db = db;
-
-        }
-
         [Command("help")]
         [Summary("Get help on commands based on input!")]
         public Task SpecificHelpCommand([Remainder]string input)
         {
 
-            var commands = _commands.Commands
+            var commands = Commands.Commands
                 .Where(command => command.Name == input && CheckPrecond(command));
 
             if(!commands.Any())
@@ -82,13 +75,13 @@ namespace YuGiOhV2.Modules
             var author = new EmbedAuthorBuilder()
                 .WithIconUrl(Context.Client.CurrentUser.GetAvatarUrl())
                 .WithName($"Click for support guild/server!")
-                .WithUrl("https://discord.gg/cVhvrEa");
+                .WithUrl(Config.GuildInvite);
 
             var paginatedMessage = new PaginatedMessage()
             {
 
                 Author = author,
-                Color = _rand.GetColor(),
+                Color = Rand.GetColor(),
                 Options = AOptions
 
             };
@@ -97,9 +90,9 @@ namespace YuGiOhV2.Modules
 
             if (Context.User.Id == (await Context.Client.GetApplicationInfoAsync()).Owner.Id &&
                 Context.Guild.Id == 171432768767524864)
-                commands = _commands.Commands.Where(command => CheckPrecond(command));
+                commands = Commands.Commands.Where(command => CheckPrecond(command));
             else
-                commands = _commands.Commands
+                commands = Commands.Commands
                     .Where(command => !command.Preconditions.Any(precondition => precondition is RequireOwnerAttribute) && 
                                        command.CheckPreconditionsAsync(Context).GetAwaiter().GetResult().IsSuccess);
 
