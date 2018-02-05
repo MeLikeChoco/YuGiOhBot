@@ -45,7 +45,8 @@ namespace YuGiOhV2.Modules
                 .WithColor(_rand.GetColor())
                 .WithDescription(message);
 
-            await (Context.Client.GetChannel(296117398132752384) as SocketTextChannel).SendMessageAsync("", embed: body.Build());
+            await (Context.Client.GetChannel(410084557170409483) as SocketTextChannel).SendMessageAsync("", embed: body.Build());
+            await ReplyAsync("Feedback was sent!");
 
         }
 
