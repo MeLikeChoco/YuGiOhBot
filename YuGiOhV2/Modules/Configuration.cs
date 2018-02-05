@@ -15,10 +15,10 @@ namespace YuGiOhV2.Modules
     {
 
         public Database Database { get; set; }
-        public Setting Setting { get; set; }
+        private Setting _setting;
 
         protected override void BeforeExecute(CommandInfo command)
-            => Setting = Database.Settings[Context.Guild.Id];
+            => _setting = Database.Settings[Context.Guild.Id];
 
         [Command("guesstime")]
         [RequireUserPermission(GuildPermission.Administrator)]
@@ -40,7 +40,7 @@ namespace YuGiOhV2.Modules
         [Command("guesstime")]
         [Summary("Get the amount of seconds for the guessing game!")]
         public Task GetGuessTimeCommand()
-            => ReplyAsync($"**Guess time:** {Setting.GuessTime} seconds");
+            => ReplyAsync($"**Guess time:** {_setting.GuessTime} seconds");
 
         [Command("prefix")]
         [RequireUserPermission(GuildPermission.Administrator)]
@@ -74,7 +74,7 @@ namespace YuGiOhV2.Modules
         [Command("prefix")]
         [Summary("See the prefix the guild is using! Kinda useless tbh...")]
         public async Task PrefixCommand()
-            => await ReplyAsync($"**Prefix:** {Setting.Prefix}");
+            => await ReplyAsync($"**Prefix:** {_setting.Prefix}");
 
         [Command("minimal")]
         [RequireUserPermission(GuildPermission.Administrator)]
@@ -115,7 +115,7 @@ namespace YuGiOhV2.Modules
         [Command("minimal")]
         [Summary("Check how much card info is shown!")]
         public async Task MinimalCommand()
-            => await ReplyAndDeleteAsync($"**Minimal:** {Setting.Minimal}");
+            => await ReplyAndDeleteAsync($"**Minimal:** {_setting.Minimal}");
 
     }
 }
