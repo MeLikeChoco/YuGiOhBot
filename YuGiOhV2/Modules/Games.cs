@@ -28,7 +28,8 @@ namespace YuGiOhV2.Modules
         public Web Web { get; set; }
         public Random Rand { get; set; }
         public Database Database { get; set; }
-        public Setting Setting { get; set; }
+
+        private Setting _setting;
 
         private static readonly Criteria<SocketMessage> _criteria = new Criteria<SocketMessage>()
                 .AddCriterion(new EnsureSourceChannelCriterion())
@@ -37,7 +38,7 @@ namespace YuGiOhV2.Modules
         private static ConcurrentDictionary<ulong, object> _inProgress = new ConcurrentDictionary<ulong, object>();
 
         protected override void BeforeExecute(CommandInfo command)
-            => Setting = Database.Settings[Context.Guild.Id];
+            => _setting = Database.Settings[Context.Guild.Id];
 
         [Command("guess")]
         [Summary("Starts an image/card guessing game!")]
@@ -73,7 +74,7 @@ namespace YuGiOhV2.Modules
                         Console.WriteLine($"https://raw.githubusercontent.com/shadowfox87/YGOTCGOCGPics323x323/master/{passcode.Key}.png");
 
                         using (var stream = await GetArtGithub(passcode.Key))
-                            await UploadAsync(stream, $"{GenObufscatedString()}.png", $":stopwatch: You have **{Setting.GuessTime}** seconds to guess what card this art belongs to! Case sensitive!");
+                            await UploadAsync(stream, $"{GenObufscatedString()}.png", $":stopwatch: You have **{_setting.GuessTime}** seconds to guess what card this art belongs to! Case sensitive!");
 
                         e = null;
 
@@ -90,7 +91,7 @@ namespace YuGiOhV2.Modules
                 //_criteria.AddCriterion(new GuessCriteria(art.Key));
                 _criteria.AddCriterion(new GuessCriteria(passcode.Value));
 
-                var answer = await NextMessageAsync(_criteria, TimeSpan.FromSeconds(Setting.GuessTime));
+                var answer = await NextMessageAsync(_criteria, TimeSpan.FromSeconds(_setting.GuessTime));
 
                 if (answer != null)
                 {
