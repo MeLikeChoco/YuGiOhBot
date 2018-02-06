@@ -31,7 +31,7 @@ namespace YuGiOhV2.Modules
 
         private Setting _setting;
 
-        private static readonly Criteria<SocketMessage> _criteria = new Criteria<SocketMessage>()
+        private readonly Criteria<SocketMessage> _criteria = new Criteria<SocketMessage>()
                 .AddCriterion(new EnsureSourceChannelCriterion())
                 .AddCriterion(new EnsureNotBot());
         //private static ConcurrentDictionary<ulong, object> _inProgress = new ConcurrentDictionary<ulong, object>();
