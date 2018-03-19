@@ -296,7 +296,7 @@ namespace YuGiOhV2.Modules
 
             var body = new EmbedBuilder()
                 .WithAuthor(author)
-                .WithColor(Rand.GetColor())
+                .WithRandomColor()
                 .WithDescription(cards.Aggregate((sentence, next) => $"{sentence}\n{next}"));
 
             return body.Build();
@@ -314,7 +314,7 @@ namespace YuGiOhV2.Modules
             {
 
                 Author = author,
-                Color = Rand.GetColor(),
+                Color = Rand.NextColor(),
                 Pages = GenDescriptions(cards),
                 Options = AOptions
 

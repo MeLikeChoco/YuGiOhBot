@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using YuGiOhV2.Extensions;
 using YuGiOhV2.Services;
 
 namespace YuGiOhV2.Modules
@@ -36,6 +37,7 @@ namespace YuGiOhV2.Modules
                     .WithText(count.TextContent);
 
                 var body = new EmbedBuilder()
+                    .WithRandomColor()
                     .WithAuthor(author)
                     .WithFooter(footer);
 

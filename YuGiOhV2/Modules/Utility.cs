@@ -36,7 +36,7 @@ namespace YuGiOhV2.Modules
             var body = new EmbedBuilder()
                 .WithAuthor(author)
                 .WithFooter(footer)
-                .WithColor(Rand.GetColor())
+                .WithRandomColor()
                 .WithDescription(message);
 
             await (Context.Client.GetChannel(Config.FeedbackChannel) as SocketTextChannel).SendMessageAsync("", embed: body.Build());
@@ -81,7 +81,7 @@ namespace YuGiOhV2.Modules
 
                 var body = new EmbedBuilder()
                     .WithAuthor(author)
-                    .WithColor(Rand.GetColor())
+                    .WithRandomColor()
                     .WithDescription(desc);
 
                 await SendEmbed(body);
@@ -103,7 +103,7 @@ namespace YuGiOhV2.Modules
         {
 
             var body = new EmbedBuilder()
-                .WithColor(Rand.GetColor())
+                .WithRandomColor()
                 .WithDescription($"**Discord API Version:** {DiscordConfig.APIVersion}\n" +
                 $"**Operating System:** {Environment.OSVersion.VersionString}\n" +
                 $"**Processor Count:** {Environment.ProcessorCount}\n");

@@ -81,7 +81,7 @@ namespace YuGiOhV2.Modules
             {
 
                 Author = author,
-                Color = Rand.GetColor(),
+                Color = Rand.NextColor(),
                 Options = AOptions
 
             };
