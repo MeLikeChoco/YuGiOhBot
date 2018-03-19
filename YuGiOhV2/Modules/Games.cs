@@ -73,7 +73,7 @@ namespace YuGiOhV2.Modules
 
                         Console.WriteLine($"https://raw.githubusercontent.com/shadowfox87/YGOTCGOCGPics323x323/master/{passcode.Key}.png");
 
-                        using (var stream = await GetArtGithub(passcode.Key))
+                        using (var stream = await GetArtGithub(passcode.Value))
                             await UploadAsync(stream, $"{GenObufscatedString()}.png", $":stopwatch: You have **{_setting.GuessTime}** seconds to guess what card this art belongs to! Case sensitive!");
 
                         e = null;
@@ -89,7 +89,7 @@ namespace YuGiOhV2.Modules
                 } while (e != null);
 
                 //_criteria.AddCriterion(new GuessCriteria(art.Key));
-                _criteria.AddCriterion(new GuessCriteria(passcode.Value));
+                _criteria.AddCriterion(new GuessCriteria(passcode.Key));
 
                 var answer = await NextMessageAsync(_criteria, TimeSpan.FromSeconds(_setting.GuessTime));
 
@@ -99,11 +99,11 @@ namespace YuGiOhV2.Modules
                     var author = answer.Author as SocketGuildUser;
 
                     //await ReplyAsync($":trophy: The winner is **{author.Nickname ?? author.Username}**! The card was `{art.Key}`!");
-                    await ReplyAsync($":trophy: The winner is **{author.Nickname ?? author.Username}**! The card was `{passcode.Value}`!");
+                    await ReplyAsync($":trophy: The winner is **{author.Nickname ?? author.Username}**! The card was `{passcode.Key}`!");
 
                 }
                 else
-                    await ReplyAsync($":stop_button: Ran out of time! The card was `{passcode.Value}`!");
+                    await ReplyAsync($":stop_button: Ran out of time! The card was `{passcode.Key}`!");
 
             }
             else

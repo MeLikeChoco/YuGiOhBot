@@ -29,7 +29,7 @@ namespace YuGiOhV2.Modules
         public Task NoResultError(string input = null)
             => NoResultError("cards", input);
 
-        public Task NoResultError(string objects = "cards", string input = null)
+        public Task NoResultError(string objects, string input = null)
         {
 
             var str = $"No {objects} were found with the given input";

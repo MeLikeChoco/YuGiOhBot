@@ -5,6 +5,7 @@ using Discord.WebSocket;
 using MoreLinq;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -158,6 +159,38 @@ namespace YuGiOhV2.Modules
                     await Context.Channel.SendFileAsync(stream, $"{card.ToLower().Replace(" ", "")}.png");
 
                 }
+
+            }
+            else
+                await NoResultError(card);
+
+        }
+
+        [Command("art")]
+        [Summary("Returns the art of the card based on input! No proper capitalization needed!")]
+        public async Task ArtCommand([Remainder]string card)
+        {
+
+            if (Cache.Passcodes.TryGetValue(card, out var passcode))
+            {
+
+                Stream stream;
+
+                try
+                {
+
+                    stream = await GetArtGithub(passcode);
+
+                }
+                catch
+                {
+
+                    await ReplyAsync("There was a problem while retrieving the art, please try again later.");
+                    return;
+
+                }
+
+                await UploadAsync(stream, $"{card}.png");
 
             }
             else
@@ -343,6 +376,14 @@ namespace YuGiOhV2.Modules
             Context.Client.MessageDeleted -= CheckMessage;
 
             return Task.CompletedTask;
+
+        }
+
+        private Task<Stream> GetArtGithub(string passcode)
+        {
+
+            var url = $"https://raw.githubusercontent.com/shadowfox87/YGOTCGOCGPics323x323/master/{passcode}.png";
+            return Web.GetStream(url);
 
         }
 

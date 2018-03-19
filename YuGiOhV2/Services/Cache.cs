@@ -33,7 +33,7 @@ namespace YuGiOhV2.Services
         public HashSet<string> Lowercase { get; private set; }
 
         /// <summary>
-        /// Maps passcode to name
+        /// Maps name to passcode
         /// </summary>
         public Dictionary<string, string> Passcodes { get; private set; }
 
@@ -124,7 +124,7 @@ namespace YuGiOhV2.Services
                 tempLower.Add(name.ToLower());
 
                 if (!string.IsNullOrEmpty(cardobj.Passcode))
-                    tempPasscodes[cardobj.Passcode.TrimStart('0')] = cardobj.Name; //man, why you guys gotta include 0's in the beginning sometimes
+                    tempPasscodes[cardobj.Name] = cardobj.Passcode.TrimStart('0'); //man, why you guys gotta include 0's in the beginning sometimes
 
                 tempObjects[name] = cardobj;
                 tempDict[name] = embed;
