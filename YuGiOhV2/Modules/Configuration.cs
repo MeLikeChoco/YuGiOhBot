@@ -15,6 +15,7 @@ namespace YuGiOhV2.Modules
     {
 
         public Database Database { get; set; }
+
         private Setting _setting;
 
         protected override void BeforeExecute(CommandInfo command)
