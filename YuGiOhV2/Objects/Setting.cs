@@ -16,6 +16,7 @@ namespace YuGiOhV2.Objects
         public string Prefix { get; set; } = "y!";
         public bool Minimal { get; set; } = false;
         public int GuessTime { get; set; } = 60;
+        public bool AutoDelete { get; set; } = true;
 
         public Setting(SocketGuild guild)
         {

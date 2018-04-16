@@ -116,5 +116,22 @@ namespace YuGiOhV2.Services
 
         }
 
+        public async Task SetAutoDelete(ulong id, bool delete)
+        {
+
+            var setting = Settings[id];
+            setting.AutoDelete = delete;
+
+            using (var db = new SqliteConnection(DbPath))
+            {
+
+                await db.OpenAsync();
+                await db.UpdateAsync(setting);
+                db.Close();
+
+            }
+
+        }
+
     }
 }

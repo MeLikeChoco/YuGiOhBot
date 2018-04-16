@@ -20,6 +20,47 @@ namespace YuGiOhV2.Modules
         protected override void BeforeExecute(CommandInfo command)
             => _setting = Database.Settings[Context.Guild.Id];
 
+        [Command("autodelete")]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        [Summary("Toggles auto delete for embeds (true/false)")]
+        public async Task SetAutoDeleteCommand(string input)
+        {
+
+            if (bool.TryParse(input, out var delete))
+            {
+
+                try
+                {
+
+                    await Database.SetAutoDelete(Context.Guild.Id, delete);
+                    await ReplyAsync($"Auto deletion of embeds has been set to: `{_setting.AutoDelete}`");
+
+                }
+                catch (Exception e)
+                {
+
+                    AltConsole.Print("Error", "Prefix", "BAH GAWD SOMETHING WRONG WITH AUTODELETE", e);
+                    await ReplyAsync("There was an error in setting autodelete. Please report error with `y!feedback <message>`");
+
+                }
+
+            }
+            else
+                await TrueOrFalseMessage();
+
+        }
+
+        [Command("autodelete")]
+        [RequireOwner]
+        [Summary("Toggles auto delete for embeds (true/false)")]
+        public Task SetAutoDeleteCommandOwner(string setting)
+            => SetAutoDeleteCommand(setting);
+
+        [Command("autodelete")]
+        [Summary("Gets the auto delete setting")]
+        public Task GetAutoDeleteCommand()
+            => ReplyAsync($"Embed auto deletion: `{_setting.AutoDelete}`");
+
         [Command("guesstime")]
         [RequireUserPermission(GuildPermission.Administrator)]
         [Summary("Sets the amount of seconds for the guessing game!")]
@@ -102,7 +143,7 @@ namespace YuGiOhV2.Modules
 
             }
             else
-                await ReplyAsync("This command only accepts `true` or `false`");
+                await TrueOrFalseMessage();
 
         }
 
@@ -116,6 +157,9 @@ namespace YuGiOhV2.Modules
         [Summary("Check how much card info is shown!")]
         public async Task MinimalCommand()
             => await ReplyAndDeleteAsync($"**Minimal:** {_setting.Minimal}");
+
+        Task TrueOrFalseMessage()
+            => ReplyAsync("This command only accepts `true` or `false`!");
 
     }
 }

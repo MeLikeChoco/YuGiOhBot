@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.Addons.Interactive;
 using Discord.Commands;
+using Discord.Net.Providers.WS4Net;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
@@ -32,14 +33,36 @@ namespace YuGiOhV2.Core
 
         private bool _isInitialized = false;
 
-        private static readonly DiscordSocketConfig _clientConfig = new DiscordSocketConfig()
+        private static DiscordSocketConfig _clientConfigBacking;
+
+        private DiscordSocketConfig _clientConfig
         {
 
-            //AlwaysDownloadUsers = true,
-            LogLevel = LogSeverity.Verbose,
-            MessageCacheSize = 1000
+            get
+            {
 
-        };
+                if(_clientConfigBacking == null)
+                {
+
+                    _clientConfigBacking = new DiscordSocketConfig()
+                    {
+
+                        //AlwaysDownloadUsers = true,
+                        LogLevel = LogSeverity.Verbose,
+                        MessageCacheSize = 1000
+
+                    };
+
+                    if (Environment.OSVersion.Version.Major == 6 && Environment.OSVersion.Version.Minor == 1)
+                        _clientConfigBacking.WebSocketProvider = WS4NetProvider.Instance;
+
+                }
+
+                return _clientConfigBacking;
+
+            }
+
+        }
 
         private static readonly CommandServiceConfig _commandConfig = new CommandServiceConfig()
         {
@@ -157,7 +180,7 @@ namespace YuGiOhV2.Core
 
             _client.MessageReceived += HandleCommand;
             _client.MessageReceived += _chat.SOMEONEGETTINGACARDBOIS;
-            await _commands.AddModulesAsync(Assembly.GetEntryAssembly());
+            await _commands.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
 
             Print("Commands registered.");
 

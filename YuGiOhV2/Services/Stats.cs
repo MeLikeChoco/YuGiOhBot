@@ -46,7 +46,7 @@ namespace YuGiOhV2.Services
             var client = state as DiscordSocketClient;
             var guilds = client.Guilds;
 
-            var maxGuild = guilds.Where(guild => !guild.Name.Contains("Bot")).MaxBy(guild => guild.MemberCount);
+            var maxGuild = guilds.Where(guild => !guild.Name.Contains("Bot")).MaxBy(guild => guild.MemberCount).FirstOrDefault();
             MaxGuild = maxGuild.Name;
             MaxGuildCount = maxGuild.MemberCount;
             UniqueUserCount = guilds.Sum(guild => guild.MemberCount);

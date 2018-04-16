@@ -88,7 +88,7 @@ namespace YuGiOhV2.Services
                             closestCard = _cache.Lowercase.AsParallel().FirstOrDefault(card => input.All(i => card.Contains(i)));
 
                         if (string.IsNullOrEmpty(closestCard))
-                            closestCard = _cache.Lowercase.AsParallel().MinBy(card => YetiLevenshtein(card, cardName));
+                            closestCard = _cache.Lowercase.AsParallel().MinBy(card => YetiLevenshtein(card, cardName)).FirstOrDefault();
 
                         var time = watch.Elapsed;
 

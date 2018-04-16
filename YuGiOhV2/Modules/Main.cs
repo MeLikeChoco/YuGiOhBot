@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using YuGiOhV2.Extensions;
+using YuGiOhV2.Objects;
 using YuGiOhV2.Objects.Banlist;
 using YuGiOhV2.Objects.Criterion;
 using YuGiOhV2.Services;
@@ -25,30 +26,32 @@ namespace YuGiOhV2.Modules
         public Web Web { get; set; }
         public Random Rand { get; set; }
 
+        private Setting _setting;
         private bool _minimal;
         private CancellationTokenSource _cts;
         private IUserMessage _display;
 
-        private static readonly PaginatedAppearanceOptions AOptions = new PaginatedAppearanceOptions
+        private PaginatedAppearanceOptions _aOptions => new PaginatedAppearanceOptions
         {
 
             DisplayInformationIcon = false,
-            Timeout = TimeSpan.FromSeconds(60),
             JumpDisplayOptions = JumpDisplayOptions.Never,
-            FooterFormat = "Enter a number to see that result! Expires in 60 seconds! | Page {0}/{1}"
+            FooterFormat = _setting.AutoDelete ? "Enter a number to see that result! Expires in 60 seconds! | Page {0}/{1}" : "This embed will not be deleted! | Page {0}/{1}",
+            Timeout = _setting.AutoDelete ? TimeSpan.FromSeconds(60) : TimeSpan.FromSeconds(-1)
 
         };
-
-        public Main()
-            => _cts = new CancellationTokenSource();
 
         protected override void BeforeExecute(CommandInfo command)
         {
 
+            _setting = Database.Settings[Context.Guild.Id];
+
             if (!(Context.Channel is SocketDMChannel))
-                _minimal = Database.Settings[Context.Guild.Id].Minimal;
+                _minimal = _setting.Minimal;
             else
                 _minimal = false;
+
+            _cts = new CancellationTokenSource();
 
         }
 
@@ -316,7 +319,7 @@ namespace YuGiOhV2.Modules
                 Author = author,
                 Color = Rand.NextColor(),
                 Pages = GenDescriptions(cards),
-                Options = AOptions
+                Options = _aOptions
 
             };
 

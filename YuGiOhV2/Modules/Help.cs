@@ -21,15 +21,20 @@ namespace YuGiOhV2.Modules
         public Database Database { get; set; }
         public Config Config { get; set; }
 
-        private static readonly PaginatedAppearanceOptions AOptions = new PaginatedAppearanceOptions()
+        private Setting _setting;
+
+        private PaginatedAppearanceOptions _aOptions => new PaginatedAppearanceOptions()
         {
 
             JumpDisplayOptions = JumpDisplayOptions.Never,
             DisplayInformationIcon = false,
-            FooterFormat = "This message will be deleted in 3 minutes! | Page {0}/{1}",
-            Timeout = TimeSpan.FromMinutes(3)
+            FooterFormat = _setting.AutoDelete ? "This message will be deleted in 3 minutes! | Page {0}/{1}" : "This message will not be deleted! | Page {0}/{1}",
+            Timeout = _setting.AutoDelete ? TimeSpan.FromMinutes(3) : TimeSpan.FromSeconds(-1)
 
         };
+
+        protected override void BeforeExecute(CommandInfo command)
+            => _setting = Database.Settings[Context.Guild.Id];
 
         [Command("help")]
         [Summary("Get help on commands based on input!")]
@@ -82,7 +87,7 @@ namespace YuGiOhV2.Modules
 
                 Author = author,
                 Color = Rand.NextColor(),
-                Options = AOptions
+                Options = _aOptions
 
             };
 
