@@ -70,8 +70,8 @@ namespace YuGiOhV2.Services
                         string cardName = match.ToString();
                         cardName = cardName.Substring(2, cardName.Length - 4).ToLower(); //lose the brackets
 
-                        if (string.IsNullOrEmpty(cardName) || string.IsNullOrWhiteSpace(cardName)) //return if there is no input
-                            return;
+                        if (string.IsNullOrEmpty(cardName) || string.IsNullOrWhiteSpace(cardName)) //continue if there is no input
+                            continue;
 
                         var input = cardName.Split(' ');
 
