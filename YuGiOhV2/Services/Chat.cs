@@ -68,7 +68,7 @@ namespace YuGiOhV2.Services
                         watch.Start();
 
                         string cardName = match.ToString();
-                        cardName = cardName.Substring(2, cardName.Length - 4).ToLower(); //lose the brackets
+                        cardName = cardName.Substring(2, cardName.Length - 4).ToLower().Trim(); //lose the brackets and trim whitespace
 
                         if (string.IsNullOrEmpty(cardName) || string.IsNullOrWhiteSpace(cardName)) //continue if there is no input
                             continue;
