@@ -11,15 +11,15 @@ Prefix >> y!
 
 --------------------------------------------------------
 
-card <card name>               | Searches card based on card name
+card \<card name>               | Searches card based on card name
 
 rcard                          | Returns a random card. Great for making random decks
 
-search <search>                | Searches for cards based on search terms given
+search \<search>                | Searches for cards based on search terms given
 
-archetype <search>             | Attemps an archetype search
+archetype \<search>             | Attemps an archetype search
 
-banlist <1/2/3>                | Returns the current banlist WARNING >> big message
+banlist \<1/2/3>                | Returns the current banlist WARNING >> big message
 
 invite                         | Sends invite link to dm
 
@@ -33,9 +33,13 @@ ping                           | Returns the latency between bot and guild
 
 help                           | The defacto help command
 
-feedback <feedback>            | Sends feedback to The One and the Only
+feedback \<feedback>            | Sends feedback to The One and the Only
 
-minimal <true/false>           | Sets minimal card settings for guild
+minimal \<true/false>           | Sets minimal card settings for guild
+
+help  | Brings up help menu
+
+help \<command> | Brings up help for a command based on input
 
 I also have inline declaration of cards. For example, "I like [[blue-eyes]]" will give you a Blue-Eyes card! You can use multiple inline declarations such as "[[red-eyes]] will beat [[blue-eyes]]"!
 
