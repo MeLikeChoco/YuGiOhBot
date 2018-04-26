@@ -30,9 +30,9 @@
     <PackageReference Include="Dapper.Contrib" Version="1.50.4" />
     <PackageReference Include="DeepCloner" Version="0.10.2" />
     <PackageReference Include="Discord.Addons.Interactive" Version="1.0.1" />
-    <PackageReference Include="Discord.Net" Version="2.0.0-beta2-00921" />
-    <PackageReference Include="Discord.Net.Providers.WS4Net" Version="2.0.0-beta2-00921" />
-    <PackageReference Include="Microsoft.Data.Sqlite" Version="2.0.0" />
+    <PackageReference Include="Discord.Net" Version="2.0.0-beta2-00924" />
+    <PackageReference Include="Discord.Net.Providers.WS4Net" Version="2.0.0-beta2-00924" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="2.1.0-preview2-final" />
     <PackageReference Include="morelinq" Version="3.0.0-beta-1" />
   </ItemGroup>
 
@@ -41,7 +41,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Databases\ygo.db">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Files\Bot List Tokens\Black.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

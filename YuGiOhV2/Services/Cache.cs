@@ -65,8 +65,8 @@ namespace YuGiOhV2.Services
             var objects = AquireGoodies();
 
             AquireFancyMessages(objects);
-            AquireTheUntouchables();
-            AquireGoodiePacks();
+            //AquireTheUntouchables();
+            //AquireGoodiePacks();
 
         }
 
@@ -134,15 +134,20 @@ namespace YuGiOhV2.Services
                 lock (aLock)
                 {
 
-                    var archetypes = cardobj.Archetype.Split(" , ");
-
-                    foreach (var archetype in archetypes)
+                    if (!string.IsNullOrEmpty(cardobj.Archetype))
                     {
 
-                        if (!Archetypes.ContainsKey(archetype))
-                            Archetypes.Add(archetype, new HashSet<string>() { name });
-                        else
-                            Archetypes[archetype].Add(name);
+                        var archetypes = cardobj.Archetype.Split(" , ");
+
+                        foreach (var archetype in archetypes)
+                        {
+
+                            if (!Archetypes.ContainsKey(archetype))
+                                Archetypes.Add(archetype, new HashSet<string>() { name });
+                            else
+                                Archetypes[archetype].Add(name);
+
+                        }
 
                     }
 
@@ -202,30 +207,37 @@ namespace YuGiOhV2.Services
             if (card is Monster monster)
             {
 
-                //for some reason, newlines aren't properly recognized
-                monster.Lore = monster.Lore.Replace(@"\n", "\n");
-
-                //if (!string.IsNullOrEmpty(monster.Materials))
-                //    monster.Lore = monster.Lore.Replace($"{monster.Materials} ", $"{monster.Materials}");
-
-                if (monster.Lore.StartsWith("Pendulum Effect"))
+                if (!string.IsNullOrEmpty(monster.Lore))
                 {
 
-                    var effects = monster.Lore.Split("Monster Effect");
+                    //for some reason, newlines aren't properly recognized
+                    monster.Lore = monster.Lore.Replace(@"\n", "\n");
 
-                    body.AddField("Pendulum Effect", effects.First().Substring(15).Trim());
-                    body.AddField($"[ {monster.Types} ]", effects[1].Trim());
+                    //if (!string.IsNullOrEmpty(monster.Materials))
+                    //    monster.Lore = monster.Lore.Replace($"{monster.Materials} ", $"{monster.Materials}");
+
+                    if (monster.Lore.StartsWith("Pendulum Effect"))
+                    {
+
+                        var effects = monster.Lore.Split("Monster Effect");
+
+                        body.AddField("Pendulum Effect", effects.First().Substring(15).Trim());
+                        body.AddField($"[ {monster.Types} ]", effects[1].Trim());
+
+                    }
+                    else
+                        body.AddField($"[ {monster.Types} ]", monster.Lore);
 
                 }
                 else
-                    body.AddField($"[ {monster.Types} ]", monster.Lore);
+                    body.AddField("Not released yet", "\u200B");
 
-                const string UnknownValue = "???";
+                var unknownValue = "???";
 
-                body.AddField("Attack", string.IsNullOrEmpty(monster.Atk) ? UnknownValue : monster.Atk, true);
+                body.AddField("Attack", string.IsNullOrEmpty(monster.Atk) ? unknownValue : monster.Atk, true);
 
                 if (!(monster is LinkMonster))
-                    body.AddField("Defence", string.IsNullOrEmpty(monster.Def) ? UnknownValue : monster.Def, true);
+                    body.AddField("Defence", string.IsNullOrEmpty(monster.Def) ? unknownValue : monster.Def, true);
 
             }
             else
@@ -248,13 +260,13 @@ namespace YuGiOhV2.Services
 
             desc += "**Format:** ";
 
-            if (card.TcgOnly == 1)
-                desc += "TCG\n";
-            else if (card.OcgOnly == 1)
-                desc += "OCG\n";
-            else
-                desc += "TCG/OCG\n";
+            if (card.TcgExists)
+                desc += "TCG";
 
+            if (card.OcgExists)
+                desc += card.TcgExists ? "/OCG" : "OCG";
+
+            desc += "\n";
             desc += $"**Card Type:** {card.CardType}\n";
 
             if (card is Monster monster)
@@ -265,12 +277,12 @@ namespace YuGiOhV2.Services
                 if (monster is Xyz xyz)
                     desc += $"**Rank:** {xyz.Rank}\n";
                 else if (monster is LinkMonster link)
-                    desc += $"**Links:** {link.Link}\n" +
-                        $"**Link Markers:** {link.LinkMarkers}\n";
+                    desc += $"**Links:** {(link.Link == 0 ? link.LinkArrows.Split(',').Length : link.Link)}\n" +
+                        $"**Link Markers:** {link.LinkArrows}\n";
                 else
                     desc += $"**Level:** {(monster as RegularMonster).Level}\n";
 
-                if (!string.IsNullOrEmpty(monster.PendulumScale))
+                if (monster.PendulumScale != 0)
                     desc += $"**Scale:** {monster.PendulumScale}\n";
 
             }
@@ -314,7 +326,7 @@ namespace YuGiOhV2.Services
 
                 if (monster is LinkMonster)
                     return new Color(0, 0, 139);
-                else if (!string.IsNullOrEmpty(monster.PendulumScale))
+                else if (monster.PendulumScale != 0)
                     return new Color(150, 208, 189);
                 else if (monster is Xyz)
                     return new Color(0, 0, 1);
@@ -426,15 +438,15 @@ namespace YuGiOhV2.Services
             _db.Open();
 
             Print("Getting regular monsters...");
-            var regulars = _db.Query<RegularMonster>("select * from Card where level not like '' and pendulumScale like ''");
+            var regulars = _db.Query<RegularMonster>("select * from Cards where Level not like 0 and PendulumScale like 0");
             Print("Getting xyz monsters...");
-            var xyz = _db.Query<Xyz>("select * from Card where types like '%Xyz%'"); //includes xyz pendulums
+            var xyz = _db.Query<Xyz>("select * from Cards where Types like '%Xyz%'"); //includes xyz pendulums
             Print("Getting pendulum monsters...");
-            var pendulums = _db.Query<RegularMonster>("select * from Card where types like '%Pendulum%' and types not like '%Xyz%'"); //does not include xyz pendulums
+            var pendulums = _db.Query<RegularMonster>("select * from Cards where Types like '%Pendulum%' and Types not like '%Xyz%'"); //does not include xyz pendulums
             Print("Getting link monsters...");
-            var links = _db.Query<LinkMonster>("select * from Card where types like '%Link%'");
+            var links = _db.Query<LinkMonster>("select * from Cards where Types like '%Link%'");
             Print("Getting spell and traps...");
-            var spelltraps = _db.Query<SpellTrap>("select * from Card where cardType like '%Spell%' or cardType like '%Trap%'");
+            var spelltraps = _db.Query<SpellTrap>("select * from Cards where CardType like '%Spell%' or CardType like '%Trap%'");
 
             _db.Close();
 
@@ -447,7 +459,7 @@ namespace YuGiOhV2.Services
 
             _db.Open();
 
-            var boosterPacks = _db.Query<Booster>("select * from Booster");
+            var boosterPacks = _db.Query<Booster>("select * from Boosters");
 
             _db.Close();
 
