@@ -30,9 +30,10 @@ namespace YuGiOhScraper.Entities
         public string Atk { get; set; }
         public string Def { get; set; }
 
-        public int Level { get; set; }
-        public int PendulumScale { get; set; }
-        public int Rank { get; set; }
+        //these values can have legit 0's
+        public int Level { get; set; } = -1;
+        public int PendulumScale { get; set; } = -1;
+        public int Rank { get; set; } = -1;
 
         public bool TcgExists { get; set; }
         public bool OcgExists { get; set; }

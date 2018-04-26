@@ -282,7 +282,7 @@ namespace YuGiOhV2.Services
                 else
                     desc += $"**Level:** {(monster as RegularMonster).Level}\n";
 
-                if (monster.PendulumScale != 0)
+                if (monster.PendulumScale != -1)
                     desc += $"**Scale:** {monster.PendulumScale}\n";
 
             }
@@ -438,7 +438,7 @@ namespace YuGiOhV2.Services
             _db.Open();
 
             Print("Getting regular monsters...");
-            var regulars = _db.Query<RegularMonster>("select * from Cards where Level not like 0 and PendulumScale like 0");
+            var regulars = _db.Query<RegularMonster>("select * from Cards where Level not like -1 and PendulumScale like -1");
             Print("Getting xyz monsters...");
             var xyz = _db.Query<Xyz>("select * from Cards where Types like '%Xyz%'"); //includes xyz pendulums
             Print("Getting pendulum monsters...");
@@ -450,7 +450,7 @@ namespace YuGiOhV2.Services
 
             _db.Close();
 
-            return regulars.Concat<Card>(xyz).Concat(pendulums).Concat(links).Concat(spelltraps).Where(card => !card.Name.Contains("Token"));
+            return regulars.Concat<Card>(xyz).Concat(pendulums).Concat(links).Concat(spelltraps);
 
         }
 
