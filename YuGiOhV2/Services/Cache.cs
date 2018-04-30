@@ -326,7 +326,7 @@ namespace YuGiOhV2.Services
 
                 if (monster is LinkMonster)
                     return new Color(0, 0, 139);
-                else if (monster.PendulumScale != 0)
+                else if (monster.PendulumScale != -1)
                     return new Color(150, 208, 189);
                 else if (monster is Xyz)
                     return new Color(0, 0, 1);
