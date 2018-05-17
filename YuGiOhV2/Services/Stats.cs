@@ -1,10 +1,15 @@
-﻿using Discord.WebSocket;
+﻿using Discord;
+using Discord.WebSocket;
+using DiscordBotsList.Api;
+using DiscordBotsList.Api.Adapter.DiscordNet;
+using DiscordBotsList.Api.Extensions.DiscordNet;
 using MoreLinq;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,15 +31,24 @@ namespace YuGiOhV2.Services
         private Timer _sendStats;
         private ulong _id;
         private Web _web;
+        private DiscordNetDblApi _discordBotListApi;
+        private IAdapter _submissionAdapter;
 
         public Stats(DiscordSocketClient client, Web web)
         {
-
+            
             _web = web;
             IsReady = false;
             _armedTimer = false;
             _id = client.CurrentUser.Id;
+            _discordBotListApi = DiscordBotsList.Api.Adapter.DiscordNet.DiscordNetDblUtils.CreateDblApi(client, File.ReadAllText("Files/Bot List Tokens/Blue.txt"));
+            _submissionAdapter = new SubmissionAdapter(_discordBotListApi, client, TimeSpan.FromMinutes(5));
+
             _calculateStats = new Timer(CalculateStats, client, 0, 3600000);
+
+            //lmao, because the constructor is actually missing an assignment, i have to do this
+
+            _submissionAdapter.Log += Log;
 
         }
 
@@ -75,7 +89,7 @@ namespace YuGiOhV2.Services
 
             try
             {
-
+                
                 Log("Sending stats to black discord bots...");
                 //var response = await _web.Post($"https://bots.discord.pw/api/bots/{_id}/stats", $"{{\"server_count\": {GuildCount}}}", await File.ReadAllTextAsync("Files/Bot List Tokens/Black.txt"));
                 var response = await _web.Post($"https://bots.discord.pw/api/bots/{_id}/stats", payload, await File.ReadAllTextAsync("Files/Bot List Tokens/Black.txt"));
@@ -94,8 +108,9 @@ namespace YuGiOhV2.Services
 
                 Log("Sending stats to blue discord bots...");
                 //var response = await _web.Post($"https://discordbots.org/api/bots/{_id}/stats", $"{{\"server_count\": {GuildCount}}}", await File.ReadAllTextAsync("Files/Bot List Tokens/Blue.txt"));
-                var response = await _web.Post($"https://discordbots.org/api/bots/{_id}/stats", payload, await File.ReadAllTextAsync("Files/Bot List Tokens/Blue.txt"));
-                Log($"Status: {response.StatusCode}");
+                //var response = await _web.Post($"https://discordbots.org/api/bots/{_id}/stats", payload, await File.ReadAllTextAsync("Files/Bot List Tokens/Blue.txt"));
+                _submissionAdapter.RunAsync().GetAwaiter().GetResult();
+                Log($"Status: Sent stats to blue discord bots.");
 
             }
             catch
@@ -106,6 +121,53 @@ namespace YuGiOhV2.Services
             }
 
         }
+
+        //this is what happens when you forget to assign in the constructor
+        //delete this later
+        public class SubmissionAdapter : IAdapter
+        {
+            protected AuthDiscordBotListApi api;
+            protected IDiscordClient client;
+            protected TimeSpan updateTime;
+
+            protected DateTime lastTimeUpdated;
+
+            public SubmissionAdapter(AuthDiscordBotListApi api, IDiscordClient client, TimeSpan updateTime)
+            {
+                this.api = api;
+                this.client = client;
+                this.updateTime = updateTime;
+            }
+
+            public event Action<string> Log;
+
+            public virtual async Task RunAsync()
+            {
+                if (DateTime.Now > lastTimeUpdated + updateTime)
+                {
+                    await api.UpdateStats(
+                        (await client.GetGuildsAsync()).Count
+                    );
+
+                    lastTimeUpdated = DateTime.Now;
+                    SendLog("Submitted stats to DiscordBotsList.org");
+                }
+            }
+
+            public virtual void Start()
+            {
+
+            }
+
+            public virtual void Stop()
+            {
+                throw new NotImplementedException();
+            }
+
+            protected void SendLog(string msg)
+                => Log?.Invoke(msg);
+        }
+
 
         private void Log(string message)
             => AltConsole.Print("Info", "Stats", message);

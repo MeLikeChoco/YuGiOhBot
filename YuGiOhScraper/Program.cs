@@ -30,10 +30,28 @@ namespace YuGiOhScraper
         {
 
             var httpClient = new HttpClient() { BaseAddress = new Uri("http://yugioh.wikia.com/") };
-
             var links = await GetCardLinks(httpClient);
-            var cards = GetCards(httpClient, links);
-            //var cards = GetCards(httpClient, links.ToList().GetRange(0, 100).ToDictionary(kv => kv.Key, kv => kv.Value));
+            IEnumerable<Card> cards = new List<Card>();
+            string retry = "";
+
+            do
+            {
+
+                Console.WriteLine("Getting cards...");
+                cards = cards.Concat(GetCards(httpClient, links, out links));
+                //var cards = GetCards(httpClient, links.ToList().GetRange(0, 100).ToDictionary(kv => kv.Key, kv => kv.Value));
+
+                if (links.Any())
+                {
+
+                    Console.WriteLine($"There were {links.Count} errors. Retry? (y/n): ");
+                    retry = Console.ReadLine();
+
+                }
+                else
+                    Console.WriteLine("Finished getting cards.");
+
+            } while (links.Any() && retry == "y");
 
             await CardsToSqlite(cards);
 
@@ -85,8 +103,10 @@ namespace YuGiOhScraper
                     "'Url' TEXT " +
                     ")";
 
+                Console.WriteLine("Saving to ygo.db...");
                 await createTable.ExecuteNonQueryAsync();
                 await db.InsertAsync(cards);
+                Console.WriteLine("Done saving to ygo.db.");
 
                 db.Close();
 
@@ -94,13 +114,14 @@ namespace YuGiOhScraper
 
         }
 
-        private static IEnumerable<Card> GetCards(HttpClient httpClient, IDictionary<string, string> links)
+        private static IEnumerable<Card> GetCards(HttpClient httpClient, IDictionary<string, string> links, out IDictionary<string,string> errors)
         {
 
             var cards = new ConcurrentBag<Card>();
             var total = links.Count;
             var current = 0;
             var pOptions = new ParallelOptions() { MaxDegreeOfParallelism = Environment.ProcessorCount };
+            var errorList = new ConcurrentDictionary<string,string>();
 
             Parallel.ForEach(links, pOptions, link =>
             {
@@ -127,11 +148,20 @@ namespace YuGiOhScraper
                     cards.Add(card);
 
                 }
-                catch (NullReferenceException) { }
+                catch (Exception)
+                {
 
-                Console.Write($"{Interlocked.Increment(ref current)}/{total}\r");
+                    errorList[link.Key] = link.Value;
+
+                }
+
+                var counter = Interlocked.Increment(ref current);
+
+                Console.Write($"Progress: {counter}/{total} ({(counter / (double)total) * 100}%)\r");
 
             });
+
+            errors = errorList;
 
             return cards;
 
