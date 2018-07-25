@@ -25,11 +25,12 @@ namespace YuGiOhV2.Core
         private Database _database;
         private Stats _stats;
         private Chat _chat;
-        private Cache _cache;
-        private Web _web;
+        private readonly Cache _cache;
+        private readonly Web _web;
         private Config _config;
-        private InteractiveService _interactive;
+        private readonly InteractiveService _interactive;
         private IServiceProvider _services;
+        private YgoDatabase _ygoDatabase;
 
         private bool _isInitialized = false;
 
@@ -132,6 +133,8 @@ namespace YuGiOhV2.Core
             await RegisterCommands();
             await _client.SetGameAsync($"Support guild/server: {_config.GuildInvite}");
 
+            _ygoDatabase = new YgoDatabase(_web, _client, _cache);
+
             _isInitialized = true;
 
         }
@@ -179,7 +182,15 @@ namespace YuGiOhV2.Core
             _chat = new Chat(_cache, _database, new Web());
 
             _client.MessageReceived += HandleCommand;
-            _client.MessageReceived += _chat.SOMEONEGETTINGACARDBOIS;
+            _client.MessageReceived += (message) =>
+            {
+
+                Task.Run(() => _chat.SOMEONEGETTINGACARDBOIS(message));
+
+                return Task.CompletedTask;
+
+            };
+
             await _commands.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
 
             Print("Commands registered.");
@@ -217,12 +228,12 @@ namespace YuGiOhV2.Core
                 var context = new SocketCommandContext(_client, possibleCmd);
 
                 if (message.Channel is SocketDMChannel)
-                    AltConsole.Print("Info", "Command", $"{possibleCmd.Author.Username} in DM's");
+                    AltConsole.Write("Info", "Command", $"{possibleCmd.Author.Username} in DM's");
                 else
-                    AltConsole.Print("Info", "Command", $"{possibleCmd.Author.Username} from {(possibleCmd.Channel as SocketTextChannel).Guild.Name}");
+                    AltConsole.Write("Info", "Command", $"{possibleCmd.Author.Username} from {(possibleCmd.Channel as SocketTextChannel).Guild.Name}");
 
 
-                AltConsole.Print("Info", "Command", $"{possibleCmd.Content}");
+                AltConsole.Write("Info", "Command", $"{possibleCmd.Content}");
 
                 var result = await _commands.ExecuteAsync(context, argPos, _services);
 
@@ -236,7 +247,7 @@ namespace YuGiOhV2.Core
 
                     //await context.Channel.SendMessageAsync("https://goo.gl/JieFJM");
 
-                    AltConsole.Print("Error", "Error", result.ErrorReason);
+                    AltConsole.Write("Error", "Error", result.ErrorReason);
                     //debug purposes
                     //await context.Channel.SendMessageAsync($"**Error:** {result.ErrorReason}");
 
@@ -251,15 +262,15 @@ namespace YuGiOhV2.Core
 
             _client.Log += (message)
                 => Task.Run(()
-                => AltConsole.Print(message.Severity.ToString(), message.Source, message.Message, message.Exception));
+                => AltConsole.Write(message.Severity.ToString(), message.Source, message.Message, message.Exception));
             _commands.Log += (message)
                 => Task.Run(()
-                => AltConsole.Print(message.Severity.ToString(), message.Source, message.Message, message.Exception));
+                => AltConsole.Write(message.Severity.ToString(), message.Source, message.Message, message.Exception));
 
         }
 
         private void Print(string message)
-            => AltConsole.Print("Info", "Events", message);
+            => AltConsole.Write("Info", "Events", message);
 
     }
 }

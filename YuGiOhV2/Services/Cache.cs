@@ -31,6 +31,7 @@ namespace YuGiOhV2.Services
         public Dictionary<string, string> LowerToUpper { get; private set; }
         public HashSet<string> Uppercase { get; private set; }
         public HashSet<string> Lowercase { get; private set; }
+        public ConcurrentDictionary<ulong, object> GuessInProgress { get; private set; }
 
         /// <summary>
         /// Maps name to passcode
@@ -52,8 +53,12 @@ namespace YuGiOhV2.Services
 
             Print("Beginning cache initialization...");
 
+            GuessInProgress = new ConcurrentDictionary<ulong, object>();
+
             //made a seperate method so other classes may update the embeds when I want them to
             Initialize();
+            
+
 
             Print("Finished cache initialization...");
 
@@ -170,7 +175,7 @@ namespace YuGiOhV2.Services
             LowerToUpper = new Dictionary<string, string>(tempLowerToUpper, StringComparer.InvariantCultureIgnoreCase);
             Uppercase = new HashSet<string>(tempUpper);
             Lowercase = new HashSet<string>(tempLower);
-            Passcodes = new Dictionary<string, string>(tempPasscodes);
+            Passcodes = new Dictionary<string, string>(tempPasscodes, StringComparer.InvariantCultureIgnoreCase);
 
         }
 
@@ -241,7 +246,7 @@ namespace YuGiOhV2.Services
 
             }
             else
-                body.AddField("Effect", card.Lore.Replace(@"\n", "\n"));
+                body.AddField("Effect", card.Lore?.Replace(@"\n", "\n") ?? "Not yet released.");
 
             if (!string.IsNullOrEmpty(card.Archetype))
                 body.AddField(card.Archetype.Split(",").Length > 1 ? "Archetypes" : "Archetype", card.Archetype.Replace(" ,", ","));
@@ -469,10 +474,10 @@ namespace YuGiOhV2.Services
         }
 
         private void Print(string message)
-            => AltConsole.Print("Info", "Cache", message);
+            => AltConsole.Write("Info", "Cache", message);
 
         private void InlinePrint(string message)
-            => AltConsole.InlinePrint("Info", "Cache", message, false);
+            => AltConsole.InlineWrite("Info", "Cache", message, false);
 
     }
 

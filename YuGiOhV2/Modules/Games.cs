@@ -1,13 +1,12 @@
-﻿using AngleSharp;
-using Discord.Addons.Interactive;
+﻿using Discord.Addons.Interactive;
 using Discord.Commands;
 using Discord.WebSocket;
 using MoreLinq;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -34,9 +33,7 @@ namespace YuGiOhV2.Modules
         private readonly Criteria<SocketMessage> _criteria = new Criteria<SocketMessage>()
                 .AddCriterion(new EnsureSourceChannelCriterion())
                 .AddCriterion(new EnsureNotBot());
-        //private static ConcurrentDictionary<ulong, object> _inProgress = new ConcurrentDictionary<ulong, object>();
-        private static ConcurrentDictionary<ulong, object> _inProgress = new ConcurrentDictionary<ulong, object>();
-
+        
         protected override void BeforeExecute(CommandInfo command)
             => _setting = Database.Settings[Context.Guild.Id];
 
@@ -45,7 +42,7 @@ namespace YuGiOhV2.Modules
         public async Task GuessCommand()
         {
 
-            if (_inProgress.TryAdd(Context.Channel.Id, null))
+            if (Cache.GuessInProgress.TryAdd(Context.Channel.Id, null))
             {
 
                 //var art = await GetArt();
@@ -60,7 +57,7 @@ namespace YuGiOhV2.Modules
 
                 //}
 
-                KeyValuePair<string, string> passcode;
+                KeyValuePair<string, string> passcode = new KeyValuePair<string, string>();
                 Exception e;
 
                 do
@@ -109,7 +106,7 @@ namespace YuGiOhV2.Modules
             else
                 await ReplyAsync($":game_die: There is a game in progress!");
 
-            _inProgress.TryRemove(Context.Channel.Id, out var blarg);
+            Cache.GuessInProgress.TryRemove(Context.Channel.Id, out var blarg);
 
         }
 
@@ -146,7 +143,7 @@ namespace YuGiOhV2.Modules
             })));
 
             //await ReplyAsync(card);
-            AltConsole.Print("Command", "Hangman", $"{card}");
+            AltConsole.Write("Command", "Hangman", $"{card}");
             await ReplyAsync($"You have **5** minutes to figure this card out!\n{display}");
 
             var cts = new CancellationTokenSource();

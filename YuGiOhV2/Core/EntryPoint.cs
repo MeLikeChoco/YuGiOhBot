@@ -20,7 +20,7 @@ namespace YuGiOhV2.Core
         {
 
             AltConsole.Initialize();
-            AltConsole.Print("Info", "Entry Point", "Welcome to YuGiOh Bot V2");
+            AltConsole.Write("Info", "Entry Point", "Welcome to YuGiOh Bot V2");
 
             try
             {

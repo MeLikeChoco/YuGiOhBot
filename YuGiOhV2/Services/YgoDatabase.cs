@@ -1,0 +1,276 @@
+﻿using Dapper.Contrib.Extensions;
+using Discord;
+using Discord.WebSocket;
+using Microsoft.Data.Sqlite;
+using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using YuGiOhScraper.Entities;
+using YuGiOhScraper.Parsers;
+using YuGiOhV2.Objects;
+
+namespace YuGiOhV2.Services
+{
+
+    public class YgoDatabase
+    {
+
+        private readonly Timer _reformDatabase;
+        private readonly DiscordSocketClient _client;
+        private readonly Cache _cache;
+
+        private IUserMessage _message;
+        private IEnumerable<Card> _cards;
+        private CancellationTokenSource _tokenSource;
+
+        private const string BaseUrl = "http://yugioh.wikia.com";
+
+        public YgoDatabase(Web web, DiscordSocketClient client, Cache cache)
+        {
+
+            _client = client;
+            _cache = cache;
+            _reformDatabase = new Timer(ReformDatabase, web, TimeSpan.FromSeconds(60), TimeSpan.FromDays(7));
+
+        }
+
+        public async void ReformDatabase(object state)
+        {
+
+            var web = state as Web;
+            var tempCache = new YgoDatabaseTempCache();
+            var links = await GetCardLinks(web, tempCache);
+
+            Log("Preparing to update ygodb...");
+
+            _cards = GetCards(web, links, tempCache, out var errors);
+
+            Log("Updates finished. Sending results...");
+
+            _message = _client.GetUser(Config.Instance.OwnerId).GetOrCreateDMChannelAsync().Result
+                .SendMessageAsync(embed: FancifyErrorList(errors)).GetAwaiter().GetResult();
+            _tokenSource = new CancellationTokenSource();
+
+            _client.ReactionAdded += CheckReactionWrapper;
+
+            try
+            {
+
+                await Task.Delay(-1, _tokenSource.Token);
+
+            }
+            catch { }
+
+            _cache.Initialize();
+
+        }
+
+        private Task CheckReactionWrapper(Cacheable<IUserMessage, ulong> cache, ISocketMessageChannel channel, SocketReaction reaction)
+        {
+
+            Task.Run(() => CheckReaction(cache, channel, reaction));
+
+            return Task.CompletedTask;
+
+        }
+
+        private async Task CheckReaction(Cacheable<IUserMessage, ulong> cache, ISocketMessageChannel channel, SocketReaction reaction)
+        {
+
+            if ((await cache.GetOrDownloadAsync()).Id == _message.Id)
+            {
+
+                if (reaction.Emote.Name == "\u2705")
+                {
+
+                    await CardsToSqlite(_cards);
+                    _tokenSource.Cancel();
+
+                }
+                else if (reaction.Emote.Name == "\u274e")
+                {
+
+                    _client.ReactionAdded -= CheckReactionWrapper;
+                    _tokenSource.Cancel();
+
+                }
+
+            }
+
+        }
+
+        private async Task CardsToSqlite(IEnumerable<Card> cards)
+        {
+
+            if (File.Exists("Databases/ygo.db"))
+            {
+
+                if (File.Exists("Databases/temp/ygo.db"))
+                    File.Delete("Databases/temp/ygo.db");
+
+                File.Move("Databases/ygo.db", "Databases/temp/ygo.db");
+
+            }
+
+            using (var db = new SqliteConnection("Data Source = Databases/ygo.db"))
+            {
+
+                await db.OpenAsync();
+
+                var createTable = db.CreateCommand();
+                createTable.CommandText = "CREATE TABLE 'Cards'(" +
+                    "'Name' TEXT, " +
+                    "'RealName' TEXT, " +
+                    "'Passcode' TEXT, " +
+                    "'CardType' TEXT, " +
+                    "'Property' TEXT, " +
+                    "'Level' INTEGER, " +
+                    "'PendulumScale' INTEGER, " +
+                    "'Rank' INTEGER, " +
+                    "'Link' INTEGER, " +
+                    "'LinkArrows' TEXT, " +
+                    "'Types' TEXT, " +
+                    "'Attribute' TEXT, " +
+                    "'Materials' TEXT, " +
+                    "'Lore' TEXT, " +
+                    "'Atk' TEXT, " +
+                    "'Def' TEXT, " +
+                    "'Archetype' TEXT, " +
+                    "'Supports' TEXT, " +
+                    "'AntiSupports' TEXT, " +
+                    "'OcgExists' INTEGER, " +
+                    "'TcgExists' INTEGER, " +
+                    "'OcgStatus' TEXT, " +
+                    "'TcgAdvStatus' TEXT, " +
+                    "'TcgTrnStatus' TEXT, " +
+                    "'Img' TEXT, " +
+                    "'Url' TEXT " +
+                    ")";
+
+                Log("Saving to ygo.db...");
+                await createTable.ExecuteNonQueryAsync();
+                await db.InsertAsync(cards);
+                Log("Done saving to ygo.db.");
+                
+                db.Close();
+
+            }
+
+        }
+
+        private IEnumerable<Card> GetCards(Web web, IDictionary<string, string> links, YgoDatabaseTempCache cache, out IEnumerable<KeyValuePair<string, Exception>> errorList)
+        {
+
+            var cards = new ConcurrentBag<Card>();
+            var count = links.Count;
+            var pOptions = new ParallelOptions() { MaxDegreeOfParallelism = Environment.ProcessorCount };
+            var tempErrorList = new ConcurrentDictionary<string, Exception>();
+            var counter = 0;
+
+            Parallel.ForEach(links, pOptions, link =>
+            {
+
+                var url = $"{BaseUrl}{link.Value}";
+                var response = web.GetString(url).Result;
+
+                try
+                {
+
+                    var card = new CardParser(link.Key, response).Parse();
+
+                    #region OCG TCG
+                    //c# int default is 0, therefore, if only one of them is 1, that means it is an format exclusive card
+                    //if both of them are 1, then it is in both formats
+                    if (cache.TCG.ContainsKey(card.Name))
+                        card.TcgExists = true;
+
+                    if (cache.OCG.ContainsKey(card.Name))
+                        card.OcgExists = true;
+                    #endregion OCG TCG
+
+                    card.Url = $"{BaseUrl}{link.Value}";
+
+                    cards.Add(card);
+
+                }
+                catch (Exception e)
+                {
+
+                    tempErrorList[link.Key] = e;
+
+                }
+
+                var current = Interlocked.Increment(ref counter);
+
+                if (current % 500 == 0)
+                    Log($"Ygodb status: {current}/{count}");
+
+            });
+
+            errorList = tempErrorList;
+
+            return cards;
+
+        }
+
+        //there are two ways we could have done this
+        //1. assume the guy using this has bad internet
+        //2. assume the guy using this doesn't care about it
+        //I'll go with 2 to make my life easier
+        //I also most likely don't need parallel foreach, but whatever
+        private async Task<IDictionary<string, string>> GetCardLinks(Web web, YgoDatabaseTempCache cache)
+        {
+
+            var responseTcg = await web.GetString($"{BaseUrl}/api/v1/Articles/List?category=TCG_cards&limit=20000&namespaces=0"); //as you can see, the 20000 assumes the user doesn't care about internet speed
+            var responseOcg = await web.GetString($"{BaseUrl}/api/v1/Articles/List?category=OCG_cards&limit=20000&namespaces=0");
+            var json = JObject.Parse(responseTcg);
+
+            Parallel.ForEach(json["items"].ToObject<JArray>(), item => cache.TCG[item.Value<string>("title")] = item.Value<string>("url"));
+
+            json = JObject.Parse(responseOcg);
+
+            Parallel.ForEach(json["items"].ToObject<JArray>(), item => cache.OCG[item.Value<string>("title")] = item.Value<string>("url"));
+
+            return cache.TCG.Concat(cache.OCG).GroupBy(kv => kv.Key).ToDictionary(group => group.Key, group => group.First().Value);
+            //return cache.TCG.Concat(cache.OCG).GroupBy(kv => kv.Key).Take(1000).ToDictionary(group => group.Key, group => group.First().Value);
+
+        }
+
+        private Embed FancifyErrorList(IEnumerable<KeyValuePair<string, Exception>> errors)
+        {
+
+            var embed = new EmbedBuilder();
+
+            if (errors.Any())
+            {
+
+                foreach (var kv in errors)
+                    embed.AddField(kv.Key, $"```{kv.Value.Message}\n\n{kv.Value.StackTrace}```");
+
+            }
+            else
+            {
+
+                embed.Title = "No errors";
+
+            }
+
+            return embed.Build();
+
+        }
+
+        private void InlineLog(string message)
+            => AltConsole.InlineWrite("Info", "YgoDatabase", message);
+
+        private void Log(string message)
+            => AltConsole.Write("Info", "YgoDatabase", message);
+
+    }
+
+}

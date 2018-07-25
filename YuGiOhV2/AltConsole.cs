@@ -28,13 +28,7 @@ namespace YuGiOhV2
 
         }
 
-        public static void Print(string firstBracket, string secondBracket, string message, bool log)
-            => Print(firstBracket, secondBracket, message, false, null);
-
-        public static void Print(string firstBracket, string secondBracket, string message, Exception exception = null)
-            => Print(firstBracket, secondBracket, message, true, exception);
-
-        public static void Print(string firstBracket, string secondBracket, string message, bool log, Exception exception = null)
+        public static void Write(string firstBracket, string secondBracket, string message, Exception exception = null, bool log = true)
         {
 
             Console.ForegroundColor = ConsoleColor.Yellow;
@@ -63,10 +57,10 @@ namespace YuGiOhV2
 
         }
 
-        public static void InlinePrint(string firstBracket, string secondBracket, string message, bool log)
-            => InlinePrint(firstBracket, secondBracket, message, log, null);
+        public static void InlineWrite(string firstBracket, string secondBracket, string message, bool log = true)
+            => InlineWrite(firstBracket, secondBracket, message, log, null);
 
-        public static void InlinePrint(string firstBracket, string secondBracket, string message, bool log, Exception exception = null)
+        public static void InlineWrite(string firstBracket, string secondBracket, string message, bool log, Exception exception = null)
         {
 
             Console.ForegroundColor = ConsoleColor.Yellow;

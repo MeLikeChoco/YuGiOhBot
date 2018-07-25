@@ -54,13 +54,13 @@ namespace YuGiOhV2.Services
                     if((channel is SocketTextChannel))
                     {
 
-                        AltConsole.Print("Info", "Command", $"{message.Author.Username} from {(channel as SocketTextChannel).Guild.Name}");
+                        AltConsole.Write("Info", "Command", $"{message.Author.Username} from {(channel as SocketTextChannel).Guild.Name}");
                         var id = (channel as SocketTextChannel).Guild.Id;
                         minimal = _database.Settings[id].Minimal;
 
                     }
 
-                    AltConsole.Print("Info", "Inline", $"{message.Content}");
+                    AltConsole.Write("Info", "Inline", $"{message.Content}");
 
                     foreach(var match in mCollection)
                     {
@@ -93,7 +93,7 @@ namespace YuGiOhV2.Services
                         var time = watch.Elapsed;
 
                         watch.Stop();
-                        AltConsole.Print("Info", "Inline", $"{cardName} took {time.TotalSeconds} seconds to complete.");
+                        AltConsole.Write("Info", "Inline", $"{cardName} took {time.TotalSeconds} seconds to complete.");
 
                         var embed = _cache.Cards[closestCard];
 
@@ -103,7 +103,7 @@ namespace YuGiOhV2.Services
                             await channel.SendMessageAsync("", embed: (await EditEmbed(embed, minimal, time)).Build());
 
                         }
-                        catch { AltConsole.Print("Service", "Chat", "No permission to send message"); }
+                        catch { AltConsole.Write("Service", "Chat", "No permission to send message"); }
 
                     }
 

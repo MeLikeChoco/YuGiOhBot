@@ -40,7 +40,7 @@ namespace YuGiOhV2.Modules
                 catch (Exception e)
                 {
 
-                    AltConsole.Print("Error", "Prefix", "BAH GAWD SOMETHING WRONG WITH AUTODELETE", e);
+                    AltConsole.Write("Error", "Prefix", "BAH GAWD SOMETHING WRONG WITH AUTODELETE", e);
                     await ReplyAsync("There was an error in setting autodelete. Please report error with `y!feedback <message>`");
 
                 }
@@ -100,7 +100,7 @@ namespace YuGiOhV2.Modules
             catch (Exception e)
             {
 
-                AltConsole.Print("Error", "Prefix", "BAH GAWD SOMETHING WRONG WITH SETTING PREFIX", e);
+                AltConsole.Write("Error", "Prefix", "BAH GAWD SOMETHING WRONG WITH SETTING PREFIX", e);
                 await ReplyAsync("There was an error in setting the prefix. Please report error with `y!feedback <message>`");
 
             }
@@ -137,7 +137,7 @@ namespace YuGiOhV2.Modules
                 catch (Exception e)
                 {
 
-                    AltConsole.Print("Error", "Prefix", "BAH GAWD SOMETHING WRONG WITH SETTING MINIMAL", e);
+                    AltConsole.Write("Error", "Prefix", "BAH GAWD SOMETHING WRONG WITH SETTING MINIMAL", e);
                     await ReplyAsync("There was an error in setting the minimal setting. Please report error with `y!feedback <message>`");
 
                 }

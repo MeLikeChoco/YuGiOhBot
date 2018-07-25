@@ -11,7 +11,7 @@ using YuGiOhV2.Services;
 
 namespace YuGiOhV2.Modules
 {
-    public class CustomBase : InteractiveBase<SocketCommandContext>
+    public class CustomBase : InteractiveBase
     {
 
         public Task DirectMessageAsync(string message, Embed embed)

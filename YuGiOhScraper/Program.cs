@@ -30,7 +30,8 @@ namespace YuGiOhScraper
         {
 
             var httpClient = new HttpClient() { BaseAddress = new Uri("http://yugioh.wikia.com/") };
-            var links = await GetCardLinks(httpClient);
+            //var links = await GetCardLinks(httpClient);
+            IDictionary<string, string> links = (await GetCardLinks(httpClient)).Take(300).ToDictionary(kv => kv.Key, kv => kv.Value);
             IEnumerable<Card> cards = new List<Card>();
             string retry = "";
 
@@ -114,14 +115,14 @@ namespace YuGiOhScraper
 
         }
 
-        private static IEnumerable<Card> GetCards(HttpClient httpClient, IDictionary<string, string> links, out IDictionary<string,string> errors)
+        private static IEnumerable<Card> GetCards(HttpClient httpClient, IDictionary<string, string> links, out IDictionary<string, string> errors)
         {
 
             var cards = new ConcurrentBag<Card>();
             var total = links.Count;
             var current = 0;
             var pOptions = new ParallelOptions() { MaxDegreeOfParallelism = Environment.ProcessorCount };
-            var errorList = new ConcurrentDictionary<string,string>();
+            var tempErrors = new ConcurrentDictionary<string,string>();
 
             Parallel.ForEach(links, pOptions, link =>
             {
@@ -151,7 +152,7 @@ namespace YuGiOhScraper
                 catch (Exception)
                 {
 
-                    errorList[link.Key] = link.Value;
+                    tempErrors[link.Key] = link.Value;
 
                 }
 
@@ -161,7 +162,7 @@ namespace YuGiOhScraper
 
             });
 
-            errors = errorList;
+            errors = tempErrors;
 
             return cards;
 

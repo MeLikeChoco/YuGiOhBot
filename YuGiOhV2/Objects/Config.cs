@@ -17,6 +17,30 @@ namespace YuGiOhV2.Objects
         public string BotInvite { get; set; }
         [JsonProperty("Feedback Channel")]
         public ulong FeedbackChannel { get; set; }
+        [JsonProperty("Owner Id")]
+        public ulong OwnerId { get; set; }
+        
+        [JsonIgnore]
+        public DateTime LastDatabaseUpdate
+        {
+
+            get
+            {
+
+                var dateStr = File.ReadAllText("LastDatabaseUpdate.txt");
+
+                return DateTime.Parse(dateStr);
+
+            }
+
+            set
+            {
+
+                File.WriteAllText("LastDatabaseUpdate.txt", value.ToUniversalTime().ToString());
+
+            }
+
+        }
 
         [JsonIgnore]
         public static Config Instance
@@ -40,10 +64,10 @@ namespace YuGiOhV2.Objects
 
             _instance = JsonConvert.DeserializeObject<Config>(File.ReadAllText("Files/Config.json"));
 
-            AltConsole.Print("Config", "Reload", "The new settings are:");
+            AltConsole.Write("Config", "Reload", "The new settings are:");
 
             foreach(var property in GetType().GetProperties())
-                AltConsole.Print("Config", "Reload", $"{property}: {property.GetValue(this)}");
+                AltConsole.Write("Config", "Reload", $"{property}: {property.GetValue(this)}");
 
         }
 

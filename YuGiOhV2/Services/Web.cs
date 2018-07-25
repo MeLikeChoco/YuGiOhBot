@@ -77,6 +77,13 @@ namespace YuGiOhV2.Services
 
         }
 
+        public async Task<string> GetString(string url)
+        {
+
+            return await (await Check(url)).ReadAsStringAsync();
+
+        }
+
         public async Task<YuGiOhPrices> GetPrices(string name, string realName = null)
         {
 

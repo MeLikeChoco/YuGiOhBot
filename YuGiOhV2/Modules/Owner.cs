@@ -105,5 +105,18 @@ namespace YuGiOhV2.Modules
             await channel.SendMessageAsync(response.Content);
 
         }
+
+        [Command("shutdown")]
+        [Summary("Shutdown bot")]
+        public async Task ShutdownCommand()
+        {
+
+            foreach (var id in Cache.GuessInProgress.Keys)
+                await Context.Channel.SendMessageAsync("Stopping current guess game due to bot restarting!");
+
+            Environment.Exit(0);
+
+        }
+
     }
 }

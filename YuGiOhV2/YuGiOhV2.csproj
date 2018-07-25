@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -25,16 +25,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="AngleSharp" Version="0.9.9.2" />
-    <PackageReference Include="Dapper" Version="1.50.4" />
-    <PackageReference Include="Dapper.Contrib" Version="1.50.4" />
+    <PackageReference Include="AngleSharp" Version="0.9.10" />
+    <PackageReference Include="Dapper" Version="1.50.5" />
+    <PackageReference Include="Dapper.Contrib" Version="1.50.5" />
     <PackageReference Include="DeepCloner" Version="0.10.2" />
     <PackageReference Include="Discord.Addons.Interactive" Version="1.0.1" />
-    <PackageReference Include="Discord.Net" Version="2.0.0-beta2-00924" />
-    <PackageReference Include="Discord.Net.Providers.WS4Net" Version="2.0.0-beta2-00924" />
+    <PackageReference Include="Discord.Net" Version="2.0.0-beta2-00977" />
+    <PackageReference Include="Discord.Net.Providers.WS4Net" Version="2.0.0-beta2-00977" />
     <PackageReference Include="DiscordBotsList.Api.Adapter.Discord.Net" Version="1.0.0" />
-    <PackageReference Include="Microsoft.Data.Sqlite" Version="2.1.0-preview2-final" />
-    <PackageReference Include="morelinq" Version="3.0.0-beta-1" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="2.1.0" />
+    <PackageReference Include="morelinq" Version="3.0.0" />
   </ItemGroup>
 
   <ItemGroup>

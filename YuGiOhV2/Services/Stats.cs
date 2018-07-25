@@ -170,7 +170,7 @@ namespace YuGiOhV2.Services
 
 
         private void Log(string message)
-            => AltConsole.Print("Info", "Stats", message);
+            => AltConsole.Write("Info", "Stats", message);
 
     }
 }
