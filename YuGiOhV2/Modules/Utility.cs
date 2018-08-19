@@ -106,7 +106,8 @@ namespace YuGiOhV2.Modules
                 .WithRandomColor()
                 .WithDescription($"**Discord API Version:** {DiscordConfig.APIVersion}\n" +
                 $"**Operating System:** {Environment.OSVersion.VersionString}\n" +
-                $"**Processor Count:** {Environment.ProcessorCount}\n");
+                $"**Processor Count:** {Environment.ProcessorCount}\n" +
+                $"**Shards:** {Context.Client.Shards.Count}\n");
 
             return SendEmbed(body);
 

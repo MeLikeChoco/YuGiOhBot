@@ -11,6 +11,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using YuGiOhV2.Objects;
 using YuGiOhV2.Services;
@@ -20,7 +21,7 @@ namespace YuGiOhV2.Core
     public class Events
     {
 
-        private DiscordSocketClient _client;
+        private DiscordShardedClient _client;
         private CommandService _commands;
         private Database _database;
         private Stats _stats;
@@ -31,6 +32,8 @@ namespace YuGiOhV2.Core
         private readonly InteractiveService _interactive;
         private IServiceProvider _services;
         private YgoDatabase _ygoDatabase;
+
+        private int recommendedShards, currentShards;
 
         private bool _isInitialized = false;
 
@@ -50,7 +53,8 @@ namespace YuGiOhV2.Core
 
                         //AlwaysDownloadUsers = true,
                         LogLevel = LogSeverity.Verbose,
-                        MessageCacheSize = 1000
+                        MessageCacheSize = 1000,
+                        TotalShards = 1,
 
                     };
 
@@ -78,7 +82,18 @@ namespace YuGiOhV2.Core
 
             Print("Initializing events...");
 
-            _client = new DiscordSocketClient(_clientConfig);
+            _client = new DiscordShardedClient(_clientConfig);
+
+            TunnelIn().GetAwaiter().GetResult();
+
+            recommendedShards = _client.GetRecommendedShardCountAsync().Result;
+
+            _client.LogoutAsync();
+
+            Print($"Launching with {recommendedShards} shards...");
+
+            _clientConfig.TotalShards = recommendedShards;
+            _client = new DiscordShardedClient(_clientConfig);
             _commands = new CommandService(_commandConfig);
             _web = new Web();
             _cache = new Cache();
@@ -97,11 +112,29 @@ namespace YuGiOhV2.Core
             await RevEngines();
 
             if (!_isInitialized)
-                _client.Ready += YouAintDoneYet;
+            {
+
+                _client.ShardReady += ReadyOtherStuff;
+
+            }
 
         }
 
-        private async Task RevEngines()
+        private async Task ReadyOtherStuff(DiscordSocketClient arg)
+        {
+
+            if (Interlocked.Increment(ref currentShards) == recommendedShards)
+            {
+
+                await YouAintDoneYet();
+
+                _client.ShardReady -= ReadyOtherStuff;
+
+            }
+
+        }
+
+        private async Task TunnelIn()
         {
 
             var isTest = Environment.GetCommandLineArgs().ElementAtOrDefault(1);
@@ -117,6 +150,13 @@ namespace YuGiOhV2.Core
             Print("Logging in...");
             await _client.LoginAsync(TokenType.Bot, token);
             Print("Logged in.");
+
+        }
+
+        private async Task RevEngines()
+        {
+
+            await TunnelIn();
             Print("Starting client...");
             await _client.StartAsync();
             Print("ITS UP AND RUNNING BOIIIIIIIIIIIIIIS");
@@ -136,6 +176,29 @@ namespace YuGiOhV2.Core
             _ygoDatabase = new YgoDatabase(_web, _client, _cache);
 
             _isInitialized = true;
+
+        }
+
+        private async Task RegisterCommands()
+        {
+
+            Print("Registering commands...");
+
+            _chat = new Chat(_cache, _database, new Web());
+
+            _client.MessageReceived += HandleCommand;
+            _client.MessageReceived += (message) =>
+            {
+
+                Task.Run(() => _chat.SOMEONEGETTINGACARDBOIS(message));
+
+                return Task.CompletedTask;
+
+            };
+
+            await _commands.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
+
+            Print("Commands registered.");
 
         }
 
@@ -174,31 +237,6 @@ namespace YuGiOhV2.Core
 
         }
 
-        private async Task RegisterCommands()
-        {
-
-            Print("Registering commands...");
-
-            _chat = new Chat(_cache, _database, new Web());
-
-            _client.MessageReceived += HandleCommand;
-            _client.MessageReceived += (message) =>
-            {
-
-                Task.Run(() => _chat.SOMEONEGETTINGACARDBOIS(message));
-
-                return Task.CompletedTask;
-
-            };
-
-            await _commands.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
-
-            Print("Commands registered.");
-
-            _client.Ready -= YouAintDoneYet;
-
-        }
-
         private async Task HandleCommand(SocketMessage message)
         {            
 
@@ -225,7 +263,7 @@ namespace YuGiOhV2.Core
                 && possibleCmd.Content.Trim() != prefix)
             {
 
-                var context = new SocketCommandContext(_client, possibleCmd);
+                var context = new ShardedCommandContext(_client, possibleCmd);
 
                 if (message.Channel is SocketDMChannel)
                     AltConsole.Write("Info", "Command", $"{possibleCmd.Author.Username} in DM's");

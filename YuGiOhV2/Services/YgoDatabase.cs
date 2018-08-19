@@ -22,7 +22,7 @@ namespace YuGiOhV2.Services
     {
 
         private readonly Timer _reformDatabase;
-        private readonly DiscordSocketClient _client;
+        private readonly DiscordShardedClient _client;
         private readonly Cache _cache;
 
         private IUserMessage _message;
@@ -31,7 +31,7 @@ namespace YuGiOhV2.Services
 
         private const string BaseUrl = "http://yugioh.wikia.com";
 
-        public YgoDatabase(Web web, DiscordSocketClient client, Cache cache)
+        public YgoDatabase(Web web, DiscordShardedClient client, Cache cache)
         {
 
             _client = client;

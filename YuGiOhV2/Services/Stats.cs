@@ -27,14 +27,14 @@ namespace YuGiOhV2.Services
         public bool IsReady { get; set; }
 
         private bool _armedTimer;
-        private Timer _calculateStats;
+        private readonly Timer _calculateStats;
         private Timer _sendStats;
         private ulong _id;
         private Web _web;
-        private DiscordNetDblApi _discordBotListApi;
+        private readonly DiscordNetDblApi _discordBotListApi;
         private IAdapter _submissionAdapter;
 
-        public Stats(DiscordSocketClient client, Web web)
+        public Stats(DiscordShardedClient client, Web web)
         {
             
             _web = web;
@@ -57,7 +57,7 @@ namespace YuGiOhV2.Services
 
             Log("Calculating stats...");
 
-            var client = state as DiscordSocketClient;
+            var client = state as DiscordShardedClient;
             var guilds = client.Guilds;
 
             var maxGuild = guilds.Where(guild => !guild.Name.Contains("Bot")).MaxBy(guild => guild.MemberCount).FirstOrDefault();
