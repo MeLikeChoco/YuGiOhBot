@@ -22,6 +22,7 @@ namespace YuGiOhV2.Modules
         public Config Config { get; set; }
 
         private Setting _setting;
+        private IEnumerable<CommandInfo> _commands;
 
         private PaginatedAppearanceOptions _aOptions => new PaginatedAppearanceOptions()
         {
@@ -34,37 +35,29 @@ namespace YuGiOhV2.Modules
         };
 
         protected override void BeforeExecute(CommandInfo command)
-            => _setting = Database.Settings[Context.Guild.Id];
+        {
+
+            _setting = Database.Settings[Context.Guild.Id];
+            _commands = Commands.Commands.Where(CheckPrecond);
+
+        }
 
         [Command("help")]
         [Summary("Get help on commands based on input!")]
         public Task SpecificHelpCommand([Remainder]string input)
         {
 
-            var commands = Commands.Commands
-                .Where(command => command.Name == input && CheckPrecond(command));
+            var commands = _commands.Where(cmdInfo => cmdInfo.Name == input);
 
             if(!commands.Any())
                 return NoResultError("commands", input);
 
+            var cmdStrings = commands
+                .Select(cmdInfo => $"{cmdInfo.Name} {string.Join(' ', cmdInfo.Parameters.Select(param => $"<{param.Name}>"))}\n{cmdInfo.Summary}")
+                .Distinct();
             var str = new StringBuilder($"```fix\n");
 
-            foreach(var command in commands)
-            {
-
-                str.Append($"{command.Name} ");
-
-                foreach(var parameter in command.Parameters)
-                {
-
-                    str.Append($"<{parameter.Name}> ");
-
-                }
-
-                str.AppendLine($"\n{command.Summary}\n");
-
-            }
-
+            cmdStrings.ToList().ForEach(line => str.AppendLine($"{line}\n"));
             str.Append("```");
 
             return ReplyAsync(str.ToString());
@@ -73,10 +66,9 @@ namespace YuGiOhV2.Modules
 
         [Command("help")]
         [Summary("Defacto help command!")]
-        public async Task HelpCommand()
+        public Task HelpCommand()
         {
-
-            var messages = new List<string>();
+            
             var author = new EmbedAuthorBuilder()
                 .WithIconUrl(Context.Client.CurrentUser.GetAvatarUrl())
                 .WithName($"Click for support guild/server!")
@@ -91,46 +83,14 @@ namespace YuGiOhV2.Modules
 
             };
 
-            IEnumerable<CommandInfo> commands;
-
-            if (Context.User.Id == (await Context.Client.GetApplicationInfoAsync()).Owner.Id &&
-                Context.Guild.Id == 171432768767524864)
-                commands = Commands.Commands.Where(command => CheckPrecond(command));
-            else
-                commands = Commands.Commands
-                    .Where(command => !command.Preconditions.Any(precondition => precondition is RequireOwnerAttribute) && 
-                                       command.CheckPreconditionsAsync(Context).GetAwaiter().GetResult().IsSuccess);
-
-            var groups = commands.Batch(5);
-
-            foreach (var group in groups)
-            {
-
-                var str = new StringBuilder();
-
-                foreach (var command in group)
-                {
-
-                    str.Append($"**Command:** {command.Name} ");
-
-                    foreach (var parameter in command.Parameters)
-                    {
-
-                        str.Append($"<{parameter.Name}> ");
-
-                    }
-
-                    str.AppendLine($"\n{command.Summary}\n");
-
-                }
-
-                messages.Add(str.ToString());
-
-            }
-
+            var messages = _commands.Select(cmdInfo => $"**Command:** {cmdInfo.Name} {string.Join(' ', cmdInfo.Parameters.Select(param => $"<{param.Name}>"))}\n{cmdInfo.Summary}")
+                .Distinct()
+                .Batch(5)
+                .Select(group => string.Join("\n\n", group));
+                       
             paginatedMessage.Pages = messages;
 
-            await PagedReplyAsync(paginatedMessage);
+            return PagedReplyAsync(paginatedMessage);
 
         }
 

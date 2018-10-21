@@ -147,25 +147,25 @@ namespace YuGiOhV2.Modules
             await ReplyAsync($"You have **5** minutes to figure this card out!\n{display}");
 
             var cts = new CancellationTokenSource();
-            var timer = new Timer(new TimerCallback((token) => (token as CancellationTokenSource).Cancel()), cts, TimeSpan.FromSeconds(300), TimeSpan.FromSeconds(300));
-            var lower = card.ToLower();
-            var hanging = 0;
-            SocketGuildUser winner = null;
 
-            await Task.Run(async () =>
+            using(var timer = new Timer(new TimerCallback((token) => (token as CancellationTokenSource).Cancel()), cts, TimeSpan.FromSeconds(300), TimeSpan.FromSeconds(300)))
             {
+
+                var lower = card.ToLower();
+                var hanging = 0;
+                SocketGuildUser winner = null;
 
                 var guesses = new List<string>();
 
                 do
                 {
 
-                    var input = await Task.Run(async () => await NextMessageAsync(_criteria), cts.Token);
+                    var input = await NextMessageAsync(_criteria, token: cts.Token);
 
                     if (cts.Token.IsCancellationRequested && input == null)
                         break;
 
-                    var content = input.Content?.ToLower();
+                    var content = input?.Content?.ToLower();
 
                     if (content == null)
                         continue;
@@ -203,17 +203,16 @@ namespace YuGiOhV2.Modules
                     }
 
                 } while (check.ToString() != card);
+                
 
-            }, cts.Token);
+                if (winner != null)
+                    await ReplyAsync($":trophy: The winner is **{winner.Nickname ?? winner.Username}**!");
+                else if (hanging == 6)
+                    await ReplyAsync($":stop_button: The guy got hanged! There was no winner. The card was `{card}`!");
+                else
+                    await ReplyAsync($":stop_button: Time is up! There was no winner. The card was `{card}`!");
 
-            timer.Dispose();
-
-            if (winner != null)
-                await ReplyAsync($":trophy: The winner is **{winner.Nickname ?? winner.Username}**!");
-            else if (hanging == 6)
-                await ReplyAsync($":stop_button: The guy got hanged! There was no winner. The card was `{card}`!");
-            else
-                await ReplyAsync($":stop_button: Time is up! There was no winner. The card was `{card}`!");
+            }
 
         }
 

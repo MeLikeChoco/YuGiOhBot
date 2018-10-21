@@ -57,8 +57,6 @@ namespace YuGiOhV2.Services
 
             //made a seperate method so other classes may update the embeds when I want them to
             Initialize();
-            
-
 
             Print("Finished cache initialization...");
 

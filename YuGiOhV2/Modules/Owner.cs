@@ -16,6 +16,7 @@ namespace YuGiOhV2.Modules
     public class Owner : CustomBase
     {
 
+        public YgoDatabase YgoDatabase { get; set; }
         public Cache Cache { get; set; }
         public Web Web { get; set; }
         public Config Config { get; set; }
@@ -67,10 +68,14 @@ namespace YuGiOhV2.Modules
 
         [Command("reform")]
         [Summary("Re-initialize the cache")]
-        public Task ReformCache()
+        public Task ReformCache(bool scrape = false)
         {
-            
-            Cache.Initialize();
+
+            if (scrape)
+                YgoDatabase.ReformDatabase(Web);
+            else
+                Cache.Initialize();
+
             return Task.CompletedTask;
 
         }

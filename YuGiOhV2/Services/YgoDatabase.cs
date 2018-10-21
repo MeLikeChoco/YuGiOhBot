@@ -24,6 +24,7 @@ namespace YuGiOhV2.Services
         private readonly Timer _reformDatabase;
         private readonly DiscordShardedClient _client;
         private readonly Cache _cache;
+        private readonly Web _web;
 
         private IUserMessage _message;
         private IEnumerable<Card> _cards;
@@ -36,10 +37,15 @@ namespace YuGiOhV2.Services
 
             _client = client;
             _cache = cache;
+            _web = web;
             _reformDatabase = new Timer(ReformDatabase, web, TimeSpan.FromSeconds(60), TimeSpan.FromDays(7));
 
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="state">Web</param>
         public async void ReformDatabase(object state)
         {
 
@@ -53,8 +59,7 @@ namespace YuGiOhV2.Services
 
             Log("Updates finished. Sending results...");
 
-            _message = _client.GetUser(Config.Instance.OwnerId).GetOrCreateDMChannelAsync().Result
-                .SendMessageAsync(embed: FancifyErrorList(errors)).GetAwaiter().GetResult();
+            _message = await (await _client.GetUser(Config.Instance.OwnerId).GetOrCreateDMChannelAsync()).SendMessageAsync(embed: FancifyErrorList(errors));
             _tokenSource = new CancellationTokenSource();
 
             _client.ReactionAdded += CheckReactionWrapper;
@@ -67,6 +72,7 @@ namespace YuGiOhV2.Services
             }
             catch { }
 
+            _client.ReactionAdded -= CheckReactionWrapper;
             _cache.Initialize();
 
         }
@@ -94,12 +100,9 @@ namespace YuGiOhV2.Services
 
                 }
                 else if (reaction.Emote.Name == "\u274e")
-                {
-
-                    _client.ReactionAdded -= CheckReactionWrapper;
                     _tokenSource.Cancel();
-
-                }
+                else if (reaction.Emote.Name == "🔁")
+                    ReformDatabase(_web);
 
             }
 
@@ -176,12 +179,11 @@ namespace YuGiOhV2.Services
             Parallel.ForEach(links, pOptions, link =>
             {
 
-                var url = $"{BaseUrl}{link.Value}";
-                var response = web.GetString(url).Result;
-
                 try
                 {
 
+                    var url = $"{BaseUrl}{link.Value}";
+                    var response = web.GetString(url).Result;
                     var card = new CardParser(link.Key, response).Parse();
 
                     #region OCG TCG

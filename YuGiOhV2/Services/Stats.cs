@@ -1,8 +1,8 @@
 ﻿using Discord;
 using Discord.WebSocket;
 using DiscordBotsList.Api;
-using DiscordBotsList.Api.Adapter.DiscordNet;
-using DiscordBotsList.Api.Extensions.DiscordNet;
+using DiscordBotsList.Api.Adapter.Discord.Net;
+using DiscordBotsList.Api.Objects;
 using MoreLinq;
 using Newtonsoft.Json;
 using System;
@@ -41,7 +41,7 @@ namespace YuGiOhV2.Services
             IsReady = false;
             _armedTimer = false;
             _id = client.CurrentUser.Id;
-            _discordBotListApi = DiscordBotsList.Api.Adapter.DiscordNet.DiscordNetDblUtils.CreateDblApi(client, File.ReadAllText("Files/Bot List Tokens/Blue.txt"));
+            _discordBotListApi = DiscordNetDblUtils.CreateDblApi(client, File.ReadAllText("Files/Bot List Tokens/Blue.txt"));
             _submissionAdapter = new SubmissionAdapter(_discordBotListApi, client, TimeSpan.FromMinutes(5));
 
             _calculateStats = new Timer(CalculateStats, client, 0, 3600000);

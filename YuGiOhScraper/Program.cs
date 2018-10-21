@@ -31,7 +31,7 @@ namespace YuGiOhScraper
 
             var httpClient = new HttpClient() { BaseAddress = new Uri("http://yugioh.wikia.com/") };
             //var links = await GetCardLinks(httpClient);
-            IDictionary<string, string> links = (await GetCardLinks(httpClient)).Take(300).ToDictionary(kv => kv.Key, kv => kv.Value);
+            IDictionary<string, string> links = (await GetCardLinks(httpClient)).ToDictionary(kv => kv.Key, kv => kv.Value);
             IEnumerable<Card> cards = new List<Card>();
             string retry = "";
 

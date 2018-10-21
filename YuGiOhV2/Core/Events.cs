@@ -169,11 +169,13 @@ namespace YuGiOhV2.Core
             //await _cache.GetAWESOMECARDART(_web);
             await LoadDatabase();
             LoadStats();
+
+            _ygoDatabase = new YgoDatabase(_web, _client, _cache);
+
             BuildServices();
             await RegisterCommands();
             await _client.SetGameAsync($"Support guild/server: {_config.GuildInvite}");
 
-            _ygoDatabase = new YgoDatabase(_web, _client, _cache);
 
             _isInitialized = true;
 
@@ -232,6 +234,7 @@ namespace YuGiOhV2.Core
                 .AddSingleton(_web)
                 .AddSingleton(_stats)
                 .AddSingleton(_config)
+                .AddSingleton(_ygoDatabase)
                 .AddSingleton<Random>()
                 .BuildServiceProvider();
 
