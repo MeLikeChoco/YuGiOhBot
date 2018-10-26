@@ -37,6 +37,17 @@ namespace YuGiOhV2.Services
         public async Task SOMEONEGETTINGACARDBOIS(SocketMessage message)
         {
 
+            if (message.Channel is SocketGuildChannel guildChannel)
+            {
+
+                var guild = guildChannel.Guild.Id;
+                var setting = _database.Settings[guild];
+
+                if (!setting.Inline)
+                    return;
+
+            }
+
             if (message.Author.IsBot || string.IsNullOrEmpty(message.Content))
                 return;
 
@@ -45,13 +56,13 @@ namespace YuGiOhV2.Services
             var channel = message.Channel;
             bool minimal = false;
 
-            if(mCollection.Count > 0 && mCollection.Count < 4)
+            if (mCollection.Count > 0 && mCollection.Count < 4)
             {
 
                 using (channel.EnterTypingState())
                 {
-                    
-                    if((channel is SocketTextChannel))
+
+                    if ((channel is SocketTextChannel))
                     {
 
                         AltConsole.Write("Info", "Command", $"{message.Author.Username} from {(channel as SocketTextChannel).Guild.Name}");
@@ -62,7 +73,7 @@ namespace YuGiOhV2.Services
 
                     AltConsole.Write("Info", "Inline", $"{message.Content}");
 
-                    foreach(var match in mCollection)
+                    foreach (var match in mCollection)
                     {
 
                         watch.Start();
@@ -121,7 +132,7 @@ namespace YuGiOhV2.Services
 
             if (searchTime != null)
             {
-                
+
                 time = searchTime.Value;
                 var rounded = Math.Round(time.TotalSeconds, 5, MidpointRounding.ToEven).ToString("0.00000");
 
@@ -129,7 +140,7 @@ namespace YuGiOhV2.Services
 
             }
 
-            if(minimal)
+            if (minimal)
             {
 
                 clone.ThumbnailUrl = clone.ImageUrl;

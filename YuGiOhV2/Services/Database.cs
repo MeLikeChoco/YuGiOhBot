@@ -133,5 +133,22 @@ namespace YuGiOhV2.Services
 
         }
 
+        public async Task SetInline(ulong id, bool inline)
+        {
+
+            var setting = Settings[id];
+            setting.Inline = inline;
+
+            using (var db = new SqliteConnection(DbPath))
+            {
+
+                await db.OpenAsync();
+                await db.UpdateAsync(setting);
+                db.Close();
+
+            }
+
+        }
+
     }
 }

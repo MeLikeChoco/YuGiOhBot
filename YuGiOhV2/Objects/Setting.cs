@@ -17,6 +17,7 @@ namespace YuGiOhV2.Objects
         public bool Minimal { get; set; } = false;
         public int GuessTime { get; set; } = 60;
         public bool AutoDelete { get; set; } = true;
+        public bool Inline { get; set; } = true;
 
         public Setting(SocketGuild guild)
         {
@@ -25,13 +26,14 @@ namespace YuGiOhV2.Objects
 
         }
 
-        public Setting(ulong id, string prefix, bool minimal, int guessTime)
+        public Setting(ulong id, string prefix, bool minimal, int guessTime, bool inLine)
         {
 
             Id = id;
             Prefix = prefix;
             Minimal = minimal;
             GuessTime = guessTime;
+            Inline = inLine;
 
         }
         

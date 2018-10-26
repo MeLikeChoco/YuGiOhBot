@@ -40,7 +40,7 @@ namespace YuGiOhV2.Modules
                 catch (Exception e)
                 {
 
-                    AltConsole.Write("Error", "Prefix", "BAH GAWD SOMETHING WRONG WITH AUTODELETE", e);
+                    AltConsole.Write("Error", "Configuration", "BAH GAWD SOMETHING WRONG WITH AUTODELETE", e);
                     await ReplyAsync("There was an error in setting autodelete. Please report error with `y!feedback <message>`");
 
                 }
@@ -100,7 +100,7 @@ namespace YuGiOhV2.Modules
             catch (Exception e)
             {
 
-                AltConsole.Write("Error", "Prefix", "BAH GAWD SOMETHING WRONG WITH SETTING PREFIX", e);
+                AltConsole.Write("Error", "Configuration", "BAH GAWD SOMETHING WRONG WITH SETTING PREFIX", e);
                 await ReplyAsync("There was an error in setting the prefix. Please report error with `y!feedback <message>`");
 
             }
@@ -137,7 +137,7 @@ namespace YuGiOhV2.Modules
                 catch (Exception e)
                 {
 
-                    AltConsole.Write("Error", "Prefix", "BAH GAWD SOMETHING WRONG WITH SETTING MINIMAL", e);
+                    AltConsole.Write("Error", "Configuration", "BAH GAWD SOMETHING WRONG WITH SETTING MINIMAL", e);
                     await ReplyAsync("There was an error in setting the minimal setting. Please report error with `y!feedback <message>`");
 
                 }
@@ -158,6 +158,44 @@ namespace YuGiOhV2.Modules
         [Summary("Check how much card info is shown!")]
         public async Task MinimalCommand()
             => await ReplyAndDeleteAsync($"**Minimal:** {_setting.Minimal}");
+
+        [Command("inline")]
+        [Summary("Enable (true) or disable (false) inline search!")]
+        public async Task InlineCommand(bool input)
+        {
+
+            if(_setting.Inline != input)
+            {
+
+                try
+                {
+
+                    await Database.SetInline(Context.Guild.Id, input);
+                    await ReplyAsync($"Inline has been set to `{input}`");
+
+                }
+                catch (Exception e)
+                {
+
+                    AltConsole.Write("Error", "Configuration", "BAH GAWD SOMETHING WRONG WITH SETTING INLINE", e);
+                    await ReplyAsync("There was an error in setting the minimal setting. Please report error with `y!feedback <message>`");
+
+                }
+
+            }
+
+        }
+
+        [Command("inline")]
+        [RequireOwner]
+        [Summary("Enable (true) or disable (false) inline search!")]
+        public Task InlineCommandOwner(bool input)
+            => InlineCommand(input);
+
+        [Command("inline")]
+        [Summary("Enable (true) or disable (false) inline search!")]
+        public Task InlineCommandOwner()
+            => ReplyAsync($"Inline search enabled: **{_setting.Inline}**");
 
         Task TrueOrFalseMessage()
             => ReplyAsync("This command only accepts `true` or `false`!");

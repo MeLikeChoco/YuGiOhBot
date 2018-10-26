@@ -30,7 +30,7 @@ namespace YuGiOhV2.Modules
             JumpDisplayOptions = JumpDisplayOptions.Never,
             DisplayInformationIcon = false,
             FooterFormat = _setting.AutoDelete ? "This message will be deleted in 3 minutes! | Page {0}/{1}" : "This message will not be deleted! | Page {0}/{1}",
-            Timeout = _setting.AutoDelete ? TimeSpan.FromMinutes(3) : TimeSpan.FromSeconds(-1)
+            Timeout = _setting.AutoDelete ? TimeSpan.FromMinutes(3) : TimeSpan.FromMilliseconds(-1)
 
         };
 
@@ -52,10 +52,10 @@ namespace YuGiOhV2.Modules
             if(!commands.Any())
                 return NoResultError("commands", input);
 
+            var str = new StringBuilder($"```fix\n");
             var cmdStrings = commands
                 .Select(cmdInfo => $"{cmdInfo.Name} {string.Join(' ', cmdInfo.Parameters.Select(param => $"<{param.Name}>"))}\n{cmdInfo.Summary}")
                 .Distinct();
-            var str = new StringBuilder($"```fix\n");
 
             cmdStrings.ToList().ForEach(line => str.AppendLine($"{line}\n"));
             str.Append("```");
