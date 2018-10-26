@@ -193,7 +193,7 @@ namespace YuGiOhV2.Modules
             => InlineCommand(input);
 
         [Command("inline")]
-        [Summary("Enable (true) or disable (false) inline search!")]
+        [Summary("Check if inline search is disabled!")]
         public Task InlineCommandOwner()
             => ReplyAsync($"Inline search enabled: **{_setting.Inline}**");
 
