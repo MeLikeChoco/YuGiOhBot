@@ -2,6 +2,7 @@
 using Dapper;
 using Dapper.Contrib.Extensions;
 using Microsoft.Data.Sqlite;
+using MoreLinq;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Concurrent;
@@ -23,10 +24,7 @@ namespace YuGiOhScraper
 
         private static IDictionary<string, string> _tcg, _ocg;
 
-        public static void Main(string[] args)
-            => new Program().MainAsync().GetAwaiter().GetResult();
-
-        public async Task MainAsync()
+        public static async Task Main(string[] args)
         {
 
             var httpClient = new HttpClient() { BaseAddress = new Uri("http://yugioh.wikia.com/") };
@@ -179,8 +177,8 @@ namespace YuGiOhScraper
             _tcg = new ConcurrentDictionary<string, string>();
             _ocg = new ConcurrentDictionary<string, string>();
 
-            var responseTcg = await httpClient.GetStringAsync("api/v1/Articles/List?category=TCG_cards&limit=20000&namespaces=0"); //as you can see, the 20000 assumes the user doesn't care about internet speed
-            var responseOcg = await httpClient.GetStringAsync("api/v1/Articles/List?category=OCG_cards&limit=20000&namespaces=0");
+            var responseTcg = await httpClient.GetStringAsync("api/v1/Articles/List?category=TCG_cards&limit=1000000&namespaces=0"); //I have to use a really high number or else some cards won't show up, its so bizarre...
+            var responseOcg = await httpClient.GetStringAsync("api/v1/Articles/List?category=OCG_cards&limit=1000000&namespaces=0");
             var json = JObject.Parse(responseTcg);
 
             Parallel.ForEach(json["items"].ToObject<JArray>(), item => _tcg[item.Value<string>("title")] = item.Value<string>("url"));
@@ -189,7 +187,7 @@ namespace YuGiOhScraper
 
             Parallel.ForEach(json["items"].ToObject<JArray>(), item => _ocg[item.Value<string>("title")] = item.Value<string>("url"));
 
-            return _tcg.Concat(_ocg).GroupBy(kv => kv.Key).ToDictionary(group => group.Key, group => group.First().Value);
+            return _tcg.Concat(_ocg).DistinctBy(kv => kv.Key).ToDictionary(kv => kv.Key, kv => kv.Value);
 
         }
 
