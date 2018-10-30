@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -11,12 +12,12 @@ namespace YuGiOhV2
     {
         
         private static StreamWriter _logger;
-        private static object _loggerLock;
+        //private static object _loggerLock;
 
         public static void Initialize()
         {
 
-            _loggerLock = new object();
+            //_loggerLock = new object();
 
             if (File.Exists("Log.txt"))
                 File.Delete("Log.txt");
@@ -89,16 +90,12 @@ namespace YuGiOhV2
 
         }
 
+        [MethodImpl(MethodImplOptions.Synchronized)]
         private static void Log(string message)
         {
 
-            lock (_loggerLock)
-            {
-
-                _logger.WriteLine($"{message}");
-                _logger.Flush();
-
-            }
+            _logger.WriteLine($"{message}");
+            _logger.Flush();
 
         }
 

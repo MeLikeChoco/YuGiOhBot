@@ -170,7 +170,7 @@ namespace YuGiOhV2.Core
             await LoadDatabase();
             LoadStats();
 
-            _ygoDatabase = new YgoDatabase(_web, _client, _cache);
+            _ygoDatabase = new YgoDatabase(_client, _cache);
 
             BuildServices();
             await RegisterCommands();

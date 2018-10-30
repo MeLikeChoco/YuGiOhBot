@@ -1,4 +1,5 @@
-﻿using AngleSharp.Dom;
+﻿using AngleSharp;
+using AngleSharp.Dom;
 using AngleSharp.Dom.Html;
 using AngleSharp.Parser.Html;
 using System;
@@ -15,15 +16,16 @@ namespace YuGiOhScraper.Parsers
     {
 
         private static readonly HtmlParser HtmlParser = new HtmlParser();
+        private static readonly IBrowsingContext Context = BrowsingContext.New(Configuration.Default.WithDefaultLoader());
 
         private string _name;
         private IElement _dom;
 
-        public CardParser(string name, string html)
+        public CardParser(string name, string link)
         {
 
             _name = name;
-            _dom = HtmlParser.Parse(html).GetElementById("mw-content-text");
+            _dom = Context.OpenAsync(link).Result.GetElementById("mw-content-text");
 
         }
 
@@ -204,6 +206,8 @@ namespace YuGiOhScraper.Parsers
                 #endregion Anti-Supports
 
             }
+
+            card.Url = _dom.BaseUri;
 
             return card;
 

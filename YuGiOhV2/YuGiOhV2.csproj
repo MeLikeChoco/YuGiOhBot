@@ -41,6 +41,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Databases\Backup\ygo.db">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Databases\guilds.db">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
