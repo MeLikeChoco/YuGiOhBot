@@ -37,7 +37,7 @@ namespace YuGiOhV2.Modules
             DisplayInformationIcon = false,
             JumpDisplayOptions = JumpDisplayOptions.Never,
             FooterFormat = _setting.AutoDelete ? "Enter a number to see that result! Expires in 60 seconds! | Page {0}/{1}" : "This embed will not be deleted! | Page {0}/{1}",
-            Timeout = _setting.AutoDelete ? TimeSpan.FromSeconds(60) : TimeSpan.FromSeconds(-1)
+            Timeout = _setting.AutoDelete ? TimeSpan.FromSeconds(60) : TimeSpan.FromMilliseconds(-1)
 
         };
 
