@@ -53,7 +53,7 @@ namespace YuGiOhV2.Services
         }
 
         public YgoDatabase(DiscordShardedClient client, Cache cache)
-            => _reformDatabase = new Timer(ReformDatabase, new { Client = client, Cache = cache }, TimeSpan.FromSeconds(10), TimeSpan.FromDays(7));
+            => _reformDatabase = Environment.GetCommandLineArgs().ElementAtOrDefault(1)?.ToLower() == "true" ? null : new Timer(ReformDatabase, new { Client = client, Cache = cache }, TimeSpan.FromSeconds(10), TimeSpan.FromDays(7));
 
         public async void ReformDatabase(object state)
         {
