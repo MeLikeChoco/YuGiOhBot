@@ -60,7 +60,7 @@ namespace YuGiOhV2.Modules
         [Command("autodelete")]
         [Summary("Gets the auto delete setting")]
         public Task GetAutoDeleteCommand()
-            => ReplyAsync($"Embed auto deletion: `{_setting.AutoDelete}`");
+            => DisplaySetting("Auto Delete Embeds", _setting.AutoDelete);
 
         [Command("guesstime")]
         [RequireUserPermission(GuildPermission.Administrator)]
@@ -115,8 +115,8 @@ namespace YuGiOhV2.Modules
 
         [Command("prefix")]
         [Summary("See the prefix the guild is using! Kinda useless tbh...")]
-        public async Task PrefixCommand()
-            => await ReplyAsync($"**Prefix:** {_setting.Prefix}");
+        public Task PrefixCommand()
+            => DisplaySetting("Prefix", _setting.Prefix);
 
         [Command("minimal")]
         [RequireUserPermission(GuildPermission.Administrator)]
@@ -156,15 +156,15 @@ namespace YuGiOhV2.Modules
 
         [Command("minimal")]
         [Summary("Check how much card info is shown!")]
-        public async Task MinimalCommand()
-            => await ReplyAndDeleteAsync($"**Minimal:** {_setting.Minimal}");
+        public Task MinimalCommand()
+            => DisplaySetting("Minimal", _setting.Minimal);
 
         [Command("inline")]
         [Summary("Enable (true) or disable (false) inline search!")]
         public async Task InlineCommand(bool input)
         {
 
-            if(_setting.Inline != input)
+            if (_setting.Inline != input)
             {
 
                 try
@@ -197,7 +197,10 @@ namespace YuGiOhV2.Modules
         public Task InlineCommandOwner()
             => ReplyAsync($"Inline search enabled: **{_setting.Inline}**");
 
-        Task TrueOrFalseMessage()
+        private Task DisplaySetting(string setting, object value)
+            => ReplyAsync($"**{setting}:** {value}");
+
+        private Task TrueOrFalseMessage()
             => ReplyAsync("This command only accepts `true` or `false`!");
 
     }
