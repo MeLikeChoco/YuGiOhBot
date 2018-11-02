@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using YuGiOhV2.Extensions;
 using YuGiOhV2.Services;
 
 namespace YuGiOhV2.Modules
@@ -20,8 +21,8 @@ namespace YuGiOhV2.Modules
         public Task UploadAsync(Stream stream, string filename, string text = null)
             => Context.Channel.SendFileAsync(stream, filename, text);
 
-        public async Task SendCardEmbed(EmbedBuilder embed, bool minimal)
-            => await ReplyAsync("", embed: (await Chat.EditEmbed(embed, minimal)).Build());
+        public async Task SendCardEmbed(EmbedBuilder embed, bool minimal, Web web)
+            => await ReplyAsync("", embed: (await embed.WithPrices(minimal, web)).Build());
 
         public async Task SendEmbed(EmbedBuilder embed)
             => await ReplyAsync("", embed: embed.Build());
