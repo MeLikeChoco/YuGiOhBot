@@ -13,10 +13,7 @@ namespace YuGiOhV2.Core
 
         //private static CancellationTokenSource TkSource;
 
-        public static void Main(string[] args)
-            => new EntryPoint().Run().GetAwaiter().GetResult();
-
-        private async Task Run()
+        private static async Task Main(string[] args)
         {
 
             AltConsole.Initialize();
