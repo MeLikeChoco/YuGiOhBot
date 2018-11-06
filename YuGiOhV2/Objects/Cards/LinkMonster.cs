@@ -10,7 +10,7 @@ namespace YuGiOhV2.Objects.Cards
     {
                 
         public int Link { get; set; }
-        public string LinkArrows { get; set; }
+        public List<string> LinkArrows { get; set; }
 
     }
 }

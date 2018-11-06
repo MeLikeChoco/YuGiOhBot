@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace YuGiOhV2.Objects.Cards
 {
-    public abstract class Card
+    public class Card
     {
 
         public string Name { get; set; }
@@ -14,9 +14,9 @@ namespace YuGiOhV2.Objects.Cards
         public string CardType { get; set; }
         public string Lore { get; set; }
 
-        public string Archetype { get; set; }
-        public string Supports { get; set; }
-        public string AntiSupports { get; set; }
+        public string[] Archetype { get; set; }
+        public string[] Supports { get; set; }
+        public string[] AntiSupports { get; set; }
 
         public bool OcgExists { get; set; }
         public bool TcgExists { get; set; }
@@ -25,9 +25,9 @@ namespace YuGiOhV2.Objects.Cards
         public string Url { get; set; }
         public string Passcode { get; set; }
 
-        public string OcgStatus { get; set; }
-        public string TcgAdvStatus { get; set; }
-        public string TcgTrnStatus { get; set; }
+        public CardStatus OcgStatus { get; set; }
+        public CardStatus TcgAdvStatus { get; set; }
+        public CardStatus TcgTrnStatus { get; set; }
 
         public bool HasEffect
         {
@@ -52,4 +52,18 @@ namespace YuGiOhV2.Objects.Cards
         }
 
     }
+
+    public enum CardStatus
+    {
+
+        Forbidden,
+        Illegal,
+        Legal,
+        Limited,
+        SemiLimited,
+        Unreleased,
+        Unlimited
+
+    }
+
 }

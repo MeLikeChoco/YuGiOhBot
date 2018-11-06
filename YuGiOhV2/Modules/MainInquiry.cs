@@ -56,7 +56,7 @@ namespace YuGiOhV2.Modules
         public Task CardCommand([Remainder]string input)
         {
 
-            if (Cache.Cards.TryGetValue(input, out var embed))
+            if (Cache.Embeds.TryGetValue(input, out var embed))
                 return SendCardEmbed(embed, _minimal, Web);
             else
                 return NoResultError(input);
@@ -68,7 +68,7 @@ namespace YuGiOhV2.Modules
         public Task RandomCommand()
         {
 
-            var embed = Cache.Cards.RandomSubset(1).First().Value;
+            var embed = Cache.Embeds.RandomSubset(1).First().Value;
 
             return SendCardEmbed(embed, _minimal, Web);
 

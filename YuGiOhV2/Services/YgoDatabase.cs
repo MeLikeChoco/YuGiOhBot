@@ -14,8 +14,6 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using YuGiOhScraper.Entities;
-using YuGiOhScraper.Parsers;
 using YuGiOhV2.Objects;
 
 namespace YuGiOhV2.Services

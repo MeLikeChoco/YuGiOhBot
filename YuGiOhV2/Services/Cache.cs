@@ -23,8 +23,8 @@ namespace YuGiOhV2.Services
     public class Cache
     {
 
-        public Dictionary<string, Card> Objects { get; private set; }
-        public Dictionary<string, EmbedBuilder> Cards { get; private set; }
+        public Dictionary<string, CardParser> Cards { get; private set; }
+        public Dictionary<string, EmbedBuilder> Embeds { get; private set; }
         public Dictionary<string, Booster> BoosterPacks { get; private set; }
         public Dictionary<string, HashSet<string>> Archetypes { get; private set; }
         public Dictionary<string, string> Images { get; private set; }
@@ -86,12 +86,12 @@ namespace YuGiOhV2.Services
 
         }
 
-        private void AquireFancyMessages(IEnumerable<Card> objects)
+        private void AquireFancyMessages(IEnumerable<CardParser> objects)
         {
 
             var counter = 0;
             var total = objects.Count();
-            var tempObjects = new ConcurrentDictionary<string, Card>();
+            var tempObjects = new ConcurrentDictionary<string, CardParser>();
             var tempDict = new ConcurrentDictionary<string, EmbedBuilder>();
             var tempImages = new ConcurrentDictionary<string, string>();
             var tempLowerToUpper = new ConcurrentDictionary<string, string>();
@@ -167,8 +167,8 @@ namespace YuGiOhV2.Services
 
             Print("Finished generating embeds.");
 
-            Objects = new Dictionary<string, Card>(tempObjects, StringComparer.InvariantCultureIgnoreCase);
-            Cards = new Dictionary<string, EmbedBuilder>(tempDict, StringComparer.InvariantCultureIgnoreCase);
+            Cards = new Dictionary<string, CardParser>(tempObjects, StringComparer.InvariantCultureIgnoreCase);
+            Embeds = new Dictionary<string, EmbedBuilder>(tempDict, StringComparer.InvariantCultureIgnoreCase);
             Images = new Dictionary<string, string>(tempImages, StringComparer.InvariantCultureIgnoreCase);
             LowerToUpper = new Dictionary<string, string>(tempLowerToUpper, StringComparer.InvariantCultureIgnoreCase);
             Uppercase = new HashSet<string>(tempUpper);
@@ -177,7 +177,7 @@ namespace YuGiOhV2.Services
 
         }
 
-        private EmbedBuilder GenFancyMessage(Card card)
+        private EmbedBuilder GenFancyMessage(CardParser card)
         {
 
             var author = new EmbedAuthorBuilder()
@@ -253,7 +253,7 @@ namespace YuGiOhV2.Services
 
         }
 
-        private string GenDescription(Card card)
+        private string GenDescription(CardParser card)
         {
 
             string desc = "";
@@ -308,7 +308,7 @@ namespace YuGiOhV2.Services
 
         }
 
-        private Color GetColor(Card card)
+        private Color GetColor(CardParser card)
         {
 
             if (card.Name == "Obelisk the Tormentor (original)")
@@ -348,7 +348,7 @@ namespace YuGiOhV2.Services
 
         }
 
-        private string GetIconUrl(Card card)
+        private string GetIconUrl(CardParser card)
         {
 
             if (card is SpellTrap spelltrap)
@@ -435,7 +435,7 @@ namespace YuGiOhV2.Services
 
         }
 
-        private IEnumerable<Card> AquireGoodies()
+        private IEnumerable<CardParser> AquireGoodies()
         {
 
             _db.Open();
@@ -453,7 +453,7 @@ namespace YuGiOhV2.Services
 
             _db.Close();
 
-            return regulars.Concat<Card>(xyz).Concat(pendulums).Concat(links).Concat(spelltraps);
+            return regulars.Concat<CardParser>(xyz).Concat(pendulums).Concat(links).Concat(spelltraps);
 
         }
 

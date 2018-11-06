@@ -107,7 +107,7 @@ namespace YuGiOhV2.Services
                         watch.Stop();
                         AltConsole.Write("Info", "Inline", $"{cardName} took {time.TotalSeconds} seconds to complete.");
 
-                        var embed = _cache.Cards[closestCard];
+                        var embed = _cache.Embeds[closestCard];
 
                         try
                         {

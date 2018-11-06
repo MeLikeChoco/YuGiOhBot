@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace YuGiOhV2.Objects.Cards
 {
-    public class Xyz : Monster
+    public class Xyz : Monster, IXyz
     {
 
         public int Rank { get; set; }

@@ -216,7 +216,7 @@ namespace YuGiOhScraper.Parsers
         private string AggregateCardCategoryData(IElement row)
             => row.GetElementsByTagName("dd")
             .Select(element => element.TextContent.Trim())
-            .Aggregate((current, next) => $"{current} , {next}");
+            .Aggregate((current, next) => $"{current},{next}");
 
     }
 }
