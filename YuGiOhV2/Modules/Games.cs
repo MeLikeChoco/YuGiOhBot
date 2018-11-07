@@ -16,6 +16,7 @@ using YuGiOhV2.Objects;
 using YuGiOhV2.Objects.Criterion;
 using YuGiOhV2.Objects.Deserializers;
 using YuGiOhV2.Services;
+using YuGiOhV2.Extensions;
 
 namespace YuGiOhV2.Modules
 {
@@ -130,9 +131,9 @@ namespace YuGiOhV2.Modules
 
             }).ToDictionary(s => counter++, s => s);
 
-            var display = string.Join("", indexToDisplay.Values);
+            var display = indexToDisplay.Values.Join("");
 
-            var check = new StringBuilder(string.Join("", card.Select(c =>
+            var check = new StringBuilder(card.Select(c =>
             {
 
                 if (char.IsLetterOrDigit(c))
@@ -140,7 +141,7 @@ namespace YuGiOhV2.Modules
                 else
                     return c;
 
-            })));
+            }).Join(""));
 
             //await ReplyAsync(card);
             AltConsole.Write("Command", "Hangman", $"{card}");
@@ -195,7 +196,7 @@ namespace YuGiOhV2.Modules
                         indexes.ForEach(i => indexToDisplay[i] = $"__{card[i]}__ ");
                         guesses.Add(content);
 
-                        await ReplyAsync(string.Join("", indexToDisplay.Values));
+                        await ReplyAsync(indexToDisplay.Values.Join(""));
 
                         if (check.ToString() == card)
                             winner = input.Author as SocketGuildUser;

@@ -54,7 +54,7 @@ namespace YuGiOhV2.Modules
 
             var str = new StringBuilder($"```fix\n");
             var cmdStrings = commands
-                .Select(cmdInfo => $"{cmdInfo.Name} {string.Join(' ', cmdInfo.Parameters.Select(param => $"<{param.Name}>"))}\n{cmdInfo.Summary}")
+                .Select(cmdInfo => $"{cmdInfo.Name} {cmdInfo.Parameters.Select(param => $"<{param.Name}>").Join(' ')}\n{cmdInfo.Summary}")
                 .Distinct();
 
             cmdStrings.ToList().ForEach(line => str.AppendLine($"{line}\n"));
@@ -83,10 +83,10 @@ namespace YuGiOhV2.Modules
 
             };
 
-            var messages = _commands.Select(cmdInfo => $"**Command:** {cmdInfo.Name} {string.Join(' ', cmdInfo.Parameters.Select(param => $"<{param.Name}>"))}\n{cmdInfo.Summary}")
+            var messages = _commands.Select(cmdInfo => $"**Command:** {cmdInfo.Name} {cmdInfo.Parameters.Select(param => $"<{param.Name}>").Join(' ')}\n{cmdInfo.Summary}")
                 .Distinct()
                 .Batch(5)
-                .Select(group => string.Join("\n\n", group));
+                .Select(group => group.Join("\n\n"));
                        
             paginatedMessage.Pages = messages;
 
