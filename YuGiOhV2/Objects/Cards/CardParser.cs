@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace YuGiOhV2.Objects.Cards
 {
-    public abstract class CardParser
+    public class CardParser
     {
 
         public string Name { get; set; }
@@ -49,13 +49,27 @@ namespace YuGiOhV2.Objects.Cards
         {
 
             Card card;
+            var types = Types?.ToLower().Split(" / ");
 
-            if ((Level == -1 && PendulumScale == -1) || (Types.ToLower().Contains("pendulum") && !Types.ToLower().Contains("xyz")))
-                card = new RegularMonster();
-            else if (Types.ToLower().Contains("xyz"))
-                card = new Xyz();
-            else if (Types.ToLower().Contains("link"))
-                card = new LinkMonster();
+            if(types != null)
+            {
+
+                if (types.Contains("link"))
+                    card = new LinkMonster();
+                else if (types.Contains("xyz") && types.Contains("pendulum"))
+                    card = new XyzPendulum();
+                else if ((types.Contains("synchro") || types.Contains("fusion")) && types.Contains("pendulum"))
+                    card = new SynchroAndFusionPendulum();
+                else if (types.Contains("xyz"))
+                    card = new Xyz();
+                else if (types.Contains("pendulum"))
+                    card = new PendulumMonster();
+                else if (types.Contains("synchro") || types.Contains("fusion"))
+                    card = new SynchroAndFusion();
+                else
+                    card = new RegularMonster();
+
+            }
             else
                 card = new SpellTrap();
 
@@ -63,9 +77,9 @@ namespace YuGiOhV2.Objects.Cards
             card.RealName = RealName;
             card.CardType = CardType;
             card.Lore = Lore;
-            card.Archetype = Archetype.Split(';');
-            card.Supports = Supports.Split(';');
-            card.AntiSupports = Supports.Split(';');
+            card.Archetypes = Archetype?.Split(',');
+            card.Supports = Supports?.Split(',');
+            card.AntiSupports = AntiSupports?.Split(',');
             card.OcgExists = OcgExists;
             card.TcgExists = TcgExists;
             card.Img = Img;
@@ -88,17 +102,117 @@ namespace YuGiOhV2.Objects.Cards
 
                 monster.Attribute = Attribute;
                 monster.Types = Types.Split(',');
-                monster.Atk = Atk;
-                monster.Def = Def;
 
-                if (PendulumScale != -1)
-                    monster.PendulumScale = PendulumScale;
+                if (monster is IHasAtk hasAtk)
+                    hasAtk.Atk = Atk;
 
-                if (!string.IsNullOrEmpty(Materials))
-                    monster.Materials = Materials;
+                if (monster is IHasDef hasDef)
+                    hasDef.Def = Def;
 
-                if (monster is Xyz xyz)
-                    xyz.Rank = Rank;
+                if (monster is IHasLevel hasLevel)
+                    hasLevel.Level = Level;
+
+                if (monster is IHasLink hasLink)
+                {
+
+                    hasLink.Link = Link;
+                    hasLink.LinkArrows = LinkArrows.Split(',');
+
+                }
+
+                if (monster is IHasMaterials hasMaterials)
+                    hasMaterials.Materials = Materials;
+
+                if (monster is IHasRank hasRank)
+                    hasRank.Rank = Rank;
+
+                if (monster is IHasScale hasScale)
+                    hasScale.PendulumScale = PendulumScale;
+
+            }
+
+            if (card is IHasProperty hasProperty)
+                hasProperty.Property = Property;
+
+            return card;
+
+        }
+
+        public static Card Parse(CardParser parser)
+        {
+
+            Card card;
+            var types = parser.Types.ToLower().Split(" / ");
+
+            if (types.Contains("link"))
+                card = new LinkMonster();
+            else if (types.Contains("xyz") && types.Contains("pendulum"))
+                card = new XyzPendulum();
+            else if ((types.Contains("synchro") || types.Contains("fusion")) && types.Contains("pendulum"))
+                card = new SynchroAndFusionPendulum();
+            else if (types.Contains("xyz"))
+                card = new Xyz();
+            else if (types.Contains("pendulum"))
+                card = new PendulumMonster();
+            else if (types.Contains("synchro") || types.Contains("fusion"))
+                card = new SynchroAndFusion();
+            else if (types.Any())
+                card = new RegularMonster();
+            else
+                card = new SpellTrap();
+
+            card.Name = parser.Name;
+            card.RealName = parser.RealName;
+            card.CardType = parser.CardType;
+            card.Lore = parser.Lore;
+            card.Archetypes = parser.Archetype.Split(';');
+            card.Supports = parser.Supports.Split(';');
+            card.AntiSupports = parser.Supports.Split(';');
+            card.OcgExists = parser.OcgExists;
+            card.TcgExists = parser.TcgExists;
+            card.Img = parser.Img;
+            card.Url = parser.Url;
+            card.Passcode = parser.Passcode;
+
+            if (card.OcgExists)
+                card.OcgStatus = GetCardStatus(parser.OcgStatus);
+
+            if (card.TcgExists)
+            {
+
+                card.TcgAdvStatus = GetCardStatus(parser.TcgAdvStatus);
+                card.TcgTrnStatus = GetCardStatus(parser.TcgTrnStatus);
+
+            }
+
+            if (card is Monster monster)
+            {
+
+                monster.Attribute = parser.Attribute;
+                monster.Types = parser.Types.Split(',');
+
+                if (monster is IHasAtk hasAtk)
+                    hasAtk.Atk = parser.Atk;
+
+                if (monster is IHasDef hasDef)
+                    hasDef.Def = parser.Def;
+
+                if (monster is IHasScale hasScale)
+                    hasScale.PendulumScale = parser.PendulumScale;
+
+                if (monster is IHasMaterials hasMaterials)
+                    hasMaterials.Materials = parser.Materials;
+
+                if (monster is IHasRank hasRank)
+                    hasRank.Rank = parser.Rank;
+
+                if (monster is IHasLink hasLink)
+                {
+
+                    hasLink.Link = parser.Link;
+                    hasLink.LinkArrows = parser.LinkArrows.Split(',');
+
+                }
 
             }
 
@@ -106,7 +220,7 @@ namespace YuGiOhV2.Objects.Cards
 
         }
 
-        private CardStatus GetCardStatus(string status)
+        public static CardStatus GetCardStatus(string status)
         {
 
             status = status.ToLower();

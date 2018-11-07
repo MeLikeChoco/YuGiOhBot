@@ -23,7 +23,8 @@ namespace YuGiOhV2.Services
     public class Cache
     {
 
-        public Dictionary<string, CardParser> Cards { get; private set; }
+        public Dictionary<string, CardParser> Parsers { get; private set; }
+        public Dictionary<string, Card> Cards { get; private set; }
         public Dictionary<string, EmbedBuilder> Embeds { get; private set; }
         public Dictionary<string, Booster> BoosterPacks { get; private set; }
         public Dictionary<string, HashSet<string>> Archetypes { get; private set; }
@@ -37,37 +38,38 @@ namespace YuGiOhV2.Services
         /// Maps name to passcode
         /// </summary>
         public Dictionary<string, string> Passcodes { get; private set; }
-
         public Banlist Banlist { get; private set; }
-
         public int FYeahYgoCardArtPosts { get; private set; }
-
         public string TumblrKey { get; private set; }
 
         private const string DbString = "Data Source = Databases/ygo.db";
         private static readonly ParallelOptions _pOptions = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount };
         private static SqliteConnection _db = new SqliteConnection(DbString);
 
+        private static readonly StringComparer IgnoreCase = StringComparer.InvariantCultureIgnoreCase;
+
         public Cache()
         {
 
-            Print("Beginning cache initialization...");
+            Log("Beginning cache initialization...");
 
             GuessInProgress = new ConcurrentDictionary<ulong, object>();
 
             //made a seperate method so other classes may update the embeds when I want them to
             Initialize();
 
-            Print("Finished cache initialization...");
+            Log("Finished cache initialization...");
 
         }
 
         public void Initialize()
         {
 
-            var objects = AquireGoodies();
+            var parsers = AquireGoodies();
 
-            AquireFancyMessages(objects);
+            AquireFancyMessages(parsers);
+            BuildHouse(parsers);
+            
             //AquireTheUntouchables();
             //AquireGoodiePacks();
 
@@ -76,44 +78,41 @@ namespace YuGiOhV2.Services
         public async Task GetAWESOMECARDART(Web web)
         {
 
-            Print("Getting photo posts on FYeahYgoCardArt tumblr...");
+            Log("Getting photo posts on FYeahYgoCardArt tumblr...");
 
             TumblrKey = await File.ReadAllTextAsync("Files/OAuth/Tumblr.txt");
             var posts = await web.GetDeserializedContent<JObject>($"https://api.tumblr.com/v2/blog/fyeahygocardart/posts/photo?api_key={TumblrKey}&limit=1");
             FYeahYgoCardArtPosts = int.Parse(posts["response"]["total_posts"].ToString());
 
-            Print($"Got {FYeahYgoCardArtPosts} photos.");
+            Log($"Got {FYeahYgoCardArtPosts} photos.");
 
         }
 
-        private void AquireFancyMessages(IEnumerable<CardParser> objects)
+        private void AquireFancyMessages(IEnumerable<CardParser> parsers)
         {
 
             var counter = 0;
-            var total = objects.Count();
-            var tempObjects = new ConcurrentDictionary<string, CardParser>();
+            var total = parsers.Count();
+            var tempObjects = new ConcurrentDictionary<string, Card>();
             var tempDict = new ConcurrentDictionary<string, EmbedBuilder>();
-            var tempImages = new ConcurrentDictionary<string, string>();
-            var tempLowerToUpper = new ConcurrentDictionary<string, string>();
-            var tempUpper = new ConcurrentBag<string>();
-            var tempLower = new ConcurrentBag<string>();
-            var tempPasscodes = new ConcurrentDictionary<string, string>();
+            var tempArchetypes = new ConcurrentDictionary<string, ConcurrentDictionary<string, object>>();
             Archetypes = new Dictionary<string, HashSet<string>>(StringComparer.InvariantCultureIgnoreCase);
 
-            Print("Generating them fancy embed messages...");
+            Log("Generating them fancy embed messages...");
 
-            var aLock = new object();
+            var monitor = new object();
 
-            Parallel.ForEach(objects, _pOptions, cardobj =>
+            Parallel.ForEach(parsers, _pOptions, parser =>
             {
 
-                var name = cardobj.Name;
+                var name = parser.Name;
+                var card = parser.Parse();
                 EmbedBuilder embed;
 
                 try
                 {
 
-                    embed = GenFancyMessage(cardobj);
+                    embed = GenFancyMessage(card);
 
                 }
                 catch (Exception ex)
@@ -123,61 +122,65 @@ namespace YuGiOhV2.Services
 
                 }
 
-                tempUpper.Add(name);
-                tempLower.Add(name.ToLower());
-
-                if (!string.IsNullOrEmpty(cardobj.Passcode))
-                    tempPasscodes[cardobj.Name] = cardobj.Passcode.TrimStart('0'); //man, why you guys gotta include 0's in the beginning sometimes
-
-                tempObjects[name] = cardobj;
+                tempObjects[name] = card;
                 tempDict[name] = embed;
-                tempImages[name] = cardobj.Img;
-                tempLowerToUpper[name.ToLower()] = name;
 
-                lock (aLock)
+                if (!string.IsNullOrEmpty(parser.Archetype))
                 {
 
-                    if (!string.IsNullOrEmpty(cardobj.Archetype))
+                    var archetypes = card.Archetypes;
+
+                    foreach (var archetype in archetypes)
                     {
 
-                        var archetypes = cardobj.Archetype.Split(" , ");
-
-                        foreach (var archetype in archetypes)
-                        {
-
-                            if (!Archetypes.ContainsKey(archetype))
-                                Archetypes.Add(archetype, new HashSet<string>() { name });
-                            else
-                                Archetypes[archetype].Add(name);
-
-                        }
+                        var set = tempArchetypes.GetOrAdd(archetype, new ConcurrentDictionary<string, object>());
+                        set[name] = null;
 
                     }
+
+                }
+
+                lock (monitor)
+                {
 
                     var current = Interlocked.Increment(ref counter);
 
                     if (current != total)
-                        InlinePrint($"Progress: {current}/{total}");
+                        InlineLog($"Progress: {current}/{total}");
                     else
-                        Print($"Progress: {current}/{total}");
+                        Log($"Progress: {current}/{total}");
 
                 }
 
             });
 
-            Print("Finished generating embeds.");
+            Parsers = new Dictionary<string, CardParser>(parsers.ToDictionary(parser => parser.Name, parser => parser), IgnoreCase);
+            Cards = new Dictionary<string, Card>(tempObjects, IgnoreCase);
+            Embeds = new Dictionary<string, EmbedBuilder>(tempDict, IgnoreCase);
+            Archetypes = new Dictionary<string, HashSet<string>>(tempArchetypes.ToDictionary(kv => kv.Key, kv => kv.Value.Keys.ToHashSet()), IgnoreCase);
 
-            Cards = new Dictionary<string, CardParser>(tempObjects, StringComparer.InvariantCultureIgnoreCase);
-            Embeds = new Dictionary<string, EmbedBuilder>(tempDict, StringComparer.InvariantCultureIgnoreCase);
-            Images = new Dictionary<string, string>(tempImages, StringComparer.InvariantCultureIgnoreCase);
-            LowerToUpper = new Dictionary<string, string>(tempLowerToUpper, StringComparer.InvariantCultureIgnoreCase);
-            Uppercase = new HashSet<string>(tempUpper);
-            Lowercase = new HashSet<string>(tempLower);
-            Passcodes = new Dictionary<string, string>(tempPasscodes, StringComparer.InvariantCultureIgnoreCase);
+            Log("Finished generating embeds.");
 
         }
 
-        private EmbedBuilder GenFancyMessage(CardParser card)
+        private void BuildHouse(IEnumerable<CardParser> parsers)
+        {
+
+            Log("Building cache...");
+
+            Task.WaitAll(
+                Task.Run(() => { Images = new Dictionary<string, string>(parsers.ToDictionary(parser => parser.Name, parser => parser.Img), IgnoreCase); }),
+                Task.Run(() => { LowerToUpper = new Dictionary<string, string>(parsers.ToDictionary(parser => parser.Name.ToLower(), parser => parser.Name), IgnoreCase); }),
+                Task.Run(() => { Uppercase = new HashSet<string>(parsers.Select(parser => parser.Name)); }),
+                Task.Run(() => { Lowercase = new HashSet<string>(parsers.Select(parser => parser.Name.ToLower())); }),
+                Task.Run(() => { Passcodes = new Dictionary<string, string>(parsers.Where(parser => !string.IsNullOrEmpty(parser.Passcode)).ToDictionary(parser => parser.Name, parser => parser.Passcode.TrimStart('0'))); })
+                );
+
+            Log("Finished building cache.");
+
+        }
+
+        private EmbedBuilder GenFancyMessage(Card card)
         {
 
             var author = new EmbedAuthorBuilder()
@@ -225,35 +228,36 @@ namespace YuGiOhV2.Services
                         var effects = monster.Lore.Split("Monster Effect");
 
                         body.AddField("Pendulum Effect", effects.First().Substring(15).Trim());
-                        body.AddField($"[ {monster.Types} ]", effects[1].Trim());
+                        body.AddField($"[ {monster.Types.Join(" / ")} ]", effects[1].Trim());
 
                     }
                     else
-                        body.AddField($"[ {monster.Types} ]", monster.Lore);
+                        body.AddField($"[ {monster.Types.Join(" / ")} ]", monster.Lore);
 
                 }
                 else
                     body.AddField("Not released yet", "\u200B");
 
-                var unknownValue = "???";
+                const string unknownValue = "???";
 
-                body.AddField("Attack", string.IsNullOrEmpty(monster.Atk) ? unknownValue : monster.Atk, true);
+                if(monster is IHasAtk hasAtk)
+                    body.AddField("Attack", string.IsNullOrEmpty(hasAtk.Atk) ? unknownValue : hasAtk.Atk, true);
 
-                if (!(monster is LinkMonster))
-                    body.AddField("Defence", string.IsNullOrEmpty(monster.Def) ? unknownValue : monster.Def, true);
+                if (monster is IHasDef hasDef)
+                    body.AddField("Defence", string.IsNullOrEmpty(hasDef.Def) ? unknownValue : hasDef.Def, true);
 
             }
             else
                 body.AddField("Effect", card.Lore?.Replace(@"\n", "\n") ?? "Not yet released.");
 
-            if (!string.IsNullOrEmpty(card.Archetype))
-                body.AddField(card.Archetype.Split(",").Length > 1 ? "Archetypes" : "Archetype", card.Archetype.Replace(" ,", ","));
+            if (card.Archetypes != null)
+                body.AddField(card.Archetypes.Length > 1 ? "Archetypes" : "Archetype", card.Archetypes.Join(", "));
 
             return body;
 
         }
 
-        private string GenDescription(CardParser card)
+        private string GenDescription(Card card)
         {
 
             string desc = "";
@@ -277,29 +281,31 @@ namespace YuGiOhV2.Services
 
                 desc += $"**Attribute:** {monster.Attribute}\n";
 
-                if (monster is Xyz xyz)
+                if (monster is IHasRank xyz)
                     desc += $"**Rank:** {xyz.Rank}\n";
-                else if (monster is LinkMonster link)
-                    desc += $"**Links:** {(link.Link == 0 ? link.LinkArrows.Split(',').Length : link.Link)}\n" +
-                        $"**Link Markers:** {link.LinkArrows}\n";
+                else if (monster is IHasLink linkMonster)
+                    desc += $"**Links:** {linkMonster.Link}\n" +
+                        $"**Link Markers:** {linkMonster.LinkArrows}\n";
                 else
-                    desc += $"**Level:** {(monster as RegularMonster).Level}\n";
+                    desc += $"**Level:** {(monster as IHasLevel).Level}\n";
 
-                if (monster.PendulumScale != -1)
-                    desc += $"**Scale:** {monster.PendulumScale}\n";
+                if (monster is IHasScale pendulumMonster)
+                    desc += $"**Scale:** {pendulumMonster.PendulumScale}\n";
 
             }
             else
                 desc += $"**Property:** {(card as SpellTrap).Property}\n";
 
-            if (card.OcgStatus != "U")
+            if (card.OcgExists)
                 desc += $"**OCG:** {card.OcgStatus}\n";
 
-            if (card.TcgAdvStatus != "U")
+            if (card.TcgExists)
+            {
+                
                 desc += $"**TCG ADV:** {card.TcgAdvStatus}\n";
-
-            if (card.TcgTrnStatus != "U")
                 desc += $"**TCG TRAD:** {card.TcgTrnStatus}\n";
+
+            }
 
             if (!string.IsNullOrEmpty(card.Passcode))
                 desc += $"**Passcode:** {card.Passcode}";
@@ -308,7 +314,7 @@ namespace YuGiOhV2.Services
 
         }
 
-        private Color GetColor(CardParser card)
+        private Color GetColor(Card card)
         {
 
             if (card.Name == "Obelisk the Tormentor (original)")
@@ -327,11 +333,11 @@ namespace YuGiOhV2.Services
 
                 var monster = card as Monster;
 
-                if (monster is LinkMonster)
+                if (monster is IHasLink)
                     return new Color(0, 0, 139);
-                else if (monster.PendulumScale != -1)
+                else if (monster is IHasScale)
                     return new Color(150, 208, 189);
-                else if (monster is Xyz)
+                else if (monster is IHasRank)
                     return new Color(0, 0, 1);
                 else if (monster.Types.Contains("Fusion"))
                     return new Color(160, 134, 183);
@@ -348,7 +354,7 @@ namespace YuGiOhV2.Services
 
         }
 
-        private string GetIconUrl(CardParser card)
+        private string GetIconUrl(Card card)
         {
 
             if (card is SpellTrap spelltrap)
@@ -416,15 +422,15 @@ namespace YuGiOhV2.Services
 
             _db.Open();
 
-            Print("Getting OCG banlist...");
+            Log("Getting OCG banlist...");
             tempban.OcgBanlist.Forbidden = _db.Query<string>("select name from Card where ocgStatus like 'forbidden' or ocgStatus like 'illegal'");
             tempban.OcgBanlist.Limited = _db.Query<string>("select name from Card where ocgStatus like 'limited'");
             tempban.OcgBanlist.SemiLimited = _db.Query<string>("select name from Card where ocgStatus like 'semi-limited'");
-            Print("Getting TCG Adv banlist...");
+            Log("Getting TCG Adv banlist...");
             tempban.TcgAdvBanlist.Forbidden = _db.Query<string>("select name from Card where tcgAdvStatus like 'forbidden' or tcgAdvStatus like 'illegal'");
             tempban.TcgAdvBanlist.Limited = _db.Query<string>("select name from Card where tcgAdvStatus like 'limited'");
             tempban.TcgTradBanlist.SemiLimited = _db.Query<string>("select name from Card where tcgAdvStatus like 'semi-limited'");
-            Print("Getting TCG Traditional banlist...");
+            Log("Getting TCG Traditional banlist...");
             tempban.TcgTradBanlist.Forbidden = _db.Query<string>("select name from Card where tcgTrnStatus like 'forbidden' or tcgTrnStatus like 'illegal'");
             tempban.TcgTradBanlist.Limited = _db.Query<string>("select name from Card where tcgTrnStatus like 'limited'");
             tempban.TcgTradBanlist.SemiLimited = _db.Query<string>("select name from Card where tcgTrnStatus like 'semi-limited'");
@@ -440,20 +446,23 @@ namespace YuGiOhV2.Services
 
             _db.Open();
 
-            Print("Getting regular monsters...");
-            var regulars = _db.Query<RegularMonster>("select * from Cards where Level not like -1 and PendulumScale like -1");
-            Print("Getting xyz monsters...");
-            var xyz = _db.Query<Xyz>("select * from Cards where Types like '%Xyz%'"); //includes xyz pendulums
-            Print("Getting pendulum monsters...");
-            var pendulums = _db.Query<RegularMonster>("select * from Cards where Types like '%Pendulum%' and Types not like '%Xyz%'"); //does not include xyz pendulums
-            Print("Getting link monsters...");
-            var links = _db.Query<LinkMonster>("select * from Cards where Types like '%Link%'");
-            Print("Getting spell and traps...");
-            var spelltraps = _db.Query<SpellTrap>("select * from Cards where CardType like '%Spell%' or CardType like '%Trap%'");
+            Log("Retrieving all cards from ygo.db...");
+            var parsers = _db.Query<CardParser>("select * from Cards");
+
+            //Log("Getting regular monsters...");
+            //var regulars = _db.Query<RegularMonster>("select * from Cards where Level not like -1 and PendulumScale like -1");
+            //Log("Getting xyz monsters...");
+            //var xyz = _db.Query<Xyz>("select * from Cards where Types like '%Xyz%'"); //includes xyz pendulums
+            //Log("Getting pendulum monsters...");
+            //var pendulums = _db.Query<RegularMonster>("select * from Cards where Types like '%Pendulum%' and Types not like '%Xyz%'"); //does not include xyz pendulums
+            //Log("Getting link monsters...");
+            //var links = _db.Query<LinkMonster>("select * from Cards where Types like '%Link%'");
+            //Log("Getting spell and traps...");
+            //var spelltraps = _db.Query<SpellTrap>("select * from Cards where CardType like '%Spell%' or CardType like '%Trap%'");
 
             _db.Close();
 
-            return regulars.Concat<CardParser>(xyz).Concat(pendulums).Concat(links).Concat(spelltraps);
+            return parsers;
 
         }
 
@@ -471,10 +480,10 @@ namespace YuGiOhV2.Services
 
         }
 
-        private void Print(string message)
+        private void Log(string message)
             => AltConsole.Write("Info", "Cache", message);
 
-        private void InlinePrint(string message)
+        private void InlineLog(string message)
             => AltConsole.InlineWrite("Info", "Cache", message, false);
 
     }

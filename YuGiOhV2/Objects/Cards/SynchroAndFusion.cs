@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 namespace YuGiOhV2.Objects.Cards
 {
-    public class Xyz : Monster, IHasRank
+    public class SynchroAndFusion : RegularMonster, IHasMaterials
     {
 
-        public int Rank { get; set; }
+        public string Materials { get; set; }
 
     }
 }

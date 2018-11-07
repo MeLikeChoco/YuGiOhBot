@@ -4,10 +4,10 @@ using System.Text;
 
 namespace YuGiOhV2.Objects.Cards
 {
-    public interface IXyz
+    public interface IHasDef
     {
 
-        int Rank { get; set; }
+        string Def { get; set; }
 
     }
 }

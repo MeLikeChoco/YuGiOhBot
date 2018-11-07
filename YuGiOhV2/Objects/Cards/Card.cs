@@ -14,7 +14,7 @@ namespace YuGiOhV2.Objects.Cards
         public string CardType { get; set; }
         public string Lore { get; set; }
 
-        public string[] Archetype { get; set; }
+        public string[] Archetypes { get; set; }
         public string[] Supports { get; set; }
         public string[] AntiSupports { get; set; }
 

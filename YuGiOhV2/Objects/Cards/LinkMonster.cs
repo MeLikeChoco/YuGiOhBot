@@ -6,11 +6,12 @@ using System.Threading.Tasks;
 
 namespace YuGiOhV2.Objects.Cards
 {
-    public class LinkMonster : Monster
+    public class LinkMonster : Monster, IHasLink, IHasAtk
     {
                 
         public int Link { get; set; }
-        public List<string> LinkArrows { get; set; }
+        public string[] LinkArrows { get; set; }
+        public string Atk { get; set; }
 
     }
 }
