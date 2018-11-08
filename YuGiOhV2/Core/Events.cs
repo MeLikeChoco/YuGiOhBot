@@ -32,9 +32,7 @@ namespace YuGiOhV2.Core
         private readonly InteractiveService _interactive;
         private IServiceProvider _services;
         private YgoDatabase _ygoDatabase;
-
-        private int recommendedShards, currentShards;
-
+        private int _recommendedShards, _currentShards;
         private bool _isInitialized = false;
 
         private static DiscordSocketConfig _clientConfigBacking;
@@ -86,13 +84,13 @@ namespace YuGiOhV2.Core
 
             TunnelIn().GetAwaiter().GetResult();
 
-            recommendedShards = _client.GetRecommendedShardCountAsync().Result;
+            _recommendedShards = _client.GetRecommendedShardCountAsync().Result;
 
             _client.LogoutAsync();
 
-            Print($"Launching with {recommendedShards} shards...");
+            Print($"Launching with {_recommendedShards} shards...");
 
-            _clientConfig.TotalShards = recommendedShards;
+            _clientConfig.TotalShards = _recommendedShards;
             _client = new DiscordShardedClient(_clientConfig);
             _commands = new CommandService(_commandConfig);
             _web = new Web();
@@ -123,33 +121,15 @@ namespace YuGiOhV2.Core
         private async Task ReadyOtherStuff(DiscordSocketClient arg)
         {
 
-            if (Interlocked.Increment(ref currentShards) == recommendedShards)
+            if (Interlocked.Increment(ref _currentShards) == _recommendedShards)
             {
 
                 await YouAintDoneYet();
 
                 _client.ShardReady -= ReadyOtherStuff;
+                _currentShards = 0;
 
             }
-
-        }
-
-        private async Task TunnelIn()
-        {
-
-            var isTest = Environment.GetCommandLineArgs().ElementAtOrDefault(1);
-            string token;
-
-            if (!string.IsNullOrEmpty(isTest) && isTest.Equals("true", StringComparison.OrdinalIgnoreCase))
-                token = File.ReadAllText("Files/Bot Tokens/Test.txt");
-            else
-                token = File.ReadAllText("Files/Bot Tokens/Legit.txt");
-
-            Print($"Test: {isTest ?? "false"}");
-
-            Print("Logging in...");
-            await _client.LoginAsync(TokenType.Bot, token);
-            Print("Logged in.");
 
         }
 
@@ -160,6 +140,25 @@ namespace YuGiOhV2.Core
             Print("Starting client...");
             await _client.StartAsync();
             Print("ITS UP AND RUNNING BOIIIIIIIIIIIIIIS");
+
+        }
+
+        private async Task TunnelIn()
+        {
+
+            var isTest = Environment.GetCommandLineArgs().Contains("test");
+            string token;
+
+            if (isTest)
+                token = File.ReadAllText("Files/Bot Tokens/Test.txt");
+            else
+                token = File.ReadAllText("Files/Bot Tokens/Legit.txt");
+
+            Print($"Test: {isTest}");
+
+            Print("Logging in...");
+            await _client.LoginAsync(TokenType.Bot, token);
+            Print("Logged in.");
 
         }
 
@@ -175,7 +174,6 @@ namespace YuGiOhV2.Core
             BuildServices();
             await RegisterCommands();
             await _client.SetGameAsync($"Support guild/server: {_config.GuildInvite}");
-
 
             _isInitialized = true;
 

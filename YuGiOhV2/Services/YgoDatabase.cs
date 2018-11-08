@@ -51,7 +51,22 @@ namespace YuGiOhV2.Services
         }
 
         public YgoDatabase(DiscordShardedClient client, Cache cache)
-            => _reformDatabase = Environment.GetCommandLineArgs().ElementAtOrDefault(1)?.ToLower() == "true" ? null : new Timer(ReformDatabase, new { Client = client, Cache = cache }, TimeSpan.FromSeconds(10), TimeSpan.FromDays(7));
+        {
+
+            var args = Environment.GetCommandLineArgs();
+            var info = new { Client = client, Cache = cache };
+
+            if (args.Contains("nofirstscrape"))
+                _reformDatabase = new Timer(ReformDatabase, info, TimeSpan.FromDays(7), TimeSpan.FromDays(7));
+            else if (args.Contains("noscrape"))
+                _reformDatabase = null;
+            else
+                _reformDatabase = new Timer(ReformDatabase, info, TimeSpan.FromSeconds(10), TimeSpan.FromDays(7));
+
+            //=> _reformDatabase = Environment.GetCommandLineArgs().Contains("noscrape") ? null : new Timer(ReformDatabase, new { Client = client, Cache = cache }, TimeSpan.FromSeconds(10), TimeSpan.FromDays(7));
+            //=> _reformDatabase = new Timer(ReformDatabase, new { Client = client, Cache = cache }, TimeSpan.FromSeconds(10), TimeSpan.FromDays(7));
+
+        }
 
         public async void ReformDatabase(object state)
         {
@@ -155,7 +170,7 @@ namespace YuGiOhV2.Services
         private void PrintOutput(object process, DataReceivedEventArgs args)
         {
 
-            if(args.Data != null)
+            if (args.Data != null)
             {
 
                 if (args.Data.StartsWith("Progress:"))
