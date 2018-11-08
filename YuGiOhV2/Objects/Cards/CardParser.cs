@@ -101,7 +101,7 @@ namespace YuGiOhV2.Objects.Cards
             {
 
                 monster.Attribute = Attribute;
-                monster.Types = Types.Split(',');
+                monster.Types = Types.Split(" / ");
 
                 if (monster is IHasAtk hasAtk)
                     hasAtk.Atk = Atk;

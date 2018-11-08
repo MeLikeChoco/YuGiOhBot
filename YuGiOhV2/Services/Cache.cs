@@ -332,6 +332,7 @@ namespace YuGiOhV2.Services
             {
 
                 var monster = card as Monster;
+                var test = monster.Types.FirstOrDefault(type => type.ToLower() == "fusion");
 
                 if (monster is IHasLink)
                     return new Color(0, 0, 139);
