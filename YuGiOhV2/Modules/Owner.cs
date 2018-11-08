@@ -72,7 +72,7 @@ namespace YuGiOhV2.Modules
         {
 
             if (scrape)
-                YgoDatabase.ReformDatabase(Web);
+                YgoDatabase.ReformDatabase(new { Context.Client, Cache });
             else
                 Cache.Initialize();
 

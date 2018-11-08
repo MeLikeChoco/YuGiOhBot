@@ -242,5 +242,8 @@ namespace YuGiOhV2.Objects.Cards
 
         }
 
+        public static string GetCardName(CardParser parser)
+            => parser.Name;
+
     }
 }

@@ -57,7 +57,19 @@ namespace YuGiOhV2.Services
             var info = new { Client = client, Cache = cache };
 
             if (args.Contains("nofirstscrape"))
-                _reformDatabase = new Timer(ReformDatabase, info, TimeSpan.FromDays(7), TimeSpan.FromDays(7));
+            {
+
+                var lastScrape = DateTime.Parse(File.ReadAllText("Databases/LastScrape.txt"));
+                var difference = DateTime.UtcNow - lastScrape;
+
+                Log($"Last scrape was {difference.TotalHours} hour(s) ago");
+
+                if (difference > TimeSpan.FromDays(7))
+                    difference = TimeSpan.FromDays(7);
+
+                _reformDatabase = new Timer(ReformDatabase, info, difference, TimeSpan.FromDays(7));
+
+            }
             else if (args.Contains("noscrape"))
                 _reformDatabase = null;
             else
@@ -164,6 +176,8 @@ namespace YuGiOhV2.Services
             } while (shouldRedo);
 
             cache.Initialize();
+
+            File.WriteAllText("Databases/LastScrape.txt", DateTime.UtcNow.ToString());
 
         }
 
