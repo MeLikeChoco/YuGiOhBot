@@ -142,7 +142,7 @@ namespace YuGiOhV2.Objects.Cards
         {
 
             Card card;
-            var types = parser.Types.ToLower().Split(" / ");
+            var types = parser.Types?.ToLower().Split(" / ");
 
             if (types.Contains("link"))
                 card = new LinkMonster();

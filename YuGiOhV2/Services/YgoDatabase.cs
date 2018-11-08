@@ -74,9 +74,9 @@ namespace YuGiOhV2.Services
             Log("Updating ygo.db...");
 
             var shouldRedo = false;
-            var asDynamic = state as dynamic;
-            var client = asDynamic.Client as DiscordShardedClient;
-            var cache = asDynamic.Cache as Cache;
+            var info = state as dynamic;
+            var client = info.Client as DiscordShardedClient;
+            var cache = info.Cache as Cache;
 
             if (File.Exists("Databases/ygo.db"))
                 File.Copy("Databases/ygo.db", "Databases/Backup/ygo.db", true);
