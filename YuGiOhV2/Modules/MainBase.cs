@@ -36,10 +36,14 @@ namespace YuGiOhV2.Modules
         protected override void BeforeExecute(CommandInfo command)
         {
 
-            _setting = Database.Settings[Context.Guild.Id];
 
             if (!(Context.Channel is SocketDMChannel))
+            {
+
+                _setting = Database.Settings[Context.Guild.Id];
                 _minimal = _setting.Minimal;
+
+            }
             else
                 _minimal = false;
 
