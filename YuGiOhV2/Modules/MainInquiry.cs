@@ -11,9 +11,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using YuGiOhV2.Extensions;
-using YuGiOhV2.Objects;
 using YuGiOhV2.Objects.Banlist;
-using YuGiOhV2.Objects.Criterion;
 using YuGiOhV2.Services;
 
 namespace YuGiOhV2.Modules
@@ -215,7 +213,9 @@ namespace YuGiOhV2.Modules
 
             }
 
-            await DirectMessageAsync("", FormatBanlist("Forbidden", banlist.Forbidden));
+            if(banlist.Forbidden.Any())
+                await DirectMessageAsync("", FormatBanlist("Forbidden", banlist.Forbidden));
+
             await DirectMessageAsync("", FormatBanlist("Limited", banlist.Limited));
             await DirectMessageAsync("", FormatBanlist("Semi-Limited", banlist.SemiLimited));
 
@@ -224,13 +224,52 @@ namespace YuGiOhV2.Modules
         public Embed FormatBanlist(string status, IEnumerable<string> cards)
         {
 
-            var author = new EmbedAuthorBuilder()
-                .WithName(status);
+            var descBuilder = new StringBuilder();
+            var cardStack = new Stack<string>(cards);
+            var counter = 0;
+
+            while (cardStack.Any())
+            {
+
+                var card = cardStack.Peek();
+                counter += card.Length + 2;
+
+                if (counter >= 2048)
+                    break;
+
+                descBuilder.AppendLine(card);
+                cardStack.Pop();
+
+            }
 
             var body = new EmbedBuilder()
-                .WithAuthor(author)
+                .WithAuthor(new EmbedAuthorBuilder().WithName(status))
                 .WithRandomColor()
-                .WithDescription(cards.Aggregate((sentence, next) => $"{sentence}\n{next}"));
+                .WithDescription(descBuilder.ToString());
+
+            while (cardStack.Any())
+            {
+
+                counter = 0;
+                var valueBuilder = new StringBuilder();
+
+                do
+                {
+
+                    var card = cardStack.Peek();
+                    counter += card.Length + 2;
+
+                    if (counter >= 1024)
+                        break;
+
+                    valueBuilder.AppendLine(card);
+                    cardStack.Pop();
+
+                } while (cardStack.Any());
+
+                body.AddField("cont.", valueBuilder.ToString());
+
+            }
 
             return body.Build();
 

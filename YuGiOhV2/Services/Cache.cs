@@ -69,8 +69,7 @@ namespace YuGiOhV2.Services
 
             AquireFancyMessages(parsers);
             BuildHouse(parsers);
-            
-            //AquireTheUntouchables();
+            AquireTheUntouchables(parsers);
             //AquireGoodiePacks();
 
         }
@@ -154,7 +153,7 @@ namespace YuGiOhV2.Services
 
             });
 
-            Parsers = new Dictionary<string, CardParser>(parsers.ToDictionary(parser => parser.Name, parser => parser), IgnoreCase);
+            Parsers = new Dictionary<string, CardParser>(parsers.ToDictionary(CardParser.GetCardName, parser => parser), IgnoreCase);
             Cards = new Dictionary<string, Card>(tempObjects, IgnoreCase);
             Embeds = new Dictionary<string, EmbedBuilder>(tempDict, IgnoreCase);
             Archetypes = new Dictionary<string, HashSet<string>>(tempArchetypes.ToDictionary(kv => kv.Key, kv => kv.Value.Keys.ToHashSet()), IgnoreCase);
@@ -169,11 +168,11 @@ namespace YuGiOhV2.Services
             Log("Building cache...");
 
             Task.WaitAll(
-                Task.Run(() => { Images = new Dictionary<string, string>(parsers.ToDictionary(parser => parser.Name, parser => parser.Img), IgnoreCase); }),
-                Task.Run(() => { LowerToUpper = new Dictionary<string, string>(parsers.ToDictionary(parser => parser.Name.ToLower(), parser => parser.Name), IgnoreCase); }),
-                Task.Run(() => { Uppercase = new HashSet<string>(parsers.Select(parser => parser.Name)); }),
+                Task.Run(() => { Images = new Dictionary<string, string>(parsers.ToDictionary(CardParser.GetCardName, parser => parser.Img), IgnoreCase); }),
+                Task.Run(() => { LowerToUpper = new Dictionary<string, string>(parsers.ToDictionary(parser => parser.Name.ToLower(), CardParser.GetCardName), IgnoreCase); }),
+                Task.Run(() => { Uppercase = new HashSet<string>(parsers.Select(CardParser.GetCardName)); }),
                 Task.Run(() => { Lowercase = new HashSet<string>(parsers.Select(parser => parser.Name.ToLower())); }),
-                Task.Run(() => { Passcodes = new Dictionary<string, string>(parsers.Where(parser => !string.IsNullOrEmpty(parser.Passcode)).ToDictionary(parser => parser.Name, parser => parser.Passcode.TrimStart('0'))); })
+                Task.Run(() => { Passcodes = new Dictionary<string, string>(parsers.Where(parser => !string.IsNullOrEmpty(parser.Passcode)).ToDictionary(CardParser.GetCardName, parser => parser.Passcode.TrimStart('0'))); })
                 );
 
             Log("Finished building cache.");
@@ -240,7 +239,7 @@ namespace YuGiOhV2.Services
 
                 const string unknownValue = "???";
 
-                if(monster is IHasAtk hasAtk)
+                if (monster is IHasAtk hasAtk)
                     body.AddField("Attack", string.IsNullOrEmpty(hasAtk.Atk) ? unknownValue : hasAtk.Atk, true);
 
                 if (monster is IHasDef hasDef)
@@ -301,7 +300,7 @@ namespace YuGiOhV2.Services
 
             if (card.TcgExists)
             {
-                
+
                 desc += $"**TCG ADV:** {card.TcgAdvStatus}\n";
                 desc += $"**TCG TRAD:** {card.TcgTrnStatus}\n";
 
@@ -416,27 +415,50 @@ namespace YuGiOhV2.Services
 
         }
 
-        private void AquireTheUntouchables()
+        private void AquireTheUntouchables(IEnumerable<CardParser> parsers)
         {
 
             var tempban = new Banlist();
 
-            _db.Open();
-
             Log("Getting OCG banlist...");
-            tempban.OcgBanlist.Forbidden = _db.Query<string>("select name from Card where ocgStatus like 'forbidden' or ocgStatus like 'illegal'");
-            tempban.OcgBanlist.Limited = _db.Query<string>("select name from Card where ocgStatus like 'limited'");
-            tempban.OcgBanlist.SemiLimited = _db.Query<string>("select name from Card where ocgStatus like 'semi-limited'");
-            Log("Getting TCG Adv banlist...");
-            tempban.TcgAdvBanlist.Forbidden = _db.Query<string>("select name from Card where tcgAdvStatus like 'forbidden' or tcgAdvStatus like 'illegal'");
-            tempban.TcgAdvBanlist.Limited = _db.Query<string>("select name from Card where tcgAdvStatus like 'limited'");
-            tempban.TcgTradBanlist.SemiLimited = _db.Query<string>("select name from Card where tcgAdvStatus like 'semi-limited'");
-            Log("Getting TCG Traditional banlist...");
-            tempban.TcgTradBanlist.Forbidden = _db.Query<string>("select name from Card where tcgTrnStatus like 'forbidden' or tcgTrnStatus like 'illegal'");
-            tempban.TcgTradBanlist.Limited = _db.Query<string>("select name from Card where tcgTrnStatus like 'limited'");
-            tempban.TcgTradBanlist.SemiLimited = _db.Query<string>("select name from Card where tcgTrnStatus like 'semi-limited'");
 
-            _db.Close();
+            var ocgBanlist = tempban.OcgBanlist;
+            var ocgCards = parsers.Where(parser => parser.OcgExists);
+            ocgBanlist.Forbidden = ocgCards.Where(parser => parser.OcgStatus == "Forbidden").Select(CardParser.GetCardName);
+            ocgBanlist.Limited = ocgCards.Where(parser => parser.OcgStatus == "Limited").Select(CardParser.GetCardName);
+            ocgBanlist.SemiLimited = ocgCards.Where(parser => parser.OcgStatus == "Semi-Limited").Select(CardParser.GetCardName);
+
+            Log("Getting TCG Adv banlist...");
+
+            var tcgAdvBanlist = tempban.TcgAdvBanlist;
+            var tcgCards = parsers.Where(parser => parser.TcgExists);
+            tcgAdvBanlist.Forbidden = tcgCards.Where(parser => parser.TcgAdvStatus == "Forbidden").Select(CardParser.GetCardName);
+            tcgAdvBanlist.Limited = tcgCards.Where(parser => parser.TcgAdvStatus == "Limited").Select(CardParser.GetCardName);
+            tcgAdvBanlist.SemiLimited = tcgCards.Where(parser => parser.TcgAdvStatus == "Semi-Limited").Select(CardParser.GetCardName);
+
+            Log("Getting TCG Traditional banlist...");
+
+            var tcgTradBanlist = tempban.TcgTradBanlist;
+            tcgTradBanlist.Forbidden = tcgCards.Where(parser => parser.TcgTrnStatus == "Forbidden").Select(CardParser.GetCardName);
+            tcgTradBanlist.Limited = tcgCards.Where(parser => parser.TcgTrnStatus == "Limited").Select(CardParser.GetCardName);
+            tcgTradBanlist.SemiLimited = tcgCards.Where(parser => parser.TcgTrnStatus == "Semi-Limited").Select(CardParser.GetCardName);
+
+            //_db.Open();
+
+            //Log("Getting OCG banlist...");
+            //tempban.OcgBanlist.Forbidden = _db.Query<string>("select name from Card where ocgStatus like 'forbidden' or ocgStatus like 'illegal'");
+            //tempban.OcgBanlist.Limited = _db.Query<string>("select name from Card where ocgStatus like 'limited'");
+            //tempban.OcgBanlist.SemiLimited = _db.Query<string>("select name from Card where ocgStatus like 'semi-limited'");
+            //Log("Getting TCG Adv banlist...");
+            //tempban.TcgAdvBanlist.Forbidden = _db.Query<string>("select name from Card where tcgAdvStatus like 'forbidden' or tcgAdvStatus like 'illegal'");
+            //tempban.TcgAdvBanlist.Limited = _db.Query<string>("select name from Card where tcgAdvStatus like 'limited'");
+            //tempban.TcgTradBanlist.SemiLimited = _db.Query<string>("select name from Card where tcgAdvStatus like 'semi-limited'");
+            //Log("Getting TCG Traditional banlist...");
+            //tempban.TcgTradBanlist.Forbidden = _db.Query<string>("select name from Card where tcgTrnStatus like 'forbidden' or tcgTrnStatus like 'illegal'");
+            //tempban.TcgTradBanlist.Limited = _db.Query<string>("select name from Card where tcgTrnStatus like 'limited'");
+            //tempban.TcgTradBanlist.SemiLimited = _db.Query<string>("select name from Card where tcgTrnStatus like 'semi-limited'");
+
+            //_db.Close();
 
             Banlist = tempban;
 

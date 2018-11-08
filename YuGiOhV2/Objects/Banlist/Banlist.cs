@@ -48,7 +48,7 @@ namespace YuGiOhV2.Objects.Banlist
 
     public class TcgTrad : IFormat
     {
-        
+
         public IEnumerable<string> Forbidden { get; set; }
         public IEnumerable<string> Limited { get; set; }
         public IEnumerable<string> SemiLimited { get; set; }
