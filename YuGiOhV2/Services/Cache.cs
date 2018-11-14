@@ -28,6 +28,8 @@ namespace YuGiOhV2.Services
         public Dictionary<string, EmbedBuilder> Embeds { get; private set; }
         public Dictionary<string, Booster> BoosterPacks { get; private set; }
         public Dictionary<string, HashSet<string>> Archetypes { get; private set; }
+        public Dictionary<string, HashSet<string>> Supports { get; private set; }
+        public Dictionary<string, HashSet<string>> AntiSupports { get; private set; }
         public Dictionary<string, string> Images { get; private set; }
         public Dictionary<string, string> LowerToUpper { get; private set; }
         public HashSet<string> Uppercase { get; private set; }
@@ -95,6 +97,8 @@ namespace YuGiOhV2.Services
             var tempObjects = new ConcurrentDictionary<string, Card>();
             var tempDict = new ConcurrentDictionary<string, EmbedBuilder>();
             var tempArchetypes = new ConcurrentDictionary<string, ConcurrentDictionary<string, object>>();
+            var tempSupports = new ConcurrentDictionary<string, ConcurrentDictionary<string, object>>();
+            var tempAntiSupports = new ConcurrentDictionary<string, ConcurrentDictionary<string, object>>();
             Archetypes = new Dictionary<string, HashSet<string>>(StringComparer.InvariantCultureIgnoreCase);
 
             Log("Generating them fancy embed messages...");
@@ -124,7 +128,7 @@ namespace YuGiOhV2.Services
                 tempObjects[name] = card;
                 tempDict[name] = embed;
 
-                if (!string.IsNullOrEmpty(parser.Archetype))
+                if (card.Archetypes != null && card.Archetypes.Any())
                 {
 
                     var archetypes = card.Archetypes;
@@ -133,6 +137,36 @@ namespace YuGiOhV2.Services
                     {
 
                         var set = tempArchetypes.GetOrAdd(archetype, new ConcurrentDictionary<string, object>());
+                        set[name] = null;
+
+                    }
+
+                }
+
+                if (card.Supports != null && card.Supports.Any())
+                {
+
+                    var supports = card.Supports;
+
+                    foreach (var support in supports)
+                    {
+
+                        var set = tempSupports.GetOrAdd(support, new ConcurrentDictionary<string, object>());
+                        set[name] = null;
+
+                    }
+
+                }
+
+                if (card.AntiSupports != null && card.AntiSupports.Any())
+                {
+
+                    var antiSupports = card.AntiSupports;
+
+                    foreach (var antiSupport in antiSupports)
+                    {
+
+                        var set = tempAntiSupports.GetOrAdd(antiSupport, new ConcurrentDictionary<string, object>());
                         set[name] = null;
 
                     }
@@ -152,11 +186,13 @@ namespace YuGiOhV2.Services
                 }
 
             });
-
+            
             Parsers = new Dictionary<string, CardParser>(parsers.ToDictionary(CardParser.GetCardName, parser => parser), IgnoreCase);
             Cards = new Dictionary<string, Card>(tempObjects, IgnoreCase);
             Embeds = new Dictionary<string, EmbedBuilder>(tempDict, IgnoreCase);
             Archetypes = new Dictionary<string, HashSet<string>>(tempArchetypes.ToDictionary(kv => kv.Key, kv => kv.Value.Keys.ToHashSet()), IgnoreCase);
+            Supports = new Dictionary<string, HashSet<string>>(tempSupports.GroupBy(kv => kv.Key.Trim(), IgnoreCase).ToDictionary(group => group.Key, group => group.SelectMany(kv => kv.Value.Keys).ToHashSet()), IgnoreCase);
+            AntiSupports = new Dictionary<string, HashSet<string>>(tempAntiSupports.GroupBy(kv => kv.Key.Trim(), IgnoreCase).ToDictionary(group => group.Key, group => group.SelectMany(kv => kv.Value.Keys).ToHashSet()), IgnoreCase);
 
             Log("Finished generating embeds.");
 
@@ -284,7 +320,7 @@ namespace YuGiOhV2.Services
                     desc += $"**Rank:** {xyz.Rank}\n";
                 else if (monster is IHasLink linkMonster)
                     desc += $"**Links:** {linkMonster.Link}\n" +
-                        $"**Link Markers:** {linkMonster.LinkArrows}\n";
+                        $"**Link Markers:** {linkMonster.LinkArrows.Join(", ")}\n";
                 else
                     desc += $"**Level:** {(monster as IHasLevel).Level}\n";
 

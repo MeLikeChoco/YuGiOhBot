@@ -41,21 +41,38 @@ namespace YuGiOhV2.Modules
         }
 
         [Command("archetype"), Alias("a")]
-        [Summary("Returns results based on your input! No proper capitalization needed!")]
+        [Summary("Returns cards in entered archetype! No proper capitalization needed!")]
         public Task ArchetypeCommand([Remainder]string input)
         {
 
-            if (Cache.Archetypes.ContainsKey(input))
-            {
-
-                var cards = Cache.Archetypes[input];
-                var amount = cards.Count();
-
-                return RecieveInput(amount, cards);
-
-            }
+            if (Cache.Archetypes.TryGetValue(input, out var cards))
+                return RecieveInput(cards.Count, cards);
             else
-                return NoResultError(input);
+                return NoResultError("archetypes", input);
+
+        }
+
+        [Command("supports")]
+        [Summary("Returns cards that support your input! No proper capitalization needed!")]
+        public Task SupportsCommand([Remainder]string input)
+        {
+
+            if (Cache.Supports.TryGetValue(input, out var cards))
+                return RecieveInput(cards.Count, cards);
+            else
+                return NoResultError("supports", input);
+
+        }
+
+        [Command("antisupports")]
+        [Summary("Returns cards that support your input! No proper capitalization needed!")]
+        public Task AntiSupportsCommand([Remainder]string input)
+        {
+
+            if (Cache.AntiSupports.TryGetValue(input, out var cards))
+                return RecieveInput(cards.Count, cards);
+            else
+                return NoResultError("anti-supports", input);
 
         }
 
