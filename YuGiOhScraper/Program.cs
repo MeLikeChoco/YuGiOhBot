@@ -37,19 +37,21 @@ namespace YuGiOhScraper
             Console.WriteLine($"There are {links.Count} cards to parse.");
 
             IEnumerable<Card> cards = new List<Card>();
+            IEnumerable<CardError> errors;
             string retry = "";
 
             do
             {
 
                 Console.WriteLine("Getting cards...");
-                cards = cards.Concat(GetCards(links, out links));
+                cards = cards.Concat(GetCards(links, out errors));
+                links = errors.ToDictionary(error => error.Name, error => error.Url);
                 //var cards = GetCards(httpClient, links.ToList().GetRange(0, 100).ToDictionary(kv => kv.Key, kv => kv.Value));
 
                 if (links.Any() && !_wasLaunchedByProgram)
                 {
 
-                    Console.WriteLine($"There were {links.Count} errors. Retry? (y/n): ");
+                    Console.WriteLine($"There were {errors.Count()} errors. Retry? (y/n): ");
                     retry = Console.ReadLine();
 
                 }
@@ -58,7 +60,7 @@ namespace YuGiOhScraper
 
             } while (links.Any() && retry == "y" && !_wasLaunchedByProgram);
 
-            await CardsToSqlite(cards, links.Keys);
+            await CardsToSqlite(cards, errors);
 
             if (!_wasLaunchedByProgram)
                 Console.ReadKey();
@@ -68,7 +70,7 @@ namespace YuGiOhScraper
         //private static Task CardsToSqlite()
         //    => CardsToSqlite(null);
 
-        private static async Task CardsToSqlite(IEnumerable<Card> cards, IEnumerable<string> errors)
+        private static async Task CardsToSqlite(IEnumerable<Card> cards, IEnumerable<CardError> errors)
         {
 
             if (File.Exists("ygo.db"))
@@ -118,7 +120,8 @@ namespace YuGiOhScraper
                     createCardErrorTable = db.CreateCommand();
                     createCardErrorTable.CommandText = "CREATE TABLE 'CardErrors' (" +
                         "'Name' TEXT, " +
-                        "'Exception' TEXT " +
+                        "'Exception' TEXT, " +
+                        "'Url' TEXT " +
                         ")";
 
                 }
@@ -130,15 +133,7 @@ namespace YuGiOhScraper
                     await createCardErrorTable.ExecuteNonQueryAsync();
 
                 await db.InsertAsync(cards);
-
-                if (_wasLaunchedByProgram)
-                {
-
-                    var errorToEntity = errors.Select(name => new CardError { Name = name });
-
-                    await db.InsertAsync(errorToEntity);
-
-                }
+                await db.InsertAsync(errors);
 
                 Console.WriteLine("Finished saving to ygo.db.");
 
@@ -148,14 +143,14 @@ namespace YuGiOhScraper
 
         }
 
-        private static IEnumerable<Card> GetCards(IDictionary<string, string> links, out IDictionary<string, string> errors)
+        private static IEnumerable<Card> GetCards(IDictionary<string, string> links, out IEnumerable<CardError> errors)
         {
 
             var cards = new ConcurrentBag<Card>();
             var total = links.Count;
             var current = 0;
             var pOptions = new ParallelOptions() { MaxDegreeOfParallelism = Environment.ProcessorCount };
-            var tempErrors = new ConcurrentDictionary<string, string>();
+            var tempErrors = new ConcurrentBag<CardError>();
 
             Parallel.ForEach(links, pOptions, kv =>
             {
@@ -178,10 +173,17 @@ namespace YuGiOhScraper
                     cards.Add(card);
 
                 }
-                catch (Exception)
+                catch (Exception exception)
                 {
 
-                    tempErrors[kv.Key] = kv.Value;
+                    tempErrors.Add(new CardError()
+                    {
+
+                        Name = kv.Key,
+                        Exception = $"{exception.Message}\n{exception.StackTrace}",
+                        Url = kv.Value
+
+                    });
 
                 }
 

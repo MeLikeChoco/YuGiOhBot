@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "YuGiOhScraper": {
+      "commandName": "Project",
+      "commandLineArgs": "1"
+    }
+  }
+}
