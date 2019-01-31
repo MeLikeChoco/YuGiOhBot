@@ -3,6 +3,9 @@
     "YuGiOhScraper": {
       "commandName": "Project",
       "commandLineArgs": "1"
+    },
+    "RunAsRelease": {
+      "commandName": "Project"
     }
   }
 }

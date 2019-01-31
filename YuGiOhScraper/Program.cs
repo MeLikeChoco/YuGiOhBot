@@ -63,7 +63,7 @@ namespace YuGiOhScraper
 
         }
 
-        private static IEnumerable<BoosterPack> ParsePacks(IDictionary<string, string> links, out IEnumerable<CardError> errors)
+        private static IEnumerable<BoosterPack> ParsePacks(IDictionary<string, string> links, out IEnumerable<Error> errors)
         {
 
             string retry = "";
@@ -72,7 +72,7 @@ namespace YuGiOhScraper
             do
             {
 
-                Console.WriteLine("Getting cards...");
+                Console.WriteLine("Getting booster packs...");
                 boosterPacks = boosterPacks.Concat(GetBoosterPacks(links, out errors));
                 links = errors.ToDictionary(error => error.Name, error => error.Url);
                 //var cards = GetCards(httpClient, links.ToList().GetRange(0, 100).ToDictionary(kv => kv.Key, kv => kv.Value));
@@ -85,7 +85,7 @@ namespace YuGiOhScraper
 
                 }
                 else
-                    Console.WriteLine("Finished getting cards.");
+                    Console.WriteLine("Finished getting booster packs.");
 
             } while (links.Any() && retry == "y" && !_wasLaunchedByProgram);
 
@@ -93,7 +93,7 @@ namespace YuGiOhScraper
 
         }
 
-        private static IEnumerable<Card> ParseCards(IDictionary<string, string> links, out IEnumerable<CardError> errors)
+        private static IEnumerable<Card> ParseCards(IDictionary<string, string> links, out IEnumerable<Error> errors)
         {
 
             string retry = "";
@@ -126,65 +126,85 @@ namespace YuGiOhScraper
         //private static Task CardsToSqlite()
         //    => CardsToSqlite(null);
 
-        private static async Task CollectionToSqlite(IEnumerable<Card> cards, IEnumerable<BoosterPack> boosterPacks, IEnumerable<CardError> errors)
+        private static async Task CollectionToSqlite(IEnumerable<Card> cards, IEnumerable<BoosterPack> boosterPacks, IEnumerable<Error> errors)
         {
 
-            if (File.Exists(ScraperConstants.DbPath))
-                File.Delete(ScraperConstants.DbPath);
+            Exception exception = null;
 
-            using (var db = new SqliteConnection(ScraperConstants.ConnectionString))
-            {
-
-                await db.OpenAsync();
-
-                SqliteCommand createCardTable, createCardErrorTable;
-                createCardTable = createCardErrorTable = null;
-
-                createCardTable = db.CreateCommand();
-                createCardTable.CommandText = ScraperConstants.CreateCardTableSql;
-
-                if (_wasLaunchedByProgram)
-                {
-
-                    createCardErrorTable = db.CreateCommand();
-                    createCardErrorTable.CommandText = ScraperConstants.CreateCardErrorTableSql;
-
-                }
-
-                Console.WriteLine("Saving to ygo.db...");
-                await createCardTable.ExecuteNonQueryAsync();
-
-                if (_wasLaunchedByProgram)
-                    await createCardErrorTable.ExecuteNonQueryAsync();
-
-                await db.InsertAsync(cards);
-                await db.InsertAsync(boosterPacks);
-                await db.InsertAsync(errors);
-
-                Console.WriteLine("Finished saving to ygo.db.");
-
-                db.Close();
-
-            }
-
-        }
-
-        private static IEnumerable<BoosterPack> GetBoosterPacks(IDictionary<string, string> links, out IEnumerable<CardError> errors)
-        {
-
-            var boosterPacks = new ConcurrentBag<BoosterPack>();
-            var total = links.Count;
-            var current = 0;
-            var pOptions = new ParallelOptions() { MaxDegreeOfParallelism = Environment.ProcessorCount };
-            var tempErrors = new ConcurrentBag<CardError>();
-
-            Parallel.ForEach(links, pOptions, kv =>
+            do
             {
 
                 try
                 {
 
-                    var boosterPack = new BoosterPackParser(kv.Key, $"{ScraperConstants.Wikia.TrimEnd('/')}{kv.Value}").Parse();
+                    if (File.Exists(ScraperConstants.DbPath))
+                        File.Delete(ScraperConstants.DbPath);
+
+                    using (var db = new SqliteConnection(ScraperConstants.ConnectionString))
+                    {
+
+                        await db.OpenAsync();
+
+                        SqliteCommand createCardTable, createboosterPackTable, createCardErrorTable;
+                        createCardTable = createCardErrorTable = null;
+
+                        createCardTable = db.CreateCommand();
+                        createboosterPackTable = db.CreateCommand();
+                        createCardErrorTable = db.CreateCommand();
+                        createCardErrorTable = db.CreateCommand();
+                        createCardTable.CommandText = ScraperConstants.CreateCardTableSql;
+                        createboosterPackTable.CommandText = ScraperConstants.CreateBoosterPackTableSql;
+                        createCardErrorTable.CommandText = ScraperConstants.CreateCardErrorTableSql;
+                        createCardErrorTable.CommandText = ScraperConstants.CreateCardErrorTableSql;
+
+                        Console.WriteLine("Saving to ygo.db...");
+                        await createCardTable.ExecuteNonQueryAsync();
+                        await createboosterPackTable.ExecuteNonQueryAsync();
+                        await createCardErrorTable.ExecuteNonQueryAsync();
+
+                        await db.InsertAsync(cards);
+                        await db.InsertAsync(boosterPacks);
+                        await db.InsertAsync(errors);
+
+                        Console.WriteLine("Finished saving to ygo.db.");
+
+                        db.Close();
+
+                    }
+
+                    exception = null;
+
+                }
+                catch (IOException ioexception)
+                {
+
+                    exception = ioexception;
+
+                    Console.WriteLine("IOException occured. Most likely cause is ygo.db held open by another program. Hit enter when resolved...");
+
+                    while (Console.ReadKey().Key != ConsoleKey.Enter) { }
+
+                }
+
+            } while (exception != null);            
+
+        }
+
+        private static IEnumerable<BoosterPack> GetBoosterPacks(IDictionary<string, string> links, out IEnumerable<Error> errors)
+        {
+
+            var boosterPacks = new ConcurrentBag<BoosterPack>();
+            var total = links.Count;
+            var current = 0;
+            var tempErrors = new ConcurrentBag<Error>();
+
+            Parallel.ForEach(links, ScraperConstants.ParallelOptions, kv =>
+            {
+
+                try
+                {
+
+                    var boosterPack = new BoosterPackParser(kv.Key, $"{ScraperConstants.BaseUrl.TrimEnd('/')}{kv.Value}").Parse();
 
                     #region OCG TCG
                     #endregion OCG TCG
@@ -195,12 +215,14 @@ namespace YuGiOhScraper
                 catch (Exception exception)
                 {
 
-                    tempErrors.Add(new CardError()
+                    tempErrors.Add(new Error()
                     {
 
                         Name = kv.Key,
-                        Exception = $"{exception.Message}\n{exception.StackTrace}",
-                        Url = kv.Value
+                        Exception = $"{exception.Message}\t{exception.StackTrace}",
+                        InnerException = exception.InnerException == null ? null : $"{exception.InnerException}\t{exception.InnerException.StackTrace}",
+                        Url = kv.Value,
+                        Type = "Booster Pack"
 
                     });
 
@@ -219,22 +241,21 @@ namespace YuGiOhScraper
 
         }
 
-        private static IEnumerable<Card> GetCards(IDictionary<string, string> links, out IEnumerable<CardError> errors)
+        private static IEnumerable<Card> GetCards(IDictionary<string, string> links, out IEnumerable<Error> errors)
         {
 
             var cards = new ConcurrentBag<Card>();
             var total = links.Count;
             var current = 0;
-            var pOptions = new ParallelOptions() { MaxDegreeOfParallelism = Environment.ProcessorCount };
-            var tempErrors = new ConcurrentBag<CardError>();
+            var tempErrors = new ConcurrentBag<Error>();
 
-            Parallel.ForEach(links, pOptions, kv =>
+            Parallel.ForEach(links, ScraperConstants.ParallelOptions, kv =>
             {
 
                 try
                 {
 
-                    var card = new CardParser(kv.Key, $"{ScraperConstants.Wikia.TrimEnd('/')}{kv.Value}").Parse();
+                    var card = new CardParser(kv.Key, $"{ScraperConstants.BaseUrl.TrimEnd('/')}{kv.Value}").Parse();
 
                     #region OCG TCG
                     //c# int default is 0, therefore, if only one of them is 1, that means it is an format exclusive card
@@ -252,12 +273,13 @@ namespace YuGiOhScraper
                 catch (Exception exception)
                 {
 
-                    tempErrors.Add(new CardError()
+                    tempErrors.Add(new Error()
                     {
 
                         Name = kv.Key,
                         Exception = $"{exception.Message}\n{exception.StackTrace}",
-                        Url = kv.Value
+                        Url = kv.Value,
+                        Type = "Card"
 
                     });
 
@@ -318,7 +340,7 @@ namespace YuGiOhScraper
             _tcgCards = new ConcurrentDictionary<string, string>();
             _ocgCards = new ConcurrentDictionary<string, string>();
 
-            using (var httpClient = new HttpClient { BaseAddress = new Uri(ScraperConstants.Wikia) })
+            using (var httpClient = new HttpClient { BaseAddress = new Uri(ScraperConstants.BaseUrl) })
             {
 
                 Console.WriteLine("Retrieving TCG and OCG card list...");
@@ -351,7 +373,7 @@ namespace YuGiOhScraper
             _tcgBoosters = new ConcurrentDictionary<string, string>();
             _ocgBoosters = new ConcurrentDictionary<string, string>();
 
-            using (var httpClient = new HttpClient() { BaseAddress = new Uri(ScraperConstants.Wikia) })
+            using (var httpClient = new HttpClient() { BaseAddress = new Uri(ScraperConstants.BaseUrl) })
             {
 
                 Console.WriteLine("Retrieving TCG and OCG booster pack list...");
@@ -368,8 +390,10 @@ namespace YuGiOhScraper
             var tcgJson = JObject.Parse(responseTcg);
             var ocgJson = JObject.Parse(responseOcg);
 
-            Task.WaitAll(Task.Run(() => Parallel.ForEach(tcgJson["items"].ToObject<JArray>(), item => _tcgBoosters[item.Value<string>("title")] = item.Value<string>("url"))),
-                Task.Run(() => Parallel.ForEach(ocgJson["items"].ToObject<JArray>(), item => _ocgBoosters[item.Value<string>("title")] = item.Value<string>("url"))));
+            Task.WaitAll(
+                Task.Run(() => Parallel.ForEach(tcgJson["items"].ToObject<JArray>(), item => _tcgBoosters[item.Value<string>("title")] = item.Value<string>("url"))),
+                Task.Run(() => Parallel.ForEach(ocgJson["items"].ToObject<JArray>(), item => _ocgBoosters[item.Value<string>("title")] = item.Value<string>("url")))
+                );
 
             Console.WriteLine("Finished parsing returned response.");
 
