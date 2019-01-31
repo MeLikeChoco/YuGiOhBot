@@ -92,16 +92,6 @@ namespace YuGiOhV2.Services
         private void AquireFancyMessages(IEnumerable<CardParser> parsers)
         {
 
-            parsers = parsers.Where(parser =>
-            {
-
-                if (!string.IsNullOrEmpty(parser.Types))
-                    return !parser.Types.Contains("Pegasus");
-                else
-                    return true;
-
-            });
-
             var counter = 0;
             var total = parsers.Count();
             var tempObjects = new ConcurrentDictionary<string, Card>();
@@ -516,7 +506,7 @@ namespace YuGiOhV2.Services
             _db.Open();
 
             Log("Retrieving all cards from ygo.db...");
-            var parsers = _db.Query<CardParser>("select * from Cards");
+            var parsers = _db.Query<CardParser>("select * from Cards where Types not like '%Pegasus%' or Types is null");
 
             //Log("Getting regular monsters...");
             //var regulars = _db.Query<RegularMonster>("select * from Cards where Level not like -1 and PendulumScale like -1");
