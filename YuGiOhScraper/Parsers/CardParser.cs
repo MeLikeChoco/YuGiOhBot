@@ -1,7 +1,5 @@
 ﻿using AngleSharp;
 using AngleSharp.Dom;
-using AngleSharp.Dom.Html;
-using AngleSharp.Parser.Html;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,9 +13,6 @@ namespace YuGiOhScraper.Parsers
     public class CardParser
     {
 
-        private static readonly HtmlParser HtmlParser = new HtmlParser();
-        private static readonly IBrowsingContext Context = BrowsingContext.New(Configuration.Default.WithDefaultLoader());
-
         private string _name;
         private IElement _dom;
 
@@ -25,7 +20,7 @@ namespace YuGiOhScraper.Parsers
         {
 
             _name = name;
-            _dom = Context.OpenAsync(link).Result.GetElementById("mw-content-text");
+            _dom = ScraperConstants.Context.OpenAsync(link).Result.GetElementById("mw-content-text");
 
         }
 

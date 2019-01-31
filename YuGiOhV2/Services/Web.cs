@@ -1,5 +1,5 @@
-﻿using AngleSharp.Dom.Html;
-using AngleSharp.Parser.Html;
+﻿using AngleSharp.Html.Dom;
+using AngleSharp.Html.Parser;
 using Newtonsoft.Json;
 using System;
 using System.IO;
@@ -41,7 +41,7 @@ namespace YuGiOhV2.Services
             var response = await Check(url).ConfigureAwait(false);
             var html = await response.ReadAsStringAsync().ConfigureAwait(false);
 
-            return await _parser.ParseAsync(html);
+            return await _parser.ParseDocumentAsync(html);
 
         }
 

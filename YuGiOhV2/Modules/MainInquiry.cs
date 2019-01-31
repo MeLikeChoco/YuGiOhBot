@@ -19,35 +19,35 @@ namespace YuGiOhV2.Modules
     public class MainInquiry : MainBase
     {
 
-        [Command("booster")]
-        [Summary("Gets information on a booster pack!")]
-        public Task BoosterCommand([Remainder]string input)
-        {
+        //[Command("booster")]
+        //[Summary("Gets information on a booster pack!")]
+        //public Task BoosterCommand([Remainder]string input)
+        //{
 
-            if (Cache.BoosterPacks.TryGetValue(input, out var booster))
-            {
+        //    if (Cache.BoosterPacks.TryGetValue(input, out var booster))
+        //    {
 
-                var cards = booster.Open();
-                var cardNumberLength = 0;
+        //        var cards = booster.Open();
+        //        var cardNumberLength = 0;
 
-                if (cards.All(card => card.CardNumber != null))
-                    cardNumberLength = cards.Max(card => card.CardNumber.Length);
+        //        if (cards.All(card => card.CardNumber != null))
+        //            cardNumberLength = cards.Max(card => card.CardNumber.Length);
 
-                var cardNameLength = cards.Max(card => card.Name.Length);
-                var builder = new StringBuilder("```");
+        //        var cardNameLength = cards.Max(card => card.Name.Length);
+        //        var builder = new StringBuilder("```");
 
-                foreach (var card in cards)
-                    builder.AppendLine($"{card.CardNumber?.PadRight(cardNumberLength + 3)}{card.Name.PadRight(cardNameLength + 3)}{card.Rarity}");
+        //        foreach (var card in cards)
+        //            builder.AppendLine($"{card.CardNumber?.PadRight(cardNumberLength + 3)}{card.Name.PadRight(cardNameLength + 3)}{card.Rarity}");
 
-                builder.Append("```");
+        //        builder.Append("```");
 
-                return ReplyAsync(builder.ToString());
+        //        return ReplyAsync(builder.ToString());
 
-            }
-            else
-                return NoResultError(input);
+        //    }
+        //    else
+        //        return NoResultError(input);
 
-        }
+        //}
 
         [Command("card"), Alias("c")]
         [Summary("Gets a card! No proper capitalization needed!")]

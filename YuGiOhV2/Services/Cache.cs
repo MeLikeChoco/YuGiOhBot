@@ -26,7 +26,7 @@ namespace YuGiOhV2.Services
         public Dictionary<string, CardParser> Parsers { get; private set; }
         public Dictionary<string, Card> Cards { get; private set; }
         public Dictionary<string, EmbedBuilder> Embeds { get; private set; }
-        public Dictionary<string, Booster> BoosterPacks { get; private set; }
+        public Dictionary<string, BoosterPack> BoosterPacks { get; private set; }
         public Dictionary<string, HashSet<string>> Archetypes { get; private set; }
         public Dictionary<string, HashSet<string>> Supports { get; private set; }
         public Dictionary<string, HashSet<string>> AntiSupports { get; private set; }
@@ -48,7 +48,7 @@ namespace YuGiOhV2.Services
         private static readonly ParallelOptions _pOptions = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount };
         private static SqliteConnection _db = new SqliteConnection(DbString);
 
-        private static readonly StringComparer IgnoreCase = StringComparer.InvariantCultureIgnoreCase;
+        private static readonly StringComparer IgnoreCase = StringComparer.OrdinalIgnoreCase;
 
         public Cache()
         {
@@ -92,6 +92,16 @@ namespace YuGiOhV2.Services
         private void AquireFancyMessages(IEnumerable<CardParser> parsers)
         {
 
+            parsers = parsers.Where(parser =>
+            {
+
+                if (!string.IsNullOrEmpty(parser.Types))
+                    return !parser.Types.Contains("Pegasus");
+                else
+                    return true;
+
+            });
+
             var counter = 0;
             var total = parsers.Count();
             var tempObjects = new ConcurrentDictionary<string, Card>();
@@ -99,7 +109,7 @@ namespace YuGiOhV2.Services
             var tempArchetypes = new ConcurrentDictionary<string, ConcurrentDictionary<string, object>>();
             var tempSupports = new ConcurrentDictionary<string, ConcurrentDictionary<string, object>>();
             var tempAntiSupports = new ConcurrentDictionary<string, ConcurrentDictionary<string, object>>();
-            Archetypes = new Dictionary<string, HashSet<string>>(StringComparer.InvariantCultureIgnoreCase);
+            Archetypes = new Dictionary<string, HashSet<string>>(IgnoreCase);
 
             Log("Generating them fancy embed messages...");
 
@@ -208,7 +218,7 @@ namespace YuGiOhV2.Services
                 Task.Run(() => { LowerToUpper = new Dictionary<string, string>(parsers.ToDictionary(parser => parser.Name.ToLower(), CardParser.GetCardName), IgnoreCase); }),
                 Task.Run(() => { Uppercase = new HashSet<string>(parsers.Select(CardParser.GetCardName)); }),
                 Task.Run(() => { Lowercase = new HashSet<string>(parsers.Select(parser => parser.Name.ToLower())); }),
-                Task.Run(() => { Passcodes = new Dictionary<string, string>(parsers.Where(parser => !string.IsNullOrEmpty(parser.Passcode)).ToDictionary(CardParser.GetCardName, parser => parser.Passcode.TrimStart('0'))); })
+                Task.Run(() => { Passcodes = new Dictionary<string, string>(parsers.Where(parser => !string.IsNullOrEmpty(parser.Passcode)).ToDictionary(CardParser.GetCardName, parser => parser.Passcode.TrimStart('0')), IgnoreCase); })
                 );
 
             Log("Finished building cache.");
@@ -276,10 +286,10 @@ namespace YuGiOhV2.Services
                 const string unknownValue = "???";
 
                 if (monster is IHasAtk hasAtk)
-                    body.AddField("Attack", string.IsNullOrEmpty(hasAtk.Atk) ? unknownValue : hasAtk.Atk, true);
+                    body.AddField("ATK", string.IsNullOrEmpty(hasAtk.Atk) ? unknownValue : hasAtk.Atk, true);
 
                 if (monster is IHasDef hasDef)
-                    body.AddField("Defence", string.IsNullOrEmpty(hasDef.Def) ? unknownValue : hasDef.Def, true);
+                    body.AddField("DEF", string.IsNullOrEmpty(hasDef.Def) ? unknownValue : hasDef.Def, true);
 
             }
             else
@@ -530,12 +540,12 @@ namespace YuGiOhV2.Services
 
             _db.Open();
 
-            var boosterPacks = _db.Query<Booster>("select * from Boosters");
+            var boosterPacks = _db.Query<BoosterPack>("select * from Boosters");
 
             _db.Close();
 
-            boosterPacks = boosterPacks.GroupBy(bp => bp.Name).Select(group => group.First()).Where(bp => bp.Cards != null && bp.IsEllegible());
-            BoosterPacks = new Dictionary<string, Booster>(boosterPacks.ToDictionary(bp => bp.Name, bp => bp), StringComparer.InvariantCultureIgnoreCase);
+            boosterPacks = boosterPacks.GroupBy(bp => bp.Name).Select(group => group.First()).Where(bp => bp.Cards != null);
+            BoosterPacks = new Dictionary<string, BoosterPack>(boosterPacks.ToDictionary(bp => bp.Name, bp => bp), IgnoreCase);
 
         }
 
