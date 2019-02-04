@@ -19,6 +19,26 @@ namespace YuGiOhV2.Modules
     public class MainInquiry : MainBase
     {
 
+        [Command("booster")]
+        [Summary("Gets information on a booster pack!")]
+        public Task BoosterCommand([Remainder]string input)
+        {
+
+            if (Cache.BoosterPacks.TryGetValue(input, out var boosterPack))
+            {
+
+                var builder = new EmbedBuilder()
+                    .WithAuthor(boosterPack.Name, url: boosterPack.Url)
+                    .WithDescription($"**Amount:** {boosterPack.Cards.Length} cards");
+
+                return SendEmbed(builder);
+
+            }
+            else
+                return NoResultError("booster packs", input);
+
+        }
+
         //[Command("booster")]
         //[Summary("Gets information on a booster pack!")]
         //public Task BoosterCommand([Remainder]string input)
@@ -213,7 +233,7 @@ namespace YuGiOhV2.Modules
 
             }
 
-            if(banlist.Forbidden.Any())
+            if (banlist.Forbidden.Any())
                 await DirectMessageAsync("", FormatBanlist("Forbidden", banlist.Forbidden));
 
             await DirectMessageAsync("", FormatBanlist("Limited", banlist.Limited));

@@ -36,6 +36,8 @@ namespace YuGiOhV2.Objects.BoosterPacks
         Ghost,
         [Rarity("Parallel Rare")]
         Parallel,
+        [Rarity("Normal Parallel Rare")]
+        NormalParallel,
         [Rarity("Super Parallel Rare")]
         SuperParallel,
         [Rarity("Ultra Rare")]

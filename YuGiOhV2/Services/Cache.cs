@@ -67,12 +67,12 @@ namespace YuGiOhV2.Services
         public void Initialize()
         {
 
-            var parsers = AquireGoodies();
+            var cardParsers = AquireGoodies();
 
-            AquireFancyMessages(parsers);
-            BuildHouse(parsers);
-            AquireTheUntouchables(parsers);
-            //AquireGoodiePacks();
+            AquireFancyMessages(cardParsers);
+            BuildHouse(cardParsers);
+            AquireTheUntouchables(cardParsers);
+            AquireGoodiePacks();
 
         }
 
@@ -186,7 +186,7 @@ namespace YuGiOhV2.Services
                 }
 
             });
-            
+
             Parsers = new Dictionary<string, CardParser>(parsers.ToDictionary(CardParser.GetCardName, parser => parser), IgnoreCase);
             Cards = new Dictionary<string, Card>(tempObjects, IgnoreCase);
             Embeds = new Dictionary<string, EmbedBuilder>(tempDict, IgnoreCase);
@@ -528,14 +528,20 @@ namespace YuGiOhV2.Services
         private void AquireGoodiePacks()
         {
 
+            Log("Retrieving all booster packs from ygo.db...");
+
             _db.Open();
 
-            var boosterPacks = _db.Query<BoosterPack>("select * from Boosters");
+            var boosterPacks = _db.Query<BoosterPackParser>("select * from BoosterPacks");
 
             _db.Close();
 
-            boosterPacks = boosterPacks.GroupBy(bp => bp.Name).Select(group => group.First()).Where(bp => bp.Cards != null);
-            BoosterPacks = new Dictionary<string, BoosterPack>(boosterPacks.ToDictionary(bp => bp.Name, bp => bp), IgnoreCase);
+            BoosterPacks = boosterPacks
+                .AsParallel()
+                .WithDegreeOfParallelism(Environment.ProcessorCount)
+                .ToDictionary(parser => parser.Name, parser => parser.Parse(), StringComparer.InvariantCultureIgnoreCase);
+
+            Log("Finished retrieving all booster packs from ygo.db");
 
         }
 

@@ -31,7 +31,7 @@ namespace YuGiOhScraper
             if (args.Any() && int.TryParse(args.FirstOrDefault(), out var result))
                 _wasLaunchedByProgram = result == 1;
             //var links = await GetCardLinks(httpClient);
-            IDictionary<string, string> cardLinks = (await GetCardLinks()).Take(0).ToDictionary(kv => kv.Key, kv => kv.Value);
+            IDictionary<string, string> cardLinks = (await GetCardLinks()).ToDictionary(kv => kv.Key, kv => kv.Value);
             IDictionary<string, string> boosterPackLinks = (await GetBoosterLinks()).ToDictionary(kv => kv.Key, kv => kv.Value);
 
             Console.WriteLine($"There are {cardLinks.Count} cards to parse.");
