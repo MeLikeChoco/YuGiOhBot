@@ -29,10 +29,54 @@ namespace YuGiOhV2.Modules
                     .WithColor(Rand.NextColor())
                     .AddField("Release dates", boosterPack.ReleaseDates.Aggregate("", (current, kv) => $"{current}\n**{kv.Key}:** {kv.Value.ToString("MM/dd/yyyy")}"));
 
-                foreach(var kv in boosterPack.RarityToCards)
+                foreach (var kv in boosterPack.RarityToCards)
                     builder.AddField(kv.Key, kv.Value.Aggregate("```", (current, next) => $"{current}\n{next}") + "```");
 
                 return SendEmbed(builder);
+
+            }
+            else
+                return NoResultError("booster packs", input);
+
+        }
+
+        [Command("open")]
+        public Task OpenCommand([Remainder]string input)
+        {
+
+            if (Cache.BoosterPacks.TryGetValue(input, out var boosterPack))
+            {
+
+                var cards = new Dictionary<string, string>(9);
+                var randoms = new List<int>(9);
+                var length = boosterPack.RarityToCards["common"].Length;
+                var builder = new StringBuilder("```fix\n");
+                int index;
+
+                for (int i = 0; i < 9; i++)
+                {
+
+                    do
+                        index = Rand.Next(length);
+                    while (randoms.Contains(index));
+
+                    cards.Add(boosterPack.RarityToCards["common"][index], "Common");
+                    randoms.Add(index);
+
+                }
+
+                foreach (var card in cards)
+                {
+
+                    builder.AppendLine($"Name: {card.Key}");
+                    builder.AppendLine($"Rarity: {card.Value}");
+                    builder.AppendLine();
+
+                }
+
+                builder.Append("```");
+
+                return ReplyAsync(builder.ToString());
 
             }
             else
