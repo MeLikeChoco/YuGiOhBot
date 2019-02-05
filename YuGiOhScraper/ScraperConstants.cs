@@ -15,14 +15,16 @@ namespace YuGiOhScraper
         public static readonly HtmlParser HtmlParser = new HtmlParser();
         public static readonly IBrowsingContext Context = BrowsingContext.New(Configuration.Default.WithDefaultLoader());
         public static readonly ParallelOptions ParallelOptions = new ParallelOptions() { MaxDegreeOfParallelism = Environment.ProcessorCount / 2 };
-        public const string BaseUrl = "http://yugioh.fandom.com/";
-        public const string TcgCards = "api/v1/Articles/List?category=TCG_cards&limit=20000&namespaces=0";
-        public const string OcgCards = "api/v1/Articles/List?category=OCG_cards&limit=20000&namespaces=0";
-        public const string TcgPacks = "api/v1/Articles/List?category=TCG_Booster_Packs&limit=20000&namespaces=0";
-        public const string OcgPacks = "api/v1/Articles/List?category=OCG_Booster_Packs&limit=20000&namespaces=0";
-        public const string DbName = "ygo.db";
-        public readonly static string DbPath = DbName;
-        public readonly static string ConnectionString = $"Data Source = {DbName}";
+        public const string YuGiOhWikiaUrl = "http://yugioh.fandom.com/";
+        public const string YuGiOhWikiaTcgCards = "api/v1/Articles/List?category=TCG_cards&limit=20000&namespaces=0";
+        public const string YuGiOhWikiaOcgCards = "api/v1/Articles/List?category=OCG_cards&limit=20000&namespaces=0";
+        public const string YuGiOhWikiaTcgPacks = "api/v1/Articles/List?category=TCG_Booster_Packs&limit=20000&namespaces=0";
+        public const string YuGiOhWikiaOcgPacks = "api/v1/Articles/List?category=OCG_Booster_Packs&limit=20000&namespaces=0";
+        public const string YuGiPediaUrl = "https://yugipedia.com/wiki/";
+        public const string YuGiPediaTcgCards = "api.php?action=query&format=json&list=categorymembers&cmtitle=Category%3ATCG_cards&cmlimit=max";
+        public const string YuGiPediaOcgCards = "api.php?action=query&format=json&list=categorymembers&cmtitle=Category%3AOCG_cards&cmlimit=max";
+        public const string YuGiPediaTcgPacks = "api.php?action=query&format=json&list=categorymembers&cmtitle=Category%3ATCG_Booster_Packs&cmlimit=max";
+        public const string YuGiPediaOcgPacks = "api.php?action=query&format=json&list=categorymembers&cmtitle=Category%3AOCG_Booster_Packs&cmlimit=max";
         public const string CreateCardTableSql = "CREATE TABLE 'Cards'(" +
             "'Name' TEXT, " +
             "'RealName' TEXT, " +
@@ -55,7 +57,9 @@ namespace YuGiOhScraper
             "'Name' TEXT, " +
             "'Dates' TEXT, " +
             "'Cards' TEXT, " +
-            "'Url' TEXT " +
+            "'Url' TEXT, " +
+            "'TcgExists' INTEGER, " +
+            "'OcgExists' INTEGER " +
             ")";
         public const string CreateCardErrorTableSql = "CREATE TABLE 'Errors' (" +
             "'Name' TEXT, " +

@@ -14,5 +14,8 @@ namespace YuGiOhScraper.Entities
         public string Cards { get; set; }
         public string Url { get; set; }
 
+        public bool TcgExists { get; set; }
+        public bool OcgExists { get; set; }
+
     }
 }
