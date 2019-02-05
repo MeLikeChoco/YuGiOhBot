@@ -20,11 +20,12 @@ namespace YuGiOhScraper
         public const string YuGiOhWikiaOcgCards = "api/v1/Articles/List?category=OCG_cards&limit=20000&namespaces=0";
         public const string YuGiOhWikiaTcgPacks = "api/v1/Articles/List?category=TCG_Booster_Packs&limit=20000&namespaces=0";
         public const string YuGiOhWikiaOcgPacks = "api/v1/Articles/List?category=OCG_Booster_Packs&limit=20000&namespaces=0";
+        public const string YuGiPediaBaseUrl = "https://yugipedia.com/";
         public const string YuGiPediaUrl = "https://yugipedia.com/wiki/";
-        public const string YuGiPediaTcgCards = "api.php?action=query&format=json&list=categorymembers&cmtitle=Category%3ATCG_cards&cmlimit=max";
-        public const string YuGiPediaOcgCards = "api.php?action=query&format=json&list=categorymembers&cmtitle=Category%3AOCG_cards&cmlimit=max";
-        public const string YuGiPediaTcgPacks = "api.php?action=query&format=json&list=categorymembers&cmtitle=Category%3ATCG_Booster_Packs&cmlimit=max";
-        public const string YuGiPediaOcgPacks = "api.php?action=query&format=json&list=categorymembers&cmtitle=Category%3AOCG_Booster_Packs&cmlimit=max";
+        public const string YuGiPediaTcgCards = "api.php?action=query&format=json&list=categorymembers&cmtitle=Category%3ATCG_cards&cmlimit=500";
+        public const string YuGiPediaOcgCards = "api.php?action=query&format=json&list=categorymembers&cmtitle=Category%3AOCG_cards&cmlimit=500";
+        public const string YuGiPediaTcgPacks = "api.php?action=query&format=json&list=categorymembers&cmtitle=Category%3ATCG_Booster_Packs&cmlimit=500";
+        public const string YuGiPediaOcgPacks = "api.php?action=query&format=json&list=categorymembers&cmtitle=Category%3AOCG_Booster_Packs&cmlimit=500";
         public const string CreateCardTableSql = "CREATE TABLE 'Cards'(" +
             "'Name' TEXT, " +
             "'RealName' TEXT, " +
@@ -61,7 +62,7 @@ namespace YuGiOhScraper
             "'TcgExists' INTEGER, " +
             "'OcgExists' INTEGER " +
             ")";
-        public const string CreateCardErrorTableSql = "CREATE TABLE 'Errors' (" +
+        public const string CreateErrorTable = "CREATE TABLE 'Errors' (" +
             "'Name' TEXT, " +
             "'Exception' TEXT, " +
             "'InnerException' TEXT, " +

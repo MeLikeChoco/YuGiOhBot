@@ -9,12 +9,12 @@ using System.Text;
 using System.Threading.Tasks;
 using YuGiOhScraper.Entities;
 
-namespace YuGiOhScraper.Parsers
+namespace YuGiOhScraper.Parsers.YuGiOhWikia
 {
     public class BoosterPackParser
     {
 
-        private string _name;
+        private readonly string _name;
         private IElement _dom;
 
         public BoosterPackParser(string name, string link)

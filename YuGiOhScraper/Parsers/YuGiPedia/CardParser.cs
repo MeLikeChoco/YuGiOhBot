@@ -8,7 +8,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using YuGiOhScraper.Entities;
 
-namespace YuGiOhScraper.Parsers
+namespace YuGiOhScraper.Parsers.YuGiPedia
 {
     public class CardParser
     {
@@ -16,21 +16,21 @@ namespace YuGiOhScraper.Parsers
         private string _name;
         private IElement _dom;
 
-        public CardParser(string name, string link)
+        public CardParser(string name, string url)
         {
 
             _name = name;
-            _dom = ScraperConstants.Context.OpenAsync(link).Result.GetElementById("mw-content-text");
+            _dom = ScraperConstants.Context.OpenAsync(url).Result.GetElementById("mw-context-text");
 
         }
 
         public Card Parse()
         {
 
-            var table = _dom.GetElementsByClassName("cardtable").FirstOrDefault();
+            var table = _dom.GetElementsByClassName("cardtable").FirstOrDefault()?.FirstElementChild;
 
             if (table == null)
-                throw new NullReferenceException();
+                throw new NullReferenceException("Missing card table");
 
             var card = new Card()
             {
@@ -40,7 +40,7 @@ namespace YuGiOhScraper.Parsers
 
             };
 
-            var realName = table.GetElementsByClassName("cardtablerowdata").First().TextContent?.Trim();
+            var realName = table.FirstElementChild.TextContent?.Trim();
 
             if (_name != realName)
                 card.RealName = realName;
@@ -55,16 +55,11 @@ namespace YuGiOhScraper.Parsers
 
                     //for future stuff
                     #region Lore
-                    if (row.TextContent.ToLower().Contains("card description"))
-                    {
-
-                        var descriptionUnformatted = row.GetElementsByClassName("navbox").First()
+                    var descriptionUnformatted = row.GetElementsByClassName("navbox").First()
                         .GetElementsByClassName("collapsible").First()
                         .GetElementsByTagName("tr").Last();
-                        var descriptionFormatted = Regex.Replace(descriptionUnformatted.InnerHtml.Replace("<br>", "\\n"), "<[^>]*>", "").Trim();
-                        card.Lore = descriptionFormatted;
-
-                    }
+                    var descriptionFormatted = Regex.Replace(descriptionUnformatted.InnerHtml.Replace("<br>", "\\n"), "<[^>]*>", "").Trim();
+                    card.Lore = descriptionFormatted;
                     #endregion Lore
 
                 }
@@ -173,34 +168,29 @@ namespace YuGiOhScraper.Parsers
 
             }
 
-            var cardSearchCategories = table.GetElementsByClassName("cardtable-categories")
-                .FirstOrDefault()?.Children;
+            #region Search Categories
+            var searchCategories = GetSearchCategories();
 
-            if (cardSearchCategories != null && cardSearchCategories.Any())
+            if (searchCategories != null && searchCategories.Any())
             {
 
-                #region Archetypes
-                var archetypeRow = cardSearchCategories.FirstOrDefault(hlist => hlist.TextContent.ToLower().Contains("archetypes"));
+                foreach (var searchCategory in searchCategories)
+                {
 
-                if (archetypeRow != null)
-                    card.Archetype = AggregateCardCategoryData(archetypeRow);
-                #endregion Archetypes
+                    var header = searchCategory.GetElementsByTagName("dt").First().TextContent;
+                    var value = searchCategory.GetElementsByTagName("dd").First().TextContent?.Trim();
 
-                #region Supports
-                var supportsRow = cardSearchCategories.FirstOrDefault(hlist => hlist.TextContent.ToLower().Contains("supports"));
+                    if (header.Contains("archetype"))
+                        card.Archetype = value;
+                    else if (header.Contains("anti-supports"))
+                        card.AntiSupports = value;
+                    else if (header.Contains("supports"))
+                        card.Supports = value;
 
-                if (supportsRow != null)
-                    card.Supports = AggregateCardCategoryData(supportsRow);
-                #endregion Supports
-
-                #region Anti-Supports
-                var antiSupportsRow = cardSearchCategories.FirstOrDefault(hlist => hlist.TextContent.ToLower().Contains("anti-support"));
-
-                if (antiSupportsRow != null)
-                    card.AntiSupports = AggregateCardCategoryData(antiSupportsRow);
-                #endregion Anti-Supports
+                }
 
             }
+            #endregion Search Categories
 
             card.Url = _dom.BaseUri;
 
@@ -208,10 +198,30 @@ namespace YuGiOhScraper.Parsers
 
         }
 
-        private string AggregateCardCategoryData(IElement row)
-            => row.GetElementsByTagName("dd")
-            .Select(element => element.TextContent.Trim())
-            .Aggregate((current, next) => $"{current},{next}"); //using commas instead of slashes because of D/D and D/D/D
+        private IEnumerable<IElement> GetSearchCategories()
+        {
+
+            var firstH2Element = _dom.Children.First(element => element.TagName == "H2");
+            var firstH2Index = _dom.Children.Index(firstH2Element);
+            var startIndex = firstH2Index + 1;
+            var searchCategories = new List<IElement>();
+            IElement currentElement;
+
+            for (int i = startIndex; i < _dom.Children.Length; i++)
+            {
+
+                currentElement = _dom.Children[i];
+
+                if (_dom.Children[i].ClassName == "hlist")
+                    searchCategories.Add(currentElement);
+                else
+                    break;
+
+            }
+
+            return searchCategories;
+
+        }
 
     }
 }

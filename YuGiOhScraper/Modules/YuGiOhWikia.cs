@@ -12,7 +12,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using YuGiOhScraper.Entities;
-using YuGiOhScraper.Parsers;
+using YuGiOhScraper.Parsers.YuGiOhWikia;
 
 namespace YuGiOhScraper.Modules
 {
@@ -22,7 +22,7 @@ namespace YuGiOhScraper.Modules
         private readonly bool _wasLaunchedByProgram;
 
         public YuGiOhWikia(bool arg)
-            : base("YuGiOh Wikia", "ygo.db")
+            : base("YuGiOh Wikia", "ygo.db", ScraperConstants.YuGiOhWikiaUrl)
         {
 
             //if (!string.IsNullOrEmpty(arg) && int.TryParse(arg, out var result))
@@ -74,7 +74,7 @@ namespace YuGiOhScraper.Modules
         }
 
         #region BoosterPacks
-        protected override IEnumerable<BoosterPack> ParseBoosterPacks(IDictionary<string, string> links, out IEnumerable<Error> errors)
+        protected override IEnumerable<BoosterPack> ParseBoosterPacks(IDictionary<string, string> boosterPackLinks, out IEnumerable<Error> errors)
         {
 
             string retry = "";
@@ -84,11 +84,11 @@ namespace YuGiOhScraper.Modules
             {
 
                 Console.WriteLine("Getting booster packs...");
-                boosterPacks = boosterPacks.Concat(GetBoosterPacks(links, out errors));
-                links = errors.ToDictionary(error => error.Name, error => error.Url);
+                boosterPacks = boosterPacks.Concat(GetBoosterPacks(boosterPackLinks, out errors));
+                boosterPackLinks = errors.ToDictionary(error => error.Name, error => error.Url);
                 //var cards = GetCards(httpClient, links.ToList().GetRange(0, 100).ToDictionary(kv => kv.Key, kv => kv.Value));
 
-                if (links.Any() && !_wasLaunchedByProgram)
+                if (boosterPackLinks.Any() && !_wasLaunchedByProgram)
                 {
 
                     Console.WriteLine($"There were {errors.Count()} errors. Retry? (y/n): ");
@@ -98,7 +98,7 @@ namespace YuGiOhScraper.Modules
                 else
                     Console.WriteLine("Finished getting booster packs.");
 
-            } while (links.Any() && retry == "y" && !_wasLaunchedByProgram);
+            } while (boosterPackLinks.Any() && retry == "y" && !_wasLaunchedByProgram);
 
             return boosterPacks;
 
@@ -159,7 +159,7 @@ namespace YuGiOhScraper.Modules
         #endregion BoosterPacks
 
         #region Cards
-        protected override IEnumerable<Card> ParseCards(IDictionary<string, string> links, out IEnumerable<Error> errors)
+        protected override IEnumerable<Card> ParseCards(IDictionary<string, string> cardLinks, out IEnumerable<Error> errors)
         {
 
             string retry = "";
@@ -169,11 +169,11 @@ namespace YuGiOhScraper.Modules
             {
 
                 Console.WriteLine("Getting cards...");
-                cards = cards.Concat(GetCards(links, out errors));
-                links = errors.ToDictionary(error => error.Name, error => error.Url);
+                cards = cards.Concat(GetCards(cardLinks, out errors));
+                cardLinks = errors.ToDictionary(error => error.Name, error => error.Url);
                 //var cards = GetCards(httpClient, links.ToList().GetRange(0, 100).ToDictionary(kv => kv.Key, kv => kv.Value));
 
-                if (links.Any() && !_wasLaunchedByProgram)
+                if (cardLinks.Any() && !_wasLaunchedByProgram)
                 {
 
                     Console.WriteLine($"There were {errors.Count()} errors. Retry? (y/n): ");
@@ -183,7 +183,7 @@ namespace YuGiOhScraper.Modules
                 else
                     Console.WriteLine("Finished getting cards.");
 
-            } while (links.Any() && retry == "y" && !_wasLaunchedByProgram);
+            } while (cardLinks.Any() && retry == "y" && !_wasLaunchedByProgram);
 
             return cards;
 
@@ -267,28 +267,28 @@ namespace YuGiOhScraper.Modules
 
                         await db.OpenAsync();
 
-                        SqliteCommand createCardTable, createboosterPackTable, createCardErrorTable;
-                        createCardTable = createCardErrorTable = null;
+                        SqliteCommand createCardTable, createboosterPackTable, createErrorTable;
+                        createCardTable = createboosterPackTable = createErrorTable = null;
 
                         createCardTable = db.CreateCommand();
                         createboosterPackTable = db.CreateCommand();
-                        createCardErrorTable = db.CreateCommand();
-                        createCardErrorTable = db.CreateCommand();
+                        createErrorTable = db.CreateCommand();
+                        createErrorTable = db.CreateCommand();
                         createCardTable.CommandText = ScraperConstants.CreateCardTableSql;
                         createboosterPackTable.CommandText = ScraperConstants.CreateBoosterPackTableSql;
-                        createCardErrorTable.CommandText = ScraperConstants.CreateCardErrorTableSql;
-                        createCardErrorTable.CommandText = ScraperConstants.CreateCardErrorTableSql;
+                        createErrorTable.CommandText = ScraperConstants.CreateErrorTable;
+                        createErrorTable.CommandText = ScraperConstants.CreateErrorTable;
 
-                        Console.WriteLine("Saving to ygo.db...");
+                        Console.WriteLine($"Saving to {DatabaseName}...");
                         await createCardTable.ExecuteNonQueryAsync();
                         await createboosterPackTable.ExecuteNonQueryAsync();
-                        await createCardErrorTable.ExecuteNonQueryAsync();
+                        await createErrorTable.ExecuteNonQueryAsync();
 
                         await db.InsertAsync(cards);
                         await db.InsertAsync(boosterPacks);
                         await db.InsertAsync(errors);
 
-                        Console.WriteLine("Finished saving to ygo.db.");
+                        Console.WriteLine($"Finished saving to {DatabaseName}.");
 
                         db.Close();
 
@@ -324,18 +324,12 @@ namespace YuGiOhScraper.Modules
             TcgCards = new ConcurrentDictionary<string, string>();
             OcgCards = new ConcurrentDictionary<string, string>();
 
-            using (var httpClient = new HttpClient { BaseAddress = new Uri(ScraperConstants.YuGiOhWikiaUrl) })
-            {
+            Console.WriteLine("Retrieving TCG and OCG card list...");
+            
+            responseTcg = await HttpClient.GetStringAsync(ScraperConstants.YuGiOhWikiaTcgCards); //I have to use a really high number or else some cards won't show up, its so bizarre...
+            responseOcg = await HttpClient.GetStringAsync(ScraperConstants.YuGiOhWikiaOcgCards);
 
-                Console.WriteLine("Retrieving TCG and OCG card list...");
-
-                responseTcg = await httpClient.GetStringAsync(ScraperConstants.YuGiOhWikiaTcgCards); //I have to use a really high number or else some cards won't show up, its so bizarre...
-                responseOcg = await httpClient.GetStringAsync(ScraperConstants.YuGiOhWikiaOcgCards);
-
-                Console.WriteLine("Retrieved TCG and OCG card list.");
-
-            }
-
+            Console.WriteLine("Retrieved TCG and OCG card list.");
             Console.WriteLine("Parsing returned response...");
 
             var tcgJson = JObject.Parse(responseTcg);
@@ -357,18 +351,12 @@ namespace YuGiOhScraper.Modules
             TcgBoosters = new ConcurrentDictionary<string, string>();
             OcgBoosters = new ConcurrentDictionary<string, string>();
 
-            using (var httpClient = new HttpClient() { BaseAddress = new Uri(ScraperConstants.YuGiOhWikiaUrl) })
-            {
+            Console.WriteLine("Retrieving TCG and OCG booster pack list...");
+            
+            responseTcg = await HttpClient.GetStringAsync(ScraperConstants.YuGiOhWikiaTcgPacks);
+            responseOcg = await HttpClient.GetStringAsync(ScraperConstants.YuGiOhWikiaOcgPacks);
 
-                Console.WriteLine("Retrieving TCG and OCG booster pack list...");
-
-                responseTcg = await httpClient.GetStringAsync(ScraperConstants.YuGiOhWikiaTcgPacks);
-                responseOcg = await httpClient.GetStringAsync(ScraperConstants.YuGiOhWikiaOcgPacks);
-
-                Console.WriteLine("Retrieved TCG and OCG booster pack list.");
-
-            }
-
+            Console.WriteLine("Retrieved TCG and OCG booster pack list.");
             Console.WriteLine("Parsing returned response...");
 
             var tcgJson = JObject.Parse(responseTcg);

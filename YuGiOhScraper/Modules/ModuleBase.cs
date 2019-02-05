@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,15 +16,16 @@ namespace YuGiOhScraper.Modules
         public string DatabaseName { get; set; }
 
         protected string DatabasePath => DatabaseName;
-        protected string ConnectionString => $"Data Source = {DatabaseName}";
-
+        protected string ConnectionString => $"Data Source = {DatabasePath}";
+        protected HttpClient HttpClient { get; private set; } //probably not a good idea if it starts scaling, but eh, doubt I'll get port exhaustion, better for parallel function anyway
         protected IDictionary<string, string> TcgCards, OcgCards, TcgBoosters, OcgBoosters;
 
-        public ModuleBase(string moduleName, string databaseName)
+        public ModuleBase(string moduleName, string databaseName, string baseAddress)
         {
 
             ModuleName = moduleName;
             DatabaseName = databaseName;
+            HttpClient = new HttpClient() { BaseAddress = new Uri(baseAddress) };
 
         }
 
