@@ -20,7 +20,7 @@ namespace YuGiOhScraper.Parsers.YuGiPedia
         {
 
             _name = name;
-            _dom = ScraperConstants.Context.OpenAsync(url).Result.GetElementById("mw-context-text");
+            _dom = ScraperConstants.Context.OpenAsync(url).Result.GetElementById("mw-content-text").FirstElementChild;
 
         }
 
@@ -50,14 +50,12 @@ namespace YuGiOhScraper.Parsers.YuGiPedia
             foreach (var row in tableRows)
             {
 
-                if (row.Children.Any(element => element.ClassName == "cardtablespanrow"))
+                if (row.FirstElementChild.ClassName == "cardtablespanrow")
                 {
 
                     //for future stuff
                     #region Lore
-                    var descriptionUnformatted = row.GetElementsByClassName("navbox").First()
-                        .GetElementsByClassName("collapsible").First()
-                        .GetElementsByTagName("tr").Last();
+                    var descriptionUnformatted = row.FirstElementChild;
                     var descriptionFormatted = Regex.Replace(descriptionUnformatted.InnerHtml.Replace("<br>", "\\n"), "<[^>]*>", "").Trim();
                     card.Lore = descriptionFormatted;
                     #endregion Lore

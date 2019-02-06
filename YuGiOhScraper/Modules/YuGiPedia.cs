@@ -72,7 +72,7 @@ namespace YuGiOhScraper.Modules
 
             Console.WriteLine("Finished parsing returned response.");
 
-            return TcgBoosters.Concat(OcgBoosters).Take(0).DistinctBy(kv => kv.Key).ToDictionary(kv => kv.Key, kv => kv.Value);
+            return TcgBoosters.Concat(OcgBoosters).Take(0).DistinctBy(kv => kv.Key).ToDictionary(kv => kv.Key, kv => $"{ScraperConstants.YuGiPediaUrl}{Uri.EscapeDataString(kv.Key)}");
 
         }
 
@@ -108,7 +108,7 @@ namespace YuGiOhScraper.Modules
                 cmcontinue = json["continue"]?["cmcontinue"]?.ToObject<string>();
 
                 foreach (var card in json["query"]["categorymembers"].ToObject<JArray>())
-                    cards[card.Value<string>("title")] = $"{ScraperConstants.YuGiPediaUrl}?curid={card.Value<string>("pageid")}";
+                    cards[card.Value<string>("title")] = card.Value<string>("pageid");
 
                 InlineWrite($"Page: {counter++}");
 
@@ -242,13 +242,13 @@ namespace YuGiOhScraper.Modules
             var current = 0;
             var tempErrors = new ConcurrentBag<Error>();
 
-            Parallel.ForEach(links, ScraperConstants.ParallelOptions, kv =>
+            Parallel.ForEach(links, kv =>
             {
 
                 try
                 {
 
-                    var card = new CardParser(kv.Key, $"{ScraperConstants.YuGiOhWikiaUrl.TrimEnd('/')}{kv.Value}").Parse();
+                    var card = new CardParser(kv.Key, ScraperConstants.YuGiPediaBaseUrl + $"?curid={kv.Value}").Parse();
 
                     #region OCG TCG
                     card.TcgExists = TcgCards.ContainsKey(card.Name);
