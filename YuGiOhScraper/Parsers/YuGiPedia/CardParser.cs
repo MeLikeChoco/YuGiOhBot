@@ -20,7 +20,8 @@ namespace YuGiOhScraper.Parsers.YuGiPedia
         {
 
             _name = name;
-            _dom = ScraperConstants.Context.OpenAsync(url).Result.GetElementById("mw-content-text").FirstElementChild;
+            var response = ScraperConstants.Context.OpenAsync(url).Result; //debugging purposes
+            _dom = response.GetElementById("mw-content-text").FirstElementChild;
 
         }
 
@@ -36,7 +37,8 @@ namespace YuGiOhScraper.Parsers.YuGiPedia
             {
 
                 Name = _name,
-                Img = _dom.GetElementsByClassName("cardtable-cardimage").First().FirstElementChild.GetAttribute("href")
+                Img = _dom.GetElementsByClassName("cardtable-cardimage").First().GetElementsByTagName("img").First().GetAttribute("srcset")?.Split(' ').First()
+                ?? _dom.GetElementsByClassName("cardtable-cardimage").First().GetElementsByTagName("img").First().GetAttribute("src")
 
             };
 

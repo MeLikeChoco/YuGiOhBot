@@ -13,6 +13,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using YuGiOhScraper.Entities;
+using YuGiOhScraper.Extensions;
 using YuGiOhScraper.Parsers.YuGiPedia;
 
 namespace YuGiOhScraper.Modules
@@ -39,9 +40,9 @@ namespace YuGiOhScraper.Modules
         protected override Task DoBeforeSaveToDb(IEnumerable<Card> cards, IEnumerable<BoosterPack> boosterPacks, IEnumerable<Error> errors)
         {
 
-            cards.FirstOrDefault(card => card.Name.Contains("obelisk", StringComparison.OrdinalIgnoreCase) && card.Name.Contains("tormentor", StringComparison.OrdinalIgnoreCase)).Passcode = "10000000";
-            cards.FirstOrDefault(card => card.Name.Contains("slifer", StringComparison.OrdinalIgnoreCase) && card.Name.Contains("sky dragon", StringComparison.OrdinalIgnoreCase)).Passcode = "10000010";
-            cards.FirstOrDefault(card => card.Name.Contains("ra", StringComparison.OrdinalIgnoreCase) && card.Name.Contains("winged dragon", StringComparison.OrdinalIgnoreCase)).Passcode = "10000020";
+            cards.FirstOrDefault(card => card.Name.Contains("obelisk", StringComparison.OrdinalIgnoreCase) && card.Name.Contains("tormentor", StringComparison.OrdinalIgnoreCase)).DoIf(card => card != null, card => card.Passcode = "10000000");
+            cards.FirstOrDefault(card => card.Name.Contains("slifer", StringComparison.OrdinalIgnoreCase) && card.Name.Contains("sky dragon", StringComparison.OrdinalIgnoreCase)).DoIf(card => card != null, card => card.Passcode = "10000010");
+            cards.FirstOrDefault(card => card.Name.Contains("ra", StringComparison.OrdinalIgnoreCase) && card.Name.Contains("winged dragon", StringComparison.OrdinalIgnoreCase)).DoIf(card => card != null, card => card.Passcode = "10000020");
 
             return Task.CompletedTask;
 
@@ -86,7 +87,7 @@ namespace YuGiOhScraper.Modules
 
             Console.WriteLine("Finished retrieving TCG and OCG cards.");
 
-            return TcgCards.Concat(OcgCards).DistinctBy(kv => kv.Key).ToDictionary(kv => kv.Key, kv => kv.Value);
+            return TcgCards.Concat(OcgCards).DistinctBy(kv => kv.Key).Take(100).ToDictionary(kv => kv.Key, kv => kv.Value);
 
         }
 
@@ -312,13 +313,13 @@ namespace YuGiOhScraper.Modules
                         SqliteCommand createCardTable, createboosterPackTable, createErrorTable;
                         createCardTable = createboosterPackTable = createErrorTable = null;
 
-                        createboosterPackTable = db.CreateCommand();
+                        createCardTable = db.CreateCommand();
                         createboosterPackTable = db.CreateCommand();
                         createErrorTable = db.CreateCommand();
 
                         createCardTable.CommandText = ScraperConstants.CreateCardTableSql;
-                        createCardTable.CommandText = ScraperConstants.CreateBoosterPackTableSql;
-                        createCardTable.CommandText = ScraperConstants.CreateErrorTable;
+                        createboosterPackTable.CommandText = ScraperConstants.CreateBoosterPackTableSql;
+                        createErrorTable.CommandText = ScraperConstants.CreateErrorTable;
 
                         Console.WriteLine($"Saving to {DatabaseName}...");
                         await createCardTable.ExecuteNonQueryAsync();
@@ -343,7 +344,7 @@ namespace YuGiOhScraper.Modules
 
                     exception = ioexception;
 
-                    Console.WriteLine("IOException occured. Most likely cause is ygo.db held open by another program. Hit enter when resolved...");
+                    Console.WriteLine($"IOException occured. Most likely cause is {DatabaseName} being held open by another program. Hit enter when resolved...");
 
                     while (Console.ReadKey().Key != ConsoleKey.Enter) { }
 

@@ -12,8 +12,10 @@ namespace YuGiOhScraper
     public static class ScraperConstants
     {
 
+        private static readonly DefaultHttpRequester _requester = new DefaultHttpRequester("Chrome/72.0");
+
         public static readonly HtmlParser HtmlParser = new HtmlParser();
-        public static readonly IBrowsingContext Context = BrowsingContext.New(Configuration.Default.WithDefaultLoader());
+        public static readonly IBrowsingContext Context = BrowsingContext.New(Configuration.Default.WithDefaultLoader().With(_requester));
         public static readonly ParallelOptions ParallelOptions = new ParallelOptions() { MaxDegreeOfParallelism = Environment.ProcessorCount };
         public const string YuGiOhWikiaUrl = "http://yugioh.fandom.com/";
         public const string YuGiOhWikiaTcgCards = "api/v1/Articles/List?category=TCG_cards&limit=20000&namespaces=0";
