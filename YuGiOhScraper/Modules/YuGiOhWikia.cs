@@ -12,6 +12,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using YuGiOhScraper.Entities;
+using YuGiOhScraper.Extensions;
 using YuGiOhScraper.Parsers.YuGiOhWikia;
 
 namespace YuGiOhScraper.Modules
@@ -67,9 +68,9 @@ namespace YuGiOhScraper.Modules
         private void PasscodeForGodCards(IEnumerable<Card> cards)
         {
 
-            cards.FirstOrDefault(card => card.Name.Contains("obelisk", StringComparison.OrdinalIgnoreCase) && card.Name.Contains("tormentor", StringComparison.OrdinalIgnoreCase)).Passcode = "10000000";
-            cards.FirstOrDefault(card => card.Name.Contains("slifer", StringComparison.OrdinalIgnoreCase) && card.Name.Contains("sky dragon", StringComparison.OrdinalIgnoreCase)).Passcode = "10000010";
-            cards.FirstOrDefault(card => card.Name.Contains("ra", StringComparison.OrdinalIgnoreCase) && card.Name.Contains("winged dragon", StringComparison.OrdinalIgnoreCase)).Passcode = "10000020";
+            cards.FirstOrDefault(card => card.Name.Contains("obelisk", StringComparison.OrdinalIgnoreCase) && card.Name.Contains("tormentor", StringComparison.OrdinalIgnoreCase)).DoIf(card => card != null, card => card.Passcode = "10000000");
+            cards.FirstOrDefault(card => card.Name.Contains("slifer", StringComparison.OrdinalIgnoreCase) && card.Name.Contains("sky dragon", StringComparison.OrdinalIgnoreCase)).DoIf(card => card != null, card => card.Passcode = "10000010");
+            cards.FirstOrDefault(card => card.Name.Contains("ra", StringComparison.OrdinalIgnoreCase) && card.Name.Contains("winged dragon", StringComparison.OrdinalIgnoreCase)).DoIf(card => card != null, card => card.Passcode = "10000020");
 
         }
 

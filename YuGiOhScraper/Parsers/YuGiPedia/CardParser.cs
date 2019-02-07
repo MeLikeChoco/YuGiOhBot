@@ -57,9 +57,16 @@ namespace YuGiOhScraper.Parsers.YuGiPedia
 
                     //for future stuff
                     #region Lore
-                    var descriptionUnformatted = row.FirstElementChild;
-                    var descriptionFormatted = Regex.Replace(descriptionUnformatted.InnerHtml.Replace("<br>", "\\n"), "<[^>]*>", "").Trim();
-                    card.Lore = descriptionFormatted;
+                    if (card.PendulumScale == -1 && row.FirstElementChild.FirstElementChild.TagName == "P")
+                    {
+
+                        var descriptionUnformatted = row.FirstElementChild;
+                        var descriptionFormatted = Regex.Replace(descriptionUnformatted.InnerHtml.Replace("<br>", "\\n"), "<[^>]*>", "").Trim();
+                        card.Lore = descriptionFormatted;
+
+                    }
+                    else if (card.PendulumScale > -1 && row.TextContent.Contains("effect", StringComparison.InvariantCultureIgnoreCase))
+                        card.Lore = row.TextContent.Replace("\n", " ").Trim();
                     #endregion Lore
 
                 }
@@ -180,11 +187,11 @@ namespace YuGiOhScraper.Parsers.YuGiPedia
                     var header = searchCategory.GetElementsByTagName("dt").First().TextContent;
                     var value = searchCategory.GetElementsByTagName("dd").First().TextContent?.Trim();
 
-                    if (header.Contains("archetype"))
+                    if (header.Contains("archetype", StringComparison.InvariantCultureIgnoreCase))
                         card.Archetype = value;
-                    else if (header.Contains("anti-supports"))
+                    else if (header.Contains("anti-supports", StringComparison.InvariantCultureIgnoreCase))
                         card.AntiSupports = value;
-                    else if (header.Contains("supports"))
+                    else if (header.Contains("supports", StringComparison.InvariantCultureIgnoreCase))
                         card.Supports = value;
 
                 }

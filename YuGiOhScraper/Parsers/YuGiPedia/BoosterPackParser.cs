@@ -20,7 +20,8 @@ namespace YuGiOhScraper.Parsers.YuGiPedia
         {
 
             _name = name;
-            _dom = ScraperConstants.Context.OpenNewAsync(url).Result.GetElementById("mw-content-text");
+            var response = ScraperConstants.Context.OpenAsync(url).Result;
+            _dom = response.GetElementById("mw-content-text").FirstElementChild;
 
         }
 
@@ -28,7 +29,7 @@ namespace YuGiOhScraper.Parsers.YuGiPedia
         {
 
             var dates = GetReleaseDates();
-            var table = _dom.GetElementsByClassName("card-list").FirstOrDefault()?.Children;
+            var table = _dom.GetElementsByClassName("card-list").FirstOrDefault().FirstElementChild.Children;
 
             if (table == null)
                 throw new NullReferenceException($"No card list exists for {_name}");
@@ -69,21 +70,27 @@ namespace YuGiOhScraper.Parsers.YuGiPedia
 
             var dates = new Dictionary<string, string>();
             var infobox = _dom.GetElementsByClassName("infobox").FirstOrDefault().FirstElementChild.Children;
-            var releaseDateHeader = infobox.First(element => !string.IsNullOrEmpty(element.TextContent) && element.TextContent.Contains("release dates", StringComparison.InvariantCultureIgnoreCase));
-            var startIndex = infobox.Index(releaseDateHeader) + 1;
+            var releaseDateHeader = infobox.FirstOrDefault(element => !string.IsNullOrEmpty(element.TextContent) && element.TextContent.Contains("release dates", StringComparison.InvariantCultureIgnoreCase));
 
-            for(int i = startIndex; i < infobox.Length; i++)
+            if(releaseDateHeader != null)
             {
 
-                var dateInfo = infobox[i];
+                var startIndex = infobox.Index(releaseDateHeader) + 1;
 
-                if(dateInfo.Children.Length == 2)
+                for (int i = startIndex; i < infobox.Length; i++)
                 {
 
-                    var region = dateInfo.FirstElementChild.TextContent.Trim();
-                    var date = dateInfo.Children[1].TextContent.Trim();
+                    var dateInfo = infobox[i];
 
-                    dates[region] = date;
+                    if (dateInfo.Children.Length == 2)
+                    {
+
+                        var region = dateInfo.FirstElementChild.TextContent.Trim();
+                        var date = dateInfo.Children[1].TextContent.Trim();
+
+                        dates[region] = date;
+
+                    }
 
                 }
 

@@ -73,7 +73,7 @@ namespace YuGiOhScraper.Modules
 
             Console.WriteLine("Finished parsing returned response.");
 
-            return TcgBoosters.Concat(OcgBoosters).Take(0).DistinctBy(kv => kv.Key).ToDictionary(kv => kv.Key, kv => $"{ScraperConstants.YuGiPediaUrl}{Uri.EscapeDataString(kv.Key)}");
+            return TcgBoosters.Concat(OcgBoosters).DistinctBy(kv => kv.Key).ToDictionary(kv => kv.Key, kv => kv.Value);
 
         }
 
@@ -87,7 +87,7 @@ namespace YuGiOhScraper.Modules
 
             Console.WriteLine("Finished retrieving TCG and OCG cards.");
 
-            return TcgCards.Concat(OcgCards).DistinctBy(kv => kv.Key).Take(100).ToDictionary(kv => kv.Key, kv => kv.Value);
+            return TcgCards.Concat(OcgCards).DistinctBy(kv => kv.Key).ToDictionary(kv => kv.Key, kv => kv.Value);
 
         }
 
@@ -164,7 +164,7 @@ namespace YuGiOhScraper.Modules
                 try
                 {
 
-                    var boosterPack = new BoosterPackParser(kv.Key, $"{ScraperConstants.YuGiOhWikiaUrl.TrimEnd('/')}{kv.Value}").Parse();
+                    var boosterPack = new BoosterPackParser(kv.Key, ScraperConstants.YuGiPediaBaseUrl + $"?curid={kv.Value}").Parse();
 
                     #region OCG TCG
                     boosterPack.TcgExists = TcgBoosters.ContainsKey(boosterPack.Name);
@@ -243,7 +243,7 @@ namespace YuGiOhScraper.Modules
             var current = 0;
             var tempErrors = new ConcurrentBag<Error>();
 
-            Parallel.ForEach(links, kv =>
+            Parallel.ForEach(links, ScraperConstants.ParallelOptions, kv =>
             {
 
                 try

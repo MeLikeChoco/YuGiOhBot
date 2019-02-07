@@ -31,7 +31,7 @@ namespace YuGiOhScraper
             if (args.Any() && int.TryParse(args.FirstOrDefault(), out var result))
                 _wasLaunchedByProgram = result == 1;
 
-            //await new YuGiOhWikia(_wasLaunchedByProgram).RunAsync();
+            await new YuGiOhWikia(_wasLaunchedByProgram).RunAsync();
             await new YuGiPedia(_wasLaunchedByProgram).RunAsync();
 
             if (!_wasLaunchedByProgram)
