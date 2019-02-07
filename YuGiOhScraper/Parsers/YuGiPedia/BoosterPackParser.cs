@@ -14,22 +14,23 @@ namespace YuGiOhScraper.Parsers.YuGiPedia
     {
 
         private readonly string _name;
-        private IElement _dom;
+        private readonly string _url;
 
         public BoosterPackParser(string name, string url)
         {
 
             _name = name;
-            var response = ScraperConstants.Context.OpenAsync(url).Result;
-            _dom = response.GetElementById("mw-content-text").FirstElementChild;
+            _url = url;
 
         }
 
         public BoosterPack Parse()
         {
 
-            var dates = GetReleaseDates();
-            var table = _dom.GetElementsByClassName("card-list").FirstOrDefault().FirstElementChild.Children;
+            var response = ScraperConstants.Context.OpenAsync(_url).Result;
+            var dom = response.GetElementById("mw-content-text").FirstElementChild;
+            var dates = GetReleaseDates(dom);
+            var table = dom.GetElementsByClassName("card-list").FirstOrDefault().FirstElementChild.Children;
 
             if (table == null)
                 throw new NullReferenceException($"No card list exists for {_name}");
@@ -57,7 +58,7 @@ namespace YuGiOhScraper.Parsers.YuGiPedia
                 Name = _name,
                 Dates = dates == null ? null : JsonConvert.SerializeObject(dates),
                 Cards = JsonConvert.SerializeObject(cards),
-                Url = _dom.BaseUri
+                Url = dom.BaseUri
 
             };
 
@@ -65,11 +66,11 @@ namespace YuGiOhScraper.Parsers.YuGiPedia
 
         }
 
-        private IDictionary<string,string> GetReleaseDates()
+        private IDictionary<string,string> GetReleaseDates(IElement dom)
         {
 
             var dates = new Dictionary<string, string>();
-            var infobox = _dom.GetElementsByClassName("infobox").FirstOrDefault().FirstElementChild.Children;
+            var infobox = dom.GetElementsByClassName("infobox").FirstOrDefault().FirstElementChild.Children;
             var releaseDateHeader = infobox.FirstOrDefault(element => !string.IsNullOrEmpty(element.TextContent) && element.TextContent.Contains("release dates", StringComparison.InvariantCultureIgnoreCase));
 
             if(releaseDateHeader != null)

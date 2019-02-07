@@ -1,11 +1,20 @@
 {
   "profiles": {
-    "YuGiOhScraper": {
-      "commandName": "Project",
-      "commandLineArgs": "1"
-    },
     "RunAsRelease": {
-      "commandName": "Project"
+      "commandName": "Project",
+      "commandLineArgs": "-p 0 -s 1 -j 1"
+    },
+    "RunAsTest": {
+      "commandName": "Project",
+      "commandLineArgs": "-p 0 -s 1 -j 1 -ca 1000 -bpa 1000"
+    },
+    "RunAsSubProcessRelease": {
+      "commandName": "Project",
+      "commandLineArgs": "-p 1 -s 1 -j 1"
+    },
+    "RunAsSubProcessTest": {
+      "commandName": "Project",
+      "commandLineArgs": "-p 1 -s 1 -j 1 -ca 1000 -bpa 1000"
     }
   }
 }

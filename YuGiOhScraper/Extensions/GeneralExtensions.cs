@@ -17,5 +17,15 @@ namespace YuGiOhScraper.Extensions
 
         }
 
+        public static T DoIf<T>(this T x, Predicate<T> conditions, Func<T, T> work)
+        {
+
+            if (conditions.Invoke(x))
+                x = work.Invoke(x);
+
+            return x;
+
+        }
+
     }
 }

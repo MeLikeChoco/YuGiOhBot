@@ -8,6 +8,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
@@ -23,18 +24,16 @@ namespace YuGiOhScraper
     public class Program
     {
         
-        private static bool _wasLaunchedByProgram = false;
 
         public static async Task Main(string[] args)
         {
 
-            if (args.Any() && int.TryParse(args.FirstOrDefault(), out var result))
-                _wasLaunchedByProgram = result == 1;
+            Settings.Initialize(args);
 
-            await new YuGiOhWikia(_wasLaunchedByProgram).RunAsync();
-            await new YuGiPedia(_wasLaunchedByProgram).RunAsync();
+            await new YuGiOhWikia().RunAsync();
+            //await new YuGiPedia().RunAsync();
 
-            if (!_wasLaunchedByProgram)
+            if (!Settings.IsSubProcess)
                 Console.ReadKey();
 
         }

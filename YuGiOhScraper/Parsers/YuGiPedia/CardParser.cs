@@ -10,25 +10,26 @@ using YuGiOhScraper.Entities;
 
 namespace YuGiOhScraper.Parsers.YuGiPedia
 {
-    public class CardParser
+    public class CardParser : IParser<Card>
     {
 
-        private string _name;
-        private IElement _dom;
+        private readonly string _name;
+        private readonly string _url;
 
         public CardParser(string name, string url)
         {
 
             _name = name;
-            var response = ScraperConstants.Context.OpenAsync(url).Result; //debugging purposes
-            _dom = response.GetElementById("mw-content-text").FirstElementChild;
+            _url = url;
 
         }
 
-        public Card Parse()
+        public async Task<Card> ParseAsync()
         {
 
-            var table = _dom.GetElementsByClassName("cardtable").FirstOrDefault()?.FirstElementChild;
+            var response = await ScraperConstants.Context.OpenAsync(_url); //debugging purposes
+            var dom = response.GetElementById("mw-content-text").FirstElementChild;
+            var table = dom.GetElementsByClassName("cardtable").FirstOrDefault()?.FirstElementChild;
 
             if (table == null)
                 throw new NullReferenceException("Missing card table");
@@ -37,8 +38,8 @@ namespace YuGiOhScraper.Parsers.YuGiPedia
             {
 
                 Name = _name,
-                Img = _dom.GetElementsByClassName("cardtable-cardimage").First().GetElementsByTagName("img").First().GetAttribute("srcset")?.Split(' ').First()
-                ?? _dom.GetElementsByClassName("cardtable-cardimage").First().GetElementsByTagName("img").First().GetAttribute("src")
+                Img = dom.GetElementsByClassName("cardtable-cardimage").First().GetElementsByTagName("img").First().GetAttribute("srcset")?.Split(' ').First()
+                ?? dom.GetElementsByClassName("cardtable-cardimage").First().GetElementsByTagName("img").First().GetAttribute("src")
 
             };
 
@@ -176,7 +177,7 @@ namespace YuGiOhScraper.Parsers.YuGiPedia
             }
 
             #region Search Categories
-            var searchCategories = GetSearchCategories();
+            var searchCategories = GetSearchCategories(dom);
 
             if (searchCategories != null && searchCategories.Any())
             {
@@ -199,27 +200,27 @@ namespace YuGiOhScraper.Parsers.YuGiPedia
             }
             #endregion Search Categories
 
-            card.Url = _dom.BaseUri;
+            card.Url = dom.BaseUri;
 
             return card;
 
         }
 
-        private IEnumerable<IElement> GetSearchCategories()
+        private IEnumerable<IElement> GetSearchCategories(IElement dom)
         {
 
-            var firstH2Element = _dom.Children.First(element => element.TagName == "H2");
-            var firstH2Index = _dom.Children.Index(firstH2Element);
+            var firstH2Element = dom.Children.First(element => element.TagName == "H2");
+            var firstH2Index = dom.Children.Index(firstH2Element);
             var startIndex = firstH2Index + 1;
             var searchCategories = new List<IElement>();
             IElement currentElement;
 
-            for (int i = startIndex; i < _dom.Children.Length; i++)
+            for (int i = startIndex; i < dom.Children.Length; i++)
             {
 
-                currentElement = _dom.Children[i];
+                currentElement = dom.Children[i];
 
-                if (_dom.Children[i].ClassName == "hlist")
+                if (dom.Children[i].ClassName == "hlist")
                     searchCategories.Add(currentElement);
                 else
                     break;

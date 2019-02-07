@@ -20,16 +20,12 @@ namespace YuGiOhScraper.Modules
     public class YuGiOhWikia : ModuleBase
     {
 
-        private readonly bool _wasLaunchedByProgram;
-
-        public YuGiOhWikia(bool arg)
-            : base("YuGiOh Wikia", "ygo.db", ScraperConstants.YuGiOhWikiaUrl)
+        public YuGiOhWikia()
+            : base("YuGiOh Wikia", "ygofandom", ScraperConstants.YuGiOhWikiaUrl)
         {
 
             //if (!string.IsNullOrEmpty(arg) && int.TryParse(arg, out var result))
             //    _wasLaunchedByProgram = result == 1;
-
-            _wasLaunchedByProgram = arg;
 
         }
 
@@ -89,7 +85,7 @@ namespace YuGiOhScraper.Modules
                 boosterPackLinks = errors.ToDictionary(error => error.Name, error => error.Url);
                 //var cards = GetCards(httpClient, links.ToList().GetRange(0, 100).ToDictionary(kv => kv.Key, kv => kv.Value));
 
-                if (boosterPackLinks.Any() && !_wasLaunchedByProgram)
+                if (boosterPackLinks.Any() && !Settings.IsSubProcess)
                 {
 
                     Console.WriteLine($"There were {errors.Count()} errors. Retry? (y/n): ");
@@ -99,7 +95,7 @@ namespace YuGiOhScraper.Modules
                 else
                     Console.WriteLine("Finished getting booster packs.");
 
-            } while (boosterPackLinks.Any() && retry == "y" && !_wasLaunchedByProgram);
+            } while (boosterPackLinks.Any() && retry == "y" && !Settings.IsSubProcess);
 
             return boosterPacks;
 
@@ -147,7 +143,7 @@ namespace YuGiOhScraper.Modules
 
                 var counter = Interlocked.Increment(ref current);
 
-                if (!_wasLaunchedByProgram)
+                if (!Settings.IsSubProcess)
                     InlineWrite($"Progress: {counter}/{total} ({(counter / (double)total) * 100}%)");
 
             });
@@ -174,7 +170,7 @@ namespace YuGiOhScraper.Modules
                 cardLinks = errors.ToDictionary(error => error.Name, error => error.Url);
                 //var cards = GetCards(httpClient, links.ToList().GetRange(0, 100).ToDictionary(kv => kv.Key, kv => kv.Value));
 
-                if (cardLinks.Any() && !_wasLaunchedByProgram)
+                if (cardLinks.Any() && !Settings.IsSubProcess)
                 {
 
                     Console.WriteLine($"There were {errors.Count()} errors. Retry? (y/n): ");
@@ -184,7 +180,7 @@ namespace YuGiOhScraper.Modules
                 else
                     Console.WriteLine("Finished getting cards.");
 
-            } while (cardLinks.Any() && retry == "y" && !_wasLaunchedByProgram);
+            } while (cardLinks.Any() && retry == "y" && !Settings.IsSubProcess);
 
             return cards;
 
@@ -231,7 +227,7 @@ namespace YuGiOhScraper.Modules
 
                 var counter = Interlocked.Increment(ref current);
 
-                if (!_wasLaunchedByProgram)
+                if (!Settings.IsSubProcess)
                     InlineWrite($"Progress: {counter}/{total} ({(counter / (double)total) * 100}%)");
 
             });
@@ -248,71 +244,7 @@ namespace YuGiOhScraper.Modules
 
         //private  Task CardsToSqlite()
         //    => CardsToSqlite(null);
-
-        protected override async Task SaveToDatabase(IEnumerable<Card> cards, IEnumerable<BoosterPack> boosterPacks, IEnumerable<Error> errors)
-        {
-
-            Exception exception = null;
-
-            do
-            {
-
-                try
-                {
-
-                    if (File.Exists(DatabasePath))
-                        File.Delete(DatabasePath);
-
-                    using (var db = new SqliteConnection(ConnectionString))
-                    {
-
-                        await db.OpenAsync();
-
-                        SqliteCommand createCardTable, createboosterPackTable, createErrorTable;
-                        createCardTable = createboosterPackTable = createErrorTable = null;
-
-                        createCardTable = db.CreateCommand();
-                        createboosterPackTable = db.CreateCommand();
-                        createErrorTable = db.CreateCommand();
-                        createErrorTable = db.CreateCommand();
-                        createCardTable.CommandText = ScraperConstants.CreateCardTableSql;
-                        createboosterPackTable.CommandText = ScraperConstants.CreateBoosterPackTableSql;
-                        createErrorTable.CommandText = ScraperConstants.CreateErrorTable;
-                        createErrorTable.CommandText = ScraperConstants.CreateErrorTable;
-
-                        Console.WriteLine($"Saving to {DatabaseName}...");
-                        await createCardTable.ExecuteNonQueryAsync();
-                        await createboosterPackTable.ExecuteNonQueryAsync();
-                        await createErrorTable.ExecuteNonQueryAsync();
-
-                        await db.InsertAsync(cards);
-                        await db.InsertAsync(boosterPacks);
-                        await db.InsertAsync(errors);
-
-                        Console.WriteLine($"Finished saving to {DatabaseName}.");
-
-                        db.Close();
-
-                    }
-
-                    exception = null;
-
-                }
-                catch (IOException ioexception)
-                {
-
-                    exception = ioexception;
-
-                    Console.WriteLine("IOException occured. Most likely cause is ygo.db held open by another program. Hit enter when resolved...");
-
-                    while (Console.ReadKey().Key != ConsoleKey.Enter) { }
-
-                }
-
-            } while (exception != null);
-
-        }
-
+                
         //there are two ways we could have done this
         //1. assume the guy using this has bad internet
         //2. assume the guy using this doesn't care about it
@@ -341,7 +273,7 @@ namespace YuGiOhScraper.Modules
 
             Console.WriteLine("Finished parsing returned response.");
 
-            return TcgCards.Concat(OcgCards).DistinctBy(kv => kv.Key).ToDictionary(kv => kv.Key, kv => kv.Value);
+            return TcgCards.Concat(OcgCards).DistinctBy(kv => kv.Key).DoIf(list => Settings.CardAmount != -1, list => list.Take(Settings.CardAmount)).ToDictionary(kv => kv.Key, kv => kv.Value);
 
         }
 
@@ -370,7 +302,7 @@ namespace YuGiOhScraper.Modules
 
             Console.WriteLine("Finished parsing returned response.");
 
-            return TcgBoosters.Concat(OcgBoosters).DistinctBy(kv => kv.Key).ToDictionary(kv => kv.Key, kv => kv.Value);
+            return TcgBoosters.Concat(OcgBoosters).DistinctBy(kv => kv.Key).DoIf(list => Settings.BoosterPackAmount != -1, list => list.Take(Settings.BoosterPackAmount)).ToDictionary(kv => kv.Key, kv => kv.Value);
 
         }
 
