@@ -17,6 +17,7 @@ namespace YuGiOhScraper
         public static readonly HtmlParser HtmlParser = new HtmlParser();
         public static readonly IBrowsingContext Context = BrowsingContext.New(Configuration.Default.WithDefaultLoader().With(_requester));
         public static readonly ParallelOptions ParallelOptions = new ParallelOptions() { MaxDegreeOfParallelism = Environment.ProcessorCount };
+        public static readonly ParallelOptions SerialOptions = new ParallelOptions() { MaxDegreeOfParallelism = 1 };
         public const string YuGiOhWikiaUrl = "http://yugioh.fandom.com/";
         public const string YuGiOhWikiaTcgCards = "api/v1/Articles/List?category=TCG_cards&limit=20000&namespaces=0";
         public const string YuGiOhWikiaOcgCards = "api/v1/Articles/List?category=OCG_cards&limit=20000&namespaces=0";
@@ -24,6 +25,7 @@ namespace YuGiOhScraper
         public const string YuGiOhWikiaOcgPacks = "api/v1/Articles/List?category=OCG_Booster_Packs&limit=20000&namespaces=0";
         public const string YuGiPediaBaseUrl = "https://yugipedia.com/";
         public const string YuGiPediaUrl = "https://yugipedia.com/wiki/";
+        public const string YuGiPediaParseUrl = "api.php?action=parse&format=json&prop=text&formatversion=2&pageid=";
         public const string YuGiPediaTcgCards = "api.php?action=query&format=json&list=categorymembers&cmtitle=Category%3ATCG_cards&cmlimit=500";
         public const string YuGiPediaOcgCards = "api.php?action=query&format=json&list=categorymembers&cmtitle=Category%3AOCG_cards&cmlimit=500";
         public const string YuGiPediaTcgPacks = "api.php?action=query&format=json&list=categorymembers&cmtitle=Category%3ATCG_Booster_Packs&cmlimit=500";

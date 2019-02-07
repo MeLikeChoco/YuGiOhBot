@@ -154,7 +154,7 @@ namespace YuGiOhScraper.Modules
             var current = 0;
             var tempErrors = new ConcurrentBag<Error>();
 
-            Parallel.ForEach(links, ScraperConstants.ParallelOptions, kv =>
+            Parallel.ForEach(links, ScraperConstants.SerialOptions, kv =>
             {
 
                 try
@@ -239,14 +239,15 @@ namespace YuGiOhScraper.Modules
             var current = 0;
             var tempErrors = new ConcurrentBag<Error>();
 
-            Parallel.ForEach(links, ScraperConstants.ParallelOptions, kv =>
+            Parallel.ForEach(links, ScraperConstants.SerialOptions, kv =>
             {
 
                 try
                 {
 
-                    var card = new CardParser(kv.Key, ScraperConstants.YuGiPediaBaseUrl + $"?curid={kv.Value}").ParseAsync().Result;
-
+                    //var card = new CardParser(kv.Key, ScraperConstants.YuGiPediaBaseUrl + $"?curid={kv.Value}").ParseAsync().Result;
+                    var card = new CardParser(kv.Key, $"{ScraperConstants.YuGiPediaBaseUrl}{ScraperConstants.YuGiPediaParseUrl}{kv.Value}").ParseAsync(HttpClient).Result;
+                    
                     #region OCG TCG
                     card.TcgExists = TcgCards.ContainsKey(card.Name);
                     card.OcgExists = OcgCards.ContainsKey(card.Name);
@@ -266,7 +267,14 @@ namespace YuGiOhScraper.Modules
                         Url = kv.Value,
                         Type = "Card"
 
-                    });
+                    }.DoIf(error => exception.InnerException != null, error => 
+                    {
+
+                        error.InnerException = $"{exception.InnerException.Message}\n{exception.InnerException.StackTrace}";
+
+                        return error;
+
+                    }));
 
                 }
 

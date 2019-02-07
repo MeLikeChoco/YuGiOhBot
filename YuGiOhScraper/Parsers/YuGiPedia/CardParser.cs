@@ -1,8 +1,10 @@
 ﻿using AngleSharp;
 using AngleSharp.Dom;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -10,7 +12,7 @@ using YuGiOhScraper.Entities;
 
 namespace YuGiOhScraper.Parsers.YuGiPedia
 {
-    public class CardParser : IParser<Card>
+    public class CardParser //: IParser<Card>
     {
 
         private readonly string _name;
@@ -24,11 +26,15 @@ namespace YuGiOhScraper.Parsers.YuGiPedia
 
         }
 
-        public async Task<Card> ParseAsync()
+        public async Task<Card> ParseAsync(HttpClient httpClient)
         {
 
-            var response = await ScraperConstants.Context.OpenAsync(_url); //debugging purposes
-            var dom = response.GetElementById("mw-content-text").FirstElementChild;
+            //var response = await ScraperConstants.Context.OpenAsync(_url); //debugging purposes
+            var json = await httpClient.GetStringAsync(_url);
+            var html = JObject.Parse(json)["parse"]["text"].Value<string>();
+            var response = ScraperConstants.HtmlParser.ParseDocument(html);
+            var dom = response.GetElementsByClassName("mw-parser-output").First();
+            //var dom = response.GetElementById("mw-content-text").FirstElementChild;
             var table = dom.GetElementsByClassName("cardtable").FirstOrDefault()?.FirstElementChild;
 
             if (table == null)

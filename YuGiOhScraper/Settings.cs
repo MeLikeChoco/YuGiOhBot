@@ -61,7 +61,7 @@ namespace YuGiOhScraper
                     if (argHeaderIndex > 0 
                         && argHeaderIndex + 1 < args.Length 
                         && int.TryParse(args[argHeaderIndex + 1], out var result)
-                        && result > 0)
+                        && result > -1)
                         property = result;
 
                 }

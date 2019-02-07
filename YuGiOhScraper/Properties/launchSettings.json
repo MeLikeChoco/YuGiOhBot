@@ -6,7 +6,7 @@
     },
     "RunAsTest": {
       "commandName": "Project",
-      "commandLineArgs": "-p 0 -s 1 -j 1 -ca 1000 -bpa 1000"
+      "commandLineArgs": "-p 0 -s 1 -j 1 -ca 100 -bpa 0"
     },
     "RunAsSubProcessRelease": {
       "commandName": "Project",
