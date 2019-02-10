@@ -61,7 +61,7 @@ namespace YuGiOhV2.Objects.BoosterPacks
 
             }
 
-            var cards = new Dictionary<string, List<string>>();
+            var cards = new Dictionary<string, List<string>>(StringComparer.InvariantCultureIgnoreCase);
 
             foreach (var cardObject in JArray.Parse(Cards).Children())
             {

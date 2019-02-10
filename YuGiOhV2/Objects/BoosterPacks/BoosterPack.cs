@@ -1,7 +1,4 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Serialization;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -16,7 +13,10 @@ namespace YuGiOhV2.Objects.BoosterPacks
 
         public string Name { get; }
         public Dictionary<string, DateTime> ReleaseDates { get; }
-        public Dictionary<string, string[]> RarityToCards { get; }
+        public string[] Commons { get; }
+        public string[] Rares { get; }
+        public Dictionary<string, string[]> Foils { get; }
+        public Dictionary<string, string[]> RarityToCards { get; set; }
         public string[] Cards { get; }
         public string Url { get; }
 
@@ -25,9 +25,21 @@ namespace YuGiOhV2.Objects.BoosterPacks
 
             Name = name;
             ReleaseDates = dates;
-            RarityToCards = cards.ToDictionary(kv => kv.Key, kv => kv.Value.ToArray(), StringComparer.InvariantCultureIgnoreCase);
-            Cards = RarityToCards.SelectMany(kv => kv.Value).ToArray();
             Url = url;
+
+            if (cards.TryGetValue("common", out var commons))
+                Commons = cards["common"].ToArray();
+            else
+                Commons = new string[0];
+
+            if (cards.TryGetValue("rare", out var rares))
+                Rares = cards["rare"].ToArray();
+            else
+                Rares = new string[0];
+
+            Foils = cards.Where(kv => kv.Key != "Common" && kv.Key != "Rare").ToDictionary(kv => kv.Key, kv => kv.Value.ToArray());
+            RarityToCards = cards.ToDictionary(kv => kv.Key, kv => kv.Value.ToArray());
+            Cards = cards.SelectMany(kv => kv.Value).Distinct(StringComparer.InvariantCulture).ToArray();
 
         }
 

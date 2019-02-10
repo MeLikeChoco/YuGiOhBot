@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Commands;
+using MoreLinq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,10 +16,14 @@ namespace YuGiOhV2.Modules
     public class Dev : MainBase
     {
 
+        private static DateTime _cutOffDate = new DateTime(2016, 1, 14);
+
         [Command("booster")]
         [Summary("Gets information on a booster pack!")]
         public Task BoosterCommand([Remainder]string input)
         {
+
+            
 
             if (Cache.BoosterPacks.TryGetValue(input, out var boosterPack))
             {
@@ -46,24 +51,28 @@ namespace YuGiOhV2.Modules
 
             if (Cache.BoosterPacks.TryGetValue(input, out var boosterPack))
             {
-
+                
                 var cards = new Dictionary<string, string>(9);
                 var randoms = new List<int>(9);
-                var length = boosterPack.RarityToCards["common"].Length;
+                var commonCards = boosterPack.Commons.Length;
                 var builder = new StringBuilder("```fix\n");
                 int index;
 
-                for (int i = 0; i < 9; i++)
+                for (int i = 0; i < 7; i++)
                 {
 
                     do
-                        index = Rand.Next(length);
+                        index = Rand.Next(commonCards);
                     while (randoms.Contains(index));
 
-                    cards.Add(boosterPack.RarityToCards["common"][index], "Common");
+                    cards.Add(boosterPack.Commons[index], "Common");
                     randoms.Add(index);
 
                 }
+                
+                var superRare = boosterPack.Foils.RandomSubset(1, Rand).FirstOrDefault();
+                cards.Add(boosterPack.Rares.RandomSubset(1, Rand).FirstOrDefault(), "Rare");
+                cards.Add(superRare.Value.RandomSubset(1, Rand).FirstOrDefault(), superRare.Key);
 
                 foreach (var card in cards)
                 {
