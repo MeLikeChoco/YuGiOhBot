@@ -17,17 +17,11 @@ using YuGiOhScraper.Parsers.YuGiOhWikia;
 
 namespace YuGiOhScraper.Modules
 {
-    public class YuGiOhWikia : ModuleBase
+    public class YuGiOhWikia : MediaWikiBase
     {
 
         public YuGiOhWikia()
-            : base("YuGiOh Wikia", "ygofandom", ScraperConstants.YuGiOhWikiaUrl)
-        {
-
-            //if (!string.IsNullOrEmpty(arg) && int.TryParse(arg, out var result))
-            //    _wasLaunchedByProgram = result == 1;
-
-        }
+            : base("YuGiOh Wikia", "ygofandom", ScraperConstants.YuGiOhWikiaUrl) { }
 
         //public async Task RunAsync()
         //{
@@ -115,7 +109,7 @@ namespace YuGiOhScraper.Modules
                 try
                 {
 
-                    var boosterPack = new BoosterPackParser(kv.Key, $"{ScraperConstants.YuGiOhWikiaUrl.TrimEnd('/')}{kv.Value}").Parse();
+                    var boosterPack = new BoosterPackParser(kv.Key, $"{ScraperConstants.YuGiOhWikiaUrl}{ScraperConstants.MediaWikiParseUrl}{kv.Value}").Parse(HttpClient);
 
                     #region OCG TCG
                     boosterPack.TcgExists = TcgBoosters.ContainsKey(boosterPack.Name);
@@ -200,7 +194,7 @@ namespace YuGiOhScraper.Modules
                 try
                 {
 
-                    var card = new CardParser(kv.Key, $"{ScraperConstants.YuGiOhWikiaUrl.TrimEnd('/')}{kv.Value}").Parse();
+                    var card = new CardParser(kv.Key, $"{ScraperConstants.YuGiOhWikiaUrl}{ScraperConstants.MediaWikiParseUrl}{kv.Value}").Parse(HttpClient);
 
                     #region OCG TCG
                     card.TcgExists = TcgCards.ContainsKey(card.Name);
@@ -244,67 +238,73 @@ namespace YuGiOhScraper.Modules
 
         //private  Task CardsToSqlite()
         //    => CardsToSqlite(null);
-                
-        //there are two ways we could have done this
-        //1. assume the guy using this has bad internet
-        //2. assume the guy using this doesn't care about it
-        //I'll go with 2 to make my life easier
-        //I also most likely don't need parallel foreach, but whatever
-        protected override async Task<IDictionary<string, string>> GetCardLinks()
-        {
 
-            string responseTcg, responseOcg;
-            TcgCards = new ConcurrentDictionary<string, string>();
-            OcgCards = new ConcurrentDictionary<string, string>();
+        ////there are two ways we could have done this
+        ////1. assume the guy using this has bad internet
+        ////2. assume the guy using this doesn't care about it
+        ////I'll go with 2 to make my life easier
+        ////I also most likely don't need parallel foreach, but whatever
+        //protected override async Task<IDictionary<string, string>> GetCardLinks()
+        //{
 
-            Console.WriteLine("Retrieving TCG and OCG card list...");
-            
-            responseTcg = await HttpClient.GetStringAsync(ScraperConstants.YuGiOhWikiaTcgCards); //I have to use a really high number or else some cards won't show up, its so bizarre...
-            responseOcg = await HttpClient.GetStringAsync(ScraperConstants.YuGiOhWikiaOcgCards);
+        //    string responseTcg, responseOcg;
+        //    TcgCards = new ConcurrentDictionary<string, string>();
+        //    OcgCards = new ConcurrentDictionary<string, string>();
 
-            Console.WriteLine("Retrieved TCG and OCG card list.");
-            Console.WriteLine("Parsing returned response...");
+        //    Console.WriteLine("Retrieving TCG and OCG card list...");
 
-            var tcgJson = JObject.Parse(responseTcg);
-            var ocgJson = JObject.Parse(responseOcg);
+        //    responseTcg = await HttpClient.GetStringAsync(ScraperConstants.YuGiOhWikiaTcgCards); //I have to use a really high number or else some cards won't show up, its so bizarre...
+        //    responseOcg = await HttpClient.GetStringAsync(ScraperConstants.YuGiOhWikiaOcgCards);
 
-            Task.WaitAll(Task.Run(() => Parallel.ForEach(tcgJson["items"].ToObject<JArray>(), item => TcgCards[item.Value<string>("title")] = item.Value<string>("url"))),
-                Task.Run(() => Parallel.ForEach(ocgJson["items"].ToObject<JArray>(), item => OcgCards[item.Value<string>("title")] = item.Value<string>("url"))));
+        //    Console.WriteLine("Retrieved TCG and OCG card list.");
+        //    Console.WriteLine("Parsing returned response...");
 
-            Console.WriteLine("Finished parsing returned response.");
+        //    var tcgJson = JObject.Parse(responseTcg);
+        //    var ocgJson = JObject.Parse(responseOcg);
 
-            return TcgCards.Concat(OcgCards).DistinctBy(kv => kv.Key).DoIf(list => Settings.CardAmount != -1, list => list.Take(Settings.CardAmount)).ToDictionary(kv => kv.Key, kv => kv.Value);
+        //    Task.WaitAll(Task.Run(() => Parallel.ForEach(tcgJson["items"].ToObject<JArray>(), item => TcgCards[item.Value<string>("title")] = item.Value<string>("url"))),
+        //        Task.Run(() => Parallel.ForEach(ocgJson["items"].ToObject<JArray>(), item => OcgCards[item.Value<string>("title")] = item.Value<string>("url"))));
 
-        }
+        //    Console.WriteLine("Finished parsing returned response.");
 
-        protected override async Task<IDictionary<string, string>> GetBoosterPackLinks()
-        {
+        //    return TcgCards.Concat(OcgCards).DistinctBy(kv => kv.Key).DoIf(list => Settings.CardAmount != -1, list => list.Take(Settings.CardAmount)).ToDictionary(kv => kv.Key, kv => kv.Value);
 
-            string responseTcg, responseOcg;
-            TcgBoosters = new ConcurrentDictionary<string, string>();
-            OcgBoosters = new ConcurrentDictionary<string, string>();
+        //}
 
-            Console.WriteLine("Retrieving TCG and OCG booster pack list...");
-            
-            responseTcg = await HttpClient.GetStringAsync(ScraperConstants.YuGiOhWikiaTcgPacks);
-            responseOcg = await HttpClient.GetStringAsync(ScraperConstants.YuGiOhWikiaOcgPacks);
+        //protected override async Task<IDictionary<string, string>> GetBoosterPackLinks()
+        //{
 
-            Console.WriteLine("Retrieved TCG and OCG booster pack list.");
-            Console.WriteLine("Parsing returned response...");
+        //    string responseTcg, responseOcg;
+        //    TcgBoosters = new ConcurrentDictionary<string, string>();
+        //    OcgBoosters = new ConcurrentDictionary<string, string>();
 
-            var tcgJson = JObject.Parse(responseTcg);
-            var ocgJson = JObject.Parse(responseOcg);
+        //    Console.WriteLine("Retrieving TCG and OCG booster pack list...");
 
-            Task.WaitAll(
-                Task.Run(() => Parallel.ForEach(tcgJson["items"].ToObject<JArray>(), item => TcgBoosters[item.Value<string>("title")] = item.Value<string>("url"))),
-                Task.Run(() => Parallel.ForEach(ocgJson["items"].ToObject<JArray>(), item => OcgBoosters[item.Value<string>("title")] = item.Value<string>("url")))
-                );
+        //    responseTcg = await HttpClient.GetStringAsync(ScraperConstants.YuGiOhWikiaTcgPacks);
+        //    responseOcg = await HttpClient.GetStringAsync(ScraperConstants.YuGiOhWikiaOcgPacks);
 
-            Console.WriteLine("Finished parsing returned response.");
+        //    Console.WriteLine("Retrieved TCG and OCG booster pack list.");
+        //    Console.WriteLine("Parsing returned response...");
 
-            return TcgBoosters.Concat(OcgBoosters).DistinctBy(kv => kv.Key).DoIf(list => Settings.BoosterPackAmount != -1, list => list.Take(Settings.BoosterPackAmount)).ToDictionary(kv => kv.Key, kv => kv.Value);
+        //    var tcgJson = JObject.Parse(responseTcg);
+        //    var ocgJson = JObject.Parse(responseOcg);
 
-        }
+        //    Task.WaitAll(
+        //        Task.Run(() => Parallel.ForEach(tcgJson["items"].ToObject<JArray>(), item => TcgBoosters[item.Value<string>("title")] = item.Value<string>("url"))),
+        //        Task.Run(() => Parallel.ForEach(ocgJson["items"].ToObject<JArray>(), item => OcgBoosters[item.Value<string>("title")] = item.Value<string>("url")))
+        //        );
+
+        //    Console.WriteLine("Finished parsing returned response.");
+
+        //    return TcgBoosters.Concat(OcgBoosters).DistinctBy(kv => kv.Key).DoIf(list => Settings.BoosterPackAmount != -1, list => list.Take(Settings.BoosterPackAmount)).ToDictionary(kv => kv.Key, kv => kv.Value);
+
+        //}
+
+        protected override string GetCmContinue(JObject jObject)
+            => jObject["query-continue"]?["categorymembers"].Value<string>("cmcontinue");
+
+        protected override JArray GetCategoryMembers(JObject jObject)
+            => jObject["query"].Value<JArray>("categorymembers");
 
     }
 }

@@ -3,31 +3,27 @@ using AngleSharp.Dom;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using YuGiOhScraper.Entities;
+using YuGiOhScraper.Extensions;
 
 namespace YuGiOhScraper.Parsers.YuGiOhWikia
 {
-    public class CardParser
+    public class CardParser : MediaWikiParser<Card>
     {
 
-        private string _name;
-        private IElement _dom;
+        public CardParser(string name, string url)
+            : base(name, url) { }
 
-        public CardParser(string name, string link)
+        public override Card Parse(HttpClient httpClient)
         {
 
-            _name = name;
-            _dom = ScraperConstants.Context.OpenAsync(link).Result.GetElementById("mw-content-text");
-
-        }
-
-        public Card Parse()
-        {
-
-            var table = _dom.GetElementsByClassName("cardtable").FirstOrDefault();
+            var html = GetHtml(httpClient);
+            var response = ScraperConstants.HtmlParser.ParseDocument(html);
+            var table = response.GetElementByClassName("cardtable");
 
             if (table == null)
                 throw new NullReferenceException("Missing card table");
@@ -35,14 +31,14 @@ namespace YuGiOhScraper.Parsers.YuGiOhWikia
             var card = new Card()
             {
 
-                Name = _name,
-                Img = _dom.GetElementsByClassName("cardtable-cardimage").First().FirstElementChild.GetAttribute("href")
+                Name = Name,
+                Img = response.GetElementByClassName("cardtable-cardimage").FirstElementChild.GetAttribute("href")
 
             };
 
-            var realName = table.GetElementsByClassName("cardtablerowdata").First().TextContent?.Trim();
+            var realName = table.GetElementByClassName("cardtablerowdata").TextContent?.Trim();
 
-            if (_name != realName)
+            if (Name != realName)
                 card.RealName = realName;
 
             var tableRows = table.GetElementsByClassName("cardtablerow");
@@ -58,9 +54,10 @@ namespace YuGiOhScraper.Parsers.YuGiOhWikia
                     if (row.TextContent.ToLower().Contains("card description"))
                     {
 
-                        var descriptionUnformatted = row.GetElementsByClassName("navbox").First()
-                        .GetElementsByClassName("collapsible").First()
-                        .GetElementsByTagName("tr").Last();
+                        var descriptionUnformatted = row.GetElementByClassName("navbox")
+                        .GetElementByClassName("collapsible")
+                        .GetElementsByTagName("tr")
+                        .Last();
                         var descriptionFormatted = Regex.Replace(descriptionUnformatted.InnerHtml.Replace("<br>", "\\n"), "<[^>]*>", "").Trim();
                         card.Lore = descriptionFormatted;
 
@@ -73,8 +70,8 @@ namespace YuGiOhScraper.Parsers.YuGiOhWikia
 
                     #region Card Data
                     //firstordefault because of statuses not always having a header
-                    var header = row.GetElementsByClassName("cardtablerowheader").FirstOrDefault()?.TextContent;
-                    var data = row.GetElementsByClassName("cardtablerowdata").First().TextContent?.Trim();
+                    var header = row.GetElementByClassName("cardtablerowheader")?.TextContent;
+                    var data = row.GetElementByClassName("cardtablerowdata").TextContent?.Trim();
 
                     switch (header)
                     {
@@ -173,8 +170,7 @@ namespace YuGiOhScraper.Parsers.YuGiOhWikia
 
             }
 
-            var cardSearchCategories = table.GetElementsByClassName("cardtable-categories")
-                .FirstOrDefault()?.Children;
+            var cardSearchCategories = table.GetElementByClassName("cardtable-categories")?.Children;
 
             if (cardSearchCategories != null && cardSearchCategories.Any())
             {
@@ -202,7 +198,7 @@ namespace YuGiOhScraper.Parsers.YuGiOhWikia
 
             }
 
-            card.Url = _dom.BaseUri;
+            card.Url = Url;
 
             return card;
 

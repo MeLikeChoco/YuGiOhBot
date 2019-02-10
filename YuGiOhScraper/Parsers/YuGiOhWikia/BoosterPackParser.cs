@@ -5,35 +5,30 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using YuGiOhScraper.Entities;
+using YuGiOhScraper.Extensions;
 
 namespace YuGiOhScraper.Parsers.YuGiOhWikia
 {
-    public class BoosterPackParser
+    public class BoosterPackParser : MediaWikiParser<BoosterPack>
     {
 
-        private readonly string _name;
-        private IElement _dom;
+        public BoosterPackParser(string name, string url)
+            : base(name, url) { }
 
-        public BoosterPackParser(string name, string link)
+        public override BoosterPack Parse(HttpClient httpClient)
         {
 
-            _name = name;
-            _dom = ScraperConstants.Context.OpenAsync(link).Result.GetElementById("mw-content-text");
-
-        }
-
-        public BoosterPack Parse()
-        {
-
-            var dates = _dom.GetElementsByClassName("portable-infobox").FirstOrDefault()?
+            var dom = GetDom(httpClient);
+            var dates = dom.GetElementByClassName("portable-infobox")?
                 .GetElementsByTagName("section")
                 .FirstOrDefault(element => element.FirstElementChild.TextContent.Contains("release date", StringComparison.OrdinalIgnoreCase))?
                 .GetElementsByClassName("pi-data")
                 .ToDictionary(element => element.FirstElementChild.TextContent.Trim(), element => element.LastElementChild.TextContent.Trim());
-            var table = _dom.GetElementsByClassName("card-list").FirstOrDefault() ?? _dom.GetElementsByClassName("wikitable").FirstOrDefault();
+            var table = dom.GetElementByClassName("card-list") ?? dom.GetElementByClassName("wikitable");
             var tableHead = table.ClassList.Contains("card-list") ? table.GetElementsByTagName("tbody").FirstOrDefault().FirstElementChild : table.GetElementsByTagName("tbody").FirstOrDefault().Children[1];
             var nameIndex = GetColumnIndex(tableHead, "name");
             var rarityIndex = GetColumnIndex(tableHead, "rarity");
@@ -54,10 +49,10 @@ namespace YuGiOhScraper.Parsers.YuGiOhWikia
             var boosterPack = new BoosterPack()
             {
 
-                Name = _name,
+                Name = Name,
                 Dates = dates == null ? null : JsonConvert.SerializeObject(dates),
                 Cards = JsonConvert.SerializeObject(cards),
-                Url = _dom.BaseUri
+                Url = Url
 
             };
 

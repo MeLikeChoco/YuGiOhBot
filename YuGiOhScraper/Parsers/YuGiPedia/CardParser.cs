@@ -9,33 +9,22 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using YuGiOhScraper.Entities;
+using YuGiOhScraper.Extensions;
 
 namespace YuGiOhScraper.Parsers.YuGiPedia
 {
-    public class CardParser //: IParser<Card>
+    public class CardParser : MediaWikiParser<Card>
     {
 
-        private readonly string _name;
-        private readonly string _url;
-
         public CardParser(string name, string url)
+            : base(name, url) { }
+
+        public override Card Parse(HttpClient httpClient)
         {
-
-            _name = name;
-            _url = url;
-
-        }
-
-        public async Task<Card> ParseAsync(HttpClient httpClient)
-        {
-
-            //var response = await ScraperConstants.Context.OpenAsync(_url); //debugging purposes
-            var json = await httpClient.GetStringAsync(_url);
-            var html = JObject.Parse(json)["parse"]["text"].Value<string>();
-            var response = ScraperConstants.HtmlParser.ParseDocument(html);
-            var dom = response.GetElementsByClassName("mw-parser-output").First();
+                        
+            var dom = GetDom(httpClient).GetElementByClassName("mw-parser-output");
             //var dom = response.GetElementById("mw-content-text").FirstElementChild;
-            var table = dom.GetElementsByClassName("cardtable").FirstOrDefault()?.FirstElementChild;
+            var table = dom.GetElementByClassName("cardtable")?.FirstElementChild;
 
             if (table == null)
                 throw new NullReferenceException("Missing card table");
@@ -43,15 +32,15 @@ namespace YuGiOhScraper.Parsers.YuGiPedia
             var card = new Card()
             {
 
-                Name = _name,
-                Img = dom.GetElementsByClassName("cardtable-cardimage").First().GetElementsByTagName("img").First().GetAttribute("srcset")?.Split(' ').First()
-                ?? dom.GetElementsByClassName("cardtable-cardimage").First().GetElementsByTagName("img").First().GetAttribute("src")
+                Name = Name,
+                Img = dom.GetElementByClassName("cardtable-cardimage").GetElementsByTagName("img").First().GetAttribute("srcset")?.Split(' ').First()
+                ?? dom.GetElementByClassName("cardtable-cardimage").GetElementsByTagName("img").First().GetAttribute("src")
 
             };
 
             var realName = table.FirstElementChild.TextContent?.Trim();
 
-            if (_name != realName)
+            if (Name != realName)
                 card.RealName = realName;
 
             var tableRows = table.GetElementsByClassName("cardtablerow");
@@ -82,8 +71,8 @@ namespace YuGiOhScraper.Parsers.YuGiPedia
 
                     #region Card Data
                     //firstordefault because of statuses not always having a header
-                    var header = row.GetElementsByClassName("cardtablerowheader").FirstOrDefault()?.TextContent;
-                    var data = row.GetElementsByClassName("cardtablerowdata").First().TextContent?.Trim();
+                    var header = row.GetElementByClassName("cardtablerowheader")?.TextContent;
+                    var data = row.GetElementByClassName("cardtablerowdata").TextContent?.Trim();
 
                     switch (header)
                     {
@@ -206,7 +195,7 @@ namespace YuGiOhScraper.Parsers.YuGiPedia
             }
             #endregion Search Categories
 
-            card.Url = dom.BaseUri;
+            card.Url = Url;
 
             return card;
 

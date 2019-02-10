@@ -1,39 +1,34 @@
 ﻿using AngleSharp;
 using AngleSharp.Dom;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using YuGiOhScraper.Entities;
 
 namespace YuGiOhScraper.Parsers.YuGiPedia
 {
-    public class BoosterPackParser
+    public class BoosterPackParser : MediaWikiParser<BoosterPack>
     {
 
-        private readonly string _name;
-        private readonly string _url;
-
         public BoosterPackParser(string name, string url)
+            : base(name, url) { }
+
+        public override BoosterPack Parse(HttpClient httpClient)
         {
 
-            _name = name;
-            _url = url;
-
-        }
-
-        public BoosterPack Parse()
-        {
-
-            var response = ScraperConstants.Context.OpenAsync(_url).Result;
-            var dom = response.GetElementById("mw-content-text").FirstElementChild;
+            var html = GetHtml(httpClient);
+            var response = ScraperConstants.HtmlParser.ParseDocument(html);
+            var dom = response.GetElementsByClassName("mw-parser-output").First();
             var dates = GetReleaseDates(dom);
             var table = dom.GetElementsByClassName("card-list").FirstOrDefault().FirstElementChild.Children;
 
             if (table == null)
-                throw new NullReferenceException($"No card list exists for {_name}");
+                throw new NullReferenceException($"No card list exists for {Name}");
 
             var tableHead = table.First();
             var nameIndex = GetColumnIndex(tableHead, "name");
@@ -41,7 +36,7 @@ namespace YuGiOhScraper.Parsers.YuGiPedia
             var cardTable = table.Skip(1);
             var cards = new List<BoosterPackCard>();
 
-            foreach(var row in cardTable)
+            foreach (var row in cardTable)
             {
 
                 var name = row.Children[nameIndex].TextContent.Trim().Trim('"');
@@ -55,10 +50,10 @@ namespace YuGiOhScraper.Parsers.YuGiPedia
             var boosterPack = new BoosterPack()
             {
 
-                Name = _name,
+                Name = Name,
                 Dates = dates == null ? null : JsonConvert.SerializeObject(dates),
                 Cards = JsonConvert.SerializeObject(cards),
-                Url = dom.BaseUri
+                Url = Url
 
             };
 
@@ -66,14 +61,14 @@ namespace YuGiOhScraper.Parsers.YuGiPedia
 
         }
 
-        private IDictionary<string,string> GetReleaseDates(IElement dom)
+        private IDictionary<string, string> GetReleaseDates(IElement dom)
         {
 
             var dates = new Dictionary<string, string>();
             var infobox = dom.GetElementsByClassName("infobox").FirstOrDefault().FirstElementChild.Children;
             var releaseDateHeader = infobox.FirstOrDefault(element => !string.IsNullOrEmpty(element.TextContent) && element.TextContent.Contains("release dates", StringComparison.InvariantCultureIgnoreCase));
 
-            if(releaseDateHeader != null)
+            if (releaseDateHeader != null)
             {
 
                 var startIndex = infobox.Index(releaseDateHeader) + 1;

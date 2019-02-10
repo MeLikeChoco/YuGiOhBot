@@ -18,17 +18,11 @@ using YuGiOhScraper.Parsers.YuGiPedia;
 
 namespace YuGiOhScraper.Modules
 {
-    public class YuGiPedia : ModuleBase
+    public class YuGiPedia : MediaWikiBase
     {
 
         public YuGiPedia()
-            : base("YugiPedia", "ygopedia", ScraperConstants.YuGiPediaBaseUrl)
-        {
-
-            //if (!string.IsNullOrEmpty(arg) && int.TryParse(arg, out var result))
-            //    Settings.IsSubProcess = result == 1;
-
-        }
+            : base("YugiPedia", "ygopedia", ScraperConstants.YuGiPediaUrl) { }
 
         protected override Task DoBeforeParse(IDictionary<string, string> cardLinks, IDictionary<string, string> boosterPackLinks)
             => Task.CompletedTask;
@@ -41,49 +35,6 @@ namespace YuGiOhScraper.Modules
             cards.FirstOrDefault(card => card.Name.Contains("ra", StringComparison.OrdinalIgnoreCase) && card.Name.Contains("winged dragon", StringComparison.OrdinalIgnoreCase)).DoIf(card => card != null, card => card.Passcode = "10000020");
 
             return Task.CompletedTask;
-
-        }
-
-        protected override async Task<IDictionary<string, string>> GetBoosterPackLinks()
-        {
-
-            string responseTcg, responseOcg;
-            TcgBoosters = new ConcurrentDictionary<string, string>();
-            OcgBoosters = new ConcurrentDictionary<string, string>();
-
-            Console.WriteLine("Retrieving TCG and OCG booster pack list...");
-
-            responseTcg = await HttpClient.GetStringAsync(ScraperConstants.YuGiPediaTcgPacks);
-            responseOcg = await HttpClient.GetStringAsync(ScraperConstants.YuGiPediaOcgPacks);
-
-            Console.WriteLine("Retrieved TCG and OCG booster pack list.");
-            Console.WriteLine("Parsing returned response...");
-
-            var tcgJson = JObject.Parse(responseTcg)["query"]["categorymembers"].ToObject<JArray>();
-            var ocgJson = JObject.Parse(responseOcg)["query"]["categorymembers"].ToObject<JArray>();
-
-            Task.WaitAll(
-                Task.Run(() => Parallel.ForEach(tcgJson, item => TcgBoosters[item.Value<string>("title")] = item.Value<string>("pageid"))),
-                Task.Run(() => Parallel.ForEach(ocgJson, item => OcgBoosters[item.Value<string>("title")] = item.Value<string>("pageid")))
-                );
-
-            Console.WriteLine("Finished parsing returned response.");
-
-            return TcgBoosters.Concat(OcgBoosters).DistinctBy(kv => kv.Key).DoIf(list => Settings.BoosterPackAmount != -1, list => list.Take(Settings.BoosterPackAmount)).ToDictionary(kv => kv.Key, kv => kv.Value);
-
-        }
-
-        protected override async Task<IDictionary<string, string>> GetCardLinks()
-        {
-
-            Console.WriteLine("Retrieving TCG and OCG card list...");
-
-            TcgCards = await AggregateCards(ScraperConstants.YuGiPediaTcgCards);
-            OcgCards = await AggregateCards(ScraperConstants.YuGiPediaOcgCards);
-
-            Console.WriteLine("Finished retrieving TCG and OCG cards.");
-
-            return TcgCards.Concat(OcgCards).DistinctBy(kv => kv.Key).DoIf(list => Settings.CardAmount != -1, list => list.Take(Settings.CardAmount)).ToDictionary(kv => kv.Key, kv => kv.Value);
 
         }
 
@@ -154,13 +105,13 @@ namespace YuGiOhScraper.Modules
             var current = 0;
             var tempErrors = new ConcurrentBag<Error>();
 
-            Parallel.ForEach(links, ScraperConstants.SerialOptions, kv =>
+            Parallel.ForEach(links, ScraperConstants.ParallelOptions, kv =>
             {
 
                 try
                 {
 
-                    var boosterPack = new BoosterPackParser(kv.Key, ScraperConstants.YuGiPediaBaseUrl + $"?curid={kv.Value}").Parse();
+                    var boosterPack = new BoosterPackParser(kv.Key, $"{ScraperConstants.YuGiPediaUrl}{ScraperConstants.MediaWikiParseUrl}{kv.Value}").Parse(HttpClient);
 
                     #region OCG TCG
                     boosterPack.TcgExists = TcgBoosters.ContainsKey(boosterPack.Name);
@@ -239,15 +190,14 @@ namespace YuGiOhScraper.Modules
             var current = 0;
             var tempErrors = new ConcurrentBag<Error>();
 
-            Parallel.ForEach(links, ScraperConstants.SerialOptions, kv =>
+            Parallel.ForEach(links, ScraperConstants.ParallelOptions, kv =>
             {
 
                 try
                 {
 
-                    //var card = new CardParser(kv.Key, ScraperConstants.YuGiPediaBaseUrl + $"?curid={kv.Value}").ParseAsync().Result;
-                    var card = new CardParser(kv.Key, $"{ScraperConstants.YuGiPediaBaseUrl}{ScraperConstants.YuGiPediaParseUrl}{kv.Value}").ParseAsync(HttpClient).Result;
-                    
+                    var card = new CardParser(kv.Key, $"{ScraperConstants.YuGiPediaUrl}{ScraperConstants.MediaWikiParseUrl}{kv.Value}").Parse(HttpClient);
+
                     #region OCG TCG
                     card.TcgExists = TcgCards.ContainsKey(card.Name);
                     card.OcgExists = OcgCards.ContainsKey(card.Name);
@@ -267,7 +217,7 @@ namespace YuGiOhScraper.Modules
                         Url = kv.Value,
                         Type = "Card"
 
-                    }.DoIf(error => exception.InnerException != null, error => 
+                    }.DoIf(error => exception.InnerException != null, error =>
                     {
 
                         error.InnerException = $"{exception.InnerException.Message}\n{exception.InnerException.StackTrace}";
@@ -294,6 +244,12 @@ namespace YuGiOhScraper.Modules
 
         }
         #endregion Cards
+
+        protected override string GetCmContinue(JObject jObject)
+            => jObject["continue"]?.Value<string>("cmcontinue");
+
+        protected override JArray GetCategoryMembers(JObject jObject)
+            => jObject["query"].Value<JArray>("categorymembers");
 
     }
 }
