@@ -34,6 +34,7 @@
     <PackageReference Include="DiscordBotsList.Api.Adapter.Discord.Net" Version="1.1.0" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="2.2.1" />
     <PackageReference Include="morelinq" Version="3.1.0" />
+    <PackageReference Include="protobuf-net" Version="2.4.0" />
   </ItemGroup>
 
   <ItemGroup>

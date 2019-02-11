@@ -13,7 +13,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using YuGiOhV2.Objects;
+using YuGiOhV2.Models;
 using YuGiOhV2.Services;
 using YuGiOhV2.Services.Microservices;
 

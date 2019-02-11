@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using YuGiOhV2.Objects;
+using YuGiOhV2.Models;
 using YuGiOhV2.Services;
 using YuGiOhV2.Services.Microservices;
 

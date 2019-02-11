@@ -13,7 +13,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using YuGiOhV2.Objects.Serializers;
+using YuGiOhV2.Models.Serializers;
 
 namespace YuGiOhV2.Services
 {

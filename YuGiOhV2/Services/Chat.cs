@@ -10,8 +10,8 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using YuGiOhV2.Extensions;
-using YuGiOhV2.Objects.Comparers;
-using YuGiOhV2.Objects.Deserializers;
+using YuGiOhV2.Models.Comparers;
+using YuGiOhV2.Models.Deserializers;
 
 namespace YuGiOhV2.Services
 {

@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using YuGiOhV2.Objects;
+using YuGiOhV2.Models;
 using Dapper.Contrib.Extensions;
 using System.Collections.Concurrent;
 

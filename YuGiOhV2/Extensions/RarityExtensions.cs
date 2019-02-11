@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using YuGiOhV2.Objects.BoosterPacks;
+using YuGiOhV2.Models.BoosterPacks;
 
 namespace YuGiOhV2.Extensions
 {

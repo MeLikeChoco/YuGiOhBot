@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using YuGiOhV2.Objects.Deserializers;
+using YuGiOhV2.Models.Deserializers;
 using YuGiOhV2.Services;
 
 namespace YuGiOhV2.Extensions

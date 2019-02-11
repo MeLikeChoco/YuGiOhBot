@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using YuGiOhV2.Extensions;
-using YuGiOhV2.Objects.Attributes;
+using YuGiOhV2.Models.Attributes;
 
 namespace YuGiOhV2.Modules
 {

@@ -11,7 +11,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using YuGiOhV2.Extensions;
-using YuGiOhV2.Objects.Banlist;
+using YuGiOhV2.Models.Banlist;
 using YuGiOhV2.Services;
 
 namespace YuGiOhV2.Modules

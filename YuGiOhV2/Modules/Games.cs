@@ -12,9 +12,9 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using YuGiOhV2.Objects;
-using YuGiOhV2.Objects.Criterion;
-using YuGiOhV2.Objects.Deserializers;
+using YuGiOhV2.Models;
+using YuGiOhV2.Models.Criterion;
+using YuGiOhV2.Models.Deserializers;
 using YuGiOhV2.Services;
 using YuGiOhV2.Extensions;
 

@@ -9,7 +9,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
-using YuGiOhV2.Objects.Deserializers;
+using YuGiOhV2.Models.Deserializers;
 
 namespace YuGiOhV2.Services
 {

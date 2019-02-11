@@ -14,7 +14,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using YuGiOhV2.Objects;
+using YuGiOhV2.Models;
 
 namespace YuGiOhV2.Services.Microservices
 {
