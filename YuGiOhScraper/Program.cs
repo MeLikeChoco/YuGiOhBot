@@ -30,7 +30,7 @@ namespace YuGiOhScraper
 
             Settings.Initialize(args);
 
-            //await new YuGiOhWikia().RunAsync();
+            await new YuGiOhWikia().RunAsync();
             await new YuGiPedia().RunAsync();
 
             if (!Settings.IsSubProcess)

@@ -44,7 +44,7 @@ namespace YuGiOhV2.Services
         public int FYeahYgoCardArtPosts { get; private set; }
         public string TumblrKey { get; private set; }
 
-        private const string DbString = "Data Source = Databases/ygo.db";
+        private const string DbString = "Data Source = Databases/ygofandom.db";
         private static readonly ParallelOptions _pOptions = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount };
         private static SqliteConnection _db = new SqliteConnection(DbString);
 
@@ -505,7 +505,7 @@ namespace YuGiOhV2.Services
 
             _db.Open();
 
-            Log("Retrieving all cards from ygo.db...");
+            Log("Retrieving all cards from ygofandom.db...");
             var parsers = _db.Query<CardParser>("select * from Cards where Types not like '%Pegasus%' or Types is null");
 
             //Log("Getting regular monsters...");
@@ -528,7 +528,7 @@ namespace YuGiOhV2.Services
         private void AquireGoodiePacks()
         {
 
-            Log("Retrieving all booster packs from ygo.db...");
+            Log("Retrieving all booster packs from ygofandom.db...");
 
             _db.Open();
 

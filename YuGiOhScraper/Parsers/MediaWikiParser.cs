@@ -23,6 +23,23 @@ namespace YuGiOhScraper.Parsers
 
         }
 
+        protected string TrimName(string name)
+        {
+
+            if (name.StartsWith('"') && name.EndsWith('"'))
+            {
+
+                if (name[name.Length - 1] == '"' && name[name.Length - 2] == '"')
+                    name = name.TrimStart('"').Substring(0, name.Length - 2);
+                else
+                    name = name.Trim('"');
+
+            }
+
+            return name.Trim();
+
+        }
+
         protected string GetHtml(HttpClient httpClient)
         {
 
@@ -45,7 +62,7 @@ namespace YuGiOhScraper.Parsers
 
         protected IHtmlDocument GetDom(HttpClient httpClient)
             => ScraperConstants.HtmlParser.ParseDocument(GetHtml(httpClient));
-        
+
         public abstract T Parse(HttpClient client);
 
     }

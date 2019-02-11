@@ -39,7 +39,7 @@ namespace YuGiOhScraper.Parsers.YuGiPedia
             foreach (var row in cardTable)
             {
 
-                var name = row.Children[nameIndex].TextContent.Trim().Trim('"');
+                var name = TrimName(row.Children[nameIndex].TextContent.Trim().Trim('"'));
                 var rarities = rarityIndex == -1 ? null : row.Children[rarityIndex].Children.Select(element => element.TextContent.Trim()).Where(IsNotNullOrEmpty);
                 var card = new BoosterPackCard { Name = name, Rarities = rarities };
 

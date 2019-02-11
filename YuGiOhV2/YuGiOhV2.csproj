@@ -50,7 +50,7 @@
     <None Update="Databases\LastScrape.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Databases\ygo.db">
+    <None Update="Databases\ygofandom.db">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Files\Bot List Tokens\Black.txt">
