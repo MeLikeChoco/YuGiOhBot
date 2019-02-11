@@ -16,7 +16,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using YuGiOhV2.Objects;
 
-namespace YuGiOhV2.Services
+namespace YuGiOhV2.Services.Microservices
 {
 
     public class YgoDatabase
