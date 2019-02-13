@@ -14,6 +14,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using YuGiOhV2.Models;
+using YuGiOhV2.Models.Services;
 using YuGiOhV2.Services;
 using YuGiOhV2.Services.Microservices;
 
@@ -30,6 +31,7 @@ namespace YuGiOhV2.Core
         private readonly Cache _cache;
         private readonly Web _web;
         private Config _config;
+        private readonly ServiceObserver _serviceObserver;
         private readonly InteractiveService _interactive;
         private IServiceProvider _services;
         private YgoDatabase _ygoDatabase;
@@ -98,6 +100,7 @@ namespace YuGiOhV2.Core
             _cache = new Cache();
             _interactive = new InteractiveService(_client);
             _config = Config.Instance;
+            _serviceObserver = new ServiceObserver();
 
             RegisterLogging();
 
@@ -234,6 +237,7 @@ namespace YuGiOhV2.Core
                 .AddSingleton(_stats)
                 .AddSingleton(_config)
                 .AddSingleton(_ygoDatabase)
+                .AddSingleton(_serviceObserver.AddPredefined(new GetValidBoosterPacks(_cache)))
                 .AddSingleton<Random>()
                 .BuildServiceProvider();
 

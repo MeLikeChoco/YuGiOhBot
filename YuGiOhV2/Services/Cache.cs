@@ -27,6 +27,7 @@ namespace YuGiOhV2.Services
         public Dictionary<string, Card> Cards { get; private set; }
         public Dictionary<string, EmbedBuilder> Embeds { get; private set; }
         public Dictionary<string, BoosterPack> BoosterPacks { get; private set; }
+        public string[] ValidBoosterPacks { get; set; }
         public Dictionary<string, HashSet<string>> Archetypes { get; private set; }
         public Dictionary<string, HashSet<string>> Supports { get; private set; }
         public Dictionary<string, HashSet<string>> AntiSupports { get; private set; }
