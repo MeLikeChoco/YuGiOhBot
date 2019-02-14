@@ -10,7 +10,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace YuGiOhV2.Models
+namespace YuGiOhV2.Models.Services
 {
     public class Service
     {
@@ -23,17 +23,34 @@ namespace YuGiOhV2.Models
         //public string ExecutablePath { get => _executablePath; set => _executablePath = GetFullPath(value); }
         //private string _settingsPath;
         //public string SettingsPath { get => _settingsPath; set => _settingsPath = GetFullPath(value); }
-        
+
         public string Name { get; set; }
         public string ServiceDirectory { get; set; }
         public string ExecutablePath { get; set; }
         public string SettingsPath { get; set; }
 
-        public JObject Settings => JObject.Parse(File.ReadAllText(SettingsPath));
-        public TimeSpan Delay => TimeSpan.ParseExact(Settings.Value<string>("Delay"), @"d\:hh\:mm\:ss", new CultureInfo("en-US"));
-        public TimeSpan Period => TimeSpan.ParseExact(Settings.Value<string>("Period"), @"d\:hh\:mm\:ss", new CultureInfo("en-US"));
+        private JObject _settings;
+        public JObject Settings
+        {
+
+            get
+            {
+
+                if (_settings == null)
+                    _settings = JObject.Parse(File.ReadAllText(SettingsPath));
+
+                return _settings;
+
+            }
+
+        }
+
+        public virtual TimeSpan Delay() => TimeSpan.ParseExact(Settings.Value<string>("Delay"), @"d\:hh\:mm\:ss", new CultureInfo("en-US"));
+        public virtual TimeSpan Period() => TimeSpan.ParseExact(Settings.Value<string>("Period"), @"d\:hh\:mm\:ss", new CultureInfo("en-US"));        
 
         protected Timer RunService;
+
+        protected string _pipeName => Settings["PipeName"]?.ToObject<string>();
 
         protected string DotNetRuntime
         {
@@ -60,7 +77,7 @@ namespace YuGiOhV2.Models
             ServiceDirectory = directory;
             ExecutablePath = executablePath;
             SettingsPath = settingsPath;
-            RunService = new Timer(Execute, null, Delay, Period);
+            RunService = new Timer(Execute, null, Delay(), Period());
 
         }
 
@@ -91,6 +108,9 @@ namespace YuGiOhV2.Models
 
         private string GetFullPath(string path)
             => Path.Combine(Directory.GetCurrentDirectory(), path);
+
+        protected void Log(string message)
+            => AltConsole.Write("Service", Name, message);
 
     }
 }

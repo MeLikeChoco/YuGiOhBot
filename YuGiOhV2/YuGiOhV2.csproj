@@ -22,6 +22,7 @@
   <ItemGroup>
     <Folder Include="Files\Attributes\" />
     <Folder Include="Files\Properties\" />
+    <Folder Include="Models\ProtobufContracts\" />
   </ItemGroup>
 
   <ItemGroup>

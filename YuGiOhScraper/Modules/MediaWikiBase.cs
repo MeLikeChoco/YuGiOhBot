@@ -32,7 +32,7 @@ namespace YuGiOhScraper.Modules
 
         protected override async Task<IDictionary<string, string>> GetBoosterPackLinks()
         {
-            
+
             Console.WriteLine("Retrieving TCG and OCG booster pack list...");
 
             TcgBoosters = await AggregateInfo(ScraperConstants.MediaWikiTcgPacks);
@@ -67,7 +67,8 @@ namespace YuGiOhScraper.Modules
                 foreach (var entity in GetCategoryMembers(json).ToObject<JArray>())
                     entities[entity.Value<string>("title")] = entity.Value<string>("pageid");
 
-                InlineWrite($"Page: {counter++}");
+                if (!Settings.IsSubProcess)
+                    InlineWrite($"Page: {counter++}");
 
             } while (!string.IsNullOrEmpty(cmcontinue));
 

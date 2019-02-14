@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "YuGiOhScraper", "YuGiOhScra
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Discord.Addons.Interactive", "Discord.Addons.Interactive\Discord.Addons.Interactive.csproj", "{0042C604-ABD4-44CA-AEAB-7DF54000B08C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GetValidBoosterPacks", "GetValidBoosterPacks\GetValidBoosterPacks.csproj", "{1D5A3E51-968A-4DEA-9B0A-C1420291E916}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GetValidBoosterPacks", "GetValidBoosterPacks\GetValidBoosterPacks.csproj", "{1D5A3E51-968A-4DEA-9B0A-C1420291E916}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

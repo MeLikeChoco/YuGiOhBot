@@ -17,6 +17,7 @@ using YuGiOhScraper.Parsers.YuGiOhWikia;
 
 namespace YuGiOhScraper.Modules
 {
+    [Module]
     public class YuGiOhWikia : MediaWikiBase
     {
 

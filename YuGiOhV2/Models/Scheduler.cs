@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using YuGiOhV2.Models.Services;
 
 namespace YuGiOhV2.Models
 {
@@ -17,7 +18,13 @@ namespace YuGiOhV2.Models
 
             Log($"Registering {service.Name}...");
 
-            _scheduler = new Timer(service.Execute, null, service.Delay, service.Period);
+            try
+            {
+                _scheduler = new Timer(service.Execute, null, service.Delay(), service.Period());
+            }catch(Exception exception)
+            {
+                AltConsole.Write("Scheduler", service.Name, "There was a problem registering a service module.", exception);
+            }
 
             Log($"Finished registering {service.Name}.");
 

@@ -39,7 +39,7 @@ namespace YuGiOhScraper.Modules
 
         }
 
-        public async Task RunAsync()
+        public async Task<ModuleInfo> RunAsync()
         {
 
             Console.WriteLine($"{ModuleName} module has began running...");
@@ -76,6 +76,15 @@ namespace YuGiOhScraper.Modules
             //}
 
             Console.WriteLine($"{ModuleName} module has finished running.");
+
+            return new ModuleInfo()
+            {
+
+                Cards = cards,
+                BoosterPacks = boosterPacks,
+                Errors = errors
+
+            };
 
         }
 

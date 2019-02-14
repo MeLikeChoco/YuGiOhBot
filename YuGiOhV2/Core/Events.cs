@@ -34,7 +34,7 @@ namespace YuGiOhV2.Core
         private readonly ServiceObserver _serviceObserver;
         private readonly InteractiveService _interactive;
         private IServiceProvider _services;
-        private YgoDatabase _ygoDatabase;
+        private YuGiOhScraper _yugiohScraper;
         private int _recommendedShards, _currentShards;
         private bool _isInitialized = false;
 
@@ -173,7 +173,7 @@ namespace YuGiOhV2.Core
             await LoadDatabase();
             LoadStats();
 
-            _ygoDatabase = new YgoDatabase(_client, _cache);
+            _yugiohScraper = new YuGiOhScraper(_client, _cache);
 
             BuildServices();
             await RegisterCommands();
@@ -236,8 +236,10 @@ namespace YuGiOhV2.Core
                 .AddSingleton(_web)
                 .AddSingleton(_stats)
                 .AddSingleton(_config)
-                .AddSingleton(_ygoDatabase)
-                .AddSingleton(_serviceObserver.AddPredefined(new GetValidBoosterPacks(_cache)))
+                .AddSingleton(_yugiohScraper)
+                .AddSingleton(_serviceObserver
+                .AddPredefined(new GetValidBoosterPacks(_cache))
+                .AddPredefined(_yugiohScraper))
                 .AddSingleton<Random>()
                 .BuildServiceProvider();
 

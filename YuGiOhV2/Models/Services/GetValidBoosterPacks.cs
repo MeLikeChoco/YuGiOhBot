@@ -11,19 +11,15 @@ using YuGiOhV2.Services;
 
 namespace YuGiOhV2.Models.Services
 {
-    public class GetValidBoosterPacks : Service
+    public class GetValidBoosterPacks : PredefinedService
     {
 
         private readonly Cache _cache;
 
         public GetValidBoosterPacks(Cache cache)
+            : base("GetValidBoosterPacks", "GetValidBoosterPacks", "GetValidBoosterPacks")
         {
-
-            Name = "GetValidBoosterPacks";
-            ServiceDirectory = $"Services/Predefined/{Name}/";
-            ExecutablePath = $"{ServiceDirectory}{Name}.dll";
-            SettingsPath = $"{ServiceDirectory}{Name}.json";
-
+            
             _cache = cache;
 
         }
@@ -33,7 +29,7 @@ namespace YuGiOhV2.Models.Services
 
             Log($"Starting service \"{Name}\"...");
 
-            using (var pipe = new NamedPipeClientStream(".", "GetValidBoosterPacks.Pipe", PipeDirection.In))
+            using (var pipe = new NamedPipeClientStream(".", _pipeName, PipeDirection.In))
             using (var process = new Process()
             {
 
@@ -42,7 +38,7 @@ namespace YuGiOhV2.Models.Services
 
                     CreateNoWindow = true,
                     UseShellExecute = false,
-                    Arguments = $"{ExecutablePath}"
+                    Arguments = $"{ExecutablePath} -pipe {_pipeName}"
 
                 }
 
@@ -64,9 +60,6 @@ namespace YuGiOhV2.Models.Services
             Log($"Finished service \"{Name}\".");
 
         }
-
-        private void Log(string message)
-            => AltConsole.Write("Service", "Get Valid Booster Packs", message);
 
     }
 }

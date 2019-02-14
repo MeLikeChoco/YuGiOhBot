@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 //but this has better organization
 //and I could serialize this into json if i wanted to for no apparent reason
 
-namespace YuGiOhV2.Models.Banlist
+namespace YuGiOhV2.Models
 {
     public class Banlist
     {
@@ -28,25 +28,11 @@ namespace YuGiOhV2.Models.Banlist
 
     }
 
-    public class Ocg : IFormat
-    {
+    public class Ocg : BanlistFormat { }
+    public class TcgAdv : BanlistFormat { }
+    public class TcgTrad : BanlistFormat { }
 
-        public IEnumerable<string> Forbidden { get; set; }
-        public IEnumerable<string> Limited { get; set; }
-        public IEnumerable<string> SemiLimited { get; set; }
-
-    }
-
-    public class TcgAdv : IFormat
-    {
-
-        public IEnumerable<string> Forbidden { get; set; }
-        public IEnumerable<string> Limited { get; set; }
-        public IEnumerable<string> SemiLimited { get; set; }
-
-    }
-
-    public class TcgTrad : IFormat
+    public abstract class BanlistFormat
     {
 
         public IEnumerable<string> Forbidden { get; set; }

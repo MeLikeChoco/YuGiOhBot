@@ -18,6 +18,7 @@ using YuGiOhScraper.Parsers.YuGiPedia;
 
 namespace YuGiOhScraper.Modules
 {
+    [Module]
     public class YuGiPedia : MediaWikiBase
     {
 
@@ -58,7 +59,8 @@ namespace YuGiOhScraper.Modules
                 foreach (var card in json["query"]["categorymembers"].ToObject<JArray>())
                     cards[card.Value<string>("title")] = card.Value<string>("pageid");
 
-                InlineWrite($"Page: {counter++}");
+                if (!Settings.IsSubProcess)
+                    InlineWrite($"Page: {counter++}");
 
             } while (!string.IsNullOrEmpty(cmcontinue));
 

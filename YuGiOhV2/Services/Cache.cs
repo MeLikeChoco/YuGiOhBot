@@ -13,7 +13,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using YuGiOhV2.Extensions;
-using YuGiOhV2.Models.Banlist;
+using YuGiOhV2.Models;
 using YuGiOhV2.Models.BoosterPacks;
 using YuGiOhV2.Models.Cards;
 using YuGiOhV2.Models.Exceptions;
@@ -542,7 +542,7 @@ namespace YuGiOhV2.Services
                 .WithDegreeOfParallelism(Environment.ProcessorCount)
                 .ToDictionary(parser => parser.Name, parser => parser.Parse(), StringComparer.InvariantCultureIgnoreCase);
 
-            Log("Finished retrieving all booster packs from ygo.db");
+            Log("Finished retrieving all booster packs from ygofandom.db");
 
         }
 

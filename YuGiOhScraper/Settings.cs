@@ -20,6 +20,8 @@ namespace YuGiOhScraper
         public static bool Json => _json;
         public static int CardAmount => _cardAmount;
         public static int BoosterPackAmount => _boosterPackAmount;
+        public static string PipeName { get; private set; }
+        public static bool NeedsPipe => !string.IsNullOrEmpty(PipeName);
 
         public static void Initialize(string[] args)
         {
@@ -43,12 +45,17 @@ namespace YuGiOhScraper
                 if (args.Contains("-bpa"))
                     SetIntProperty("-bpa", ref _boosterPackAmount);
 
+                if (args.Contains("--pipe"))
+                    PipeName = GetSetting("-pipe");
+
                 void SetBoolProperty(string option, ref bool property)
                 {
 
                     var argHeaderIndex = Array.IndexOf(args, option);
 
-                    if (argHeaderIndex > 0 && argHeaderIndex + 1 < args.Length && int.TryParse(args[argHeaderIndex + 1], out var result))
+                    if (argHeaderIndex >= 0 
+                        && argHeaderIndex + 1 < args.Length 
+                        && int.TryParse(args[argHeaderIndex + 1], out var result))
                         property = result == 1;
 
                 }
@@ -58,11 +65,23 @@ namespace YuGiOhScraper
 
                     var argHeaderIndex = Array.IndexOf(args, option);
 
-                    if (argHeaderIndex > 0 
-                        && argHeaderIndex + 1 < args.Length 
+                    if (argHeaderIndex >= 0
+                        && argHeaderIndex + 1 < args.Length
                         && int.TryParse(args[argHeaderIndex + 1], out var result)
                         && result > -1)
                         property = result;
+
+                }
+
+                string GetSetting(string option)
+                {
+
+                    var argHeaderIndex = Array.IndexOf(args, option);
+
+                    if (argHeaderIndex > 0 && argHeaderIndex + 1 < args.Length)
+                        return args[argHeaderIndex + 1];
+                    else
+                        return null;
 
                 }
 

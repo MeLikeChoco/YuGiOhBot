@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using YuGiOhV2.Models;
+using YuGiOhV2.Models.Services;
 using YuGiOhV2.Services;
 using YuGiOhV2.Services.Microservices;
 
@@ -17,7 +18,7 @@ namespace YuGiOhV2.Modules
     public class Owner : CustomBase
     {
 
-        public YgoDatabase YgoDatabase { get; set; }
+        public YuGiOhScraper YuGiOhScraper { get; set; }
         public Cache Cache { get; set; }
         public Web Web { get; set; }
         public Config Config { get; set; }
@@ -73,7 +74,7 @@ namespace YuGiOhV2.Modules
         {
 
             if (scrape)
-                YgoDatabase.ReformDatabase(new { Context.Client, Cache });
+                YuGiOhScraper.Execute(null);
             else
                 Cache.Initialize();
 

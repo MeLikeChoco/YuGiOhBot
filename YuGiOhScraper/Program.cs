@@ -1,16 +1,14 @@
-﻿using Dapper;
-using Dapper.Contrib.Extensions;
-using Microsoft.Data.Sqlite;
-using MoreLinq;
-using Newtonsoft.Json.Linq;
+﻿using ProtoBuf;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Pipes;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
@@ -30,8 +28,43 @@ namespace YuGiOhScraper
 
             Settings.Initialize(args);
 
-            await new YuGiOhWikia().RunAsync();
-            await new YuGiPedia().RunAsync();
+            //NamedPipeServerStream pipe;
+            var modules = Assembly.GetEntryAssembly().GetTypes().Where(type => type.CustomAttributes.Any(attribute => attribute.AttributeType == typeof(ModuleAttribute)));
+
+            foreach (var moduleType in modules)
+            {
+
+                var module = Activator.CreateInstance(moduleType) as ModuleBase;
+                var moduleInfo = await module.RunAsync();
+
+            }
+
+            //if (Settings.NeedsPipe)
+            //{
+
+            //    using (var pipe = new NamedPipeServerStream(Settings.PipeName, PipeDirection.Out))
+            //    {
+
+            //        await pipe.WaitForConnectionAsync();
+            //        Serializer.Serialize(pipe, true);
+            //        pipe.WaitForPipeDrain();
+            //        pipe.Disconnect();
+
+            //    }
+
+            //}
+
+            //if (Settings.NeedsPipe)
+            //    pipe = new NamedPipeServerStream(Settings.PipeName, PipeDirection.Out);
+
+            //foreach (var moduleType in modules)
+            //{
+
+            //    var module = Activator.CreateInstance(moduleType) as ModuleBase;
+            //    var moduleInfo = await module.RunAsync();
+
+
+            //}
 
             if (!Settings.IsSubProcess)
                 Console.ReadKey();
