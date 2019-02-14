@@ -76,7 +76,8 @@ namespace YuGiOhV2.Models.Services
                         RedirectStandardOutput = true,
                         RedirectStandardError = true,
                         FileName = DotNetRuntime,
-                        Arguments = $"{ExecutablePath} -s 1 -j 1 -p 1"
+                        WorkingDirectory = ServiceDirectory,
+                        Arguments = $"{Executable} -s 1 -j 1 -p 1"
 
                     }
 

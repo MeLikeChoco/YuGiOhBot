@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -14,9 +15,11 @@ namespace YuGiOhV2.Models.Services
         {
 
             Name = name;
-            ServiceDirectory = $"Services/Predefined/{folderName}/";
-            ExecutablePath = Path.Combine(ServiceDirectory, $"{Name}.dll");
-            SettingsPath = Path.Combine(ServiceDirectory, $"{Name}.json");
+            FileName = serviceName;
+            ServiceTypePath = PredefinedServicePath;
+            ServiceDirectory = folderName;
+            ExecutablePath = $"{Name}.dll";
+            SettingsPath = $"{Name}.json";
 
         }
 

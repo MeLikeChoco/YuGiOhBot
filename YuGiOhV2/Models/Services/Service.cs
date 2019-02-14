@@ -15,21 +15,26 @@ namespace YuGiOhV2.Models.Services
     public class Service
     {
 
-        //private string _name;
-        //public string Name { get => _name; set => _name = GetFullPath(value); }
-        //private string _serviceDirectory;
-        //public string ServiceDirectory { get => _serviceDirectory; set =>_serviceDirectory = GetFullPath(value); }
-        //private string _executablePath;
-        //public string ExecutablePath { get => _executablePath; set => _executablePath = GetFullPath(value); }
-        //private string _settingsPath;
-        //public string SettingsPath { get => _settingsPath; set => _settingsPath = GetFullPath(value); }
+        public const string PredefinedServicePath = "Services/Predefined/";
+        public const string RunnableServicePath = "Services/Runnables/";
+                
+        ////public string Name { get => _name; set => _name = GetFullPath(value); }
+        protected string _serviceDirectory;
+        ////public string ServiceDirectory { get => _serviceDirectory; set =>_serviceDirectory = GetFullPath(value); }
+        protected string _executablePath;
+        ////public string ExecutablePath { get => _executablePath; set => _executablePath = GetFullPath(value); }
+        protected string _settingsPath;
+        ////public string SettingsPath { get => _settingsPath; set => _settingsPath = GetFullPath(value); }
 
         public string Name { get; set; }
-        public string ServiceDirectory { get; set; }
-        public string ExecutablePath { get; set; }
-        public string SettingsPath { get; set; }
+        public string FileName { get; set; }
+        protected string ServiceTypePath { get; set; }
+        public string ServiceDirectory { get => Path.Combine(ServiceTypePath, _serviceDirectory); set => _serviceDirectory = value; }
+        public string ExecutablePath { get => Path.Combine(ServiceDirectory, _executablePath); set => _executablePath = value; }
+        public string SettingsPath { get => Path.Combine(ServiceDirectory, _settingsPath); set => _settingsPath = value; }
+        public string Executable { get => $"{FileName}.dll"; }
 
-        private JObject _settings;
+        protected JObject _settings;
         public JObject Settings
         {
 
@@ -46,7 +51,7 @@ namespace YuGiOhV2.Models.Services
         }
 
         public virtual TimeSpan Delay() => TimeSpan.ParseExact(Settings.Value<string>("Delay"), @"d\:hh\:mm\:ss", new CultureInfo("en-US"));
-        public virtual TimeSpan Period() => TimeSpan.ParseExact(Settings.Value<string>("Period"), @"d\:hh\:mm\:ss", new CultureInfo("en-US"));        
+        public virtual TimeSpan Period() => TimeSpan.ParseExact(Settings.Value<string>("Period"), @"d\:hh\:mm\:ss", new CultureInfo("en-US"));
 
         protected Timer RunService;
 

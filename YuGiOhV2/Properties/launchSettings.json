@@ -2,7 +2,7 @@
   "profiles": {
     "YuGiOhV2": {
       "commandName": "Project",
-      "commandLineArgs": "test 1"
+      "commandLineArgs": "test 0"
     }
   }
 }
