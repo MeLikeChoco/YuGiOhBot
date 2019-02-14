@@ -153,10 +153,14 @@ namespace YuGiOhV2.Models.Services
             } while (shouldRedo);
 
             if (File.Exists(Path.Combine(ServiceDirectory, "ygofandom.db")))
-                File.Move(Path.Combine(ServiceDirectory, "ygofandom.db"), "Databases/ygofandom.db");
+                File.Delete(Path.Combine(ServiceDirectory, "ygofandom.db"));
+
+            File.Move(Path.Combine(ServiceDirectory, "ygofandom.db"), "Databases/ygofandom.db");
 
             if (File.Exists(Path.Combine(ServiceDirectory, "ygopedia.db")))
-                File.Move(Path.Combine(ServiceDirectory, "ygopedia.db"), "Databases/ygopedia.db");
+                File.Delete(Path.Combine(ServiceDirectory, "ygopedia.db"));
+
+            File.Move(Path.Combine(ServiceDirectory, "ygopedia.db"), "Databases/ygopedia.db");
 
             _cache.Initialize();
 
