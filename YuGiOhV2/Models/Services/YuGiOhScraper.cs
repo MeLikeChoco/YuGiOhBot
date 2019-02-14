@@ -92,11 +92,11 @@ namespace YuGiOhV2.Models.Services
                     process.BeginOutputReadLine();
                     process.BeginErrorReadLine();
                     //await pipe.ConnectAsync();
-                    Log($"Connected to \"{Name}\".");
+                    //Log($"Connected to \"{Name}\".");
 
                     //var notification = Serializer.Deserialize<bool>(pipe);
 
-                    Log($"Finished getting info from \"{Name}\".");
+                    //Log($"Finished getting info from \"{Name}\".");
                     //pipe.Close();
                     process.WaitForExit();
                     Log($"Finished service \"{Name}\".");
@@ -153,13 +153,13 @@ namespace YuGiOhV2.Models.Services
 
             } while (shouldRedo);
 
-            if (File.Exists(Path.Combine(ServiceDirectory, "ygofandom.db")))
-                File.Delete(Path.Combine(ServiceDirectory, "ygofandom.db"));
+            if (File.Exists($"Databases/ygofandom.db"))
+                File.Delete($"Databases/ygofandom.db");
 
             File.Move(Path.Combine(ServiceDirectory, "ygofandom.db"), "Databases/ygofandom.db");
 
-            if (File.Exists(Path.Combine(ServiceDirectory, "ygopedia.db")))
-                File.Delete(Path.Combine(ServiceDirectory, "ygopedia.db"));
+            if (File.Exists($"Databases/ygopedia.db"))
+                File.Delete($"Databases/ygopedia.db");
 
             File.Move(Path.Combine(ServiceDirectory, "ygopedia.db"), "Databases/ygopedia.db");
 

@@ -18,10 +18,10 @@ using YuGiOhScraper.Parsers.YuGiOhWikia;
 namespace YuGiOhScraper.Modules
 {
     [Module]
-    public class YuGiOhWikia : MediaWikiBase
+    public class YuGiOhFandom : MediaWikiBase
     {
 
-        public YuGiOhWikia()
+        public YuGiOhFandom()
             : base("YuGiOh Wikia", "ygofandom", ScraperConstants.YuGiOhWikiaUrl) { }
 
         //public async Task RunAsync()
