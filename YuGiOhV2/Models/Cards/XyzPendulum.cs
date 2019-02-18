@@ -6,12 +6,10 @@ using System.Threading.Tasks;
 
 namespace YuGiOhV2.Models.Cards
 {
-    public class XyzPendulum : Monster, IHasRank, IHasScale, IHasMaterials
+    public class XyzPendulum : Xyz, IHasRank, IHasScale
     {
-
-        public int Rank { get; set; }
+        
         public int PendulumScale { get; set; }
-        public string Materials { get; set; }
 
     }
 }
