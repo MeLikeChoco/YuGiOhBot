@@ -101,7 +101,7 @@ namespace YuGiOhV2.Modules
         public async Task ArtCommand([Remainder]string card)
         {
 
-            if (Cache.Passcodes.TryGetValue(card, out var passcode))
+            if (Cache.NameToPasscode.TryGetValue(card, out var passcode))
             {
 
                 Stream stream;
@@ -190,7 +190,7 @@ namespace YuGiOhV2.Modules
         public async Task BanlistCommand([Remainder]string format)
         {
 
-             BanlistFormat banlist;
+            BanlistFormat banlist;
 
             switch (format.ToLower())
             {

@@ -124,7 +124,7 @@ namespace YuGiOhScraper.Parsers.YuGiOhWikia
                             card.LinkArrows = data.Replace(" , ", ", ");
                             break;
                         case "Passcode":
-                            card.Passcode = data;
+                            card.Passcode = data.TrimStart('0');
                             break;
                         case "Statuses":
                             var statuses = tableRows.Where(element => !element.Children.Any(child => child.ClassName == "cardtablerowheader" || child.ClassName == "cardtablespanrow") &&

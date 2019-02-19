@@ -67,7 +67,7 @@ namespace YuGiOhV2.Modules
                     try
                     {
 
-                        passcode = Cache.Passcodes.RandomSubset(1).First();
+                        passcode = Cache.NameToPasscode.RandomSubset(1).First();
 
                         Console.WriteLine($"https://raw.githubusercontent.com/shadowfox87/YGOTCGOCGPics323x323/master/{passcode.Key}.png");
 

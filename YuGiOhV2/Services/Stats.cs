@@ -41,7 +41,7 @@ namespace YuGiOhV2.Services
             _armedTimer = false;
             _id = client.CurrentUser.Id;
             _discordBotListApi = new AuthDiscordBotListApi(_id, File.ReadAllText("Files/Bot List Tokens/Blue.txt"));
-            _calculateStats = new Timer(CalculateStats, client, 0, 3600000);
+            _calculateStats = new Timer(CalculateStats, client, TimeSpan.FromSeconds(5), TimeSpan.FromHours(1));
 
         }
 

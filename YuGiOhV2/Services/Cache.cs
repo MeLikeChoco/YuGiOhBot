@@ -24,7 +24,8 @@ namespace YuGiOhV2.Services
     {
 
         public Dictionary<string, CardParser> Parsers { get; private set; }
-        public Dictionary<string, Card> Cards { get; private set; }
+        public List<Card> Cards { get; private set; }
+        public Dictionary<string, Card> NameToCard { get; private set; }
         public Dictionary<string, EmbedBuilder> Embeds { get; private set; }
         public Dictionary<string, BoosterPack> BoosterPacks { get; private set; }
         public string[] ValidBoosterPacks { get; set; }
@@ -36,11 +37,8 @@ namespace YuGiOhV2.Services
         public HashSet<string> Uppercase { get; private set; }
         public HashSet<string> Lowercase { get; private set; }
         public ConcurrentDictionary<ulong, object> GuessInProgress { get; private set; }
-
-        /// <summary>
-        /// Maps name to passcode
-        /// </summary>
-        public Dictionary<string, string> Passcodes { get; private set; }
+        public Dictionary<string, string> NameToPasscode { get; private set; }
+        public Dictionary<string, string> PasscodeToName { get; private set; }
         public Banlist Banlist { get; private set; }
         public int FYeahYgoCardArtPosts { get; private set; }
         public string TumblrKey { get; private set; }
@@ -189,7 +187,8 @@ namespace YuGiOhV2.Services
             });
 
             Parsers = new Dictionary<string, CardParser>(parsers.ToDictionary(CardParser.GetCardName, parser => parser), IgnoreCase);
-            Cards = new Dictionary<string, Card>(tempObjects, IgnoreCase);
+            NameToCard = new Dictionary<string, Card>(tempObjects, IgnoreCase);
+            Cards = NameToCard.Select(kv => kv.Value).ToList();
             Embeds = new Dictionary<string, EmbedBuilder>(tempDict, IgnoreCase);
             Archetypes = new Dictionary<string, HashSet<string>>(tempArchetypes.ToDictionary(kv => kv.Key, kv => kv.Value.Keys.ToHashSet()), IgnoreCase);
             Supports = new Dictionary<string, HashSet<string>>(tempSupports.GroupBy(kv => kv.Key.Trim(), IgnoreCase).ToDictionary(group => group.Key, group => group.SelectMany(kv => kv.Value.Keys).ToHashSet()), IgnoreCase);
@@ -209,7 +208,8 @@ namespace YuGiOhV2.Services
                 Task.Run(() => { LowerToUpper = new Dictionary<string, string>(parsers.ToDictionary(parser => parser.Name.ToLower(), CardParser.GetCardName), IgnoreCase); }),
                 Task.Run(() => { Uppercase = new HashSet<string>(parsers.Select(CardParser.GetCardName)); }),
                 Task.Run(() => { Lowercase = new HashSet<string>(parsers.Select(parser => parser.Name.ToLower())); }),
-                Task.Run(() => { Passcodes = new Dictionary<string, string>(parsers.Where(parser => !string.IsNullOrEmpty(parser.Passcode)).ToDictionary(CardParser.GetCardName, parser => parser.Passcode.TrimStart('0')), IgnoreCase); })
+                Task.Run(() => { NameToPasscode = new Dictionary<string, string>(parsers.Where(parser => !string.IsNullOrEmpty(parser.Passcode)).ToDictionary(parser => parser.Name, parser => parser.Passcode), IgnoreCase); }),
+                Task.Run(() => { PasscodeToName = new Dictionary<string, string>(parsers.Where(parser => !string.IsNullOrEmpty(parser.Passcode)).GroupBy(parser => parser.Passcode).Select(group => group.FirstOrDefault()).ToDictionary(parser => parser.Passcode, CardParser.GetCardName)); })
                 );
 
             Log("Finished building cache.");

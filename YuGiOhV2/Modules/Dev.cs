@@ -3,6 +3,7 @@ using Discord.Commands;
 using MoreLinq;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,14 +17,65 @@ namespace YuGiOhV2.Modules
     public class Dev : MainBase
     {
 
-        private static DateTime _cutOffDate = new DateTime(2016, 1, 14);
+        private static readonly DateTime _cutOffDate = new DateTime(2016, 1, 14);
+
+        [Command("price"), Alias("prices", "p")]
+        [Summary("Returns the prices based on your deck list from ygopro! No proper capitalization needed!")]
+        public async Task DeckPriceCommand()
+        {
+
+            var attachments = Context.Message.Attachments;
+            var file = attachments.FirstOrDefault(attachment => Path.GetExtension(attachment.Filename) == ".ydk");
+
+            if (file != null)
+            {
+
+                var url = file.Url;
+                var stream = await Web.GetStream(url);
+                var buffer = new byte[stream.Length];
+
+                await stream.ReadAsync(buffer, 0, (int)stream.Length);
+
+                var text = Encoding.UTF8.GetString(buffer);
+                var passcodes = text.Split('\n').Select(passcode => passcode.Trim()).ToArray();
+                var main = GetSection(passcodes, "#main", "#extra");
+                var extra = GetSection(passcodes, "#extra", "!side");
+                var side = GetSection(passcodes, "!side", null);
+
+                if (main.Any() || extra.Any() || side.Any())
+                {
+
+                    var cards = main.Distinct().Select(passcode => Cache.PasscodeToName[passcode]);
+
+                    await ReplyAsync($"```{cards.Aggregate("", (current, next) => $"{current}\n{next}")}```");
+
+                }
+                else
+                    await NoResultError("cards", file.Filename);
+
+            }
+            else
+                await NoResultError("ydk files");
+
+        }
+
+        private string[] GetSection(string[] deck, string startSection, string endSection)
+        {
+
+            var startIndex = Array.IndexOf(deck, startSection) + 1;
+            var endIndex = string.IsNullOrEmpty(endSection) ? deck.Length - 1 : Array.IndexOf(deck, endSection);
+            var count = endIndex - startIndex;
+
+            return deck.Slice(startIndex, count).ToArray();
+
+        }
 
         [Command("booster")]
         [Summary("Gets information on a booster pack!")]
         public Task BoosterCommand([Remainder]string input)
         {
 
-            
+
 
             if (Cache.BoosterPacks.TryGetValue(input, out var boosterPack))
             {
@@ -51,7 +103,7 @@ namespace YuGiOhV2.Modules
 
             if (Cache.BoosterPacks.TryGetValue(input, out var boosterPack))
             {
-                
+
                 var cards = new Dictionary<string, string>(9);
                 var randoms = new List<int>(9);
                 var commonCards = boosterPack.Commons.Length;
@@ -69,7 +121,7 @@ namespace YuGiOhV2.Modules
                     randoms.Add(index);
 
                 }
-                
+
                 var superRare = boosterPack.Foils.RandomSubset(1, Rand).FirstOrDefault();
                 cards.Add(boosterPack.Rares.RandomSubset(1, Rand).FirstOrDefault(), "Rare");
                 cards.Add(superRare.Value.RandomSubset(1, Rand).FirstOrDefault(), superRare.Key);

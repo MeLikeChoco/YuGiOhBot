@@ -84,7 +84,7 @@ namespace YuGiOhV2.Models.Cards
             card.TcgExists = TcgExists;
             card.Img = Img;
             card.Url = Url;
-            card.Passcode = Passcode;
+            card.Passcode = Passcode?.Trim('0');
 
             if (card.OcgExists)
                 card.OcgStatus = GetCardStatus(OcgStatus);
