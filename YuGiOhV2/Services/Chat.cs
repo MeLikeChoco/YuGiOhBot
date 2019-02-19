@@ -60,64 +60,59 @@ namespace YuGiOhV2.Services
             if (mCollection.Count > 0 && mCollection.Count < 4)
             {
 
-                using (channel.EnterTypingState())
+                if ((channel is SocketTextChannel))
                 {
 
-                    if ((channel is SocketTextChannel))
+                    AltConsole.Write("Info", "Command", $"{message.Author.Username} from {(channel as SocketTextChannel).Guild.Name}");
+                    var id = (channel as SocketTextChannel).Guild.Id;
+                    minimal = _database.Settings[id].Minimal;
+
+                }
+
+                AltConsole.Write("Info", "Inline", $"{message.Content}");
+
+                foreach (var match in mCollection)
+                {
+
+                    watch.Start();
+
+                    string cardName = match.ToString();
+                    cardName = cardName.Substring(2, cardName.Length - 4).ToLower().Trim(); //lose the brackets and trim whitespace
+
+                    if (string.IsNullOrEmpty(cardName) || string.IsNullOrWhiteSpace(cardName)) //continue if there is no input
+                        continue;
+
+                    var input = cardName.Split(' ');
+
+                    //check if the card list contains anything from the input and return that instead
+                    //ex. kaiju slumber would return Interrupted Kaiju Slumber
+                    //note: it has problems such as "red eyes" will return Hundred Eyes Dragon instead of Red-Eyes B. Dragon
+                    //how to accurately solve this problem is not easy                            
+                    string closestCard = _cache.Lowercase.AsParallel().FirstOrDefault(card => card == cardName);
+
+                    if (string.IsNullOrEmpty(closestCard))
+                        closestCard = _cache.Lowercase.AsParallel().FirstOrDefault(card => card.Contains(cardName));
+
+                    if (string.IsNullOrEmpty(closestCard))
+                        closestCard = _cache.Lowercase.AsParallel().Where(card => input.All(i => card.Contains(i))).MinBy(card => card.Length).FirstOrDefault();
+
+                    if (string.IsNullOrEmpty(closestCard))
+                        closestCard = _cache.Lowercase.AsParallel().MinBy(card => YetiLevenshtein(card, cardName)).FirstOrDefault();
+
+                    var time = watch.Elapsed;
+
+                    watch.Stop();
+                    AltConsole.Write("Info", "Inline", $"{cardName} took {time.TotalSeconds} seconds to complete.");
+
+                    var embed = _cache.Embeds[closestCard];
+
+                    try
                     {
 
-                        AltConsole.Write("Info", "Command", $"{message.Author.Username} from {(channel as SocketTextChannel).Guild.Name}");
-                        var id = (channel as SocketTextChannel).Guild.Id;
-                        minimal = _database.Settings[id].Minimal;
+                        await channel.SendMessageAsync("", embed: (await embed.WithPrices(minimal, _web, time)).Build());
 
                     }
-
-                    AltConsole.Write("Info", "Inline", $"{message.Content}");
-
-                    foreach (var match in mCollection)
-                    {
-
-                        watch.Start();
-
-                        string cardName = match.ToString();
-                        cardName = cardName.Substring(2, cardName.Length - 4).ToLower().Trim(); //lose the brackets and trim whitespace
-
-                        if (string.IsNullOrEmpty(cardName) || string.IsNullOrWhiteSpace(cardName)) //continue if there is no input
-                            continue;
-
-                        var input = cardName.Split(' ');
-
-                        //check if the card list contains anything from the input and return that instead
-                        //ex. kaiju slumber would return Interrupted Kaiju Slumber
-                        //note: it has problems such as "red eyes" will return Hundred Eyes Dragon instead of Red-Eyes B. Dragon
-                        //how to accurately solve this problem is not easy                            
-                        string closestCard = _cache.Lowercase.AsParallel().FirstOrDefault(card => card == cardName);
-
-                        if (string.IsNullOrEmpty(closestCard))
-                            closestCard = _cache.Lowercase.AsParallel().FirstOrDefault(card => card.Contains(cardName));
-
-                        if (string.IsNullOrEmpty(closestCard))
-                            closestCard = _cache.Lowercase.AsParallel().Where(card => input.All(i => card.Contains(i))).MinBy(card => card.Length).FirstOrDefault();
-
-                        if (string.IsNullOrEmpty(closestCard))
-                            closestCard = _cache.Lowercase.AsParallel().MinBy(card => YetiLevenshtein(card, cardName)).FirstOrDefault();
-
-                        var time = watch.Elapsed;
-
-                        watch.Stop();
-                        AltConsole.Write("Info", "Inline", $"{cardName} took {time.TotalSeconds} seconds to complete.");
-
-                        var embed = _cache.Embeds[closestCard];
-
-                        try
-                        {
-
-                            await channel.SendMessageAsync("", embed: (await embed.WithPrices(minimal, _web, time)).Build());
-
-                        }
-                        catch { AltConsole.Write("Service", "Chat", "No permission to send message"); }
-
-                    }
+                    catch { AltConsole.Write("Service", "Chat", "No permission to send message"); }
 
                 }
 
