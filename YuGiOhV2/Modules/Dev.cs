@@ -45,7 +45,25 @@ namespace YuGiOhV2.Modules
                 if (main.Any() || extra.Any() || side.Any())
                 {
 
-                    var cards = main.Distinct().Select(passcode => Cache.PasscodeToName[passcode]);
+                    var tasks = main.GroupBy(passcode => passcode).Select(async group =>
+                    {
+
+                        var passcode = group.First();
+
+                        if (Cache.PasscodeToName.TryGetValue(passcode, out var name))
+                            return name;
+                        else
+                        {
+
+                            var response = (await Web.GetResponseMessage(Web.FandomUrl)).RequestMessage.RequestUri.Segments.Last().Replace('_', ' ');
+
+                            return response;
+
+                        }
+
+                    });
+
+                    var cards = await Task.WhenAll(tasks);
 
                     await ReplyAsync($"```{cards.Aggregate("", (current, next) => $"{current}\n{next}")}```");
 

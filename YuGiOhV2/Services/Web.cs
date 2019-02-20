@@ -16,6 +16,8 @@ namespace YuGiOhV2.Services
     public class Web
     {
 
+        public string FandomUrl = "https://yugioh.fandom.com/";
+
         private HttpClient _http;
         private HtmlParser _parser;
 
@@ -133,7 +135,7 @@ namespace YuGiOhV2.Services
             do
             {
 
-                response = await _http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
+                response = await GetResponseMessage(url);
                 counter++;
 
             } while (!response.IsSuccessStatusCode && counter != 3);
@@ -144,6 +146,9 @@ namespace YuGiOhV2.Services
             return response.Content;
 
         }
+
+        public Task<HttpResponseMessage> GetResponseMessage(string url)
+            => _http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
 
         public enum ContentType
         {
