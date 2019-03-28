@@ -18,7 +18,7 @@ namespace YuGiOhScraper
         public static readonly IBrowsingContext Context = BrowsingContext.New(Configuration.Default.WithDefaultLoader().With(_requester));
         public static readonly ParallelOptions ParallelOptions = new ParallelOptions() { MaxDegreeOfParallelism = Environment.ProcessorCount };
         public static readonly ParallelOptions SerialOptions = new ParallelOptions() { MaxDegreeOfParallelism = 1 };
-        public const string YuGiOhWikiaUrl = "http://yugioh.fandom.com/";
+        public const string YuGiOhWikiaUrl = "https://yugioh.fandom.com/";
         public const string YuGiPediaUrl = "https://yugipedia.com/";
         public const string MediaWikiTcgCards = "api.php?action=query&format=json&list=categorymembers&cmtitle=Category%3ATCG_cards&cmlimit=500";
         public const string MediaWikiOcgCards = "api.php?action=query&format=json&list=categorymembers&cmtitle=Category%3AOCG_cards&cmlimit=500";

@@ -16,7 +16,7 @@ namespace YuGiOhV2.Services
     public class Web
     {
 
-        public string FandomUrl = "https://yugioh.fandom.com/";
+        public string FandomUrl = "https://yugioh.fandom.com/wiki/";
 
         private HttpClient _http;
         private HtmlParser _parser;

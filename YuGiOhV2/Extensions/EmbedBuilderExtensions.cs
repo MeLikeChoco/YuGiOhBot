@@ -79,13 +79,7 @@ namespace YuGiOhV2.Extensions
                     {
 
                         if (string.IsNullOrEmpty(info.PriceData.Message))
-                        {
-
-                            clone.AddField(info.Name,
-                                $"Rarity: {info.Rarity}\n" +
-                                $"Average Price: {info.PriceData.Data.Prices.Average.ToString("0.00")}");
-
-                        }
+                            clone.AddPriceShort(info);
                         else
                             clone.AddField(info.Name, info.PriceData.Message);
 
@@ -98,6 +92,29 @@ namespace YuGiOhV2.Extensions
             }
 
             return clone;
+
+        }
+
+        public static EmbedBuilder AddPriceShort(this EmbedBuilder body, Datum info, bool isInline = false)
+        {
+
+            return body.AddField(info.Name,
+                                $"Rarity: {info.Rarity}\n" +
+                                $"Lowest Price: {info.PriceData.Data.Prices.Low.ToString("0.00")}", isInline);
+
+        }
+
+        public static EmbedBuilder AddPrice(this EmbedBuilder body, Datum info, bool isInline)
+        {
+
+            var prices = info.PriceData.Data.Prices;
+
+            return body.AddField(info.Name,
+                            $"**Print Tag:** {info.PrintTag}\n" +
+                            $"**Rarity:** {info.Rarity}\n" +
+                            $"**Low:** ${prices.Low.ToString("0.00")}\n" +
+                            $"**High:** ${prices.High.ToString("0.00")}\n" +
+                            $"**Average:** ${prices.Average.ToString("0.00")}", isInline);
 
         }
 

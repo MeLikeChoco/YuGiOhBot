@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using YuGiOhV2.Extensions;
@@ -37,31 +38,32 @@ namespace YuGiOhV2.Modules
                 await stream.ReadAsync(buffer, 0, (int)stream.Length);
 
                 var text = Encoding.UTF8.GetString(buffer);
-                var passcodes = text.Split('\n').Select(passcode => passcode.Trim()).ToArray();
-                var main = GetSection(passcodes, "#main", "#extra");
-                var extra = GetSection(passcodes, "#extra", "!side");
-                var side = GetSection(passcodes, "!side", null);
+                var passcodes = text.Replace("#main", "")
+                    .Replace("#extra", "")
+                    .Replace("#created by ...", "")
+                    .Replace("!side", "")
+                    .Split('\n')
+                    .Select(passcode => passcode.Trim())
+                    .Where(passcode => !string.IsNullOrEmpty(passcode))
+                    .ToArray();
+                //var passcodes = text
+                //    .Split('\n')
+                //    .Select(passcode => passcode.Trim())
+                //    .ToArray();
+                //var main = GetSection(passcodes, "#main", "#extra");
+                //var extra = GetSection(passcodes, "#extra", "!side");
+                //var side = GetSection(passcodes, "!side", null);
 
-                if (main.Any() || extra.Any() || side.Any())
+                if (passcodes.Any())
                 {
 
-                    var tasks = main.GroupBy(passcode => passcode).Select(async group =>
-                    {
-
-                        var passcode = group.First();
-
-                        if (Cache.PasscodeToName.TryGetValue(passcode, out var name))
-                            return name;
-                        else
-                        {
-
-                            var response = (await Web.GetResponseMessage(Web.FandomUrl)).RequestMessage.RequestUri.Segments.Last().Replace('_', ' ');
-
-                            return response;
-
-                        }
-
-                    });
+                    var tasks = passcodes
+                        .Where(name => name != "YuGiOh Wikia!")
+                        .GroupBy(passcode => passcode)
+                        .Select(GetName);
+                    //var tasks = main.GroupBy(passcode => passcode).Select(GetName);
+                    //tasks = tasks.Concat(extra.GroupBy(passcode => passcode).Select(GetName));
+                    //tasks = tasks.Concat(extra.GroupBy(passcode => passcode).Select(GetName));
 
                     var cards = await Task.WhenAll(tasks);
 
@@ -85,6 +87,23 @@ namespace YuGiOhV2.Modules
             var count = endIndex - startIndex;
 
             return deck.Slice(startIndex, count).ToArray();
+
+        }
+
+        private async Task<(string name, int count, double price)> GetName(IGrouping<string, string> group)
+        {
+
+            var passcode = group.First();
+
+            if (!Cache.PasscodeToName.TryGetValue(passcode, out var name))
+            {
+                
+                name = (await Web.GetResponseMessage($"{Constants.FandomWikiUrl}{passcode}")).RequestMessage.RequestUri.Segments.Last().Replace('_', ' ');
+                name = WebUtility.UrlDecode(name);
+
+            }
+
+            return (name, group.Count(), double.Epsilon);
 
         }
 

@@ -507,7 +507,10 @@ namespace YuGiOhV2.Services
             _db.Open();
 
             Log("Retrieving all cards from ygofandom.db...");
-            var parsers = _db.Query<CardParser>("select * from Cards where Types not like '%Pegasus%' or Types is null");
+            //var parsers = _db.Query<CardParser>("select * from Cards where Types not like '%Pegasus%' or Types is null");
+            var parsers = _db.Query<CardParser>("select * from Cards");
+            parsers = parsers.Where(parser => string.IsNullOrEmpty(parser.Types) || !parser.Types.Contains("Pegasus") || !parser.Types.Contains("Skill"))
+                .Where(parser => string.IsNullOrEmpty(parser.Types) || !(parser.Level == -1 && parser.Rank == -1 && parser.Link == 0 && string.IsNullOrEmpty(parser.Property)));
 
             //Log("Getting regular monsters...");
             //var regulars = _db.Query<RegularMonster>("select * from Cards where Level not like -1 and PendulumScale like -1");

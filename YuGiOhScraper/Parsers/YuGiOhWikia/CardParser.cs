@@ -3,10 +3,12 @@ using AngleSharp.Dom;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Web;
 using YuGiOhScraper.Entities;
 using YuGiOhScraper.Extensions;
 
@@ -59,7 +61,7 @@ namespace YuGiOhScraper.Parsers.YuGiOhWikia
                         .GetElementsByTagName("tr")
                         .Last();
                         var descriptionFormatted = Regex.Replace(descriptionUnformatted.InnerHtml.Replace("<br>", "\\n"), "<[^>]*>", "").Trim();
-                        card.Lore = descriptionFormatted;
+                        card.Lore = WebUtility.HtmlDecode(descriptionFormatted);
 
                     }
                     #endregion Lore
@@ -197,8 +199,6 @@ namespace YuGiOhScraper.Parsers.YuGiOhWikia
                 #endregion Anti-Supports
 
             }
-
-            card.Url = Url;
 
             return card;
 

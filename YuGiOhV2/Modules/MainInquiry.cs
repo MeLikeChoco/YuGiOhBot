@@ -137,11 +137,28 @@ namespace YuGiOhV2.Modules
             if (Cache.LowerToUpper.ContainsKey(card))
             {
 
+                if(!Cache.NameToCard[card].TcgExists)
+                {
+
+                    await ReplyAsync("Card does not exist in TCG therefore no price can be determined for this card currently!");
+                    return;
+
+                }
+
                 using (Context.Channel.EnterTypingState())
                 {
 
                     var name = Cache.LowerToUpper[card];
                     var response = await Web.GetPrices(name);
+
+                    if(response == null)
+                    {
+
+                        var temp = Cache.Cards.FirstOrDefault(c => c.RealName.Equals(card, StringComparison.InvariantCultureIgnoreCase));
+                        response = await Web.GetPrices(temp.RealName) ?? await Web.GetPrices(temp.Name);
+
+                    }
+
                     var data = response.Data.Where(d => string.IsNullOrEmpty(d.PriceData.Message)).ToList();
 
                     var author = new EmbedAuthorBuilder()
@@ -163,17 +180,7 @@ namespace YuGiOhV2.Modules
                     }
 
                     foreach (var datum in data)
-                    {
-
-                        var prices = datum.PriceData.Data.Prices;
-
-                        body.AddField(datum.Name,
-                            $"**Rarity:** {datum.Rarity}\n" +
-                            $"**Low:** ${prices.Low.ToString("0.00")}\n" +
-                            $"**High:** ${prices.High.ToString("0.00")}\n" +
-                            $"**Average:** ${prices.Average.ToString("0.00")}", true);
-
-                    }
+                        body.AddPrice(datum, true);
 
                     await SendEmbed(body);
 

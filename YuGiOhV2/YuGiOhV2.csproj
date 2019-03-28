@@ -26,14 +26,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="AngleSharp" Version="0.10.1" />
-    <PackageReference Include="Dapper" Version="1.50.5" />
-    <PackageReference Include="Dapper.Contrib" Version="1.50.5" />
+    <PackageReference Include="AngleSharp" Version="0.11.0" />
+    <PackageReference Include="Dapper" Version="1.60.1" />
+    <PackageReference Include="Dapper.Contrib" Version="1.60.1" />
     <PackageReference Include="DeepCloner" Version="0.10.2" />
     <PackageReference Include="Discord.Net" Version="2.0.2-dev-01059" />
     <PackageReference Include="Discord.Net.Providers.WS4Net" Version="2.0.2-dev-01059" />
     <PackageReference Include="DiscordBotsList.Api.Adapter.Discord.Net" Version="1.1.0" />
-    <PackageReference Include="Microsoft.Data.Sqlite" Version="2.2.1" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="2.2.3" />
     <PackageReference Include="morelinq" Version="3.1.0" />
     <PackageReference Include="protobuf-net" Version="2.4.0" />
   </ItemGroup>

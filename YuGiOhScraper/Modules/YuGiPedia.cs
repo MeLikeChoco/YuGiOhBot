@@ -199,6 +199,7 @@ namespace YuGiOhScraper.Modules
                 {
 
                     var card = new CardParser(kv.Key, $"{ScraperConstants.YuGiPediaUrl}{ScraperConstants.MediaWikiParseUrl}{kv.Value}").Parse(HttpClient);
+                    card.Url = $"{ScraperConstants.YuGiPediaUrl}?curid={kv.Value}";
 
                     #region OCG TCG
                     card.TcgExists = TcgCards.ContainsKey(card.Name);

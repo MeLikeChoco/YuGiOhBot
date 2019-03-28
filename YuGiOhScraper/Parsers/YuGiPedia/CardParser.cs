@@ -4,6 +4,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -58,7 +59,7 @@ namespace YuGiOhScraper.Parsers.YuGiPedia
 
                         var descriptionUnformatted = row.FirstElementChild;
                         var descriptionFormatted = Regex.Replace(descriptionUnformatted.InnerHtml.Replace("<br>", "\\n"), "<[^>]*>", "").Trim();
-                        card.Lore = descriptionFormatted;
+                        card.Lore = WebUtility.HtmlDecode(descriptionFormatted);
 
                     }
                     else if (card.PendulumScale > -1 && row.TextContent.Contains("effect", StringComparison.InvariantCultureIgnoreCase))
@@ -194,8 +195,6 @@ namespace YuGiOhScraper.Parsers.YuGiPedia
 
             }
             #endregion Search Categories
-
-            card.Url = Url;
 
             return card;
 
