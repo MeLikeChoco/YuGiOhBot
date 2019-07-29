@@ -43,7 +43,7 @@ namespace YuGiOhV2.Services
         public int FYeahYgoCardArtPosts { get; private set; }
         public string TumblrKey { get; private set; }
 
-        private const string DbString = "Data Source = Databases/ygofandom.db";
+        private static readonly string DbString = Constants.DatabaseString;
         private static readonly ParallelOptions _pOptions = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount };
         private static SqliteConnection _db = new SqliteConnection(DbString);
 
@@ -71,7 +71,7 @@ namespace YuGiOhV2.Services
             AquireFancyMessages(cardParsers);
             BuildHouse(cardParsers);
             AquireTheUntouchables(cardParsers);
-            AquireGoodiePacks();
+            //AquireGoodiePacks();
 
         }
 
@@ -364,11 +364,8 @@ namespace YuGiOhV2.Services
                 return new Color(29, 158, 116);
             else if (card.CardType == "Trap")
                 return new Color(188, 90, 132);
-            else
+            else if (card is Monster monster)
             {
-
-                var monster = card as Monster;
-                var test = monster.Types.FirstOrDefault(type => type.ToLower() == "fusion");
 
                 if (monster is IHasLink)
                     return new Color(0, 0, 139);
@@ -376,18 +373,27 @@ namespace YuGiOhV2.Services
                     return new Color(150, 208, 189);
                 else if (monster is IHasRank)
                     return new Color(0, 0, 1);
-                else if (monster.Types.Contains("Fusion"))
-                    return new Color(160, 134, 183);
-                else if (monster.Types.Contains("Synchro"))
-                    return new Color(204, 204, 204);
-                else if (monster.Types.Contains("Ritual"))
-                    return new Color(157, 181, 204);
-                else if (monster.Types.Contains("Effect"))
-                    return new Color(255, 139, 83);
+                else if (monster.Types != null)
+                {
+
+                    if (monster.Types.Contains("Fusion"))
+                        return new Color(160, 134, 183);
+                    else if (monster.Types.Contains("Synchro"))
+                        return new Color(204, 204, 204);
+                    else if (monster.Types.Contains("Ritual"))
+                        return new Color(157, 181, 204);
+                    else if (monster.Types.Contains("Effect"))
+                        return new Color(255, 139, 83);
+                    else
+                        return new Color(253, 230, 138);
+
+                }
                 else
                     return new Color(253, 230, 138);
 
             }
+            else
+                return new Color(255, 0, 0);
 
         }
 
@@ -506,7 +512,7 @@ namespace YuGiOhV2.Services
 
             _db.Open();
 
-            Log("Retrieving all cards from ygofandom.db...");
+            Log($"Retrieving all cards from \"{_db.ConnectionString}\"...");
             //var parsers = _db.Query<CardParser>("select * from Cards where Types not like '%Pegasus%' or Types is null");
             var parsers = _db.Query<CardParser>("select * from Cards");
             parsers = parsers.Where(parser => string.IsNullOrEmpty(parser.Types) || !parser.Types.Contains("Pegasus") || !parser.Types.Contains("Skill"))
@@ -532,7 +538,7 @@ namespace YuGiOhV2.Services
         private void AquireGoodiePacks()
         {
 
-            Log("Retrieving all booster packs from ygofandom.db...");
+            Log($"Retrieving all booster packs from \"{_db.ConnectionString}\"...");
 
             _db.Open();
 

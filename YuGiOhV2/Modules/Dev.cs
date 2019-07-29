@@ -6,10 +6,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using YuGiOhV2.Extensions;
 using YuGiOhV2.Models.Attributes;
+using YuGiOhV2.Models.Cards;
 
 namespace YuGiOhV2.Modules
 {
@@ -19,6 +21,75 @@ namespace YuGiOhV2.Modules
     {
 
         private static readonly DateTime _cutOffDate = new DateTime(2016, 1, 14);
+
+        //[Command("probability"), Alias("prob")]
+        //[Summary("Returns the chance of your hand occuring!")]
+        //public async Task ProbabilityCommand(int deckSize, int handSize, params string[] cards)
+        //{
+
+        //    if (deckSize < 40 || deckSize > 60)
+        //    {
+
+        //        await ReplyAsync("Deck size needs to be at least 40 cards and no more than 60 cards.");
+        //        return;
+
+        //    }
+
+        //    IEnumerable<CardInHand> cardsInHand;
+
+        //    try
+        //    {
+
+        //        cardsInHand = cards.Select(card =>
+        //        {
+
+        //            var array = card.Split(',');
+
+        //            if (array.Length != 4)
+        //                throw new Exception("The supplied hand has the wrong format. Example: `name,inDeck,minInHand,maxInHand");
+
+        //            var name = array.First();
+        //            int inDeck, min, max;
+
+        //            try
+        //            {
+
+        //                inDeck = int.Parse(array[1]);
+        //                min = int.Parse(array[2]);
+        //                max = int.Parse(array[3]);
+
+        //            }catch(FormatException)
+        //            { throw new Exception($"There was a problem parsing `{card}`. Check your input and try again!"); }
+
+        //            if (max > inDeck)
+        //                throw new Exception($"There are more {name} in max in hand than in the deck. Please fix `{card}`!");
+
+        //            if(min < 1)
+
+
+        //            deckSize -= inDeck;
+
+        //            return new CardInHand()
+        //            {
+
+        //                Name = name,
+        //                InDeck = inDeck,
+        //                Min = min,
+        //                Max = max
+
+        //            };
+
+        //        });
+
+        //    }catch(Exception ex)
+        //    {
+
+        //        await ReplyAsync(ex.Message);
+        //        return;
+
+        //    }
+
+        //}
 
         [Command("price"), Alias("prices", "p")]
         [Summary("Returns the prices based on your deck list from ygopro! No proper capitalization needed!")]
@@ -97,7 +168,7 @@ namespace YuGiOhV2.Modules
 
             if (!Cache.PasscodeToName.TryGetValue(passcode, out var name))
             {
-                
+
                 name = (await Web.GetResponseMessage($"{Constants.FandomWikiUrl}{passcode}")).RequestMessage.RequestUri.Segments.Last().Replace('_', ' ');
                 name = WebUtility.UrlDecode(name);
 

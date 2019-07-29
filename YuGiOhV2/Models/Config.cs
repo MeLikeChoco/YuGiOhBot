@@ -27,7 +27,7 @@ namespace YuGiOhV2.Models
             get
             {
 
-                var dateStr = File.ReadAllText("LastDatabaseUpdate.txt");
+                var dateStr = File.ReadAllText("Databases/LastScrape.txt");
 
                 return DateTime.Parse(dateStr);
 
@@ -36,7 +36,7 @@ namespace YuGiOhV2.Models
             set
             {
 
-                File.WriteAllText("LastDatabaseUpdate.txt", value.ToUniversalTime().ToString());
+                File.WriteAllText("Databases/LastScrape.txt", value.ToUniversalTime().ToString());
 
             }
 

@@ -69,7 +69,8 @@ namespace YuGiOhV2.Modules
 
                         passcode = Cache.NameToPasscode.RandomSubset(1).First();
 
-                        Console.WriteLine($"https://raw.githubusercontent.com/shadowfox87/YGOTCGOCGPics323x323/master/{passcode.Key}.png");
+                        Console.WriteLine($"{passcode.Key}\n{Constants.ArtBaseUrl}{passcode.Value}.png");
+                        //$"https://raw.githubusercontent.com/shadowfox87/YGOTCGOCGPics323x323/master/{passcode.Key}.png"
 
                         using (var stream = await GetArtGithub(passcode.Value))
                             await UploadAsync(stream, $"{GenObufscatedString()}.png", $":stopwatch: You have **{_setting.GuessTime}** seconds to guess what card this art belongs to! Case sensitive!");
@@ -77,12 +78,7 @@ namespace YuGiOhV2.Modules
                         e = null;
 
                     }
-                    catch (NullReferenceException nullref)
-                    {
-
-                        e = nullref;
-
-                    }
+                    catch (NullReferenceException nullref) { e = nullref; }
 
                 } while (e != null);
 
@@ -278,7 +274,7 @@ namespace YuGiOhV2.Modules
         private Task<Stream> GetArtGithub(string passcode)
         {
 
-            var url = $"https://raw.githubusercontent.com/shadowfox87/YGOTCGOCGPics323x323/master/{passcode}.png";
+            var url = $"{Constants.ArtBaseUrl}{passcode}.jpg";
             return Web.GetStream(url);
 
         }

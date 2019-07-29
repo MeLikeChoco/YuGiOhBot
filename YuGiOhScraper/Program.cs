@@ -29,15 +29,18 @@ namespace YuGiOhScraper
             Settings.Initialize(args);
 
             //NamedPipeServerStream pipe;
-            var modules = Assembly.GetEntryAssembly().GetTypes().Where(type => type.CustomAttributes.Any(attribute => attribute.AttributeType == typeof(ModuleAttribute)));
+            //var modules = Assembly.GetEntryAssembly().GetTypes().Where(type => type.CustomAttributes.Any(attribute => attribute.AttributeType == typeof(ModuleAttribute)));
 
-            foreach (var moduleType in modules)
-            {
+            //foreach (var moduleType in modules)
+            //{
 
-                var module = Activator.CreateInstance(moduleType) as ModuleBase;
-                var moduleInfo = await module.RunAsync();
+            //    var module = Activator.CreateInstance(moduleType) as ModuleBase;
+            //    var moduleInfo = await module.RunAsync();
 
-            }
+            //}
+
+            var module = new YuGiPedia();
+            await module.RunAsync();
 
             //if (Settings.NeedsPipe)
             //{

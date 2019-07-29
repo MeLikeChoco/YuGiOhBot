@@ -223,16 +223,16 @@ namespace YuGiOhV2.Models.Cards
         public static CardStatus GetCardStatus(string status)
         {
 
-            status = status.ToLower();
+            status = status?.ToLower();
 
+            if (status == null || status.Contains("not yet released"))
+                return CardStatus.Unreleased;
             if (status.Contains("forbidden"))
                 return CardStatus.Forbidden;
             if (status.Contains("illegal"))
                 return CardStatus.Illegal;
             if (status.Contains("legal"))
                 return CardStatus.Legal;
-            if (status.Contains("not yet released"))
-                return CardStatus.Unreleased;
             if (status.Contains("unlimited"))
                 return CardStatus.Unlimited;  //unlimited and semi limited is checked first because they both contains "limited"
             if (status.Contains("semi") && status.Contains("limited"))

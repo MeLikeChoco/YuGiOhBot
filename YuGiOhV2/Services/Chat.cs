@@ -112,7 +112,7 @@ namespace YuGiOhV2.Services
                         await channel.SendMessageAsync("", embed: (await embed.WithPrices(minimal, _web, time)).Build());
 
                     }
-                    catch { AltConsole.Write("Service", "Chat", "No permission to send message"); }
+                    catch (Exception ex) { AltConsole.Write("Service", "Chat", $"{ex.InnerException.Message}\n{ex.InnerException.StackTrace}"); }
 
                 }
 

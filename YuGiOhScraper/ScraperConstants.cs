@@ -20,6 +20,7 @@ namespace YuGiOhScraper
         public static readonly ParallelOptions SerialOptions = new ParallelOptions() { MaxDegreeOfParallelism = 1 };
         public const string YuGiOhWikiaUrl = "https://yugioh.fandom.com/";
         public const string YuGiPediaUrl = "https://yugipedia.com/";
+        public const string MediaWikiAllCards = "api.php?action=query&format=json&list=categorymembers&cmtitle=Category%3ADuel_Monsters_cards&cmlimit=500";
         public const string MediaWikiTcgCards = "api.php?action=query&format=json&list=categorymembers&cmtitle=Category%3ATCG_cards&cmlimit=500";
         public const string MediaWikiOcgCards = "api.php?action=query&format=json&list=categorymembers&cmtitle=Category%3AOCG_cards&cmlimit=500";
         public const string MediaWikiTcgPacks = "api.php?action=query&format=json&list=categorymembers&cmtitle=Category%3ATCG_Booster_Packs&cmlimit=500";

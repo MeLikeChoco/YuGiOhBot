@@ -13,7 +13,10 @@ namespace YuGiOhV2
         public const string FandomWikiUrl = "https://yugioh.fandom.com/wiki/";
         public const string YugiPediaUrl = "https://yugipedia.com/";
         public const string YugiPediaWikiUrl = "https://yugipedia.com/wiki/";
-
+        public const string DatabaseName = "ygopedia";
+        public static readonly string DatabasePath = $"Databases/{DatabaseName}.db";
+        public static readonly string DatabaseString = $"Data Source = {DatabasePath}";
+        public const string ArtBaseUrl = "https://raw.githubusercontent.com/moecube/yugioh-images/master/pics/";
 
     }
 }

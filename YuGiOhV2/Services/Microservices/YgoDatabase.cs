@@ -30,7 +30,7 @@ namespace YuGiOhV2.Services.Microservices
         //private IEnumerable<Card> _cards;
         //private CancellationTokenSource _tokenSource;
 
-        private const string BaseUrl = "http://yugioh.wikia.com";
+        private const string BaseUrl = "http://yugipedia.com";
 
         private string DotNetRuntime
         {
@@ -83,15 +83,15 @@ namespace YuGiOhV2.Services.Microservices
         public async void ReformDatabase(object state)
         {
 
-            Log("Updating ygo.db...");
+            Log($"Updating \"{Constants.DatabaseString}\"...");
 
             var shouldRedo = false;
             var info = state as dynamic;
             var client = info.Client as DiscordShardedClient;
             var cache = info.Cache as Cache;
 
-            if (File.Exists("Databases/ygo.db"))
-                File.Copy("Databases/ygo.db", "Databases/Backup/ygo.db", true);
+            if (File.Exists(Constants.DatabasePath))
+                File.Copy(Constants.DatabasePath, $"Databases/Backup/{Constants.DatabaseName}.db", true);
 
             do
             {
@@ -127,7 +127,7 @@ namespace YuGiOhV2.Services.Microservices
 
                 IEnumerable<string> errors;
 
-                using (var db = new SqliteConnection("Data Source = Databases/ygo.db"))
+                using (var db = new SqliteConnection("Data Source = Databases/ygopedia.db"))
                 {
 
                     await db.OpenAsync();

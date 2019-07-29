@@ -47,7 +47,7 @@ namespace YuGiOhV2.Modules
         public Task SpecificHelpCommand([Remainder]string input)
         {
 
-            var commands = _commands.Where(cmdInfo => cmdInfo.Name == input);
+            var commands = _commands.Where(cmdInfo => cmdInfo.Name == input || cmdInfo.Aliases.Contains(input));
 
             if(!commands.Any())
                 return NoResultError("commands", input);

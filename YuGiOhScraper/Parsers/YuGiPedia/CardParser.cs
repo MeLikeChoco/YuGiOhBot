@@ -34,7 +34,7 @@ namespace YuGiOhScraper.Parsers.YuGiPedia
             {
 
                 Name = Name,
-                Img = dom.GetElementByClassName("cardtable-cardimage").GetElementsByTagName("img").First().GetAttribute("srcset")?.Split(' ').First()
+                Img = dom.GetElementByClassName("cardtable-cardimage").GetElementsByTagName("img").First().GetAttribute("srcset")?.Split(' ').ElementAtOrDefault(2)
                 ?? dom.GetElementByClassName("cardtable-cardimage").GetElementsByTagName("img").First().GetAttribute("src")
 
             };
@@ -125,6 +125,7 @@ namespace YuGiOhScraper.Parsers.YuGiPedia
                         case "Link Arrows":
                             card.LinkArrows = data.Replace(" , ", ", ");
                             break;
+                        case "Password":
                         case "Passcode":
                             card.Passcode = data.TrimStart('0');
                             break;
@@ -182,14 +183,17 @@ namespace YuGiOhScraper.Parsers.YuGiPedia
                 {
 
                     var header = searchCategory.GetElementsByTagName("dt").First().TextContent;
-                    var value = searchCategory.GetElementsByTagName("dd").First().TextContent?.Trim();
+                    var value = searchCategory.GetElementsByTagName("dd")
+                        .AsEnumerable()
+                        .Where(element => element.TextContent != null)
+                        .Select(element => element.TextContent);
 
-                    if (header.Contains("archetype", StringComparison.InvariantCultureIgnoreCase))
-                        card.Archetype = value;
+                    if (header.StartsWith("archetype", StringComparison.InvariantCultureIgnoreCase))
+                        card.Archetype = string.Join(',', value);
                     else if (header.Contains("anti-supports", StringComparison.InvariantCultureIgnoreCase))
-                        card.AntiSupports = value;
+                        card.AntiSupports = string.Join(',', value);
                     else if (header.Contains("supports", StringComparison.InvariantCultureIgnoreCase))
-                        card.Supports = value;
+                        card.Supports = string.Join(',', value);
 
                 }
 

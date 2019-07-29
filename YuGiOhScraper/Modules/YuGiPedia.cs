@@ -68,6 +68,9 @@ namespace YuGiOhScraper.Modules
 
         }
 
+        //protected override Task<IDictionary<string, string>> GetCardLinks()
+        //    => AggregateInfo(ScraperConstants.MediaWikiAllCards);
+
         #region Booster Packs
         protected override IEnumerable<BoosterPack> ParseBoosterPacks(IDictionary<string, string> boosterPackLinks, out IEnumerable<Error> errors)
         {
