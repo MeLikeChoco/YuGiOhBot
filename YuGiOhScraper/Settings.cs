@@ -27,7 +27,7 @@ namespace YuGiOhScraper
         {
 
 
-            if (args.Any())
+            if (args.Length > 0)
             {
 
                 if (args.Contains("-p"))

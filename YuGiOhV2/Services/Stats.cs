@@ -28,106 +28,109 @@ namespace YuGiOhV2.Services
 
         private bool _armedTimer;
         private readonly Timer _calculateStats;
-        private Timer _sendStats;
         private readonly ulong _id;
         private Web _web;
         private readonly AuthDiscordBotListApi _discordBotListApi;
 
         public Stats(DiscordShardedClient client, Web web)
         {
-            
+
             _web = web;
             IsReady = false;
             _armedTimer = false;
             _id = client.CurrentUser.Id;
             _discordBotListApi = new AuthDiscordBotListApi(_id, File.ReadAllText("Files/Bot List Tokens/Blue.txt"));
-            _calculateStats = new Timer(CalculateStats, client, TimeSpan.FromSeconds(5), TimeSpan.FromHours(1));
+            _calculateStats = new Timer(CalculateStats, client, TimeSpan.FromSeconds(300), TimeSpan.FromHours(1));
 
         }
 
         private void CalculateStats(object state)
         {
 
-            if(state is DiscordShardedClient client && client.Shards.All(socket => socket.ConnectionState == ConnectionState.Connected))
+            try
             {
 
-                Log("Calculating stats...");
-
-                var guilds = client.Guilds;
-                var maxGuild = guilds.Where(guild => !guild.Name.Contains("Bot")).MaxBy(guild => guild.MemberCount).FirstOrDefault();
-                MaxGuild = maxGuild.Name;
-                MaxGuildCount = maxGuild.MemberCount;
-                UniqueUserCount = guilds.Sum(guild => guild.MemberCount);
-                GuildCount = guilds.Count;
-
-                Log("Finished calculating stats.");
-
-                IsReady = true;
-
-                //SendStats(null);
-
-                if (!(_armedTimer || Environment.GetCommandLineArgs().Contains("test")))
+                if (state is DiscordShardedClient client && client.Shards.All(socket => socket.ConnectionState == ConnectionState.Connected))
                 {
 
-                    _sendStats = new Timer(SendStats, client, 0, 3600000);
-                    _armedTimer = true;
+                    Log("Calculating stats...");
+
+                    var guilds = client.Guilds;
+                    var maxGuild = guilds.Where(guild => !guild.Name.Contains("Bot")).MaxBy(guild => guild.MemberCount).FirstOrDefault();
+                    MaxGuild = maxGuild.Name;
+                    MaxGuildCount = maxGuild.MemberCount;
+                    UniqueUserCount = guilds.Sum(guild => guild.MemberCount);
+                    GuildCount = guilds.Count;
+
+                    Log("Finished calculating stats.");
+
+                    IsReady = true;
+
+                    //SendStats(null);
+
+                    if (!Environment.GetCommandLineArgs().Contains("test"))
+                        SendStats(client);
+
+                    _calculateStats.Change(TimeSpan.FromHours(1), TimeSpan.FromHours(1));
 
                 }
+
+            }
+            catch (NullReferenceException)
+            {
+
+                AltConsole.Write("Stats", "Error", "Error calculating stats. Rerunning in 300 seconds.");
+                _calculateStats.Change(TimeSpan.FromSeconds(300), TimeSpan.FromHours(1));
 
             }
 
         }
 
-        private async void SendStats(object state)
+        private async void SendStats(DiscordShardedClient client)
         {
 
-            if(state is DiscordShardedClient client && client.Shards.All(socket => socket.ConnectionState == ConnectionState.Connected))
+            var shards = client.Shards;
+            var shardCount = shards.Count;
+
+            foreach (DiscordSocketClient shard in shards)
             {
 
-                var shards = client.Shards;
-                var shardCount = shards.Count;
-
-                foreach(DiscordSocketClient shard in shards)
-                {
-
-                    var payload = JsonConvert.SerializeObject(new GuildCount(shard.ShardId, shardCount, shard.Guilds.Count));
-
-                    try
-                    {
-
-                        Log($"Sending shard {shard.ShardId} stats to black discord bots...");
-                        //var response = await _web.Post($"https://bots.discord.pw/api/bots/{_id}/stats", $"{{\"server_count\": {GuildCount}}}", await File.ReadAllTextAsync("Files/Bot List Tokens/Black.txt"));
-                        var response = await _web.Post($"https://bots.discord.pw/api/bots/{_id}/stats", payload, await File.ReadAllTextAsync("Files/Bot List Tokens/Black.txt"));
-                        Log($"Status: {response.StatusCode}");
-
-                    }
-                    catch
-                    {
-
-                        Log("Error in sending stats to black discord bots.");
-
-                    }
-
-                }
+                var payload = JsonConvert.SerializeObject(new GuildCount(shard.ShardId, shardCount, shard.Guilds.Count));
 
                 try
                 {
 
-                    var bot = await _discordBotListApi.GetMeAsync();
-
-                    Log("Sending stats to blue discord bots...");
-                    //var response = await _web.Post($"https://discordbots.org/api/bots/{_id}/stats", $"{{\"server_count\": {GuildCount}}}", await File.ReadAllTextAsync("Files/Bot List Tokens/Blue.txt"));
-                    //var response = await _web.Post($"https://discordbots.org/api/bots/{_id}/stats", payload, await File.ReadAllTextAsync("Files/Bot List Tokens/Blue.txt"));
-                    await bot.UpdateStatsAsync(client.Guilds.Count);
-                    Log($"Status: Sent stats to blue discord bots.");
+                    Log($"Sending shard {shard.ShardId} stats to black discord bots...");
+                    //var response = await _web.Post($"https://bots.discord.pw/api/bots/{_id}/stats", $"{{\"server_count\": {GuildCount}}}", await File.ReadAllTextAsync("Files/Bot List Tokens/Black.txt"));
+                    var response = await _web.Post(string.Format(Constants.BlackDiscordBotUrl, _id), payload, authorization: await File.ReadAllTextAsync("Files/Bot List Tokens/Black.txt"));
+                    Log($"Status: {response.StatusCode}");
 
                 }
                 catch
                 {
 
-                    Log("Error in sending stats to blue discord bots.");
+                    Log("Error in sending stats to black discord bots.");
 
                 }
+
+            }
+
+            try
+            {
+
+                var bot = await _discordBotListApi.GetMeAsync();
+
+                Log("Sending stats to blue discord bots...");
+                //var response = await _web.Post($"https://discordbots.org/api/bots/{_id}/stats", $"{{\"server_count\": {GuildCount}}}", await File.ReadAllTextAsync("Files/Bot List Tokens/Blue.txt"));
+                //var response = await _web.Post($"https://discordbots.org/api/bots/{_id}/stats", payload, await File.ReadAllTextAsync("Files/Bot List Tokens/Blue.txt"));
+                await bot.UpdateStatsAsync(client.Guilds.Count);
+                Log($"Status: Sent stats to blue discord bots.");
+
+            }
+            catch
+            {
+
+                Log("Error in sending stats to blue discord bots.");
 
             }
 

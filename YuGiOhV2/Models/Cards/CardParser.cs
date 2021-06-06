@@ -51,7 +51,7 @@ namespace YuGiOhV2.Models.Cards
             Card card;
             var types = Types?.ToLower().Split(" / ");
 
-            if(types != null)
+            if (types != null)
             {
 
                 if (types.Contains("link"))
@@ -59,13 +59,13 @@ namespace YuGiOhV2.Models.Cards
                 else if (types.Contains("xyz") && types.Contains("pendulum"))
                     card = new XyzPendulum();
                 else if ((types.Contains("synchro") || types.Contains("fusion")) && types.Contains("pendulum"))
-                    card = new SynchroAndFusionPendulum();
+                    card = new SynchroOrFusionPendulum();
                 else if (types.Contains("xyz"))
                     card = new Xyz();
                 else if (types.Contains("pendulum"))
                     card = new PendulumMonster();
                 else if (types.Contains("synchro") || types.Contains("fusion"))
-                    card = new SynchroAndFusion();
+                    card = new SynchroOrFusion();
                 else
                     card = new RegularMonster();
 
@@ -75,8 +75,8 @@ namespace YuGiOhV2.Models.Cards
 
             card.Name = Name;
             card.RealName = RealName;
-            card.CardType = CardType;
-            card.Lore = Lore;
+            card.CardType = Enum.Parse<CardType>(CardType);
+            card.Lore = Lore?.Replace(@"\n", "\n");
             card.Archetypes = Archetype?.Split(',');
             card.Supports = Supports?.Split(',');
             card.AntiSupports = AntiSupports?.Split(',');
@@ -100,7 +100,7 @@ namespace YuGiOhV2.Models.Cards
             if (card is Monster monster)
             {
 
-                monster.Attribute = Attribute;
+                monster.Attribute = Enum.Parse<MonsterAttribute>(Attribute, true);
                 monster.Types = Types.Split(" / ");
 
                 if (monster is IHasAtk hasAtk)
@@ -139,106 +139,27 @@ namespace YuGiOhV2.Models.Cards
         }
 
         public static Card Parse(CardParser parser)
-        {
-
-            Card card;
-            var types = parser.Types?.ToLower().Split(" / ");
-
-            if (types.Contains("link"))
-                card = new LinkMonster();
-            else if (types.Contains("xyz") && types.Contains("pendulum"))
-                card = new XyzPendulum();
-            else if ((types.Contains("synchro") || types.Contains("fusion")) && types.Contains("pendulum"))
-                card = new SynchroAndFusionPendulum();
-            else if (types.Contains("xyz"))
-                card = new Xyz();
-            else if (types.Contains("pendulum"))
-                card = new PendulumMonster();
-            else if (types.Contains("synchro") || types.Contains("fusion"))
-                card = new SynchroAndFusion();
-            else if (types.Any())
-                card = new RegularMonster();
-            else
-                card = new SpellTrap();
-
-            card.Name = parser.Name;
-            card.RealName = parser.RealName;
-            card.CardType = parser.CardType;
-            card.Lore = parser.Lore;
-            card.Archetypes = parser.Archetype.Split(';');
-            card.Supports = parser.Supports.Split(';');
-            card.AntiSupports = parser.Supports.Split(';');
-            card.OcgExists = parser.OcgExists;
-            card.TcgExists = parser.TcgExists;
-            card.Img = parser.Img;
-            card.Url = parser.Url;
-            card.Passcode = parser.Passcode;
-
-            if (card.OcgExists)
-                card.OcgStatus = GetCardStatus(parser.OcgStatus);
-
-            if (card.TcgExists)
-            {
-
-                card.TcgAdvStatus = GetCardStatus(parser.TcgAdvStatus);
-                card.TcgTrnStatus = GetCardStatus(parser.TcgTrnStatus);
-
-            }
-
-            if (card is Monster monster)
-            {
-
-                monster.Attribute = parser.Attribute;
-                monster.Types = parser.Types.Split(',');
-
-                if (monster is IHasAtk hasAtk)
-                    hasAtk.Atk = parser.Atk;
-
-                if (monster is IHasDef hasDef)
-                    hasDef.Def = parser.Def;
-
-                if (monster is IHasScale hasScale)
-                    hasScale.PendulumScale = parser.PendulumScale;
-
-                if (monster is IHasMaterials hasMaterials)
-                    hasMaterials.Materials = parser.Materials;
-
-                if (monster is IHasRank hasRank)
-                    hasRank.Rank = parser.Rank;
-
-                if (monster is IHasLink hasLink)
-                {
-
-                    hasLink.Link = parser.Link;
-                    hasLink.LinkArrows = parser.LinkArrows.Split(',');
-
-                }
-
-            }
-
-            return card;
-
-        }
+            => parser.Parse();
 
         public static CardStatus GetCardStatus(string status)
         {
 
-            status = status?.ToLower();
-
-            if (status == null || status.Contains("not yet released"))
+            if (status.Contains("not yet released", StringComparison.OrdinalIgnoreCase))
                 return CardStatus.Unreleased;
-            if (status.Contains("forbidden"))
+            if (status.Contains("forbidden", StringComparison.OrdinalIgnoreCase))
                 return CardStatus.Forbidden;
-            if (status.Contains("illegal"))
+            if (status.Contains("illegal", StringComparison.OrdinalIgnoreCase))
                 return CardStatus.Illegal;
-            if (status.Contains("legal"))
+            if (status.Contains("legal", StringComparison.OrdinalIgnoreCase))
                 return CardStatus.Legal;
-            if (status.Contains("unlimited"))
-                return CardStatus.Unlimited;  //unlimited and semi limited is checked first because they both contains "limited"
-            if (status.Contains("semi") && status.Contains("limited"))
+            if (status.Contains("unlimited", StringComparison.OrdinalIgnoreCase))
+                return CardStatus.Unlimited;  //unlimited and semi limited is checked first because they both contain "limited"
+            if (status.Contains("semi", StringComparison.OrdinalIgnoreCase) && status.Contains("limited", StringComparison.OrdinalIgnoreCase))
                 return CardStatus.SemiLimited;
+            if (status.Contains("limited", StringComparison.OrdinalIgnoreCase))
+                return CardStatus.Limited;
 
-            return CardStatus.Limited;
+            return CardStatus.NA;
 
         }
 

@@ -16,7 +16,7 @@ namespace YuGiOhV2.Extensions
 
             var count = list.Count;
 
-            for(int i = 0; i < count; i++)
+            for (int i = 0; i < count; i++)
             {
 
                 var newPos = random.Next(0, count);
@@ -26,6 +26,15 @@ namespace YuGiOhV2.Extensions
                 list[newPos] = temp;
 
             }
+
+            return list;
+
+        }
+
+        public static List<T> With<T>(this List<T> list, T item)
+        {
+
+            list.Add(item);
 
             return list;
 

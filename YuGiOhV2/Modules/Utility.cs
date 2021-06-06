@@ -46,14 +46,8 @@ namespace YuGiOhV2.Modules
 
         [Command("invite")]
         [Summary("Gets an invite to the bot!")]
-        public async Task InviteCommand()
-        {
-
-            var id = Context.Client.GetApplicationInfoAsync().Result.Id;
-
-            await ReplyAsync($"{Context.User.Mention} <{Config.BotInvite}>");
-            
-        }
+        public Task InviteCommand()
+            => ReplyAsync($"{Context.User.Mention} <{Config.BotInvite}>");
 
         [Command("uptime")]
         [Summary("Gets the uptime of the bot!")]
@@ -105,6 +99,7 @@ namespace YuGiOhV2.Modules
             var body = new EmbedBuilder()
                 .WithRandomColor()
                 .WithDescription($"**Discord API Version:** {DiscordConfig.APIVersion}\n" +
+                $"**Discord.NET Version:** {DiscordConfig.Version}" +
                 $"**Operating System:** {Environment.OSVersion.VersionString}\n" +
                 $"**Processor Count:** {Environment.ProcessorCount}\n" +
                 $"**Shards:** {Context.Client.Shards.Count}\n");

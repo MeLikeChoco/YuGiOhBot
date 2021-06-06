@@ -6,6 +6,7 @@ using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -16,7 +17,6 @@ using System.Threading.Tasks;
 using YuGiOhV2.Models;
 using YuGiOhV2.Models.Services;
 using YuGiOhV2.Services;
-using YuGiOhV2.Services.Microservices;
 
 namespace YuGiOhV2.Core
 {
@@ -30,47 +30,49 @@ namespace YuGiOhV2.Core
         private Chat _chat;
         private readonly Cache _cache;
         private readonly Web _web;
-        private Config _config;
-        private readonly ServiceObserver _serviceObserver;
+        private readonly Config _config;
+        //private readonly ServiceObserver _serviceObserver;
         private readonly InteractiveService _interactive;
         private IServiceProvider _services;
         private YuGiOhScraper _yugiohScraper;
         private int _recommendedShards, _currentShards;
-        private bool _isInitialized = false;
+        private bool _isInitialized;
+        private readonly ConcurrentDictionary<DiscordSocketClient, Timer> _reconnectTimers;
 
-        private static DiscordSocketConfig _clientConfigBacking;
+        private static DiscordSocketConfig _clientConfig;
 
-        private DiscordSocketConfig _clientConfig
+        private DiscordSocketConfig ClientConfig
         {
 
             get
             {
 
-                if(_clientConfigBacking == null)
+                if (_clientConfig == null)
                 {
 
-                    _clientConfigBacking = new DiscordSocketConfig()
+                    _clientConfig = new DiscordSocketConfig()
                     {
 
                         //AlwaysDownloadUsers = true,
+                        ConnectionTimeout = 60000, //had to include this as my bot got bigger and there were more guilds to connect to per shard
                         LogLevel = LogSeverity.Verbose,
                         MessageCacheSize = 1000,
                         TotalShards = 1,
 
                     };
 
-                    if (Environment.OSVersion.Version.Major == 6 && Environment.OSVersion.Version.Minor == 1)
-                        _clientConfigBacking.WebSocketProvider = WS4NetProvider.Instance;
+                    //if (Environment.OSVersion.Version.Major == 6 && Environment.OSVersion.Version.Minor == 1)
+                    //    _clientConfigBacking.WebSocketProvider = WS4NetProvider.Instance;
 
                 }
 
-                return _clientConfigBacking;
+                return _clientConfig;
 
             }
 
         }
 
-        private static readonly CommandServiceConfig _commandConfig = new CommandServiceConfig()
+        private static readonly CommandServiceConfig CommandConfig = new CommandServiceConfig()
         {
 
             DefaultRunMode = RunMode.Async,
@@ -83,7 +85,15 @@ namespace YuGiOhV2.Core
 
             Print("Initializing events...");
 
-            _client = new DiscordShardedClient(_clientConfig);
+            try
+            {
+                _client = new DiscordShardedClient(ClientConfig);
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine(exception.Message);
+                Environment.Exit(0);
+            }
 
             TunnelIn().GetAwaiter().GetResult();
 
@@ -93,14 +103,15 @@ namespace YuGiOhV2.Core
 
             Print($"Launching with {_recommendedShards} shards...");
 
-            _clientConfig.TotalShards = _recommendedShards;
-            _client = new DiscordShardedClient(_clientConfig);
-            _commands = new CommandService(_commandConfig);
+            ClientConfig.TotalShards = _recommendedShards;
+            _client = new DiscordShardedClient(ClientConfig);
+            _commands = new CommandService(CommandConfig);
             _web = new Web();
             _cache = new Cache();
             _interactive = new InteractiveService(_client);
             _config = Config.Instance;
-            _serviceObserver = new ServiceObserver();
+            _reconnectTimers = new ConcurrentDictionary<DiscordSocketClient, Timer>();
+            //_serviceObserver = new ServiceObserver();
 
             RegisterLogging();
 
@@ -117,23 +128,75 @@ namespace YuGiOhV2.Core
             {
 
                 _client.ShardReady += ReadyOtherStuff;
+                _client.ShardDisconnected += Whoopsies;
 
             }
 
         }
 
-        private async Task ReadyOtherStuff(DiscordSocketClient arg)
+        private async Task ReadyOtherStuff(DiscordSocketClient client)
         {
 
             if (Interlocked.Increment(ref _currentShards) == _recommendedShards)
             {
 
-                await YouAintDoneYet();
+                var youAintDoneYet = YouAintDoneYet();
 
                 _client.ShardReady -= ReadyOtherStuff;
+                _client.ShardDisconnected -= Whoopsies;
                 _currentShards = 0;
 
+                _client.ShardDisconnected += GetBackToWork;
+
+                await youAintDoneYet;
+
             }
+
+        }
+
+        private Task GetBackToWork(Exception exception, DiscordSocketClient shard)
+        {
+
+            Print($"Shard {shard.ShardId} disconnected. Started reconnection timer.");
+
+            shard.Ready += () => Task.Run(() =>
+            {
+
+                _reconnectTimers.Remove(shard, out var reconnectTimer);
+
+                reconnectTimer.Change(Timeout.Infinite, Timeout.Infinite);
+                reconnectTimer.Dispose();
+
+                Print($"Shard {shard.ShardId} reconnected. Reconnection timer disposed.");
+
+            });
+
+            _reconnectTimers.TryAdd(shard, new Timer((state) =>
+            {
+
+                var shard = state as DiscordSocketClient;
+
+                if (_reconnectTimers.ContainsKey(shard) && (shard.ConnectionState == ConnectionState.Disconnected || shard.ConnectionState == ConnectionState.Disconnecting))
+                {
+
+                    Print($"Shard {shard.ShardId} failed to reconnect. Reconnecting forcefully...");
+
+                    shard.StartAsync();
+
+                }
+
+            }, shard, TimeSpan.FromSeconds(90), TimeSpan.FromSeconds(90)));
+
+            return Task.CompletedTask;
+
+        }
+
+        private Task Whoopsies(Exception exception, DiscordSocketClient client)
+        {
+
+            Interlocked.Decrement(ref _currentShards);
+
+            return Task.CompletedTask;
 
         }
 
@@ -200,6 +263,7 @@ namespace YuGiOhV2.Core
 
             };
 
+            _commands.AddTypeReader<string>(new StringInputTypeReader());
             await _commands.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
 
             Print("Commands registered.");
@@ -237,16 +301,16 @@ namespace YuGiOhV2.Core
                 .AddSingleton(_stats)
                 .AddSingleton(_config)
                 .AddSingleton(_yugiohScraper)
-                .AddSingleton(_serviceObserver
-                .AddPredefined(new GetValidBoosterPacks(_cache))
-                .AddPredefined(_yugiohScraper))
+                //.AddSingleton(_serviceObserver
+                //.AddPredefined(new GetValidBoosterPacks(_cache))
+                //.AddPredefined(_yugiohScraper))
                 .AddSingleton<Random>()
                 .BuildServiceProvider();
 
         }
 
         private async Task HandleCommand(SocketMessage message)
-        {            
+        {
 
             if (!(message is SocketUserMessage)
                 || message.Author.IsBot
@@ -275,9 +339,8 @@ namespace YuGiOhV2.Core
 
                 if (message.Channel is SocketDMChannel)
                     AltConsole.Write("Info", "Command", $"{possibleCmd.Author.Username} in DM's");
-                else
-                    AltConsole.Write("Info", "Command", $"{possibleCmd.Author.Username} from {(possibleCmd.Channel as SocketTextChannel).Guild.Name}");
-
+                else if (message.Channel is SocketTextChannel textChannel)
+                    AltConsole.Write("Info", "Command", $"{possibleCmd.Author.Username} from {textChannel.Guild.Name}");
 
                 AltConsole.Write("Info", "Command", $"{possibleCmd.Content}");
 
@@ -286,9 +349,9 @@ namespace YuGiOhV2.Core
                 if (!result.IsSuccess)
                 {
 
-                    if (result.ErrorReason.ToLower().Contains("unknown command"))
+                    if (result.ErrorReason.Contains("unknown command", StringComparison.OrdinalIgnoreCase))
                         return;
-                    else if (result.ErrorReason.ToLower().Contains("you are currently in timeout"))
+                    else if (result.ErrorReason.Contains("you are currently in timeout", StringComparison.OrdinalIgnoreCase))
                         await context.Channel.SendMessageAsync("Please wait 5 seconds between each type of paginator command!");
 
                     //await context.Channel.SendMessageAsync("https://goo.gl/JieFJM");

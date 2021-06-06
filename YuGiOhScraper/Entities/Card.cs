@@ -43,9 +43,11 @@ namespace YuGiOhScraper.Entities
 
         public string Passcode { get; set; }
 
-        public string OcgStatus { get; set; }
-        public string TcgAdvStatus { get; set; }
-        public string TcgTrnStatus { get; set; }
+        public string OcgStatus { get; set; } = "N/A";
+        public string TcgAdvStatus { get; set; } = "N/A";
+        public string TcgTrnStatus { get; set; } = "N/A";
+
+        public string CardTrivia { get; set; }
 
     }
 }

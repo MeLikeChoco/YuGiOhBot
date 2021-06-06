@@ -1,17 +1,21 @@
 ﻿using Discord;
 using Discord.Commands;
 using MoreLinq;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using YuGiOhV2.Extensions;
 using YuGiOhV2.Models.Attributes;
+using YuGiOhV2.Models.BoosterPacks;
 using YuGiOhV2.Models.Cards;
+using YuGiOhV2.Services;
 
 namespace YuGiOhV2.Modules
 {
@@ -22,74 +26,77 @@ namespace YuGiOhV2.Modules
 
         private static readonly DateTime _cutOffDate = new DateTime(2016, 1, 14);
 
-        //[Command("probability"), Alias("prob")]
-        //[Summary("Returns the chance of your hand occuring!")]
-        //public async Task ProbabilityCommand(int deckSize, int handSize, params string[] cards)
-        //{
+        [Command("test")]
+        public async Task TestCommand()
+        {
 
-        //    if (deckSize < 40 || deckSize > 60)
-        //    {
+            await Context.Client.Shards.FirstOrDefault().StopAsync();
 
-        //        await ReplyAsync("Deck size needs to be at least 40 cards and no more than 60 cards.");
-        //        return;
+        }
 
-        //    }
+        [Command("buy"), Alias("b")]
+        [Summary("Submits the decklist to massbuy on Tcgplayer!")]
+        public async Task BuyCommand()
+        {
 
-        //    IEnumerable<CardInHand> cardsInHand;
+            var attachments = Context.Message.Attachments;
 
-        //    try
-        //    {
+            if (attachments.Count == 0)
+                return;
 
-        //        cardsInHand = cards.Select(card =>
-        //        {
+            var file = attachments.FirstOrDefault(attachment => Path.GetExtension(attachment.Filename) == ".ydk");
 
-        //            var array = card.Split(',');
+            if (file == null)
+            {
 
-        //            if (array.Length != 4)
-        //                throw new Exception("The supplied hand has the wrong format. Example: `name,inDeck,minInHand,maxInHand");
+                await ReplyAsync("Invalid file provided! Must be a ydk or text file!");
+                return;
 
-        //            var name = array.First();
-        //            int inDeck, min, max;
+            }
 
-        //            try
-        //            {
+            var url = file.Url;
+            string text;
 
-        //                inDeck = int.Parse(array[1]);
-        //                min = int.Parse(array[2]);
-        //                max = int.Parse(array[3]);
+            using (var stream = await Web.GetStream(url))
+            {
 
-        //            }catch(FormatException)
-        //            { throw new Exception($"There was a problem parsing `{card}`. Check your input and try again!"); }
+                var buffer = new byte[stream.Length];
 
-        //            if (max > inDeck)
-        //                throw new Exception($"There are more {name} in max in hand than in the deck. Please fix `{card}`!");
+                await stream.ReadAsync(buffer, 0, (int)stream.Length);
 
-        //            if(min < 1)
+                text = Encoding.UTF8.GetString(buffer);
 
+            }
 
-        //            deckSize -= inDeck;
+            var cards = text.Replace("#main", "")
+                    .Replace("#extra", "")
+                    .Replace("#created by ...", "")
+                    .Replace("!side", "")
+                    .Split('\n')
+                    .Select(passcode => passcode.Trim())
+                    .Where(passcode => !string.IsNullOrEmpty(passcode))
+                    .Select(PasscodeToName)
+                    .Where(name => !string.IsNullOrEmpty(name))
+                    .GroupBy(name => name)
+                    .Aggregate(new StringBuilder(), (builder, group) => builder.Append("||").Append(Uri.EscapeDataString($"{group.Count()} {group.First()}")))
+                    .ToString();
 
-        //            return new CardInHand()
-        //            {
+            url = $"http://store.tcgplayer.com/massentry?productline=YuGiOh&c={cards}";
+            var response = await Web.Post("https://api-ssl.bitly.com/v4/shorten", $"{{\"long_url\": \"{url}\"}}", "Bearer", Cache.BitlyKey, Web.ContentType.Json);
+            url = JObject.Parse(await response.Content.ReadAsStringAsync())["link"].Value<string>();
 
-        //                Name = name,
-        //                InDeck = inDeck,
-        //                Min = min,
-        //                Max = max
+            await ReplyAsync(url);
 
-        //            };
+        }
 
-        //        });
+        private string PasscodeToName(string passcode)
+        {
 
-        //    }catch(Exception ex)
-        //    {
+            Cache.PasscodeToName.TryGetValue(passcode, out var name);
 
-        //        await ReplyAsync(ex.Message);
-        //        return;
+            return name;
 
-        //    }
-
-        //}
+        }
 
         [Command("price"), Alias("prices", "p")]
         [Summary("Returns the prices based on your deck list from ygopro! No proper capitalization needed!")]
@@ -103,12 +110,19 @@ namespace YuGiOhV2.Modules
             {
 
                 var url = file.Url;
-                var stream = await Web.GetStream(url);
-                var buffer = new byte[stream.Length];
+                string text;
 
-                await stream.ReadAsync(buffer, 0, (int)stream.Length);
+                using (var stream = await Web.GetStream(url))
+                {
 
-                var text = Encoding.UTF8.GetString(buffer);
+                    var buffer = new byte[stream.Length];
+
+                    await stream.ReadAsync(buffer, 0, (int)stream.Length);
+
+                    text = Encoding.UTF8.GetString(buffer);
+
+                }
+
                 var passcodes = text.Replace("#main", "")
                     .Replace("#extra", "")
                     .Replace("#created by ...", "")
@@ -175,81 +189,6 @@ namespace YuGiOhV2.Modules
             }
 
             return (name, group.Count(), double.Epsilon);
-
-        }
-
-        [Command("booster")]
-        [Summary("Gets information on a booster pack!")]
-        public Task BoosterCommand([Remainder]string input)
-        {
-
-
-
-            if (Cache.BoosterPacks.TryGetValue(input, out var boosterPack))
-            {
-
-                var builder = new EmbedBuilder()
-                    .WithAuthor(boosterPack.Name, url: boosterPack.Url)
-                    .WithDescription($"**Amount:** {boosterPack.Cards.Length} cards")
-                    .WithColor(Rand.NextColor())
-                    .AddField("Release dates", boosterPack.ReleaseDates.Aggregate("", (current, kv) => $"{current}\n**{kv.Key}:** {kv.Value.ToString("MM/dd/yyyy")}"));
-
-                foreach (var kv in boosterPack.RarityToCards)
-                    builder.AddField(kv.Key, kv.Value.Aggregate("```", (current, next) => $"{current}\n{next}") + "```");
-
-                return SendEmbed(builder);
-
-            }
-            else
-                return NoResultError("booster packs", input);
-
-        }
-
-        [Command("open")]
-        public Task OpenCommand([Remainder]string input)
-        {
-
-            if (Cache.BoosterPacks.TryGetValue(input, out var boosterPack))
-            {
-
-                var cards = new Dictionary<string, string>(9);
-                var randoms = new List<int>(9);
-                var commonCards = boosterPack.Commons.Length;
-                var builder = new StringBuilder("```fix\n");
-                int index;
-
-                for (int i = 0; i < 7; i++)
-                {
-
-                    do
-                        index = Rand.Next(commonCards);
-                    while (randoms.Contains(index));
-
-                    cards.Add(boosterPack.Commons[index], "Common");
-                    randoms.Add(index);
-
-                }
-
-                var superRare = boosterPack.Foils.RandomSubset(1, Rand).FirstOrDefault();
-                cards.Add(boosterPack.Rares.RandomSubset(1, Rand).FirstOrDefault(), "Rare");
-                cards.Add(superRare.Value.RandomSubset(1, Rand).FirstOrDefault(), superRare.Key);
-
-                foreach (var card in cards)
-                {
-
-                    builder.AppendLine($"Name: {card.Key}");
-                    builder.AppendLine($"Rarity: {card.Value}");
-                    builder.AppendLine();
-
-                }
-
-                builder.Append("```");
-
-                return ReplyAsync(builder.ToString());
-
-            }
-            else
-                return NoResultError("booster packs", input);
 
         }
 

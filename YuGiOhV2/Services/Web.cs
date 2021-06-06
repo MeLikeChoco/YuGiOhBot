@@ -47,7 +47,7 @@ namespace YuGiOhV2.Services
 
         }
 
-        public async Task<HttpResponseMessage> Post(string url, string content, string authorization = null, ContentType contentType = ContentType.Json)
+        public Task<HttpResponseMessage> Post(string url, string content, string authorizationScheme = null, string authorization = null, ContentType contentType = ContentType.Json)
         {
 
             var payload = new StringContent(content);
@@ -57,6 +57,9 @@ namespace YuGiOhV2.Services
             {
                 Content = payload
             };
+
+            if (!string.IsNullOrEmpty(authorizationScheme))
+                message.Headers.Authorization = new AuthenticationHeaderValue(authorizationScheme, authorization);
 
             if(!string.IsNullOrEmpty(authorization))
                 message.Headers.Authorization = new AuthenticationHeaderValue(authorization);
@@ -72,10 +75,8 @@ namespace YuGiOhV2.Services
                     break;
 
             }
-
-            var response = await _http.SendAsync(message, HttpCompletionOption.ResponseHeadersRead);
-
-            return response;
+            
+            return _http.SendAsync(message, HttpCompletionOption.ResponseHeadersRead);
 
         }
 
@@ -129,16 +130,19 @@ namespace YuGiOhV2.Services
         private async Task<HttpContent> Check(string url)
         {
 
-            HttpResponseMessage response;
-            var counter = 0;
+            HttpResponseMessage response = null;
+            //var counter = 0;
 
-            do
-            {
-
+            for(int i = 0; response?.IsSuccessStatusCode != true && i != 3; i++)
                 response = await GetResponseMessage(url);
-                counter++;
 
-            } while (!response.IsSuccessStatusCode && counter != 3);
+            //do
+            //{
+
+            //    response = await GetResponseMessage(url);
+            //    counter++;
+
+            //} while (!response.IsSuccessStatusCode && counter != 3);
 
             if (response.StatusCode == HttpStatusCode.NotFound)
                 throw new NullReferenceException("Error 404");

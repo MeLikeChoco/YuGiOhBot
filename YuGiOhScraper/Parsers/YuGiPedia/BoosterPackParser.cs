@@ -25,7 +25,7 @@ namespace YuGiOhScraper.Parsers.YuGiPedia
             var response = ScraperConstants.HtmlParser.ParseDocument(html);
             var dom = response.GetElementsByClassName("mw-parser-output").First();
             var dates = GetReleaseDates(dom);
-            var table = dom.GetElementsByClassName("card-list").FirstOrDefault().FirstElementChild.Children;
+            var table = dom.GetElementsByClassName("card-list").FirstOrDefault()?.FirstElementChild.Children;
 
             if (table == null)
                 throw new NullReferenceException($"No card list exists for {Name}");
@@ -47,7 +47,7 @@ namespace YuGiOhScraper.Parsers.YuGiPedia
 
             }
 
-            var boosterPack = new BoosterPack()
+            return new BoosterPack()
             {
 
                 Name = Name,
@@ -57,15 +57,13 @@ namespace YuGiOhScraper.Parsers.YuGiPedia
 
             };
 
-            return boosterPack;
-
         }
 
         private IDictionary<string, string> GetReleaseDates(IElement dom)
         {
 
             var dates = new Dictionary<string, string>();
-            var infobox = dom.GetElementsByClassName("infobox").FirstOrDefault().FirstElementChild.Children;
+            var infobox = dom.GetElementsByClassName("infobox").FirstOrDefault()?.FirstElementChild.Children;
             var releaseDateHeader = infobox.FirstOrDefault(element => !string.IsNullOrEmpty(element.TextContent) && element.TextContent.Contains("release dates", StringComparison.InvariantCultureIgnoreCase));
 
             if (releaseDateHeader != null)
@@ -84,9 +82,19 @@ namespace YuGiOhScraper.Parsers.YuGiPedia
                         var region = dateInfo.FirstElementChild.TextContent.Trim();
                         var date = dateInfo.Children[1].TextContent.Trim();
 
+                        if (date?.Contains('[') == true)
+                        {
+
+                            var openBracketIndex = date.IndexOf('[');
+                            date = date.Substring(0, openBracketIndex);
+
+                        }
+
                         dates[region] = date;
 
                     }
+                    else
+                        break;
 
                 }
 

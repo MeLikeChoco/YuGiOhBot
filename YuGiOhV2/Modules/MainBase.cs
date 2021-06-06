@@ -23,7 +23,7 @@ namespace YuGiOhV2.Modules
         protected Setting _setting;
         protected bool _minimal;
 
-        protected PaginatedAppearanceOptions _aOptions => new PaginatedAppearanceOptions
+        protected PaginatedAppearanceOptions PagedOptions => new()
         {
 
             DisplayInformationIcon = false,

@@ -80,7 +80,7 @@ namespace YuGiOhScraper.Modules
                 boosterPackLinks = errors.ToDictionary(error => error.Name, error => error.Url);
                 //var cards = GetCards(httpClient, links.ToList().GetRange(0, 100).ToDictionary(kv => kv.Key, kv => kv.Value));
 
-                if (boosterPackLinks.Any() && !Settings.IsSubProcess)
+                if (boosterPackLinks.Count > 0 && !Settings.IsSubProcess)
                 {
 
                     Console.WriteLine($"There were {errors.Count()} errors. Retry? (y/n): ");
@@ -90,7 +90,7 @@ namespace YuGiOhScraper.Modules
                 else
                     Console.WriteLine("Finished getting booster packs.");
 
-            } while (boosterPackLinks.Any() && retry == "y" && !Settings.IsSubProcess);
+            } while (boosterPackLinks.Count > 0 && retry == "y" && !Settings.IsSubProcess);
 
             return boosterPacks;
 
@@ -110,7 +110,7 @@ namespace YuGiOhScraper.Modules
                 try
                 {
 
-                    var boosterPack = new BoosterPackParser(kv.Key, $"{ScraperConstants.YuGiOhWikiaUrl}{ScraperConstants.MediaWikiParseUrl}{kv.Value}").Parse(HttpClient);
+                    var boosterPack = new BoosterPackParser(kv.Key, $"{ScraperConstants.YuGiOhWikiaUrl}{ScraperConstants.MediaWikiParseIdUrl}{kv.Value}").Parse(HttpClient);
 
                     #region OCG TCG
                     boosterPack.TcgExists = TcgBoosters.ContainsKey(boosterPack.Name);
@@ -165,7 +165,7 @@ namespace YuGiOhScraper.Modules
                 cardLinks = errors.ToDictionary(error => error.Name, error => error.Url);
                 //var cards = GetCards(httpClient, links.ToList().GetRange(0, 100).ToDictionary(kv => kv.Key, kv => kv.Value));
 
-                if (cardLinks.Any() && !Settings.IsSubProcess)
+                if (cardLinks.Count > 0 && !Settings.IsSubProcess)
                 {
 
                     Console.WriteLine($"There were {errors.Count()} errors. Retry? (y/n): ");
@@ -175,7 +175,7 @@ namespace YuGiOhScraper.Modules
                 else
                     Console.WriteLine("Finished getting cards.");
 
-            } while (cardLinks.Any() && retry == "y" && !Settings.IsSubProcess);
+            } while (cardLinks.Count > 0 && retry == "y" && !Settings.IsSubProcess);
 
             return cards;
 
@@ -195,7 +195,7 @@ namespace YuGiOhScraper.Modules
                 try
                 {
 
-                    var card = new CardParser(kv.Key, $"{ScraperConstants.YuGiOhWikiaUrl}{ScraperConstants.MediaWikiParseUrl}{kv.Value}").Parse(HttpClient);
+                    var card = new CardParser(kv.Key, $"{ScraperConstants.YuGiOhWikiaUrl}{ScraperConstants.MediaWikiParseIdUrl}{kv.Value}").Parse(HttpClient);
                     card.Url = $"{ScraperConstants.YuGiOhWikiaUrl}?curid={kv.Value}";
 
                     #region OCG TCG

@@ -53,7 +53,7 @@ namespace YuGiOhScraper.Parsers.YuGiOhWikia
 
                     //for future stuff
                     #region Lore
-                    if (row.TextContent.ToLower().Contains("card description"))
+                    if (row.TextContent.Contains("card description", StringComparison.OrdinalIgnoreCase))
                     {
 
                         var descriptionUnformatted = row.GetElementByClassName("navbox")
@@ -162,8 +162,6 @@ namespace YuGiOhScraper.Parsers.YuGiOhWikia
                             }
 
                             break;
-                        default:
-                            break;
 
                     }
                     #endregion Card Data
@@ -178,21 +176,21 @@ namespace YuGiOhScraper.Parsers.YuGiOhWikia
             {
 
                 #region Archetypes
-                var archetypeRow = cardSearchCategories.FirstOrDefault(hlist => hlist.TextContent.ToLower().Contains("archetypes"));
+                var archetypeRow = cardSearchCategories.FirstOrDefault(hlist => hlist.TextContent.Contains("archetypes", StringComparison.OrdinalIgnoreCase));
 
                 if (archetypeRow != null)
                     card.Archetype = AggregateCardCategoryData(archetypeRow);
                 #endregion Archetypes
 
                 #region Supports
-                var supportsRow = cardSearchCategories.FirstOrDefault(hlist => hlist.TextContent.ToLower().Contains("supports"));
+                var supportsRow = cardSearchCategories.FirstOrDefault(hlist => hlist.TextContent.Contains("supports", StringComparison.OrdinalIgnoreCase));
 
                 if (supportsRow != null)
                     card.Supports = AggregateCardCategoryData(supportsRow);
                 #endregion Supports
 
                 #region Anti-Supports
-                var antiSupportsRow = cardSearchCategories.FirstOrDefault(hlist => hlist.TextContent.ToLower().Contains("anti-support"));
+                var antiSupportsRow = cardSearchCategories.FirstOrDefault(hlist => hlist.TextContent.Contains("anti-support", StringComparison.OrdinalIgnoreCase));
 
                 if (antiSupportsRow != null)
                     card.AntiSupports = AggregateCardCategoryData(antiSupportsRow);

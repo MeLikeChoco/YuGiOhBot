@@ -104,7 +104,7 @@ namespace YuGiOhScraper
         //        links = errors.ToDictionary(error => error.Name, error => error.Url);
         //        //var cards = GetCards(httpClient, links.ToList().GetRange(0, 100).ToDictionary(kv => kv.Key, kv => kv.Value));
 
-        //        if (links.Any() && !_wasLaunchedByProgram)
+        //        if (links.Count > 0 && !_wasLaunchedByProgram)
         //        {
 
         //            Console.WriteLine($"There were {errors.Count()} errors. Retry? (y/n): ");
@@ -114,7 +114,7 @@ namespace YuGiOhScraper
         //        else
         //            Console.WriteLine("Finished getting booster packs.");
 
-        //    } while (links.Any() && retry == "y" && !_wasLaunchedByProgram);
+        //    } while (links.Count > 0 && retry == "y" && !_wasLaunchedByProgram);
 
         //    return boosterPacks;
 
@@ -134,7 +134,7 @@ namespace YuGiOhScraper
         //        links = errors.ToDictionary(error => error.Name, error => error.Url);
         //        //var cards = GetCards(httpClient, links.ToList().GetRange(0, 100).ToDictionary(kv => kv.Key, kv => kv.Value));
 
-        //        if (links.Any() && !_wasLaunchedByProgram)
+        //        if (links.Count > 0 && !_wasLaunchedByProgram)
         //        {
 
         //            Console.WriteLine($"There were {errors.Count()} errors. Retry? (y/n): ");
@@ -144,7 +144,7 @@ namespace YuGiOhScraper
         //        else
         //            Console.WriteLine("Finished getting cards.");
 
-        //    } while (links.Any() && retry == "y" && !_wasLaunchedByProgram);
+        //    } while (links.Count > 0 && retry == "y" && !_wasLaunchedByProgram);
 
         //    return cards;
 

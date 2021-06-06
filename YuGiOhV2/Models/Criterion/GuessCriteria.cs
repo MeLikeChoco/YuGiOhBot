@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Discord.Commands;
 using Discord.WebSocket;
+using YuGiOhV2.Extensions;
 
 namespace YuGiOhV2.Models.Criterion
 {
@@ -24,7 +25,11 @@ namespace YuGiOhV2.Models.Criterion
         public Task<bool> JudgeAsync(SocketCommandContext sourceContext, SocketMessage parameter)
         {
 
-            return Task.FromResult(parameter.Content == _answer);
+            return Task.FromResult(
+                parameter.Content
+                .ConvertTypesetterToTypewriter()
+                .Trim() == _answer
+                );
 
         }
 

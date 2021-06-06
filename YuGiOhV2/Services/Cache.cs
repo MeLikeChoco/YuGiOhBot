@@ -42,11 +42,11 @@ namespace YuGiOhV2.Services
         public Banlist Banlist { get; private set; }
         public int FYeahYgoCardArtPosts { get; private set; }
         public string TumblrKey { get; private set; }
+        public string BitlyKey { get; private set; }
 
         private static readonly string DbString = Constants.DatabaseString;
-        private static readonly ParallelOptions _pOptions = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount };
-        private static SqliteConnection _db = new SqliteConnection(DbString);
-
+        private static readonly ParallelOptions POptions = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount };
+        private static readonly SqliteConnection Db = new SqliteConnection(DbString);
         private static readonly StringComparer IgnoreCase = StringComparer.OrdinalIgnoreCase;
 
         public Cache()
@@ -70,8 +70,9 @@ namespace YuGiOhV2.Services
 
             AquireFancyMessages(cardParsers);
             BuildHouse(cardParsers);
-            AquireTheUntouchables(cardParsers);
-            //AquireGoodiePacks();
+            AquireTheUntouchables();
+            UnlockTheShock();
+            AquireGoodiePacks();
 
         }
 
@@ -85,6 +86,13 @@ namespace YuGiOhV2.Services
             FYeahYgoCardArtPosts = int.Parse(posts["response"]["total_posts"].ToString());
 
             Log($"Got {FYeahYgoCardArtPosts} photos.");
+
+        }
+
+        private void UnlockTheShock()
+        {
+
+            BitlyKey = File.ReadAllText("Files/OAuth/Bitly.txt");
 
         }
 
@@ -104,35 +112,20 @@ namespace YuGiOhV2.Services
 
             var monitor = new object();
 
-            Parallel.ForEach(parsers, _pOptions, parser =>
+            Parallel.ForEach(parsers, POptions, parser =>
             {
 
                 var name = parser.Name;
                 var card = parser.Parse();
-                EmbedBuilder embed;
-
-                try
-                {
-
-                    embed = GenFancyMessage(card);
-
-                }
-                catch (Exception ex)
-                {
-
-                    throw new EmbedGenerationException(name, ex);
-
-                }
+                var embed = card.GetEmbedBuilder();
 
                 tempObjects[name] = card;
                 tempDict[name] = embed;
 
-                if (card.Archetypes != null && card.Archetypes.Any())
+                if (card.Archetypes?.Any() == true)
                 {
 
-                    var archetypes = card.Archetypes;
-
-                    foreach (var archetype in archetypes)
+                    foreach (var archetype in card.Archetypes)
                     {
 
                         var set = tempArchetypes.GetOrAdd(archetype, new ConcurrentDictionary<string, object>());
@@ -142,12 +135,10 @@ namespace YuGiOhV2.Services
 
                 }
 
-                if (card.Supports != null && card.Supports.Any())
+                if (card.Supports?.Any() == true)
                 {
 
-                    var supports = card.Supports;
-
-                    foreach (var support in supports)
+                    foreach (var support in card.Supports)
                     {
 
                         var set = tempSupports.GetOrAdd(support, new ConcurrentDictionary<string, object>());
@@ -157,12 +148,10 @@ namespace YuGiOhV2.Services
 
                 }
 
-                if (card.AntiSupports != null && card.AntiSupports.Any())
+                if (card.AntiSupports?.Any() == true)
                 {
 
-                    var antiSupports = card.AntiSupports;
-
-                    foreach (var antiSupport in antiSupports)
+                    foreach (var antiSupport in card.AntiSupports)
                     {
 
                         var set = tempAntiSupports.GetOrAdd(antiSupport, new ConcurrentDictionary<string, object>());
@@ -172,10 +161,10 @@ namespace YuGiOhV2.Services
 
                 }
 
+                var current = Interlocked.Increment(ref counter);
+
                 lock (monitor)
                 {
-
-                    var current = Interlocked.Increment(ref counter);
 
                     if (current != total)
                         InlineLog($"Progress: {current}/{total}");
@@ -204,287 +193,278 @@ namespace YuGiOhV2.Services
             Log("Building cache...");
 
             Task.WaitAll(
-                Task.Run(() => { Images = new Dictionary<string, string>(parsers.ToDictionary(CardParser.GetCardName, parser => parser.Img), IgnoreCase); }),
-                Task.Run(() => { LowerToUpper = new Dictionary<string, string>(parsers.ToDictionary(parser => parser.Name.ToLower(), CardParser.GetCardName), IgnoreCase); }),
-                Task.Run(() => { Uppercase = new HashSet<string>(parsers.Select(CardParser.GetCardName)); }),
-                Task.Run(() => { Lowercase = new HashSet<string>(parsers.Select(parser => parser.Name.ToLower())); }),
-                Task.Run(() => { NameToPasscode = new Dictionary<string, string>(parsers.Where(parser => !string.IsNullOrEmpty(parser.Passcode)).ToDictionary(parser => parser.Name, parser => parser.Passcode), IgnoreCase); }),
-                Task.Run(() => { PasscodeToName = new Dictionary<string, string>(parsers.Where(parser => !string.IsNullOrEmpty(parser.Passcode)).GroupBy(parser => parser.Passcode).Select(group => group.FirstOrDefault()).ToDictionary(parser => parser.Passcode, CardParser.GetCardName)); })
+                Task.Run(() => Images = new Dictionary<string, string>(parsers.ToDictionary(CardParser.GetCardName, parser => parser.Img), IgnoreCase)),
+                Task.Run(() => LowerToUpper = new Dictionary<string, string>(parsers.ToDictionary(parser => parser.Name.ToLower(), CardParser.GetCardName), IgnoreCase)),
+                Task.Run(() => Uppercase = new HashSet<string>(parsers.Select(CardParser.GetCardName))),
+                Task.Run(() => Lowercase = new HashSet<string>(parsers.Select(parser => parser.Name.ToLower()))),
+                Task.Run(() => NameToPasscode = new Dictionary<string, string>(parsers.Where(parser => !string.IsNullOrEmpty(parser.Passcode)).ToDictionary(parser => parser.Name, parser => parser.Passcode), IgnoreCase)),
+                Task.Run(() => PasscodeToName = new Dictionary<string, string>(parsers.Where(parser => !string.IsNullOrEmpty(parser.Passcode)).GroupBy(parser => parser.Passcode).Select(group => group.FirstOrDefault()).ToDictionary(parser => parser.Passcode, CardParser.GetCardName)))
                 );
 
             Log("Finished building cache.");
 
         }
 
-        private EmbedBuilder GenFancyMessage(Card card)
+        //private EmbedBuilder GenFancyMessage(Card card)
+        //{
+
+        //    var author = new EmbedAuthorBuilder()
+        //        .WithIconUrl(GetIconUrl(card))
+        //        .WithName(card.Name)
+        //        .WithUrl(card.Url);
+
+        //    var footer = new EmbedFooterBuilder()
+        //        .WithIconUrl("http://1.bp.blogspot.com/-a3KasYvDBaY/VCQXuTjmb2I/AAAAAAAACZM/oQ6Hw71kLQQ/s1600/Cursed%2BHexagram.png")
+        //        .WithText("Yu-Gi-Oh!");
+
+        //    var body = new EmbedBuilder()
+        //    {
+
+        //        Author = author,
+        //        Footer = footer,
+        //        Color = GetColor(card),
+        //        Description = GenDescription(card)
+
+        //    };
+
+        //    try
+        //    {
+
+        //        body.ImageUrl = card.Img;
+
+        //    }
+        //    catch { }
+
+        //    if (card is Monster monster)
+        //    {
+
+        //        if (!string.IsNullOrEmpty(monster.Lore))
+        //        {
+
+        //            //for some reason, newlines aren't properly recognized
+        //            //monster.Lore = monster.Lore.Replace(@"\n", "\n");
+
+        //            //if (!string.IsNullOrEmpty(monster.Materials))
+        //            //    monster.Lore = monster.Lore.Replace($"{monster.Materials} ", $"{monster.Materials}");
+
+        //            if (monster.Lore.StartsWith("Pendulum Effect"))
+        //            {
+
+        //                var effects = monster.Lore.Split("Monster Effect");
+
+        //                body.AddField("Pendulum Effect", effects[0].Substring(15).Trim());
+        //                body.AddField($"[ {monster.Types.Join(" / ")} ]", effects[1].Trim());
+
+        //            }
+        //            else
+        //                body.AddField($"[ {monster.Types.Join(" / ")} ]", monster.Lore);
+
+        //        }
+        //        else
+        //            body.AddField("Not released yet", "\u200B");
+
+        //        const string unknownValue = "???";
+
+        //        if (monster is IHasAtk hasAtk)
+        //            body.AddField("ATK", string.IsNullOrEmpty(hasAtk.Atk) ? unknownValue : hasAtk.Atk, true);
+
+        //        if (monster is IHasDef hasDef)
+        //            body.AddField("DEF", string.IsNullOrEmpty(hasDef.Def) ? unknownValue : hasDef.Def, true);
+
+        //    }
+        //    else
+        //        body.AddField("Effect", card.Lore?.Replace(@"\n", "\n") ?? "Not yet released.");
+
+        //    if (card.Archetypes != null)
+        //        body.AddField(card.Archetypes.Length > 1 ? "Archetypes" : "Archetype", card.Archetypes.Join(", "));
+
+        //    return body;
+
+        //}
+
+        //private string GenDescription(Card card)
+        //{
+
+        //    string desc = "";
+
+        //    if (!string.IsNullOrEmpty(card.RealName))
+        //        desc += $"**Real Name:** {card.RealName}\n";
+
+        //    desc += "**Format:** ";
+
+        //    if (card.TcgExists)
+        //        desc += "TCG";
+
+        //    if (card.OcgExists)
+        //        desc += card.TcgExists ? "/OCG" : "OCG";
+
+        //    desc += "\n";
+        //    desc += $"**Card Type:** {card.CardType}\n";
+
+        //    if (card is Monster monster)
+        //    {
+
+        //        desc += $"**Attribute:** {monster.Attribute}\n";
+
+        //        if (monster is IHasRank xyz)
+        //            desc += $"**Rank:** {xyz.Rank}\n";
+        //        else if (monster is IHasLink linkMonster)
+        //            desc += $"**Links:** {linkMonster.Link}\n" +
+        //                $"**Link Markers:** {linkMonster.LinkArrows.Join(", ")}\n";
+        //        else
+        //            desc += $"**Level:** {(monster as IHasLevel).Level}\n";
+
+        //        if (monster is IHasScale pendulumMonster)
+        //            desc += $"**Scale:** {pendulumMonster.PendulumScale}\n";
+
+        //    }
+        //    else
+        //        desc += $"**Property:** {(card as SpellTrap).Property}\n";
+
+        //    if (card.OcgExists)
+        //        desc += $"**OCG:** {card.OcgStatus}\n";
+
+        //    if (card.TcgExists)
+        //    {
+
+        //        desc += $"**TCG ADV:** {card.TcgAdvStatus}\n";
+        //        desc += $"**TCG TRAD:** {card.TcgTrnStatus}\n";
+
+        //    }
+
+        //    if (!string.IsNullOrEmpty(card.Passcode))
+        //        desc += $"**Passcode:** {card.Passcode}";
+
+        //    return desc;
+
+        //}
+
+        //private Color GetColor(Card card)
+        //{
+
+        //    if (card.Name == "Obelisk the Tormentor (original)")
+        //        return new Color(50, 50, 153);
+        //    else if (card.Name == "Slifer the Sky Dragon (original)")
+        //        return new Color(255, 0, 0);
+        //    else if (card.Name == "The Winged Dragon of Ra (original)")
+        //        return new Color(255, 215, 0);
+
+        //    if (card.CardType == CardType.Spell)
+        //        return new Color(29, 158, 116);
+        //    else if (card.CardType == CardType.Trap)
+        //        return new Color(188, 90, 132);
+        //    else if (card is Monster monster)
+        //    {
+
+        //        if (monster is IHasLink)
+        //            return new Color(0, 0, 139);
+        //        else if (monster is IHasScale)
+        //            return new Color(150, 208, 189);
+        //        else if (monster is IHasRank)
+        //            return new Color(0, 0, 1);
+        //        else if (monster.Types != null)
+        //        {
+
+        //            if (monster.Types.Contains("Fusion"))
+        //                return new Color(160, 134, 183);
+        //            else if (monster.Types.Contains("Synchro"))
+        //                return new Color(204, 204, 204);
+        //            else if (monster.Types.Contains("Ritual"))
+        //                return new Color(157, 181, 204);
+        //            else if (monster.Types.Contains("Effect"))
+        //                return new Color(255, 139, 83);
+        //            else
+        //                return new Color(253, 230, 138);
+
+        //        }
+        //        else
+        //            return new Color(253, 230, 138);
+
+        //    }
+        //    else
+        //        return new Color(255, 0, 0);
+
+        //}
+
+        //private string GetIconUrl(Card card)
+        //{
+
+        //    if (card is SpellTrap spelltrap)
+        //    {
+
+        //        switch (spelltrap.Property)
+        //        {
+
+        //            case "Ritual":
+        //                return "http://1.bp.blogspot.com/-AuufBN2P_2Q/UxXrMJAkPJI/AAAAAAAAByQ/ZFuEQPj-UtQ/s1600/Ritual.png";
+        //            case "Quick-Play":
+        //                return "http://4.bp.blogspot.com/-4neFVlt9xyk/UxXrMO1cynI/AAAAAAAAByY/WWRyA3beAl4/s1600/Quick-Play.png";
+        //            case "Field":
+        //                return "http://1.bp.blogspot.com/-3elroOLxcrM/UxXrK5AzXuI/AAAAAAAABxo/qrMUuciJm8s/s1600/Field.png";
+        //            case "Equip":
+        //                return "http://1.bp.blogspot.com/-_7q4XTlAX_g/UxXrKeKbppI/AAAAAAAABxY/uHl2cPYY6PA/s1600/Equip.png";
+        //            case "Counter":
+        //                return "http://3.bp.blogspot.com/-EoqEY8ef698/UxXrJRfgnPI/AAAAAAAABxA/e9-pD6CSdwk/s1600/Counter.png";
+        //            case "Continuous":
+        //                return "http://3.bp.blogspot.com/-O_1NZeHQBSk/UxXrJfY0EEI/AAAAAAAABxI/vKg5txOFlog/s1600/Continuous.png";
+        //            default:
+        //                if (spelltrap.CardType == CardType.Spell)
+        //                    return "http://2.bp.blogspot.com/-RS2Go77CqUw/UxXrMaDiM-I/AAAAAAAAByU/cjc2OyyUzvM/s1600/Spell.png";
+        //                else
+        //                    return "http://3.bp.blogspot.com/-o8wNPTv-VVw/UxXrNA8kTMI/AAAAAAAAByw/uXwjDLJZPxI/s1600/Trap.png";
+
+        //        }
+
+        //    }
+        //    else
+        //    {
+
+        //        var monster = card as Monster;
+
+        //        return monster.Attribute switch
+        //        {
+        //            MonsterAttribute.WIND => "http://1.bp.blogspot.com/-ndLNmGIXXKk/UxXrNXeUH-I/AAAAAAAABys/rdoqo1Bkhnk/s1600/Wind.png",
+        //            MonsterAttribute.DARK => "http://1.bp.blogspot.com/-QUU5KSFMYig/UxXrJZoOOfI/AAAAAAAABxE/7p8CLfWdTXA/s1600/Dark.png",
+        //            MonsterAttribute.LIGHT => "http://1.bp.blogspot.com/-MxQabegkthM/UxXrLHywzrI/AAAAAAAABx8/h86nYieq9nc/s1600/Light.png",
+        //            MonsterAttribute.EARTH => "http://2.bp.blogspot.com/-5fLcEnHAA9M/UxXrKAcSUII/AAAAAAAABxc/5fEingbdyXQ/s1600/Earth.png",
+        //            MonsterAttribute.FIRE => "http://4.bp.blogspot.com/-sS0-GqQ19gQ/UxXrLIymRVI/AAAAAAAAByA/aOAdiLerXoQ/s1600/Fire.png",
+        //            MonsterAttribute.WATER => "http://4.bp.blogspot.com/-A43QT1n8o5k/UxXrNJcG-fI/AAAAAAAAByo/0KFlRXQbZjI/s1600/Water.png",
+        //            MonsterAttribute.DIVINE => "http://1.bp.blogspot.com/-xZZF5E2NXi4/UxXrJwDWkaI/AAAAAAAABxg/EG-7ajL9WGc/s1600/Divine.png",
+        //            _ => "http://3.bp.blogspot.com/-12VDHRVnjYk/VHdt3uHWbdI/AAAAAAAACyA/fOgzigv-9XU/s1600/Level.png",//its a star, rofl
+        //        };
+
+        //    }
+
+        //}
+
+        private void AquireTheUntouchables()
         {
 
-            var author = new EmbedAuthorBuilder()
-                .WithIconUrl(GetIconUrl(card))
-                .WithName(card.Name)
-                .WithUrl(card.Url);
-
-            var footer = new EmbedFooterBuilder()
-                .WithIconUrl("http://1.bp.blogspot.com/-a3KasYvDBaY/VCQXuTjmb2I/AAAAAAAACZM/oQ6Hw71kLQQ/s1600/Cursed%2BHexagram.png")
-                .WithText("Yu-Gi-Oh!");
-
-            var body = new EmbedBuilder()
-            {
-
-                Author = author,
-                Footer = footer,
-                Color = GetColor(card),
-                Description = GenDescription(card)
-
-            };
-
-            try
-            {
-
-                body.ImageUrl = card.Img;
-
-            }
-            catch { }
-
-            if (card is Monster monster)
-            {
-
-                if (!string.IsNullOrEmpty(monster.Lore))
-                {
-
-                    //for some reason, newlines aren't properly recognized
-                    monster.Lore = monster.Lore.Replace(@"\n", "\n");
-
-                    //if (!string.IsNullOrEmpty(monster.Materials))
-                    //    monster.Lore = monster.Lore.Replace($"{monster.Materials} ", $"{monster.Materials}");
-
-                    if (monster.Lore.StartsWith("Pendulum Effect"))
-                    {
-
-                        var effects = monster.Lore.Split("Monster Effect");
-
-                        body.AddField("Pendulum Effect", effects.First().Substring(15).Trim());
-                        body.AddField($"[ {monster.Types.Join(" / ")} ]", effects[1].Trim());
-
-                    }
-                    else
-                        body.AddField($"[ {monster.Types.Join(" / ")} ]", monster.Lore);
-
-                }
-                else
-                    body.AddField("Not released yet", "\u200B");
-
-                const string unknownValue = "???";
-
-                if (monster is IHasAtk hasAtk)
-                    body.AddField("ATK", string.IsNullOrEmpty(hasAtk.Atk) ? unknownValue : hasAtk.Atk, true);
-
-                if (monster is IHasDef hasDef)
-                    body.AddField("DEF", string.IsNullOrEmpty(hasDef.Def) ? unknownValue : hasDef.Def, true);
-
-            }
-            else
-                body.AddField("Effect", card.Lore?.Replace(@"\n", "\n") ?? "Not yet released.");
-
-            if (card.Archetypes != null)
-                body.AddField(card.Archetypes.Length > 1 ? "Archetypes" : "Archetype", card.Archetypes.Join(", "));
-
-            return body;
-
-        }
-
-        private string GenDescription(Card card)
-        {
-
-            string desc = "";
-
-            if (!string.IsNullOrEmpty(card.RealName))
-                desc += $"**Real Name:** {card.RealName}\n";
-
-            desc += "**Format:** ";
-
-            if (card.TcgExists)
-                desc += "TCG";
-
-            if (card.OcgExists)
-                desc += card.TcgExists ? "/OCG" : "OCG";
-
-            desc += "\n";
-            desc += $"**Card Type:** {card.CardType}\n";
-
-            if (card is Monster monster)
-            {
-
-                desc += $"**Attribute:** {monster.Attribute}\n";
-
-                if (monster is IHasRank xyz)
-                    desc += $"**Rank:** {xyz.Rank}\n";
-                else if (monster is IHasLink linkMonster)
-                    desc += $"**Links:** {linkMonster.Link}\n" +
-                        $"**Link Markers:** {linkMonster.LinkArrows.Join(", ")}\n";
-                else
-                    desc += $"**Level:** {(monster as IHasLevel).Level}\n";
-
-                if (monster is IHasScale pendulumMonster)
-                    desc += $"**Scale:** {pendulumMonster.PendulumScale}\n";
-
-            }
-            else
-                desc += $"**Property:** {(card as SpellTrap).Property}\n";
-
-            if (card.OcgExists)
-                desc += $"**OCG:** {card.OcgStatus}\n";
-
-            if (card.TcgExists)
-            {
-
-                desc += $"**TCG ADV:** {card.TcgAdvStatus}\n";
-                desc += $"**TCG TRAD:** {card.TcgTrnStatus}\n";
-
-            }
-
-            if (!string.IsNullOrEmpty(card.Passcode))
-                desc += $"**Passcode:** {card.Passcode}";
-
-            return desc;
-
-        }
-
-        private Color GetColor(Card card)
-        {
-
-            if (card.Name == "Obelisk the Tormentor (original)")
-                return new Color(50, 50, 153);
-            else if (card.Name == "Slifer the Sky Dragon (original)")
-                return new Color(255, 0, 0);
-            else if (card.Name == "The Winged Dragon of Ra (original)")
-                return new Color(255, 215, 0);
-
-            if (card.CardType == "Spell")
-                return new Color(29, 158, 116);
-            else if (card.CardType == "Trap")
-                return new Color(188, 90, 132);
-            else if (card is Monster monster)
-            {
-
-                if (monster is IHasLink)
-                    return new Color(0, 0, 139);
-                else if (monster is IHasScale)
-                    return new Color(150, 208, 189);
-                else if (monster is IHasRank)
-                    return new Color(0, 0, 1);
-                else if (monster.Types != null)
-                {
-
-                    if (monster.Types.Contains("Fusion"))
-                        return new Color(160, 134, 183);
-                    else if (monster.Types.Contains("Synchro"))
-                        return new Color(204, 204, 204);
-                    else if (monster.Types.Contains("Ritual"))
-                        return new Color(157, 181, 204);
-                    else if (monster.Types.Contains("Effect"))
-                        return new Color(255, 139, 83);
-                    else
-                        return new Color(253, 230, 138);
-
-                }
-                else
-                    return new Color(253, 230, 138);
-
-            }
-            else
-                return new Color(255, 0, 0);
-
-        }
-
-        private string GetIconUrl(Card card)
-        {
-
-            if (card is SpellTrap spelltrap)
-            {
-
-                switch (spelltrap.Property)
-                {
-
-                    case "Ritual":
-                        return "http://1.bp.blogspot.com/-AuufBN2P_2Q/UxXrMJAkPJI/AAAAAAAAByQ/ZFuEQPj-UtQ/s1600/Ritual.png";
-                    case "Quick-Play":
-                        return "http://4.bp.blogspot.com/-4neFVlt9xyk/UxXrMO1cynI/AAAAAAAAByY/WWRyA3beAl4/s1600/Quick-Play.png";
-                    case "Field":
-                        return "http://1.bp.blogspot.com/-3elroOLxcrM/UxXrK5AzXuI/AAAAAAAABxo/qrMUuciJm8s/s1600/Field.png";
-                    case "Equip":
-                        return "http://1.bp.blogspot.com/-_7q4XTlAX_g/UxXrKeKbppI/AAAAAAAABxY/uHl2cPYY6PA/s1600/Equip.png";
-                    case "Counter":
-                        return "http://3.bp.blogspot.com/-EoqEY8ef698/UxXrJRfgnPI/AAAAAAAABxA/e9-pD6CSdwk/s1600/Counter.png";
-                    case "Continuous":
-                        return "http://3.bp.blogspot.com/-O_1NZeHQBSk/UxXrJfY0EEI/AAAAAAAABxI/vKg5txOFlog/s1600/Continuous.png";
-                    default:
-                        if (spelltrap.CardType == "Spell")
-                            return "http://2.bp.blogspot.com/-RS2Go77CqUw/UxXrMaDiM-I/AAAAAAAAByU/cjc2OyyUzvM/s1600/Spell.png";
-                        else
-                            return "http://3.bp.blogspot.com/-o8wNPTv-VVw/UxXrNA8kTMI/AAAAAAAAByw/uXwjDLJZPxI/s1600/Trap.png";
-
-                }
-
-            }
-            else
-            {
-
-                var monster = card as Monster;
-
-                switch (monster.Attribute)
-                {
-
-                    case "WIND":
-                        return "http://1.bp.blogspot.com/-ndLNmGIXXKk/UxXrNXeUH-I/AAAAAAAABys/rdoqo1Bkhnk/s1600/Wind.png";
-                    case "DARK":
-                        return "http://1.bp.blogspot.com/-QUU5KSFMYig/UxXrJZoOOfI/AAAAAAAABxE/7p8CLfWdTXA/s1600/Dark.png";
-                    case "LIGHT":
-                        return "http://1.bp.blogspot.com/-MxQabegkthM/UxXrLHywzrI/AAAAAAAABx8/h86nYieq9nc/s1600/Light.png";
-                    case "EARTH":
-                        return "http://2.bp.blogspot.com/-5fLcEnHAA9M/UxXrKAcSUII/AAAAAAAABxc/5fEingbdyXQ/s1600/Earth.png";
-                    case "FIRE":
-                        return "http://4.bp.blogspot.com/-sS0-GqQ19gQ/UxXrLIymRVI/AAAAAAAAByA/aOAdiLerXoQ/s1600/Fire.png";
-                    case "WATER":
-                        return "http://4.bp.blogspot.com/-A43QT1n8o5k/UxXrNJcG-fI/AAAAAAAAByo/0KFlRXQbZjI/s1600/Water.png";
-                    case "DIVINE":
-                        return "http://1.bp.blogspot.com/-xZZF5E2NXi4/UxXrJwDWkaI/AAAAAAAABxg/EG-7ajL9WGc/s1600/Divine.png";
-                    default:
-                        return "http://3.bp.blogspot.com/-12VDHRVnjYk/VHdt3uHWbdI/AAAAAAAACyA/fOgzigv-9XU/s1600/Level.png"; //its a star, rofl
-
-                }
-
-            }
-
-        }
-
-        private void AquireTheUntouchables(IEnumerable<CardParser> parsers)
-        {
-
-            var tempban = new Banlist();
+            var banlist = new Banlist();
 
             Log("Getting OCG banlist...");
 
-            var ocgBanlist = tempban.OcgBanlist;
-            var ocgCards = parsers.Where(parser => parser.OcgExists);
-            ocgBanlist.Forbidden = ocgCards.Where(parser => parser.OcgStatus == "Forbidden").Select(CardParser.GetCardName);
-            ocgBanlist.Limited = ocgCards.Where(parser => parser.OcgStatus == "Limited").Select(CardParser.GetCardName);
-            ocgBanlist.SemiLimited = ocgCards.Where(parser => parser.OcgStatus == "Semi-Limited").Select(CardParser.GetCardName);
+            var ocgBanlist = banlist.OcgBanlist;
+            var ocgCards = Cards.Where(card => card.OcgExists);
+            ocgBanlist.Forbidden = ocgCards.Where(card => card.OcgStatus == CardStatus.Forbidden).Select(card => card.Name);
+            ocgBanlist.Limited = ocgCards.Where(card => card.OcgStatus == CardStatus.Limited).Select(card => card.Name);
+            ocgBanlist.SemiLimited = ocgCards.Where(card => card.OcgStatus == CardStatus.SemiLimited).Select(card => card.Name);
 
             Log("Getting TCG Adv banlist...");
 
-            var tcgAdvBanlist = tempban.TcgAdvBanlist;
-            var tcgCards = parsers.Where(parser => parser.TcgExists);
-            tcgAdvBanlist.Forbidden = tcgCards.Where(parser => parser.TcgAdvStatus == "Forbidden").Select(CardParser.GetCardName);
-            tcgAdvBanlist.Limited = tcgCards.Where(parser => parser.TcgAdvStatus == "Limited").Select(CardParser.GetCardName);
-            tcgAdvBanlist.SemiLimited = tcgCards.Where(parser => parser.TcgAdvStatus == "Semi-Limited").Select(CardParser.GetCardName);
+            var tcgCards = Cards.Where(card => card.TcgExists);
+
+            var tcgAdvBanlist = banlist.TcgAdvBanlist;
+            tcgAdvBanlist.Forbidden = tcgCards.Where(card => card.TcgAdvStatus == CardStatus.Forbidden).Select(card => card.Name);
+            tcgAdvBanlist.Limited = tcgCards.Where(card => card.TcgAdvStatus == CardStatus.Limited).Select(card => card.Name);
+            tcgAdvBanlist.SemiLimited = tcgCards.Where(card => card.TcgAdvStatus == CardStatus.SemiLimited).Select(card => card.Name);
 
             Log("Getting TCG Traditional banlist...");
 
-            var tcgTradBanlist = tempban.TcgTradBanlist;
-            tcgTradBanlist.Forbidden = tcgCards.Where(parser => parser.TcgTrnStatus == "Forbidden").Select(CardParser.GetCardName);
-            tcgTradBanlist.Limited = tcgCards.Where(parser => parser.TcgTrnStatus == "Limited").Select(CardParser.GetCardName);
-            tcgTradBanlist.SemiLimited = tcgCards.Where(parser => parser.TcgTrnStatus == "Semi-Limited").Select(CardParser.GetCardName);
+            var tcgTradBanlist = banlist.TcgTradBanlist;
+            tcgTradBanlist.Forbidden = tcgCards.Where(card => card.TcgTrnStatus == CardStatus.Forbidden).Select(card => card.Name);
+            tcgTradBanlist.Limited = tcgCards.Where(card => card.TcgTrnStatus == CardStatus.Limited).Select(card => card.Name);
+            tcgTradBanlist.SemiLimited = tcgCards.Where(card => card.TcgTrnStatus == CardStatus.SemiLimited).Select(card => card.Name);
 
             //_db.Open();
 
@@ -503,20 +483,23 @@ namespace YuGiOhV2.Services
 
             //_db.Close();
 
-            Banlist = tempban;
+            Banlist = banlist;
 
         }
 
         private IEnumerable<CardParser> AquireGoodies()
         {
 
-            _db.Open();
+            Db.Open();
 
-            Log($"Retrieving all cards from \"{_db.ConnectionString}\"...");
+            Log($"Retrieving all cards from \"{Db.ConnectionString}\"...");
             //var parsers = _db.Query<CardParser>("select * from Cards where Types not like '%Pegasus%' or Types is null");
-            var parsers = _db.Query<CardParser>("select * from Cards");
-            parsers = parsers.Where(parser => string.IsNullOrEmpty(parser.Types) || !parser.Types.Contains("Pegasus") || !parser.Types.Contains("Skill"))
-                .Where(parser => string.IsNullOrEmpty(parser.Types) || !(parser.Level == -1 && parser.Rank == -1 && parser.Link == 0 && string.IsNullOrEmpty(parser.Property)));
+            var parsers = Db.Query<CardParser>("select * from Cards");
+            parsers = parsers.Where(parser => (string.IsNullOrEmpty(parser.Types) || !parser.Types.Contains("Pegasus") || !parser.Types.Contains("Skill")) &&
+            (string.IsNullOrEmpty(parser.Types) || !(parser.Level == -1 && parser.Rank == -1 && parser.Link == 0 && string.IsNullOrEmpty(parser.Property))) &&
+            !parser.CardType.ContainsIgnoreCase("Counter") && !parser.CardType.ContainsIgnoreCase("Command") &&
+            (string.IsNullOrEmpty(parser.Attribute) || !parser.Attribute.ContainsIgnoreCase("LAUGH")));
+
 
             //Log("Getting regular monsters...");
             //var regulars = _db.Query<RegularMonster>("select * from Cards where Level not like -1 and PendulumScale like -1");
@@ -529,7 +512,9 @@ namespace YuGiOhV2.Services
             //Log("Getting spell and traps...");
             //var spelltraps = _db.Query<SpellTrap>("select * from Cards where CardType like '%Spell%' or CardType like '%Trap%'");
 
-            _db.Close();
+            Db.Close();
+
+            Log($"Retrieved {parsers.Count()} cards from the database.");
 
             return parsers;
 
@@ -538,16 +523,16 @@ namespace YuGiOhV2.Services
         private void AquireGoodiePacks()
         {
 
-            Log($"Retrieving all booster packs from \"{_db.ConnectionString}\"...");
+            Log($"Retrieving all booster packs from \"{Db.ConnectionString}\"...");
+            
+            Db.Open();
 
-            _db.Open();
+            var boosterPacks = Db.Query<BoosterPackParser>("select * from BoosterPacks");
 
-            var boosterPacks = _db.Query<BoosterPackParser>("select * from BoosterPacks");
-
-            _db.Close();
+            Db.Close();
 
             BoosterPacks = boosterPacks
-                .AsParallel()
+                .AsParallel() //probably don't need it, but whatever, it was cool to try using
                 .WithDegreeOfParallelism(Environment.ProcessorCount)
                 .ToDictionary(parser => parser.Name, parser => parser.Parse(), StringComparer.InvariantCultureIgnoreCase);
 

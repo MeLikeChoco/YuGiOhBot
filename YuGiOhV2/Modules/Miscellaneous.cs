@@ -1,10 +1,16 @@
-﻿using Discord.Commands;
+﻿using Discord;
+using Discord.Addons.Interactive;
+using Discord.Commands;
+using MoreLinq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
+using YuGiOhV2.Extensions;
+using YuGiOhV2.Models.Attributes;
+using YuGiOhV2.Models.BoosterPacks;
 
 namespace YuGiOhV2.Modules
 {
@@ -88,6 +94,206 @@ namespace YuGiOhV2.Modules
 
         }
 
+        [Command("booster")]
+        [Summary("Gets information on a booster pack!")]
+        public Task BoosterCommand([Remainder] string input)
+        {
+
+            if (!Cache.BoosterPacks.TryGetValue(input, out BoosterPack boosterPack))
+            {
+
+                var inputWords = input.Split(' ');
+                boosterPack = Cache.BoosterPacks.FirstOrDefault(kv => inputWords.All(word => kv.Key.Contains(word, StringComparison.OrdinalIgnoreCase))).Value;
+
+            }
+
+            if (boosterPack != null)
+            {
+
+                var descBuilder = new StringBuilder()
+                    .Append("**Amount:** ").Append(boosterPack.Cards.Length).AppendLine(" cards")
+                    .AppendLine()
+                    .AppendLine("**Release dates**");
+
+                descBuilder = boosterPack.ReleaseDates
+                    .Aggregate(descBuilder, (current, kv) =>
+                        current.Append("**").Append(kv.Key).Append(":** ")
+                        .AppendFormat("{0: MM/dd/yyyy}", kv.Value)
+                        .AppendLine()
+                    );
+
+                var options = PagedOptions;
+                options.FieldsPerPage = 1;
+
+                var paginator = new PaginatedMessage()
+                {
+
+                    Title = boosterPack.Name,
+                    Color = Rand.NextColor(),
+                    AlternateDescription = descBuilder.ToString(),
+                    Options = options
+
+                };
+
+                var pages = new LinkedList<EmbedFieldBuilder>();
+                paginator.Pages = pages;
+
+                foreach (var kv in boosterPack.RarityToCards)
+                {
+
+                    var cards = kv.Value
+                        .Aggregate(new StringBuilder(), (current, next) => current.AppendLine(next))
+                        .ToString();
+
+                    while (cards.Length >= 1024)
+                    {
+
+                        const int maxLength = 1000;
+
+                        var substring = cards.Substring(0, maxLength);
+                        var cutoff = substring.LastIndexOf('\n');
+                        substring = cards.Substring(0, cutoff);
+                        var cardsField = $"```{substring}```";
+
+                        pages.AddLast(new EmbedFieldBuilder()
+                            .WithName(kv.Key)
+                            .WithValue(cardsField));
+
+                        if (cards.Length >= maxLength)
+                            cards = cards[cutoff..];
+
+                    }
+
+                    if (!string.IsNullOrEmpty(cards) || !string.IsNullOrWhiteSpace(cards))
+                    {
+
+                        pages.AddLast(new EmbedFieldBuilder()
+                            .WithName(kv.Key)
+                            .WithValue($"```{cards}```"));
+
+                    }
+
+                }
+
+                return PagedReplyAsync(paginator);
+
+                //var builder = new EmbedBuilder()
+                //    .WithAuthor(boosterPack.Name, url: boosterPack.Url)
+                //    .WithDescription($"**Amount:** {boosterPack.Cards.Length} cards")
+                //    .WithColor(Rand.NextColor())
+                //    .AddField("Release dates", boosterPack.ReleaseDates.Aggregate("", (current, kv) => $"{current}\n**{kv.Key}:** {kv.Value: MM/dd/yyyy}"));
+
+                //foreach (var kv in boosterPack.RarityToCards)
+                //{
+
+                //    var cards = kv.Value.Aggregate(new StringBuilder(), (current, next) => current.AppendLine(next)).ToString();
+
+                //    if (cards.Length >= 1024)
+                //    {
+
+                //        do
+                //        {
+
+                //            const int maxLength = 1000;
+
+                //            var substring = cards.Substring(0, maxLength);
+                //            var cutoff = substring.LastIndexOf('\n');
+                //            substring = cards.Substring(0, cutoff);
+                //            var cardsField = $"```{substring}```";
+
+                //            builder.AddField(kv.Key, cardsField);
+
+                //            if (cards.Length >= maxLength)
+                //                cards = cards[cutoff..];
+
+                //        } while (cards.Length >= 1024);
+
+                //    }
+
+                //    builder.AddField(kv.Key, $"```{cards}```");
+
+                //}
+
+                //return SendEmbed(builder);
+
+            }
+            else
+                return NoResultError("booster packs", input);
+
+        }
+
+        [Command("open")]
+        [RequireChannel(410082506935894016)]
+        public Task OpenCommand([Remainder] string input)
+        {
+
+            try
+            {
+
+                if (!Cache.BoosterPacks.TryGetValue(input, out BoosterPack boosterPack))
+                {
+
+                    var inputWords = input.Split(' ');
+                    boosterPack = Cache.BoosterPacks
+                        .Where(kv => inputWords.All(word => kv.Key.Contains(word, StringComparison.OrdinalIgnoreCase)))
+                        .ToList()
+                        .PartialSortBy(1, kv => kv.Key)
+                        .FirstOrDefault()
+                        .Value;
+
+                }
+
+                if (boosterPack != null)
+                {
+
+                    var cards = new Dictionary<string, string>(9);
+                    var randoms = new List<int>(9);
+                    var commonCards = boosterPack.Commons.Length;
+                    var builder = new StringBuilder("```fix\n");
+                    int index;
+
+                    for (int i = 0; i < 7; i++)
+                    {
+
+                        do
+                            index = Rand.Next(commonCards);
+                        while (randoms.Contains(index));
+
+                        cards.Add(boosterPack.Commons[index], "Common");
+                        randoms.Add(index);
+
+                    }
+
+                    var superRare = boosterPack.Foils.RandomSubset(1, Rand).FirstOrDefault();
+
+                    cards.Add(boosterPack.Rares.RandomSubset(1, Rand).FirstOrDefault(), "Rare");
+                    cards.Add(superRare.Value.RandomSubset(1, Rand).FirstOrDefault(), superRare.Key);
+
+                    foreach (var card in cards)
+                    {
+
+                        builder.Append("Name: ").AppendLine(card.Key);
+                        builder.Append("Rarity: ").AppendLine(card.Value);
+                        builder.AppendLine();
+
+                    }
+
+                    builder.Append("```");
+
+                    return ReplyAsync(builder.ToString());
+
+                }
+                else
+                    return NoResultError("booster packs", input);
+
+            }
+            catch
+            {
+                return ReplyAsync("There was an error opening the booster pack. This is most likely due to unknown ratios or the pack being unique (ex. gold rare only pack). This problem is temporary and will be fixed soon™.");
+            }
+
+        }
+
         public double HyperGeometricProbability(int deckSize, int inDeck, int handSize, int inHand)
         {
 
@@ -107,9 +313,7 @@ namespace YuGiOhV2.Modules
 
             var numerator = Factorial(n);
             var denominator = Factorial(k) * Factorial(n - k);
-            var result = (double)(numerator / denominator);
-
-            return result;
+            return (double)(numerator / denominator);
 
         }
 

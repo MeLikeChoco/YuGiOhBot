@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using MoreLinq;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -93,6 +94,8 @@ namespace YuGiOhV2.Models.BoosterPacks
                 //}
 
             }
+
+            cards.ForEach(kv => kv.Value.Sort());
 
             return new BoosterPack(Name, releaseDates, cards, Url);
 

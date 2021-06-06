@@ -19,8 +19,6 @@ namespace YuGiOhV2.Modules
     public class MainInquiry : MainBase
     {
 
-        private const string GuessBaseUrl = "https://media.githubusercontent.com/media/shadowfox87/YGOProPictureMirror/master/picture/processed/hq/arts/";
-
         //[Command("booster")]
         //[Summary("Gets information on a booster pack!")]
         //public Task BoosterCommand([Remainder]string input)
@@ -287,7 +285,7 @@ namespace YuGiOhV2.Modules
         private Task<Stream> GetArtGithub(string passcode)
         {
 
-            var url = $"{Constants.ArtBaseUrl}{passcode}.jpg";
+            var url = $"{Constants.ArtBaseUrl}{passcode}.{Constants.ArtFileType}";
             return Web.GetStream(url);
 
         }

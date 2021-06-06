@@ -9,13 +9,15 @@ namespace YuGiOhV2.Extensions
     public static class StringExtensions
     {
 
+        public static bool ContainsIgnoreCase(this string str, string value, StringComparison comparisonType = StringComparison.OrdinalIgnoreCase)
+            => str.Contains(value, comparisonType);
+
         public static string Title(this string str)
         {
 
             return char.ToUpper(str.First()) + str.Substring(1).ToLower();
 
         }
-
 
         //from https://stackoverflow.com/questions/17710561/parse-very-long-date-format-to-datetime-in-c-sharp
         public static string StripDateOrdinals(this string input)
@@ -34,6 +36,17 @@ namespace YuGiOhV2.Extensions
                 .Replace("7th", "7")
                 .Replace("8th", "8")
                 .Replace("9th", "9");
+
+        }
+
+        public static string ConvertTypesetterToTypewriter(this string input)
+        {
+
+            return input
+                .Replace('\u2018', '\'')
+                .Replace('\u2019', '\'')
+                .Replace('\u201c', '\"')
+                .Replace('\u201d', '\"');
 
         }
 

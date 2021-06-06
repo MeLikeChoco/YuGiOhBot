@@ -30,7 +30,7 @@ namespace YuGiOhScraper.Modules
         protected HttpClient HttpClient { get; private set; } //probably not a good idea if it starts scaling, but eh, doubt I'll get port exhaustion, better for parallel function anyway
         protected IDictionary<string, string> TcgCards, OcgCards, TcgBoosters, OcgBoosters;
 
-        public ModuleBase(string moduleName, string databaseName, string baseAddress)
+        protected ModuleBase(string moduleName, string databaseName, string baseAddress)
         {
 
             ModuleName = moduleName;
@@ -122,7 +122,7 @@ namespace YuGiOhScraper.Modules
         //        links = errors.ToDictionary(error => error.Name, error => error.Url);
         //        //var cards = GetCards(httpClient, links.ToList().GetRange(0, 100).ToDictionary(kv => kv.Key, kv => kv.Value));
 
-        //        if (links.Any() && !Settings.IsSubProcess)
+        //        if (links.Count > 0 && !Settings.IsSubProcess)
         //        {
 
         //            Console.WriteLine($"There were {errors.Count()} errors. Retry? (y/n): ");
@@ -132,7 +132,7 @@ namespace YuGiOhScraper.Modules
         //        else
         //            Console.WriteLine($"Finished getting {type}.");
 
-        //    } while (links.Any() && retry == "y" && !Settings.IsSubProcess);
+        //    } while (links.Count > 0 && retry == "y" && !Settings.IsSubProcess);
 
         //    return (results, errors);
 

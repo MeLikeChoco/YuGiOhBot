@@ -58,7 +58,7 @@ namespace YuGiOhV2.Modules
 
                 //}
 
-                KeyValuePair<string, string> passcode = new KeyValuePair<string, string>();
+                KeyValuePair<string, string> passcodeKv = default;
                 Exception e;
 
                 do
@@ -67,13 +67,15 @@ namespace YuGiOhV2.Modules
                     try
                     {
 
-                        passcode = Cache.NameToPasscode.RandomSubset(1).First();
+                        passcodeKv = Cache.NameToPasscode.RandomSubset(1).First();
 
-                        Console.WriteLine($"{passcode.Key}\n{Constants.ArtBaseUrl}{passcode.Value}.png");
-                        //$"https://raw.githubusercontent.com/shadowfox87/YGOTCGOCGPics323x323/master/{passcode.Key}.png"
+                        var url = $"{Constants.ArtBaseUrl}{passcodeKv.Value}.{Constants.ArtFileType}";
 
-                        using (var stream = await GetArtGithub(passcode.Value))
-                            await UploadAsync(stream, $"{GenObufscatedString()}.png", $":stopwatch: You have **{_setting.GuessTime}** seconds to guess what card this art belongs to! Case sensitive!");
+                        //$"https://storage.googleapis.com/ygoprodeck.com/pics_artgame/{passcode}.jpg"
+                        Console.WriteLine($"{passcodeKv.Key}\n{Constants.ArtBaseUrl}{passcodeKv.Value}.{Constants.ArtFileType}");
+
+                        using (var stream = await Web.GetStream(url))
+                            await UploadAsync(stream, $"{GenObufscatedString()}.{Constants.ArtFileType}", $":stopwatch: You have **{_setting.GuessTime}** seconds to guess what card this art belongs to! Case sensitive!");
 
                         e = null;
 
@@ -83,7 +85,7 @@ namespace YuGiOhV2.Modules
                 } while (e != null);
 
                 //_criteria.AddCriterion(new GuessCriteria(art.Key));
-                _criteria.AddCriterion(new GuessCriteria(passcode.Key));
+                _criteria.AddCriterion(new GuessCriteria(passcodeKv.Key));
 
                 var answer = await NextMessageAsync(_criteria, TimeSpan.FromSeconds(_setting.GuessTime));
 
@@ -93,17 +95,16 @@ namespace YuGiOhV2.Modules
                     var author = answer.Author as SocketGuildUser;
 
                     //await ReplyAsync($":trophy: The winner is **{author.Nickname ?? author.Username}**! The card was `{art.Key}`!");
-                    await ReplyAsync($":trophy: The winner is **{author.Nickname ?? author.Username}**! The card was `{passcode.Key}`!");
+                    await ReplyAsync($":trophy: The winner is **{author.Nickname ?? author.Username}**! The card was `{passcodeKv.Key}`!");
 
                 }
                 else
-                    await ReplyAsync($":stop_button: Ran out of time! The card was `{passcode.Key}`!");
+                    await ReplyAsync($":stop_button: Ran out of time! The card was `{passcodeKv.Key}`!");
 
             }
             else
                 await ReplyAsync($":game_die: There is a game in progress!");
-
-            Cache.GuessInProgress.TryRemove(Context.Channel.Id, out var blarg);
+            Cache.GuessInProgress.TryRemove(Context.Channel.Id, out _);
 
         }
 
@@ -144,72 +145,68 @@ namespace YuGiOhV2.Modules
             await ReplyAsync($"You have **5** minutes to figure this card out!\n{display}");
 
             var cts = new CancellationTokenSource();
+            var timer = new Timer((token) => (token as CancellationTokenSource).Cancel(), cts, TimeSpan.FromSeconds(300), TimeSpan.FromSeconds(300));
 
-            using(var timer = new Timer(new TimerCallback((token) => (token as CancellationTokenSource).Cancel()), cts, TimeSpan.FromSeconds(300), TimeSpan.FromSeconds(300)))
+            var lower = card.ToLower();
+            var hanging = 0;
+            SocketGuildUser winner = null;
+
+            var guesses = new List<string>();
+
+            do
             {
 
-                var lower = card.ToLower();
-                var hanging = 0;
-                SocketGuildUser winner = null;
+                var input = await NextMessageAsync(_criteria, token: cts.Token);
 
-                var guesses = new List<string>();
+                if (cts.Token.IsCancellationRequested && input == null)
+                    break;
 
-                do
+                var content = input?.Content?.ToLower();
+
+                if (content == null)
+                    continue;
+                else if (content.Length != 1)
+                    continue;
+                else if (guesses.Contains(content))
+                    await ReplyAsync($"You already guessed `{content}`!");
+                else if (!lower.Contains(content))
                 {
 
-                    var input = await NextMessageAsync(_criteria, token: cts.Token);
+                    await ReplyAsync($"```fix\n{GetHangman(++hanging)}```");
+                    guesses.Add(content);
 
-                    if (cts.Token.IsCancellationRequested && input == null)
+                    if (hanging == 6)
                         break;
 
-                    var content = input?.Content?.ToLower();
-
-                    if (content == null)
-                        continue;
-                    else if (content.Length != 1)
-                        continue;
-                    else if (guesses.Contains(content))
-                        await ReplyAsync($"You already guessed `{content}`!");
-                    else if (!lower.Contains(content))
-                    {
-
-                        await ReplyAsync($"```fix\n{GetHangman(++hanging)}```");
-                        guesses.Add(content);
-
-                        if (hanging == 6)
-                            break;
-
-                    }
-                    else
-                    {
-
-                        var indexes = new List<int>(5);
-
-                        for (int i = lower.IndexOf(content); i != -1; i = lower.IndexOf(content, ++i))
-                            indexes.Add(i);
-
-                        indexes.ForEach(i => check[i] = card[i]);
-                        indexes.ForEach(i => indexToDisplay[i] = $"__{card[i]}__ ");
-                        guesses.Add(content);
-
-                        await ReplyAsync(indexToDisplay.Values.Join(""));
-
-                        if (check.ToString() == card)
-                            winner = input.Author as SocketGuildUser;
-
-                    }
-
-                } while (check.ToString() != card);
-                
-
-                if (winner != null)
-                    await ReplyAsync($":trophy: The winner is **{winner.Nickname ?? winner.Username}**!");
-                else if (hanging == 6)
-                    await ReplyAsync($":stop_button: The guy got hanged! There was no winner. The card was `{card}`!");
+                }
                 else
-                    await ReplyAsync($":stop_button: Time is up! There was no winner. The card was `{card}`!");
+                {
 
-            }
+                    var indexes = new List<int>(5);
+
+                    for (int i = lower.IndexOf(content); i != -1; i = lower.IndexOf(content, ++i))
+                        indexes.Add(i);
+
+                    indexes.ForEach(i => check[i] = card[i]);
+                    indexes.ForEach(i => indexToDisplay[i] = $"__{card[i]}__ ");
+                    guesses.Add(content);
+
+                    await ReplyAsync(indexToDisplay.Values.Join(""));
+
+                    if (check.ToString() == card)
+                        winner = input.Author as SocketGuildUser;
+
+                }
+
+            } while (check.ToString() != card);
+
+
+            if (winner != null)
+                await ReplyAsync($":trophy: The winner is **{winner.Nickname ?? winner.Username}**!");
+            else if (hanging == 6)
+                await ReplyAsync($":stop_button: The guy got hanged! There was no winner. The card was `{card}`!");
+            else
+                await ReplyAsync($":stop_button: Time is up! There was no winner. The card was `{card}`!");
 
         }
 
@@ -271,15 +268,7 @@ namespace YuGiOhV2.Modules
 
         }
 
-        private Task<Stream> GetArtGithub(string passcode)
-        {
-
-            var url = $"{Constants.ArtBaseUrl}{passcode}.jpg";
-            return Web.GetStream(url);
-
-        }
-
-        private async Task<KeyValuePair<string, string>> GetArt()
+        private async Task<KeyValuePair<string, string>> GetArtTumblr()
         {
 
             var offset = Rand.Next(0, Cache.FYeahYgoCardArtPosts - 20);

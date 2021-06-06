@@ -57,6 +57,7 @@ namespace YuGiOhV2.Models.BoosterPacks
 
     }
 
+    [AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
     public class RarityAttribute : Attribute
     {
 

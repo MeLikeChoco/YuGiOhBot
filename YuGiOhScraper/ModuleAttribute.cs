@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace YuGiOhScraper
 {
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
     public class ModuleAttribute : Attribute
     {
 

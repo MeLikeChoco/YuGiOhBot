@@ -31,9 +31,9 @@ namespace YuGiOhScraper.Modules
         protected override Task DoBeforeSaveToDb(IEnumerable<Card> cards, IEnumerable<BoosterPack> boosterPacks, IEnumerable<Error> errors)
         {
 
-            cards.FirstOrDefault(card => card.Name.Contains("obelisk", StringComparison.OrdinalIgnoreCase) && card.Name.Contains("tormentor", StringComparison.OrdinalIgnoreCase)).DoIf(card => card != null, card => card.Passcode = "10000000");
-            cards.FirstOrDefault(card => card.Name.Contains("slifer", StringComparison.OrdinalIgnoreCase) && card.Name.Contains("sky dragon", StringComparison.OrdinalIgnoreCase)).DoIf(card => card != null, card => card.Passcode = "10000010");
-            cards.FirstOrDefault(card => card.Name.Contains("ra", StringComparison.OrdinalIgnoreCase) && card.Name.Contains("winged dragon", StringComparison.OrdinalIgnoreCase)).DoIf(card => card != null, card => card.Passcode = "10000020");
+            cards.FirstOrDefault(card => card.Name.Contains("obelisk", StringComparison.OrdinalIgnoreCase) && card.Name.Contains("tormentor", StringComparison.OrdinalIgnoreCase))?.DoIf(card => card != null, card => card.Passcode = "10000000");
+            cards.FirstOrDefault(card => card.Name == "The Winged Dragon of Ra")?.DoIf(card => card != null, card => card.Passcode = "10000010"); //too many card names contain "Winged Dragon of Ra", i have to use the actual name
+            cards.FirstOrDefault(card => card.Name.Contains("slifer", StringComparison.OrdinalIgnoreCase) && card.Name.Contains("sky dragon", StringComparison.OrdinalIgnoreCase))?.DoIf(card => card != null, card => card.Passcode = "10000020");
 
             return Task.CompletedTask;
 
@@ -86,7 +86,7 @@ namespace YuGiOhScraper.Modules
                 boosterPackLinks = errors.ToDictionary(error => error.Name, error => error.Url);
                 //var cards = GetCards(httpClient, links.ToList().GetRange(0, 100).ToDictionary(kv => kv.Key, kv => kv.Value));
 
-                if (boosterPackLinks.Any() && !Settings.IsSubProcess)
+                if (boosterPackLinks.Count > 0 && !Settings.IsSubProcess)
                 {
 
                     Console.WriteLine($"There were {errors.Count()} errors. Retry? (y/n): ");
@@ -96,7 +96,7 @@ namespace YuGiOhScraper.Modules
                 else
                     Console.WriteLine("Finished getting booster packs.");
 
-            } while (boosterPackLinks.Any() && retry == "y" && !Settings.IsSubProcess);
+            } while (boosterPackLinks.Count > 0 && retry == "y" && !Settings.IsSubProcess);
 
             return boosterPacks;
 
@@ -116,7 +116,8 @@ namespace YuGiOhScraper.Modules
                 try
                 {
 
-                    var boosterPack = new BoosterPackParser(kv.Key, $"{ScraperConstants.YuGiPediaUrl}{ScraperConstants.MediaWikiParseUrl}{kv.Value}").Parse(HttpClient);
+                    var boosterPack = new BoosterPackParser(kv.Key, $"{ScraperConstants.YuGiPediaUrl}{ScraperConstants.MediaWikiParseIdUrl}{kv.Value}").Parse(HttpClient);
+                    boosterPack.Url = $"{ScraperConstants.YuGiPediaUrl}?curid={kv.Value}";
 
                     #region OCG TCG
                     boosterPack.TcgExists = TcgBoosters.ContainsKey(boosterPack.Name);
@@ -171,7 +172,7 @@ namespace YuGiOhScraper.Modules
                 cardLinks = errors.ToDictionary(error => error.Name, error => error.Url);
                 //var cards = GetCards(httpClient, links.ToList().GetRange(0, 100).ToDictionary(kv => kv.Key, kv => kv.Value));
 
-                if (cardLinks.Any() && !Settings.IsSubProcess)
+                if (cardLinks.Count > 0 && !Settings.IsSubProcess)
                 {
 
                     Console.WriteLine($"There were {errors.Count()} errors. Retry? (y/n): ");
@@ -181,7 +182,7 @@ namespace YuGiOhScraper.Modules
                 else
                     Console.WriteLine("Finished getting cards.");
 
-            } while (cardLinks.Any() && retry == "y" && !Settings.IsSubProcess);
+            } while (cardLinks.Count > 0 && retry == "y" && !Settings.IsSubProcess);
 
             return cards;
 
@@ -201,7 +202,7 @@ namespace YuGiOhScraper.Modules
                 try
                 {
 
-                    var card = new CardParser(kv.Key, $"{ScraperConstants.YuGiPediaUrl}{ScraperConstants.MediaWikiParseUrl}{kv.Value}").Parse(HttpClient);
+                    var card = new CardParser(kv.Key, $"{ScraperConstants.YuGiPediaUrl}{ScraperConstants.MediaWikiParseIdUrl}{kv.Value}").Parse(HttpClient);
                     card.Url = $"{ScraperConstants.YuGiPediaUrl}?curid={kv.Value}";
 
                     #region OCG TCG
@@ -223,7 +224,7 @@ namespace YuGiOhScraper.Modules
                         Url = kv.Value,
                         Type = "Card"
 
-                    }.DoIf(error => exception.InnerException != null, error =>
+                    }.DoIf(_ => exception.InnerException != null, error =>
                     {
 
                         error.InnerException = $"{exception.InnerException.Message}\n{exception.InnerException.StackTrace}";

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Discord;
 
 namespace YuGiOhV2.Core
 {
@@ -18,6 +19,7 @@ namespace YuGiOhV2.Core
 
             AltConsole.Initialize();
             AltConsole.Write("Info", "Entry Point", "Welcome to YuGiOh Bot V2");
+            AltConsole.Write("Info", "Entry Point", $"Using Discord.NET v{DiscordConfig.Version}");
 
             try
             {

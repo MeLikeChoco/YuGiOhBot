@@ -138,7 +138,7 @@ namespace YuGiOhV2.Services.Microservices
 
                 }
 
-                var message = await (await client.GetUser(Config.Instance.OwnerId).GetOrCreateDMChannelAsync()).SendMessageAsync(embed: FancifyErrorList(errors));
+                var message = await (await client.GetUser(Config.Instance.OwnerId).CreateDMChannelAsync()).SendMessageAsync(embed: FancifyErrorList(errors));
                 var tks = new CancellationTokenSource();
 
                 #region CheckReaction

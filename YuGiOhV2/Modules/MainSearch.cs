@@ -89,7 +89,7 @@ namespace YuGiOhV2.Modules
                 Author = author,
                 Color = Rand.NextColor(),
                 Pages = GenDescriptions(cards),
-                Options = _aOptions
+                Options = PagedOptions
 
             };
 

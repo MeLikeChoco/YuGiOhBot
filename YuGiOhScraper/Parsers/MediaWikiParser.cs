@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using YuGiOhScraper.Entities;
 
 namespace YuGiOhScraper.Parsers
 {
@@ -15,7 +16,7 @@ namespace YuGiOhScraper.Parsers
         protected string Name { get; set; }
         protected string Url { get; set; }
 
-        public MediaWikiParser(string name, string url)
+        protected MediaWikiParser(string name, string url)
         {
 
             Name = name;
@@ -40,10 +41,10 @@ namespace YuGiOhScraper.Parsers
 
         }
 
-        protected string GetHtml(HttpClient httpClient)
+        protected string GetHtml(HttpClient httpClient, string url)
         {
 
-            var json = httpClient.GetStringAsync(Url).Result;
+            var json = httpClient.GetStringAsync(url).Result;
             var jObject = JObject.Parse(json);
 
             try
@@ -52,16 +53,25 @@ namespace YuGiOhScraper.Parsers
             }
             catch (Exception)
             {
-                return jObject["parse"]["text"].Value<string>("*");
+                if (jObject.ContainsKey("parse"))
+                    return jObject["parse"]["text"].Value<string>("*");
+                else
+                    throw new PageDoesNotExistException();
             }
 
         }
 
+        protected string GetHtml(HttpClient httpClient)
+            => GetHtml(httpClient, Url);
+
         protected IHtmlDocument GetDom(string html)
             => ScraperConstants.HtmlParser.ParseDocument(html);
 
+        protected IHtmlDocument GetDom(HttpClient httpClient, string url)
+            => ScraperConstants.HtmlParser.ParseDocument(GetHtml(httpClient, url));
+
         protected IHtmlDocument GetDom(HttpClient httpClient)
-            => ScraperConstants.HtmlParser.ParseDocument(GetHtml(httpClient));
+            => GetDom(httpClient, Url);
 
         public abstract T Parse(HttpClient client);
 
