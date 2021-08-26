@@ -224,7 +224,7 @@ namespace YuGiOhV2.Modules
 
         [Command("open")]
         [RequireChannel(410082506935894016)]
-        public Task OpenCommand([Remainder] string input)
+        public async Task OpenCommand([Remainder] string input)
         {
 
             try
@@ -280,16 +280,20 @@ namespace YuGiOhV2.Modules
 
                     builder.Append("```");
 
-                    return ReplyAsync(builder.ToString());
+                    await ReplyAsync(builder.ToString());
+
+                    return;
 
                 }
                 else
-                    return NoResultError("booster packs", input);
+                    await NoResultError("booster packs", input);
 
             }
             catch
             {
-                return ReplyAsync("There was an error opening the booster pack. This is most likely due to unknown ratios or the pack being unique (ex. gold rare only pack). This problem is temporary and will be fixed soon™.");
+                await ReplyAsync("There was an error opening the booster pack. This is most likely due to unknown ratios or the pack being unique (ex. gold rare only pack). This problem is temporary and will be fixed soon™.");
+
+                return;
             }
 
         }

@@ -30,7 +30,7 @@ namespace YuGiOhV2.Modules
         public async Task TestCommand()
         {
 
-            await Context.Client.Shards.FirstOrDefault().StopAsync();
+            Environment.Exit(0);
 
         }
 

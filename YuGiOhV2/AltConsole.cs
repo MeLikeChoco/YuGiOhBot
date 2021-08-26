@@ -33,7 +33,7 @@ namespace YuGiOhV2
         {
 
             Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write($"{DateTime.Now.ToString()} ");
+            Console.Write($"{DateTime.Now} ");
             Console.ForegroundColor = ConsoleColor.Red;
             Console.Write($"[{firstBracket}]");
             Console.ForegroundColor = ConsoleColor.Green;
@@ -65,7 +65,7 @@ namespace YuGiOhV2
         {
 
             Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write($"{DateTime.Now.ToString()} ");
+            Console.Write($"{DateTime.Now} ");
             Console.ForegroundColor = ConsoleColor.Red;
             Console.Write($"[{firstBracket}]");
             Console.ForegroundColor = ConsoleColor.Green;

@@ -142,7 +142,7 @@ namespace YuGiOhV2.Services.Microservices
                 var tks = new CancellationTokenSource();
 
                 #region CheckReaction
-                Task checkReaction(Cacheable<IUserMessage, ulong> messageCache, ISocketMessageChannel channel, SocketReaction reaction)
+                Task CheckReaction(Cacheable<IUserMessage, ulong> messageCache, Cacheable<IMessageChannel, ulong> _, SocketReaction reaction)
                 {
 
                     if (messageCache.Id == message.Id)
@@ -166,12 +166,12 @@ namespace YuGiOhV2.Services.Microservices
                 }
                 #endregion CheckReaction
 
-                client.ReactionAdded += checkReaction;
+                client.ReactionAdded += CheckReaction;
 
                 //this is so stupid...
                 try { await Task.Delay(-1, tks.Token); } catch { }
 
-                client.ReactionAdded -= checkReaction;
+                client.ReactionAdded -= CheckReaction;
 
             } while (shouldRedo);
 

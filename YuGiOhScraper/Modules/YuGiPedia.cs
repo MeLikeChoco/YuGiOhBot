@@ -202,7 +202,7 @@ namespace YuGiOhScraper.Modules
                 try
                 {
 
-                    var card = new CardParser(kv.Key, $"{ScraperConstants.YuGiPediaUrl}{ScraperConstants.MediaWikiParseIdUrl}{kv.Value}").Parse(HttpClient);
+                    var card = new CardParser(kv.Key, ScraperConstants.YuGiPediaUrl + ScraperConstants.MediaWikiParseIdUrl + kv.Value).Parse(HttpClient);
                     card.Url = $"{ScraperConstants.YuGiPediaUrl}?curid={kv.Value}";
 
                     #region OCG TCG

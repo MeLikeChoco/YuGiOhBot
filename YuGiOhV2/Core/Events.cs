@@ -38,6 +38,7 @@ namespace YuGiOhV2.Core
         private int _recommendedShards, _currentShards;
         private bool _isInitialized;
         private readonly ConcurrentDictionary<DiscordSocketClient, Timer> _reconnectTimers;
+        private readonly List<Reconnector<DiscordSocketClient>> _reconnectors;
 
         private static DiscordSocketConfig _clientConfig;
 
@@ -72,7 +73,7 @@ namespace YuGiOhV2.Core
 
         }
 
-        private static readonly CommandServiceConfig CommandConfig = new CommandServiceConfig()
+        private static readonly CommandServiceConfig CommandConfig = new()
         {
 
             DefaultRunMode = RunMode.Async,
@@ -111,6 +112,7 @@ namespace YuGiOhV2.Core
             _interactive = new InteractiveService(_client);
             _config = Config.Instance;
             _reconnectTimers = new ConcurrentDictionary<DiscordSocketClient, Timer>();
+            _reconnectors = new List<Reconnector<DiscordSocketClient>>();
             //_serviceObserver = new ServiceObserver();
 
             RegisterLogging();
@@ -134,7 +136,7 @@ namespace YuGiOhV2.Core
 
         }
 
-        private async Task ReadyOtherStuff(DiscordSocketClient client)
+        private async Task ReadyOtherStuff(DiscordSocketClient _)
         {
 
             if (Interlocked.Increment(ref _currentShards) == _recommendedShards)
@@ -146,7 +148,8 @@ namespace YuGiOhV2.Core
                 _client.ShardDisconnected -= Whoopsies;
                 _currentShards = 0;
 
-                _client.ShardDisconnected += GetBackToWork;
+                foreach (var client in _client.Shards)
+                    _reconnectors.Add(new Reconnector<DiscordSocketClient>(client));
 
                 await youAintDoneYet;
 
@@ -171,7 +174,7 @@ namespace YuGiOhV2.Core
 
             });
 
-            _reconnectTimers.TryAdd(shard, new Timer((state) =>
+            _reconnectTimers.TryAdd(shard, new Timer(async (state) =>
             {
 
                 var shard = state as DiscordSocketClient;
@@ -181,7 +184,7 @@ namespace YuGiOhV2.Core
 
                     Print($"Shard {shard.ShardId} failed to reconnect. Reconnecting forcefully...");
 
-                    shard.StartAsync();
+                    await shard.StartAsync();
 
                 }
 

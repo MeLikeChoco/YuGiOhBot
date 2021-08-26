@@ -100,8 +100,9 @@ namespace YuGiOhV2.Modules
             var cts = new CancellationTokenSource();
             var token = cts.Token;
 
+            #region CheckMessage
             //cancel if pagination is deleted
-            Task CheckMessage(Cacheable<IMessage, ulong> cache, ISocketMessageChannel channel)
+            Task CheckMessage(Cacheable<IMessage, ulong> cache, Cacheable<IMessageChannel, ulong> _)
             {
 
                 if (cache.Id == display.Id)
@@ -112,6 +113,7 @@ namespace YuGiOhV2.Modules
                 return Task.CompletedTask;
 
             }
+            #endregion CheckMessage
 
             Context.Client.MessageDeleted += CheckMessage;
 
