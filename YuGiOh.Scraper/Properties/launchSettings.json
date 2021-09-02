@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "YuGiOh.Scraper": {
+      "commandName": "Project",
+      "commandLineArgs": "--cards 5000 --boosters 0",
+      "hotReloadEnabled": false
+    }
+  }
+}

@@ -15,7 +15,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "YuGiOh.Scraper", "YuGiOh.Sc
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "YuGiOh.Bot.Observer", "YuGiOh.Bot.Observer\YuGiOh.Bot.Observer.csproj", "{547F97EF-FD33-48BB-ABBF-C8221D797A11}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YuGiOh.Database", "YuGiOh.Database\YuGiOh.Database.csproj", "{1B0161C3-7CB5-4DE6-AB77-64067169CADA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "YuGiOh.Database", "YuGiOh.Database\YuGiOh.Database.csproj", "{1B0161C3-7CB5-4DE6-AB77-64067169CADA}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "YuGiOh.Common", "YuGiOh.Common\YuGiOh.Common.csproj", "{0F1B6EF9-BB8B-4971-8912-DBBA98C63595}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -51,6 +53,10 @@ Global
 		{1B0161C3-7CB5-4DE6-AB77-64067169CADA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1B0161C3-7CB5-4DE6-AB77-64067169CADA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1B0161C3-7CB5-4DE6-AB77-64067169CADA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0F1B6EF9-BB8B-4971-8912-DBBA98C63595}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0F1B6EF9-BB8B-4971-8912-DBBA98C63595}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0F1B6EF9-BB8B-4971-8912-DBBA98C63595}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0F1B6EF9-BB8B-4971-8912-DBBA98C63595}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

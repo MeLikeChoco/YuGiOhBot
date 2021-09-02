@@ -1,0 +1,28 @@
+﻿{
+
+  "Database": {
+
+    "Host": "",
+    "Port": 0,
+    "Username": "",
+    "Password": ""
+
+  },
+  "Directories": {
+
+    "SqlDirectory": "Sql",
+    "BackupsDirectory": "backups"
+
+  },
+  "ProcessArgs": {
+
+    "PgDump": "-U %s -w -Fc yugioh",
+    "Scraper": "%s"
+
+  },
+  "ScraperDllName": "Scraper/YuGiOhScraper.dll",
+  "ScraperInterval": "7",
+  "ShouldRunScraper": false,
+  "ShouldInstantStart": true
+
+}

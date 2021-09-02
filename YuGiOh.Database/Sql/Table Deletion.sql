@@ -1,0 +1,9 @@
+﻿drop table card_to_archetypes;
+drop table card_to_supports;
+drop table card_to_antisupports;
+drop table archetypes;
+drop table supports;
+drop table antisupports;
+drop table cards;
+drop table errors;
+drop table boosterpacks;
