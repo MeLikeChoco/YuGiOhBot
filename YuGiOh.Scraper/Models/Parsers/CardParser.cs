@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using AngleSharp.Dom;
 using AngleSharp.Html.Parser;
 using Newtonsoft.Json.Linq;
+using YuGiOh.Common.Extensions;
 using YuGiOh.Common.Models.YuGiOh;
 using YuGiOh.Scraper.Constants;
 using YuGiOh.Scraper.Extensions;

@@ -54,9 +54,18 @@ namespace YuGiOh.Scraper
 
             ocgLinks = await GetLinks(ConstantString.MediaWikiOcgPacks);
 
+            Log($"Processing boosterpacks.");
+
             var boosterProcResponse = ProcessBoosters(tcgLinks, ocgLinks);
 
             Log($"Processed {boosterProcResponse.Count} booster packs. There were {boosterProcResponse.Errors.Count} errors.");
+            Log($"Processing errors.");
+
+            var errors = cardProcResponse.Errors.Concat(boosterProcResponse.Errors);
+
+            ProcessErrors(errors);
+
+            Log($"Processed {errors.Count()} errors.");
 
         }
 
@@ -133,11 +142,11 @@ namespace YuGiOh.Scraper
 
                         var current = Interlocked.Increment(ref count);
 
-                        var display = $"Cards processed: {current}/{size} ({current / (double)size * 100:#.##}%)";
+                        var display = $"Cards processed: {current}/{size} ({current / (double)size * 100:0.00}%)";
 
                         if (current % 1000 == 0 && Options.IsSubProc)
                             Log(display);
-                        else if (!Options.IsSubProc)
+                        else
                             InlineLog(display);
 
                     }
@@ -229,11 +238,11 @@ namespace YuGiOh.Scraper
 
                         var current = Interlocked.Increment(ref count);
 
-                        var display = $"Booster packs processed: {current}/{size} ({Math.Truncate(current / (double)size * 100)}%)";
+                        var display = $"Booster packs processed: {current}/{size} ({current / (double)size * 100:0.00}%)";
 
                         if (current % 1000 == 0 && Options.IsSubProc)
                             Log(display);
-                        else if (!Options.IsSubProc)
+                        else
                             InlineLog(display);
 
                     }
@@ -249,6 +258,59 @@ namespace YuGiOh.Scraper
                 Errors = errors
 
             };
+
+        }
+
+        public void ProcessErrors(IEnumerable<Error> errors)
+        {
+
+            var repo = new YuGiOhRepository(this);
+            var semaphore = new SemaphoreSlim(ConstantValue.ProcessorCount);
+            var size = errors.Count();
+            var tasks = new Task[size];
+            var count = 0;
+            var countLock = new object();
+
+            for (var i = 0; i < size; i++)
+            {
+
+                var index = i;
+                tasks[index] = Task.Run(async () =>
+                {
+
+                    await semaphore.WaitAsync();
+
+                    try
+                    {
+
+                        await repo.InsertErrorAsync(errors.ElementAt(index));
+
+                        lock (countLock)
+                        {
+
+                            var current = Interlocked.Increment(ref count);
+
+                            var display = $"Cards processed: {current}/{size} ({current / (double)size * 100:0.00}%)";
+
+                            if (current % 1000 == 0 && Options.IsSubProc)
+                                Log(display);
+                            else
+                                InlineLog(display);
+
+                        }
+
+                    }
+                    catch (Exception) { }
+                    finally
+                    {
+                        semaphore.Release();
+                    }
+
+                });
+
+            }
+
+            Task.WaitAll(tasks);
 
         }
 

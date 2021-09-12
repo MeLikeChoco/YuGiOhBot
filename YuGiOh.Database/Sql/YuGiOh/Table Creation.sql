@@ -73,7 +73,7 @@ create table boosterpacks (
 );
 
 create table errors (
-	id integer primary key,
+	id serial primary key,
 	name varchar,
 	message varchar,
 	stacktrace text,

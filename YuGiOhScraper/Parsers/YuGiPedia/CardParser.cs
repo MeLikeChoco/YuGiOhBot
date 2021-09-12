@@ -370,11 +370,11 @@ namespace YuGiOhScraper.Parsers.YuGiPedia
             if (triviaUrlElement != null)
             {
 
-                var title = triviaUrlElement.FirstElementChild.GetAttribute("title");
+                var title = triviaUrlElement.FirstElementChild.GetAttribute("href");
 
                 //lets hope konami never releases a card called "page does not exist"
                 //we could also check if href ends with "redlink=1" if checking by title is problematic
-                if (!title.ContainsIgnoreCase("page does not exist"))
+                if (!title.ContainsIgnoreCase("redlink=1"))
                 {
 
                     var triviaUrl = ScraperConstants.YuGiPediaUrl + ScraperConstants.MediaWikiParseNameUrl + Uri.EscapeDataString(title);

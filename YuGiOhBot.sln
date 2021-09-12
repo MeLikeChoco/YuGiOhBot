@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31612.314
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "YuGiOhV2", "YuGiOhV2\YuGiOhV2.csproj", "{00240C90-BFB0-423A-8F36-25BD5C4D6059}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "YuGiOh.Bot", "YuGiOhV2\YuGiOh.Bot.csproj", "{00240C90-BFB0-423A-8F36-25BD5C4D6059}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "YuGiOhScraper", "YuGiOhScraper\YuGiOhScraper.csproj", "{FFAC5E2D-F2A1-4FF8-B72B-35EBD24D6833}"
 EndProject

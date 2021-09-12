@@ -14,6 +14,10 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using YuGiOh.Bot.Models;
+using YuGiOh.Bot.Services;
+using YuGiOh.Bot.Services.Interfaces;
+using YuGiOh.Common.Interfaces;
 using YuGiOhV2.Models;
 using YuGiOhV2.Models.Services;
 using YuGiOhV2.Services;
@@ -25,7 +29,7 @@ namespace YuGiOhV2.Core
 
         private DiscordShardedClient _client;
         private CommandService _commands;
-        private Database _database;
+        private Services.Database _database;
         private Stats _stats;
         private Chat _chat;
         private readonly Cache _cache;
@@ -38,7 +42,7 @@ namespace YuGiOhV2.Core
         private int _recommendedShards, _currentShards;
         private bool _isInitialized;
         private readonly ConcurrentDictionary<DiscordSocketClient, Timer> _reconnectTimers;
-        private readonly List<Reconnector<DiscordSocketClient>> _reconnectors;
+        //private readonly List<Reconnector<DiscordSocketClient>> _reconnectors;
 
         private static DiscordSocketConfig _clientConfig;
 
@@ -112,7 +116,7 @@ namespace YuGiOhV2.Core
             _interactive = new InteractiveService(_client);
             _config = Config.Instance;
             _reconnectTimers = new ConcurrentDictionary<DiscordSocketClient, Timer>();
-            _reconnectors = new List<Reconnector<DiscordSocketClient>>();
+            //_reconnectors = new List<Reconnector<DiscordSocketClient>>();
             //_serviceObserver = new ServiceObserver();
 
             RegisterLogging();
@@ -148,8 +152,8 @@ namespace YuGiOhV2.Core
                 _client.ShardDisconnected -= Whoopsies;
                 _currentShards = 0;
 
-                foreach (var client in _client.Shards)
-                    _reconnectors.Add(new Reconnector<DiscordSocketClient>(client));
+                //foreach (var client in _client.Shards)
+                //    _reconnectors.Add(new Reconnector<DiscordSocketClient>(client));
 
                 await youAintDoneYet;
 
@@ -277,7 +281,7 @@ namespace YuGiOhV2.Core
         {
 
             Print("Loading database...");
-            _database = new Database();
+            _database = new Services.Database();
             await _database.Initialize(_client.Guilds);
             Print("Finished loading database.");
 
@@ -296,6 +300,9 @@ namespace YuGiOhV2.Core
         {
 
             _services = new ServiceCollection()
+                .AddSingleton(Config.Instance)
+                .AddTransient<IYuGiOhRepositoryConfiguration, RepoConfig>()
+                .AddTransient<IYuGiOhDbService, YuGiOhDbService>()
                 .AddSingleton(_client)
                 .AddSingleton(_cache)
                 .AddSingleton(_database)

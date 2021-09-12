@@ -13,6 +13,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using YuGiOhV2.Models;
 using YuGiOhV2.Models.Serializers;
 
 namespace YuGiOhV2.Services
@@ -39,7 +40,7 @@ namespace YuGiOhV2.Services
             IsReady = false;
             _armedTimer = false;
             _id = client.CurrentUser.Id;
-            _discordBotListApi = new AuthDiscordBotListApi(_id, File.ReadAllText("Files/Bot List Tokens/Blue.txt"));
+            _discordBotListApi = new AuthDiscordBotListApi(_id, Config.Instance.Tokens.BotList.Blue);
             _calculateStats = new Timer(CalculateStats, client, TimeSpan.FromSeconds(300), TimeSpan.FromHours(1));
 
         }
@@ -102,7 +103,7 @@ namespace YuGiOhV2.Services
 
                     Log($"Sending shard {shard.ShardId} stats to black discord bots...");
                     //var response = await _web.Post($"https://bots.discord.pw/api/bots/{_id}/stats", $"{{\"server_count\": {GuildCount}}}", await File.ReadAllTextAsync("Files/Bot List Tokens/Black.txt"));
-                    var response = await _web.Post(string.Format(Constants.BlackDiscordBotUrl, _id), payload, authorization: await File.ReadAllTextAsync("Files/Bot List Tokens/Black.txt"));
+                    var response = await _web.Post(string.Format(Constants.BlackDiscordBotUrl, _id), payload, authorization: Config.Instance.Tokens.BotList.Black);
                     Log($"Status: {response.StatusCode}");
 
                 }

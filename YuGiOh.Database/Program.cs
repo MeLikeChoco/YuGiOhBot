@@ -37,11 +37,14 @@ async void DumpDatabaseAndScrape(object _)
     var config = await Config.GetConfig();
 
     await BackupDatabase(config);
-    await RecreateDatabase(config);
+    //await RecreateDatabase(config);
     await StartScraper(config);
-    await CreateIndexes(config);
+    //await CreateIndexes(config);
 
-    await File.WriteAllTextAsync("time.txt", DateTime.Now.ToString());
+    var scrapeDate = DateTime.Now;
+
+    await File.WriteAllTextAsync("time.txt", scrapeDate.ToString());
+    Logger.Info($"Finished scraping at {scrapeDate}");
 
 }
 

@@ -14,7 +14,7 @@ namespace YuGiOhV2.Modules
     public class Configuration : CustomBase
     {
 
-        public Database Database { get; set; }
+        public Services.Database Database { get; set; }
 
         private Setting _setting;
 

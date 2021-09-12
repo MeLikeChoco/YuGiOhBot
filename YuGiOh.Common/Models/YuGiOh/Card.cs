@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
@@ -12,6 +13,7 @@ namespace YuGiOh.Common.Models.YuGiOh
     public class Card
     {
 
+        [Key, DatabaseGenerated(DatabaseGeneratedOption.None)]
         public int Id { get; set; }
 
         public string Name { get; set; }
@@ -26,10 +28,16 @@ namespace YuGiOh.Common.Models.YuGiOh
 
         [Ignore]
         public List<string> Archetypes { get; set; }
+        [Column("archetypes"), DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        internal int ArchetypesId { get; set; }
         [Ignore]
         public List<string> Supports { get; set; }
+        [Column("supports"), DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        internal int SupportsId { get; set; }
         [Ignore]
         public List<string> AntiSupports { get; set; }
+        [Column("antisupports"), DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        internal int AntiSupportsId { get; set; }
 
         public int Link { get; set; }
         public string LinkArrows { get; set; }

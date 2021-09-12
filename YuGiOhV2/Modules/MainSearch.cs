@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using YuGiOh.Bot.Services.Interfaces;
 using YuGiOhV2.Extensions;
 using YuGiOhV2.Models;
 using YuGiOhV2.Models.Criterion;
@@ -21,6 +22,7 @@ namespace YuGiOhV2.Modules
 
         public CommandService CommandService { get; set; }
         public IServiceProvider ServiceProvider { get; set; }
+        public IYuGiOhDbService YuGiOhDbService { get; set; }
 
         [Command("search"), Alias("s")]
         [Summary("Returns results based on your input! No proper capitalization needed!")]
@@ -42,13 +44,15 @@ namespace YuGiOhV2.Modules
 
         [Command("archetype"), Alias("a")]
         [Summary("Returns cards in entered archetype! No proper capitalization needed!")]
-        public Task ArchetypeCommand([Remainder]string input)
+        public async Task ArchetypeCommand([Remainder]string input)
         {
 
-            if (Cache.Archetypes.TryGetValue(input, out var cards))
-                return RecieveInput(cards.Count, cards);
+            var cards = await YuGiOhDbService.GetCardsFromArchetypeAsync(input);
+
+            if (cards.Any())
+                await RecieveInput(cards.Count(), cards);
             else
-                return NoResultError("archetypes", input);
+                await NoResultError("archetypes", input);
 
         }
 

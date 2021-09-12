@@ -19,13 +19,10 @@
     <None Update="config.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Sql\Index Creation.sql">
+    <None Update="Sql\YuGiOh\Index Creation.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Sql\Table Creation.sql">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Sql\Table Deletion.sql">
+    <None Update="Sql\YuGiOh\Table Creation.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

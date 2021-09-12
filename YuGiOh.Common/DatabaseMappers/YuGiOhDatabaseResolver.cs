@@ -11,7 +11,7 @@ using Dommel;
 
 namespace YuGiOh.Common.DatabaseMappers
 {
-    public class YuGiOhDatabaseResolver : Convention, IColumnNameResolver, IKeyPropertyResolver
+    public class YuGiOhDatabaseResolver : Convention, IColumnNameResolver
     {
 
         public YuGiOhDatabaseResolver()
@@ -24,15 +24,6 @@ namespace YuGiOh.Common.DatabaseMappers
 
         public string ResolveColumnName(PropertyInfo propertyInfo)
             => propertyInfo.Name.ToLower();
-
-        public ColumnPropertyInfo[] ResolveKeyProperties(Type type)
-        {
-
-            var idProp = type.GetProperties().First(propInfo => propInfo.Name.Equals("id", StringComparison.OrdinalIgnoreCase));
-
-            return new ColumnPropertyInfo[] { new ColumnPropertyInfo(idProp, DatabaseGeneratedOption.None) };
-
-        }
 
     }
 }

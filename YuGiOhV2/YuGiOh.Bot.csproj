@@ -30,6 +30,7 @@
     <PackageReference Include="Dapper" Version="2.0.90" />
     <PackageReference Include="Dapper.Contrib" Version="2.0.78" />
     <PackageReference Include="DeepCloner" Version="0.10.2" />
+    <PackageReference Include="Discord.Addons.Interactive" Version="2.0.0" />
     <PackageReference Include="Discord.Net" Version="3.0.0-dev-20210601.2" />
     <PackageReference Include="Discord.Net.Providers.WS4Net" Version="3.0.0-dev-20210601.2" />
     <PackageReference Include="DiscordBotsList.Api.Adapter.Discord.Net" Version="1.4.5" />
@@ -40,7 +41,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Discord.Addons.Interactive\Discord.Addons.Interactive.csproj" />
+    <ProjectReference Include="..\YuGiOh.Common\YuGiOh.Common.csproj" />
   </ItemGroup>
 
   <ItemGroup>

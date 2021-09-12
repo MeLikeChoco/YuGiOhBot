@@ -13,6 +13,7 @@ namespace YuGiOh.Common.Models.YuGiOh
     public class BoosterPack
     {
 
+        [Key, DatabaseGenerated(DatabaseGeneratedOption.None)]
         public int Id { get; set; }
         public string Name { get; set; }
         [Ignore]
