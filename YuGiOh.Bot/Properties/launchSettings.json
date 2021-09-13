@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "YuGiOh.Bot": {
+      "commandName": "Project",
+      "commandLineArgs": "test 1"
+    }
+  }
+}
