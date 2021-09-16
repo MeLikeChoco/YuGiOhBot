@@ -59,7 +59,7 @@ namespace YuGiOh.Bot.Core
                         //AlwaysDownloadUsers = true,
                         ConnectionTimeout = 60000, //had to include this as my bot got bigger and there were more guilds to connect to per shard
                         LogLevel = LogSeverity.Verbose,
-                        MessageCacheSize = 1000,
+                        MessageCacheSize = 30,
                         TotalShards = 1,
 
                     };
