@@ -1,52 +1,37 @@
-﻿using AngleSharp;
-using Dapper;
-using Dapper.Contrib.Extensions;
-using Discord;
-using Microsoft.Data.Sqlite;
-using Newtonsoft.Json.Linq;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Dapper;
+using Discord;
+using Microsoft.Data.Sqlite;
+using Newtonsoft.Json.Linq;
 using YuGiOh.Bot.Extensions;
 using YuGiOh.Bot.Models;
 using YuGiOh.Bot.Models.BoosterPacks;
 using YuGiOh.Bot.Models.Cards;
-using YuGiOh.Bot.Models.Exceptions;
 
 namespace YuGiOh.Bot.Services
 {
     public class Cache
     {
 
-        public Dictionary<string, CardParser> Parsers { get; private set; }
         public List<Card> Cards { get; private set; }
         public Dictionary<string, Card> NameToCard { get; private set; }
-        public Dictionary<string, EmbedBuilder> Embeds { get; private set; }
         public Dictionary<string, BoosterPack> BoosterPacks { get; private set; }
-        public string[] ValidBoosterPacks { get; set; }
-        public Dictionary<string, HashSet<string>> Archetypes { get; private set; }
-        public Dictionary<string, HashSet<string>> Supports { get; private set; }
-        public Dictionary<string, HashSet<string>> AntiSupports { get; private set; }
-        public Dictionary<string, string> Images { get; private set; }
-        public Dictionary<string, string> LowerToUpper { get; private set; }
-        public HashSet<string> Uppercase { get; private set; }
         public HashSet<string> Lowercase { get; private set; }
-        public ConcurrentDictionary<ulong, object> GuessInProgress { get; private set; }
-        public Dictionary<string, string> NameToPasscode { get; private set; }
-        public Dictionary<string, string> PasscodeToName { get; private set; }
+        public ConcurrentDictionary<ulong, object> GuessInProgress { get; }
         public Banlist Banlist { get; private set; }
         public int FYeahYgoCardArtPosts { get; private set; }
         public string TumblrKey { get; private set; }
         public string BitlyKey { get; private set; }
 
         private static readonly string DbString = Constants.DatabaseString;
-        private static readonly ParallelOptions POptions = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount };
-        private static readonly SqliteConnection Db = new SqliteConnection(DbString);
+        private static readonly ParallelOptions POptions = new() { MaxDegreeOfParallelism = Environment.ProcessorCount };
+        private static readonly SqliteConnection Db = new(DbString);
         private static readonly StringComparer IgnoreCase = StringComparer.OrdinalIgnoreCase;
 
         public Cache()
@@ -103,10 +88,6 @@ namespace YuGiOh.Bot.Services
             var total = parsers.Count();
             var tempObjects = new ConcurrentDictionary<string, Card>();
             var tempDict = new ConcurrentDictionary<string, EmbedBuilder>();
-            var tempArchetypes = new ConcurrentDictionary<string, ConcurrentDictionary<string, object>>();
-            var tempSupports = new ConcurrentDictionary<string, ConcurrentDictionary<string, object>>();
-            var tempAntiSupports = new ConcurrentDictionary<string, ConcurrentDictionary<string, object>>();
-            Archetypes = new Dictionary<string, HashSet<string>>(IgnoreCase);
 
             Log("Generating them fancy embed messages...");
 
@@ -122,45 +103,6 @@ namespace YuGiOh.Bot.Services
                 tempObjects[name] = card;
                 tempDict[name] = embed;
 
-                if (card.Archetypes?.Any() == true)
-                {
-
-                    foreach (var archetype in card.Archetypes)
-                    {
-
-                        var set = tempArchetypes.GetOrAdd(archetype, new ConcurrentDictionary<string, object>());
-                        set[name] = null;
-
-                    }
-
-                }
-
-                if (card.Supports?.Any() == true)
-                {
-
-                    foreach (var support in card.Supports)
-                    {
-
-                        var set = tempSupports.GetOrAdd(support, new ConcurrentDictionary<string, object>());
-                        set[name] = null;
-
-                    }
-
-                }
-
-                if (card.AntiSupports?.Any() == true)
-                {
-
-                    foreach (var antiSupport in card.AntiSupports)
-                    {
-
-                        var set = tempAntiSupports.GetOrAdd(antiSupport, new ConcurrentDictionary<string, object>());
-                        set[name] = null;
-
-                    }
-
-                }
-
                 var current = Interlocked.Increment(ref counter);
 
                 lock (monitor)
@@ -175,13 +117,9 @@ namespace YuGiOh.Bot.Services
 
             });
 
-            Parsers = new Dictionary<string, CardParser>(parsers.ToDictionary(CardParser.GetCardName, parser => parser), IgnoreCase);
             NameToCard = new Dictionary<string, Card>(tempObjects, IgnoreCase);
             Cards = NameToCard.Select(kv => kv.Value).ToList();
-            Embeds = new Dictionary<string, EmbedBuilder>(tempDict, IgnoreCase);
-            Archetypes = new Dictionary<string, HashSet<string>>(tempArchetypes.ToDictionary(kv => kv.Key, kv => kv.Value.Keys.ToHashSet()), IgnoreCase);
-            Supports = new Dictionary<string, HashSet<string>>(tempSupports.GroupBy(kv => kv.Key.Trim(), IgnoreCase).ToDictionary(group => group.Key, group => group.SelectMany(kv => kv.Value.Keys).ToHashSet()), IgnoreCase);
-            AntiSupports = new Dictionary<string, HashSet<string>>(tempAntiSupports.GroupBy(kv => kv.Key.Trim(), IgnoreCase).ToDictionary(group => group.Key, group => group.SelectMany(kv => kv.Value.Keys).ToHashSet()), IgnoreCase);
+            //Embeds = new Dictionary<string, EmbedBuilder>(tempDict, IgnoreCase);
 
             Log("Finished generating embeds.");
 
@@ -193,12 +131,7 @@ namespace YuGiOh.Bot.Services
             Log("Building cache...");
 
             Task.WaitAll(
-                Task.Run(() => Images = new Dictionary<string, string>(parsers.ToDictionary(CardParser.GetCardName, parser => parser.Img), IgnoreCase)),
-                Task.Run(() => LowerToUpper = new Dictionary<string, string>(parsers.ToDictionary(parser => parser.Name.ToLower(), CardParser.GetCardName), IgnoreCase)),
-                Task.Run(() => Uppercase = new HashSet<string>(parsers.Select(CardParser.GetCardName))),
-                Task.Run(() => Lowercase = new HashSet<string>(parsers.Select(parser => parser.Name.ToLower()))),
-                Task.Run(() => NameToPasscode = new Dictionary<string, string>(parsers.Where(parser => !string.IsNullOrEmpty(parser.Passcode)).ToDictionary(parser => parser.Name, parser => parser.Passcode), IgnoreCase)),
-                Task.Run(() => PasscodeToName = new Dictionary<string, string>(parsers.Where(parser => !string.IsNullOrEmpty(parser.Passcode)).GroupBy(parser => parser.Passcode).Select(group => group.FirstOrDefault()).ToDictionary(parser => parser.Passcode, CardParser.GetCardName)))
+                Task.Run(() => Lowercase = new HashSet<string>(parsers.Select(parser => parser.Name.ToLower())))
                 );
 
             Log("Finished building cache.");
@@ -524,7 +457,7 @@ namespace YuGiOh.Bot.Services
         {
 
             Log($"Retrieving all booster packs from \"{Db.ConnectionString}\"...");
-            
+
             Db.Open();
 
             var boosterPacks = Db.Query<BoosterPackParser>("select * from BoosterPacks");

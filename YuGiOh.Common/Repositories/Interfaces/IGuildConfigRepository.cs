@@ -10,8 +10,10 @@ namespace YuGiOh.Common.Repositories.Interfaces
     public interface IGuildConfigRepository
     {
 
-        Task InsertGuildConfigAsync(ulong id);
-        Task<GuildConfig> GetGuildConfigAsync(ulong id);
+        Task InsertGuildConfigAsync(GuildConfigEntity guildConfig);
+        Task UpdateGuildConfigAsync(GuildConfigEntity guildConfig);
+        Task<GuildConfigEntity> GetGuildConfigAsync(string id);
+        Task<bool> GuildConfigExistsAsync(string id);
 
     }
 }

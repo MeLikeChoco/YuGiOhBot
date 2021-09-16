@@ -75,7 +75,8 @@ namespace YuGiOh.Bot.Modules
                     .Split('\n')
                     .Select(passcode => passcode.Trim())
                     .Where(passcode => !string.IsNullOrEmpty(passcode))
-                    .Select(PasscodeToName)
+                    .Select(async passcode => await YuGiOhDbService.GetNameWithPasscodeAsync(passcode))
+                    .Select(task => task.Result)
                     .Where(name => !string.IsNullOrEmpty(name))
                     .GroupBy(name => name)
                     .Aggregate(new StringBuilder(), (builder, group) => builder.Append("||").Append(Uri.EscapeDataString($"{group.Count()} {group.First()}")))
@@ -86,15 +87,6 @@ namespace YuGiOh.Bot.Modules
             url = JObject.Parse(await response.Content.ReadAsStringAsync())["link"].Value<string>();
 
             await ReplyAsync(url);
-
-        }
-
-        private string PasscodeToName(string passcode)
-        {
-
-            Cache.PasscodeToName.TryGetValue(passcode, out var name);
-
-            return name;
 
         }
 
@@ -179,11 +171,13 @@ namespace YuGiOh.Bot.Modules
         {
 
             var passcode = group.First();
+            var name = await YuGiOhDbService.GetNameWithPasscodeAsync(passcode);
 
-            if (!Cache.PasscodeToName.TryGetValue(passcode, out var name))
+            if (name != null)
             {
 
-                name = (await Web.GetResponseMessage($"{Constants.FandomWikiUrl}{passcode}")).RequestMessage.RequestUri.Segments.Last().Replace('_', ' ');
+                var response = await Web.GetResponseMessage(Constants.FandomWikiUrl + passcode);
+                name = response.RequestMessage.RequestUri.Segments.Last().Replace('_', ' ');
                 name = WebUtility.UrlDecode(name);
 
             }

@@ -77,9 +77,9 @@ namespace YuGiOh.Bot.Models.Cards
             card.RealName = RealName;
             card.CardType = Enum.Parse<CardType>(CardType);
             card.Lore = Lore?.Replace(@"\n", "\n");
-            card.Archetypes = Archetype?.Split(',');
-            card.Supports = Supports?.Split(',');
-            card.AntiSupports = AntiSupports?.Split(',');
+            card.Archetypes = Archetype?.Split(',').ToList();
+            card.Supports = Supports?.Split(',').ToList();
+            card.AntiSupports = AntiSupports?.Split(',').ToList();
             card.OcgExists = OcgExists;
             card.TcgExists = TcgExists;
             card.Img = Img;

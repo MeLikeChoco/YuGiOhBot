@@ -11,15 +11,8 @@ using YuGiOh.Bot.Services;
 namespace YuGiOh.Bot.Modules
 {
     [RequireContext(ContextType.Guild)]
-    public class Configuration : CustomBase
+    public class Configuration : MainBase
     {
-
-        public Services.Database Database { get; set; }
-
-        private Setting _setting;
-
-        protected override void BeforeExecute(CommandInfo command)
-            => _setting = Database.Settings[Context.Guild.Id];
 
         [Command("autodelete")]
         [RequireUserPermission(GuildPermission.Administrator)]
@@ -33,8 +26,10 @@ namespace YuGiOh.Bot.Modules
                 try
                 {
 
-                    await Database.SetAutoDelete(Context.Guild.Id, delete);
-                    await ReplyAsync($"Auto deletion of embeds has been set to: `{_setting.AutoDelete}`");
+                    _guildConfig.AutoDelete = delete;
+
+                    await GuildConfigDbService.UpdateGuildConfigAsync(_guildConfig);
+                    await ReplyAsync($"Auto deletion of embeds has been set to: `{_guildConfig.AutoDelete}`");
 
                 }
                 catch (Exception e)
@@ -60,7 +55,7 @@ namespace YuGiOh.Bot.Modules
         [Command("autodelete")]
         [Summary("Gets the auto delete setting")]
         public Task GetAutoDeleteCommand()
-            => DisplaySetting("Auto Delete Embeds", _setting.AutoDelete);
+            => DisplaySetting("Auto Delete Embeds", _guildConfig.AutoDelete);
 
         [Command("guesstime")]
         [RequireUserPermission(GuildPermission.Administrator)]
@@ -68,7 +63,9 @@ namespace YuGiOh.Bot.Modules
         public async Task SetGuessTimeCommand(int seconds)
         {
 
-            await Database.SetGuessTime(Context.Guild.Id, seconds);
+            _guildConfig.GuessTime = seconds;
+
+            await GuildConfigDbService.UpdateGuildConfigAsync(_guildConfig);
             await ReplyAsync($"The time for guess game has been set to `{seconds}` seconds!");
 
         }
@@ -82,18 +79,20 @@ namespace YuGiOh.Bot.Modules
         [Command("guesstime")]
         [Summary("Get the amount of seconds for the guessing game!")]
         public Task GetGuessTimeCommand()
-            => ReplyAsync($"**Guess time:** {_setting.GuessTime} seconds");
+            => ReplyAsync($"**Guess time:** {_guildConfig.GuessTime} seconds");
 
         [Command("prefix")]
         [RequireUserPermission(GuildPermission.Administrator)]
         [Summary("Sets the prefix for the bot in this guild!")]
-        public async Task SetPrefixCommand([Remainder]string prefix)
+        public async Task SetPrefixCommand([Remainder] string prefix)
         {
 
             try
             {
 
-                await Database.SetPrefix(Context.Guild.Id, prefix);
+                _guildConfig.Prefix = prefix;
+
+                await GuildConfigDbService.UpdateGuildConfigAsync(_guildConfig);
                 await ReplyAsync($"Prefix has been set to `{prefix}`");
 
             }
@@ -110,18 +109,18 @@ namespace YuGiOh.Bot.Modules
         [Command("prefix")]
         [RequireOwner]
         [Summary("Sets the prefix for the bot in this guild!")]
-        public Task SetPrefixCommandOwner([Remainder]string prefix)
+        public Task SetPrefixCommandOwner([Remainder] string prefix)
             => SetPrefixCommand(prefix);
 
         [Command("prefix")]
         [Summary("See the prefix the guild is using! Kinda useless tbh...")]
         public Task PrefixCommand()
-            => DisplaySetting("Prefix", _setting.Prefix);
+            => DisplaySetting("Prefix", _guildConfig.Prefix);
 
         [Command("minimal")]
         [RequireUserPermission(GuildPermission.Administrator)]
         [Summary("Set how much card info should be shown! (true/false)")]
-        public async Task SetMinimalCommand([Remainder]string input)
+        public async Task SetMinimalCommand([Remainder] string input)
         {
 
             if (bool.TryParse(input, out var minimal))
@@ -130,7 +129,9 @@ namespace YuGiOh.Bot.Modules
                 try
                 {
 
-                    await Database.SetMinimal(Context.Guild.Id, minimal);
+                    _guildConfig.Minimal = minimal;
+
+                    await GuildConfigDbService.UpdateGuildConfigAsync(_guildConfig);
                     await ReplyAsync($"Minimal has been set to `{minimal}`");
 
                 }
@@ -157,20 +158,22 @@ namespace YuGiOh.Bot.Modules
         [Command("minimal")]
         [Summary("Check how much card info is shown!")]
         public Task MinimalCommand()
-            => DisplaySetting("Minimal", _setting.Minimal);
+            => DisplaySetting("Minimal", _guildConfig.Minimal);
 
         [Command("inline")]
         [Summary("Enable (true) or disable (false) inline search!")]
         public async Task InlineCommand(bool input)
         {
 
-            if (_setting.Inline != input)
+            if (_guildConfig.Inline != input)
             {
 
                 try
                 {
 
-                    await Database.SetInline(Context.Guild.Id, input);
+                    _guildConfig.Inline = input;
+
+                    await GuildConfigDbService.UpdateGuildConfigAsync(_guildConfig);
                     await ReplyAsync($"Inline has been set to `{input}`");
 
                 }
@@ -195,7 +198,7 @@ namespace YuGiOh.Bot.Modules
         [Command("inline")]
         [Summary("Check if inline search is disabled!")]
         public Task InlineCommandOwner()
-            => ReplyAsync($"Inline search enabled: **{_setting.Inline}**");
+            => ReplyAsync($"Inline search enabled: **{_guildConfig.Inline}**");
 
         private Task DisplaySetting(string setting, object value)
             => ReplyAsync($"**{setting}:** {value}");

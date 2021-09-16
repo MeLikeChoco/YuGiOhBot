@@ -80,3 +80,12 @@ create table errors (
 	url varchar,
 	type varchar(12)
 );
+
+create table configs (
+	id bigint primary key,
+	prefix varchar not null default 'y!',
+	minimal boolean default true,
+	guess_time integer default 60,
+	autodelete boolean default true,
+	inline boolean default true
+);

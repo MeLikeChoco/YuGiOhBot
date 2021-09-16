@@ -47,18 +47,7 @@ namespace YuGiOh.Bot.Models
         }
 
         [JsonIgnore]
-        public static Config Instance
-        {
-            get
-            {
-
-                if(_instance == null)
-                    _instance = JsonConvert.DeserializeObject<Config>(File.ReadAllText("Files/Config.json"));
-
-                return _instance;
-
-            }
-        }
+        public static Config Instance { get => _instance ??= JsonConvert.DeserializeObject<Config>(File.ReadAllText("Files/Config.json")); }
 
         [JsonIgnore]
         private static Config _instance;

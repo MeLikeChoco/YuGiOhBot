@@ -15,6 +15,7 @@ namespace YuGiOh.Scraper.Constants
         public const string MediaWikiAllCards = "api.php?action=query&format=json&list=categorymembers&cmtitle=Category%3ADuel_Monsters_cards&cmlimit=500";
         public const string MediaWikiTcgCards = "api.php?action=query&format=json&list=categorymembers&cmtitle=Category%3ATCG_cards&cmlimit=500";
         public const string MediaWikiOcgCards = "api.php?action=query&format=json&list=categorymembers&cmtitle=Category%3AOCG_cards&cmlimit=500";
+        public const string MediaWikiSkillCards = "api.php?action=query&format=json&list=categorymembers&cmtitle=Category%3ASkill_Cards&cmlimit=500";
         public const string MediaWikiTcgPacks = "api.php?action=query&format=json&list=categorymembers&cmtitle=Category%3ATCG_Booster_Packs&cmlimit=500";
         public const string MediaWikiOcgPacks = "api.php?action=query&format=json&list=categorymembers&cmtitle=Category%3AOCG_Booster_Packs&cmlimit=500";
         public const string MediaWikiParseIdUrl = "api.php?action=parse&format=json&prop=text&formatversion=2&pageid={0}";

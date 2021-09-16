@@ -9,13 +9,33 @@ using YuGiOh.Bot.Models;
 
 namespace YuGiOh.Bot.Models
 {
-    public class RepoConfig : IYuGiOhRepositoryConfiguration
+    public class RepoConfig : IYuGiOhRepositoryConfiguration, IGuildConfigConfiguration
     {
 
         private readonly Config _config;
 
         public RepoConfig(Config config)
             => _config = config;
+
+        public NpgsqlConnection GetGuildConfigConnection()
+        {
+
+            var guildsDbConfig = _config.Databases.Guilds;
+
+            var connectionStr = new NpgsqlConnectionStringBuilder
+            {
+
+                Host = guildsDbConfig.Host,
+                Port = guildsDbConfig.Port,
+                Username = guildsDbConfig.Username,
+                Password = guildsDbConfig.Password,
+                Database = "guilds"
+
+            }.ToString();
+
+            return new NpgsqlConnection(connectionStr);
+
+        }
 
         public NpgsqlConnection GetYuGiOhDbConnection()
         {

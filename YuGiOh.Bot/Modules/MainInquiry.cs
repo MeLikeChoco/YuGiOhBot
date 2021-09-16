@@ -51,57 +51,67 @@ namespace YuGiOh.Bot.Modules
 
         [Command("card"), Alias("c")]
         [Summary("Gets a card! No proper capitalization needed!")]
-        public Task CardCommand([Remainder]string input)
+        public async Task CardCommand([Remainder] string input)
         {
 
-            if (Cache.Embeds.TryGetValue(input, out var embed))
-                return SendCardEmbed(embed, _minimal, Web);
+            var card = await YuGiOhDbService.GetCardAsync(input);
+
+            if (card != null)
+                await SendCardEmbed(card.GetEmbedBuilder(), _minimal, Web);
             else
-                return NoResultError(input);
+                await NoResultError(input);
+
+            //if (Cache.NameToCard.TryGetValue(input, out var card))
+            //    return SendCardEmbed(card.GetEmbedBuilder(), _minimal, Web);
+            //else
+            //    return NoResultError(input);
 
         }
 
         [Command("random"), Alias("rcard", "r")]
         [Summary("Gets a random card!")]
-        public Task RandomCommand()
+        public async Task RandomCommand()
         {
 
-            var embed = Cache.Embeds.RandomSubset(1).First().Value;
+            var card = await YuGiOhDbService.GetRandomCardAsync();
 
-            return SendCardEmbed(embed, _minimal, Web);
+            await SendCardEmbed(card.GetEmbedBuilder(), _minimal, Web);
 
         }
 
         [Command("image"), Alias("i", "img")]
         [Summary("Returns image of the card based on your input! No proper capitalization needed!")]
-        public async Task ImageCommand([Remainder]string card)
+        public async Task ImageCommand([Remainder] string input)
         {
 
-            if (Cache.Images.ContainsKey(card))
+            var card = await YuGiOhDbService.GetCardAsync(input);
+
+            if (card != null)
             {
 
                 using (Context.Channel.EnterTypingState())
                 {
 
-                    var link = Cache.Images[card];
-                    var stream = await Web.GetStream(link);
+                    var stream = await Web.GetStream(card.Img);
 
-                    await Context.Channel.SendFileAsync(stream, $"{card.ToLower().Replace(" ", "")}.png");
+                    await Context.Channel.SendFileAsync(stream, $"{input.ToLower().Replace(" ", "")}.png");
 
                 }
 
             }
             else
-                await NoResultError(card);
+                await NoResultError(input);
 
         }
 
         [Command("art")]
         [Summary("Returns the art of the card based on input! No proper capitalization needed!")]
-        public async Task ArtCommand([Remainder]string card)
+        public async Task ArtCommand([Remainder] string input)
         {
 
-            if (Cache.NameToPasscode.TryGetValue(card, out var passcode))
+            var card = await YuGiOhDbService.GetCardAsync(input);
+
+            if (card != null)
             {
 
                 Stream stream;
@@ -109,7 +119,9 @@ namespace YuGiOh.Bot.Modules
                 try
                 {
 
-                    stream = await GetArtGithub(passcode);
+                    stream = await GetArtGithub(card.Passcode);
+
+                    await UploadAsync(stream, $"{Uri.EscapeUriString(card.Name)}.jpg");
 
                 }
                 catch
@@ -120,24 +132,24 @@ namespace YuGiOh.Bot.Modules
 
                 }
 
-                await UploadAsync(stream, $"{Uri.EscapeUriString(card)}.jpg");
-
             }
             else
-                await NoResultError(card);
+                await NoResultError(input);
 
         }
 
-        //this is so ghetto
+        //this is pretty wack
         [Command("price"), Alias("prices", "p")]
         [Summary("Returns the prices based on your input! No proper capitalization needed!")]
-        public async Task PriceCommand([Remainder]string card)
+        public async Task PriceCommand([Remainder] string input)
         {
 
-            if (Cache.LowerToUpper.ContainsKey(card))
+            var card = await YuGiOhDbService.GetCardAsync(input);
+
+            if (card != null)
             {
 
-                if(!Cache.NameToCard[card].TcgExists)
+                if (!card.TcgExists)
                 {
 
                     await ReplyAsync("Card does not exist in TCG therefore no price can be determined for this card currently!");
@@ -148,14 +160,13 @@ namespace YuGiOh.Bot.Modules
                 using (Context.Channel.EnterTypingState())
                 {
 
-                    var name = Cache.LowerToUpper[card];
-                    var response = await Web.GetPrices(name);
+                    var response = await Web.GetPrices(card.Name) ?? await Web.GetPrices(card.RealName);
 
-                    if(response == null)
+                    if (response == null)
                     {
 
-                        var temp = Cache.Cards.FirstOrDefault(c => c.RealName.Equals(card, StringComparison.InvariantCultureIgnoreCase));
-                        response = await Web.GetPrices(temp.RealName) ?? await Web.GetPrices(temp.Name);
+                        await ReplyAsync($"There was an error in retrieving the prices for \"{input}\". Please try again later.");
+                        return;
 
                     }
 
@@ -164,7 +175,7 @@ namespace YuGiOh.Bot.Modules
                     var author = new EmbedAuthorBuilder()
                         .WithIconUrl("https://vignette1.wikia.nocookie.net/yugioh/images/8/82/PotofGreed-TF04-JP-VG.jpg/revision/latest?cb=20120829225457")
                         .WithName("YuGiOh Prices")
-                        .WithUrl($"https://yugiohprices.com/card_price?name={Uri.EscapeDataString(card)}");
+                        .WithUrl($"https://yugiohprices.com/card_price?name={Uri.EscapeDataString(input)}");
 
                     var body = new EmbedBuilder()
                         .WithAuthor(author)
@@ -188,13 +199,13 @@ namespace YuGiOh.Bot.Modules
 
             }
             else
-                await NoResultError(card);
+                await NoResultError(input);
 
         }
 
         [Command("banlist")]
         [Summary("Get the banlist of a specified format! OCG or 1, TCGADV or 2, TCGTRAD or 3")]
-        public async Task BanlistCommand([Remainder]string format)
+        public async Task BanlistCommand([Remainder] string format)
         {
 
             BanlistFormat banlist;

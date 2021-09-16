@@ -29,7 +29,7 @@ namespace YuGiOh.Scraper.Models.Parsers
             _id = id;
         }
 
-        public async Task<Card> Parse()
+        public async Task<CardEntity> Parse()
         {
 
             var url = string.Format(ConstantString.MediaWikiParseIdUrl, _id);
@@ -37,7 +37,7 @@ namespace YuGiOh.Scraper.Models.Parsers
             var parserOutput = dom.GetElementByClassName("mw-parser-output");
             var imgElement = parserOutput.GetElementByClassName("cardtable-main_image-wrapper").GetElementByTagName("img");
 
-            var card = new Card
+            var card = new CardEntity
             {
 
                 Name = _name,

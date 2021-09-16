@@ -11,10 +11,10 @@ using Dommel;
 
 namespace YuGiOh.Common.DatabaseMappers
 {
-    public class YuGiOhDatabaseResolver : Convention, IColumnNameResolver
+    public class LowerCaseConvention : Convention, IColumnNameResolver
     {
 
-        public YuGiOhDatabaseResolver()
+        public LowerCaseConvention()
         {
 
             Properties()

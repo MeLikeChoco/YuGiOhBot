@@ -1,5 +1,5 @@
-﻿create or replace function get_card_contains(input varchar)
-returns setof cards
+﻿create or replace function get_cards_contains(input varchar)
+returns setof varchar
 as $func$
 begin
 	

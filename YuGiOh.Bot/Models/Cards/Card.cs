@@ -22,9 +22,9 @@ namespace YuGiOh.Bot.Models.Cards
         public CardType CardType { get; set; }
         public string Lore { get; set; }
 
-        public string[] Archetypes { get; set; }
-        public string[] Supports { get; set; }
-        public string[] AntiSupports { get; set; }
+        public List<string> Archetypes { get; set; }
+        public List<string> Supports { get; set; }
+        public List<string> AntiSupports { get; set; }
 
         public bool OcgExists { get; set; }
         public bool TcgExists { get; set; }
@@ -100,7 +100,7 @@ namespace YuGiOh.Bot.Models.Cards
             => string.IsNullOrEmpty(Lore) ? body.AddField("Not released yet", "\u200B") : body.AddField("Effect", Lore);
 
         protected virtual EmbedBuilder AddAdditionalFields(EmbedBuilder body)
-            => Archetypes != null ? body.AddField("Archetypes", Archetypes.Join(", ")) : body;
+            => Archetypes?.Any() == true ? body.AddField("Archetypes", Archetypes.Join(", ")) : body;
 
     }
 

@@ -1,19 +1,15 @@
-﻿using Discord;
-using Discord.Addons.Interactive;
-using Discord.Commands;
-using Discord.WebSocket;
-using MoreLinq;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using YuGiOh.Bot.Services.Interfaces;
+using Discord;
+using Discord.Addons.Interactive;
+using Discord.Commands;
+using MoreLinq;
 using YuGiOh.Bot.Extensions;
-using YuGiOh.Bot.Models;
 using YuGiOh.Bot.Models.Criterion;
-using YuGiOh.Bot.Services;
 
 namespace YuGiOh.Bot.Modules
 {
@@ -22,35 +18,33 @@ namespace YuGiOh.Bot.Modules
 
         public CommandService CommandService { get; set; }
         public IServiceProvider ServiceProvider { get; set; }
-        public IYuGiOhDbService YuGiOhDbService { get; set; }
 
         [Command("search"), Alias("s")]
         [Summary("Returns results based on your input! No proper capitalization needed!")]
-        public Task SearchCommand([Remainder]string input)
+        public async Task SearchCommand([Remainder] string input)
         {
 
-            var lower = input.ToLower();
-            var cards = Cache.LowerToUpper.Where(kv => kv.Key.Contains(lower)).Select(kv => kv.Value);
+            var cards = await YuGiOhDbService.SearchCardsAsync(input);
             var amount = cards.Count();
 
             if (amount == 1)
-                return CardCommand(cards.First());
+                await CardCommand(cards.First());
             else if (amount != 0)
-                return RecieveInput(amount, cards);
+                await ReceiveInput(amount, cards);
             else
-                return NoResultError(input);
+                await NoResultError(input);
 
         }
 
         [Command("archetype"), Alias("a")]
         [Summary("Returns cards in entered archetype! No proper capitalization needed!")]
-        public async Task ArchetypeCommand([Remainder]string input)
+        public async Task ArchetypeCommand([Remainder] string input)
         {
 
-            var cards = await YuGiOhDbService.GetCardsFromArchetypeAsync(input);
+            var cards = await YuGiOhDbService.GetCardsInArchetype(input);
 
             if (cards.Any())
-                await RecieveInput(cards.Count(), cards);
+                await ReceiveInput(cards.Count(), cards);
             else
                 await NoResultError("archetypes", input);
 
@@ -58,29 +52,33 @@ namespace YuGiOh.Bot.Modules
 
         [Command("supports")]
         [Summary("Returns cards that support your input! No proper capitalization needed!")]
-        public Task SupportsCommand([Remainder]string input)
+        public async Task SupportsCommand([Remainder] string input)
         {
 
-            if (Cache.Supports.TryGetValue(input, out var cards))
-                return RecieveInput(cards.Count, cards);
+            var cards = await YuGiOhDbService.GetCardsFromSupportAsync(input);
+
+            if (cards.Any())
+                await ReceiveInput(cards.Count(), cards);
             else
-                return NoResultError("supports", input);
+                await NoResultError("supports", input);
 
         }
 
         [Command("antisupports")]
         [Summary("Returns cards that support your input! No proper capitalization needed!")]
-        public Task AntiSupportsCommand([Remainder]string input)
+        public async Task AntiSupportsCommand([Remainder] string input)
         {
 
-            if (Cache.AntiSupports.TryGetValue(input, out var cards))
-                return RecieveInput(cards.Count, cards);
+            var cards = await YuGiOhDbService.GetCardsFromAntisupportAsync(input);
+
+            if (cards.Any())
+                await ReceiveInput(cards.Count(), cards);
             else
-                return NoResultError("anti-supports", input);
+                await NoResultError("antisupports", input);
 
         }
 
-        public async Task RecieveInput(int amount, IEnumerable<string> cards)
+        public async Task ReceiveInput(int amount, IEnumerable<string> cards)
         {
 
             var author = new EmbedAuthorBuilder()
@@ -123,7 +121,7 @@ namespace YuGiOh.Bot.Modules
 
             var input = await NextMessageAsync(criteria, TimeSpan.FromSeconds(60), token);
 
-            if (!token.IsCancellationRequested && int.TryParse(input.Content, out var selection) && selection > 0 && selection <= cards.Count())
+            if (!token.IsCancellationRequested && input != null && int.TryParse(input.Content, out var selection) && selection > 0 && selection <= cards.Count())
                 await CardCommand(cards.ElementAt(selection - 1));
 
         }

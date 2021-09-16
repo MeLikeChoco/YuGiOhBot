@@ -4,9 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace YuGiOh.Bot.Services.Interfaces
+namespace YuGiOh.Common.Models.YuGiOh
 {
-    public interface IGuildConfigDbServices
+    public enum CardEntityFormats
     {
+
+        OCG,
+        TCG,
+        TCGTRAD
+
     }
 }

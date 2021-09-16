@@ -5,9 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using YuGiOh.Bot.Models;
-using YuGiOh.Bot.Models.Services;
 using YuGiOh.Bot.Services;
-using YuGiOh.Bot.Services.Microservices;
 
 //The getinvite command can be intruding, however, I only use it to ask for feedback on the bot, else there is no other way to get 
 //any sort of information on what I could improve or add. Sure, I have the feedback command, but no one uses it.
@@ -18,14 +16,13 @@ namespace YuGiOh.Bot.Modules
     public class Owner : CustomBase
     {
 
-        public YuGiOhScraper YuGiOhScraper { get; set; }
         public Cache Cache { get; set; }
         public Web Web { get; set; }
         public Config Config { get; set; }
 
         [Command("getinvite")]
         [Summary("Gets invite to the default channel of the guild")]
-        public async Task GetInviteCommand([Remainder]string name)
+        public async Task GetInviteCommand([Remainder] string name)
         {
 
             try
@@ -48,7 +45,7 @@ namespace YuGiOh.Bot.Modules
 
         [Command("megaphone")]
         [Summary("Sends a message to all guilds USE WITH CAUTION")]
-        public async Task MegaphoneCommand([Remainder]string message)
+        public async Task MegaphoneCommand([Remainder] string message)
         {
 
             foreach (var guild in Context.Client.Guilds.Where(guild => !guild.Name.Contains("Discord Bot")))
@@ -70,13 +67,10 @@ namespace YuGiOh.Bot.Modules
 
         [Command("reform")]
         [Summary("Re-initialize the cache")]
-        public Task ReformCache(bool scrape = false)
+        public Task ReformCache()
         {
 
-            if (scrape)
-                YuGiOhScraper.Execute(null);
-            else
-                Cache.Initialize();
+            Cache.Initialize();
 
             return Task.CompletedTask;
 
@@ -94,7 +88,7 @@ namespace YuGiOh.Bot.Modules
 
         [Command("tell")]
         [Summary("Tell a specific channel on a guild something")]
-        public async Task TellCommand([Remainder]string input)
+        public async Task TellCommand([Remainder] string input)
         {
 
             var guild = Context.Client.Guilds.FirstOrDefault(g => g.Name == input);

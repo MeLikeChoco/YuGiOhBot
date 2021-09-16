@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
+using YuGiOh.Bot.Extensions;
+using YuGiOh.Bot.Models.Cards;
 using YuGiOh.Bot.Services.Interfaces;
-using YuGiOh.Common.Models.YuGiOh;
 using YuGiOh.Common.Repositories.Interfaces;
 
 namespace YuGiOh.Bot.Services
@@ -17,36 +16,53 @@ namespace YuGiOh.Bot.Services
         public YuGiOhDbService(IYuGiOhRepository repo)
             => _repo = repo;
 
-        public Task<Card> GetCardAsync(string name)
+        public async Task<Card> GetCardAsync(string name)
         {
 
-            throw new NotImplementedException();
+            var card = await _repo.GetCardAsync(name);
+
+            return card?.ToModel();
+
+        }
+
+        public Task<IEnumerable<string>> SearchCardsAsync(string input)
+            => _repo.SearchCardsAsync(input);
+
+        public async Task<Card> GetRandomCardAsync()
+        {
+
+            var entity = await _repo.GetRandomCardAsync();
+
+            return entity.ToModel();
 
         }
 
         public Task<IEnumerable<string>> GetCardsAsync(string input)
-            => _repo.GetCardsAsync(input);
+            => _repo.SearchCardsAsync(input);
 
-        public Task<IEnumerable<string>> GetCardsFromAntisupportAsync(string input)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<IEnumerable<string>> GetCardsFromArchetypeAsync(string input)
-            => _repo.GetCardsFromArchetypeAsync(input);
+        public Task<IEnumerable<string>> GetCardsInArchetype(string input)
+            => _repo.GetCardsInArchetypeAsync(input);
 
         public Task<IEnumerable<string>> GetCardsFromSupportAsync(string input)
+            => _repo.GetCardsInSupportAsync(input);
+
+        public Task<IEnumerable<string>> GetCardsFromAntisupportAsync(string input)
+            => _repo.GetCardsInAntisupportAsync(input);
+
+        public async Task<Card> GetClosestCardAsync(string input)
         {
+
+            var card = await _repo.GetCardFuzzyAsync(input);
+
             throw new NotImplementedException();
+
         }
 
-        public Task<Card> GetClosestCardAsync(string input)
-            => _repo.GetCardFuzzyAsync(input);
+        public Task<string> GetImageLinkAsync(string input)
+            => _repo.GetImageLinkAsync(input);
 
-        public Task<Card> GetRandomCardAsync()
-        {
-            throw new NotImplementedException();
-        }
+        public Task<string> GetNameWithPasscodeAsync(string passcode)
+            => _repo.GetNameWithPasscodeAsync(passcode);
 
     }
 }

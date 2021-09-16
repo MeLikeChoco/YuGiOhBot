@@ -41,9 +41,13 @@ namespace YuGiOh.Scraper
 
             var ocgLinks = await GetLinks(ConstantString.MediaWikiOcgCards);
 
+            Log("Getting Skill cards...");
+
+            var skillLinks = await GetLinks(ConstantString.MediaWikiSkillCards);
+
             Log("Processing cards.");
 
-            var cardProcResponse = ProcessCards(tcgLinks, ocgLinks);
+            var cardProcResponse = ProcessCards(tcgLinks, ocgLinks, skillLinks);
 
             Log($"Processed {cardProcResponse.Count} cards. There were {cardProcResponse.Errors.Count} errors.");
             Log("Getting TCG booster packs.");
@@ -69,11 +73,12 @@ namespace YuGiOh.Scraper
 
         }
 
-        public CardProcessorResponse ProcessCards(IDictionary<string, string> tcgLinks, IDictionary<string, string> ocgLinks)
+        public CardProcessorResponse ProcessCards(IDictionary<string, string> tcgLinks, IDictionary<string, string> ocgLinks, IDictionary<string, string> skillLinks)
         {
 
             var nameToLinks = tcgLinks
-                .Concat(ocgLinks.Where(kv => !tcgLinks.ContainsKey(kv.Key)));
+                .Concat(ocgLinks.Where(kv => !tcgLinks.ContainsKey(kv.Key)))
+                .Except(skillLinks);
             var size = nameToLinks.Count();
 
             if (Options.MaxCardsToParse <= size)

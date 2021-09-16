@@ -10,7 +10,7 @@ using Dommel;
 namespace YuGiOh.Common.Models.YuGiOh
 {
     [Table("cards")]
-    public class Card
+    public class CardEntity
     {
 
         [Key, DatabaseGenerated(DatabaseGeneratedOption.None)]
@@ -29,15 +29,15 @@ namespace YuGiOh.Common.Models.YuGiOh
         [Ignore]
         public List<string> Archetypes { get; set; }
         [Column("archetypes"), DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        internal int ArchetypesId { get; set; }
+        public int ArchetypesId { get; set; }
         [Ignore]
         public List<string> Supports { get; set; }
         [Column("supports"), DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        internal int SupportsId { get; set; }
+        public int SupportsId { get; set; }
         [Ignore]
         public List<string> AntiSupports { get; set; }
         [Column("antisupports"), DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        internal int AntiSupportsId { get; set; }
+        public int AntiSupportsId { get; set; }
 
         public int Link { get; set; }
         public string LinkArrows { get; set; }

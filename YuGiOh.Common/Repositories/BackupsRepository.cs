@@ -18,7 +18,18 @@ namespace YuGiOh.Common.Repositories
             _config = config;
         }
 
-        public async Task InsertBackupAsync(Guid guid)
+        public async Task InsertYuGiOhBackupAsync(Guid guid)
+        {
+
+            using var connection = _config.GetBackupsDbConnection();
+
+            await connection.OpenAsync();
+            await connection.InsertAsync(new Backup { Guid = guid });
+            await connection.CloseAsync();
+
+        }
+
+        public async Task InsertGuildsBackupAsync(Guid guid)
         {
 
             using var connection = _config.GetBackupsDbConnection();

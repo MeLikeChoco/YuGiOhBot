@@ -1,35 +1,31 @@
-﻿using Discord;
-using Discord.WebSocket;
-using Force.DeepCloner;
-using MoreLinq;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Discord.WebSocket;
+using MoreLinq;
 using YuGiOh.Bot.Extensions;
 using YuGiOh.Bot.Models.Comparers;
-using YuGiOh.Bot.Models.Deserializers;
+using YuGiOh.Bot.Services.Interfaces;
 
 namespace YuGiOh.Bot.Services
 {
     public class Chat
     {
 
-        private Cache _cache;
-        private Database _database;
-        private static Web _web;
-        private IgnoreCaseComparer _ignoreCaseComparer;
+        private readonly Cache _cache;
+        private readonly Web _web;
+        private readonly IGuildConfigDbService _guildConfigDbService;
+        private readonly IgnoreCaseComparer _ignoreCaseComparer;
 
         private const string Pattern = @"(\[\[.+?\]\])";
 
-        public Chat(Cache cache, Database database, Web web)
+        public Chat(Cache cache, IGuildConfigDbService guildConfigDbService, Web web)
         {
 
             _cache = cache;
-            _database = database;
+            _guildConfigDbService = guildConfigDbService;
             _web = web;
             _ignoreCaseComparer = new IgnoreCaseComparer();
 
@@ -42,9 +38,9 @@ namespace YuGiOh.Bot.Services
             {
 
                 var guild = guildChannel.Guild.Id;
-                var setting = _database.Settings[guild];
+                var guildConfig = await _guildConfigDbService.GetGuildConfigAsync(guild);
 
-                if (!setting.Inline)
+                if (!guildConfig.Inline)
                     return;
 
             }
@@ -65,7 +61,8 @@ namespace YuGiOh.Bot.Services
 
                     AltConsole.Write("Info", "Command", $"{message.Author.Username} from {(channel as SocketTextChannel).Guild.Name}");
                     var id = (channel as SocketTextChannel).Guild.Id;
-                    minimal = _database.Settings[id].Minimal;
+                    var guildConfig = await _guildConfigDbService.GetGuildConfigAsync(id);
+                    minimal = guildConfig.Minimal;
 
                 }
 
@@ -104,7 +101,7 @@ namespace YuGiOh.Bot.Services
                     watch.Stop();
                     AltConsole.Write("Info", "Inline", $"{cardName} took {time.TotalSeconds} seconds to complete.");
 
-                    var embed = _cache.Embeds[closestCard];
+                    var embed = _cache.NameToCard[closestCard].GetEmbedBuilder();
 
                     try
                     {

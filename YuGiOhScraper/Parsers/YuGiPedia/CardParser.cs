@@ -361,52 +361,52 @@ namespace YuGiOhScraper.Parsers.YuGiPedia
 
             #region Card Trivia
             //i have to do it this way because i can't figure out why anglesharp is fetching the wrong index when i use the table as reference
-            var triviaUrlElement = parserOutput.Children
-                .FirstOrDefault(element => element.TextContent.ContainsIgnoreCase("Trivia"))?
-                .FirstElementChild
-                .Children
-                .FirstOrDefault(element => element.TextContent.ContainsIgnoreCase("Trivia"));
+            //var triviaUrlElement = parserOutput.Children
+            //    .FirstOrDefault(element => element.TextContent.ContainsIgnoreCase("Trivia"))?
+            //    .FirstElementChild
+            //    .Children
+            //    .FirstOrDefault(element => element.TextContent.ContainsIgnoreCase("Trivia"));
 
-            if (triviaUrlElement != null)
-            {
+            //if (triviaUrlElement != null)
+            //{
 
-                var title = triviaUrlElement.FirstElementChild.GetAttribute("href");
+            //    var title = triviaUrlElement.FirstElementChild.GetAttribute("href");
 
-                //lets hope konami never releases a card called "page does not exist"
-                //we could also check if href ends with "redlink=1" if checking by title is problematic
-                if (!title.ContainsIgnoreCase("redlink=1"))
-                {
+            //    //lets hope konami never releases a card called "page does not exist"
+            //    //we could also check if href ends with "redlink=1" if checking by title is problematic
+            //    if (!title.ContainsIgnoreCase("redlink=1"))
+            //    {
 
-                    var triviaUrl = ScraperConstants.YuGiPediaUrl + ScraperConstants.MediaWikiParseNameUrl + Uri.EscapeDataString(title);
-                    dom = GetDom(httpClient, triviaUrl);
-                    parserOutput = dom.GetElementByClassName("mw-parser-output");
-                    var triviaElements = parserOutput?.Children
-                        .Where(element => element.TagName == "UL");
+            //        var triviaUrl = ScraperConstants.YuGiPediaUrl + ScraperConstants.MediaWikiParseNameUrl + Uri.EscapeDataString(title);
+            //        dom = GetDom(httpClient, triviaUrl);
+            //        parserOutput = dom.GetElementByClassName("mw-parser-output");
+            //        var triviaElements = parserOutput?.Children
+            //            .Where(element => element.TagName == "UL");
 
-                    if (triviaElements != null)
-                    {
+            //        if (triviaElements != null)
+            //        {
 
-                        var trivias = new List<string>(triviaElements.Count());
+            //            var trivias = new List<string>(triviaElements.Count());
 
-                        foreach (var triviaElement in triviaElements)
-                        {
+            //            foreach (var triviaElement in triviaElements)
+            //            {
 
-                            var html = triviaElement.InnerHtml;
-                            var cleanedTrivia = Regex
-                                .Replace(html, ScraperConstants.HtmlTagRegex, "")
-                                .Replace("\n", "\\n");
+            //                var html = triviaElement.InnerHtml;
+            //                var cleanedTrivia = Regex
+            //                    .Replace(html, ScraperConstants.HtmlTagRegex, "")
+            //                    .Replace("\n", "\\n");
 
-                            trivias.Add(cleanedTrivia);
+            //                trivias.Add(cleanedTrivia);
 
-                        }
+            //            }
 
-                        card.CardTrivia = string.Join('|', trivias);
+            //            card.CardTrivia = string.Join('|', trivias);
 
-                    }
+            //        }
 
-                }
+            //    }
 
-            }
+            //}
             #endregion Card Trivia
 
             return card;

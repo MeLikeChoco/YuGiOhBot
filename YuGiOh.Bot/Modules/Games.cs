@@ -17,26 +17,17 @@ using YuGiOh.Bot.Models.Criterion;
 using YuGiOh.Bot.Models.Deserializers;
 using YuGiOh.Bot.Services;
 using YuGiOh.Bot.Extensions;
+using YuGiOh.Bot.Models.Cards;
 
 namespace YuGiOh.Bot.Modules
 {
     [RequireContext(ContextType.Guild)]
-    public class Games : CustomBase
+    public class Games : MainBase
     {
-
-        public Cache Cache { get; set; }
-        public Web Web { get; set; }
-        public Random Rand { get; set; }
-        public Services.Database Database { get; set; }
-
-        private Setting _setting;
 
         private readonly Criteria<SocketMessage> _criteria = new Criteria<SocketMessage>()
                 .AddCriterion(new EnsureSourceChannelCriterion())
                 .AddCriterion(new EnsureNotBot());
-        
-        protected override void BeforeExecute(CommandInfo command)
-            => _setting = Database.Settings[Context.Guild.Id];
 
         [Command("guess")]
         [Summary("Starts an image/card guessing game!")]
@@ -58,7 +49,7 @@ namespace YuGiOh.Bot.Modules
 
                 //}
 
-                KeyValuePair<string, string> passcodeKv = default;
+                Card card = null;
                 Exception e;
 
                 do
@@ -67,15 +58,15 @@ namespace YuGiOh.Bot.Modules
                     try
                     {
 
-                        passcodeKv = Cache.NameToPasscode.RandomSubset(1).First();
+                        card = await YuGiOhDbService.GetRandomCardAsync();
 
-                        var url = $"{Constants.ArtBaseUrl}{passcodeKv.Value}.{Constants.ArtFileType}";
+                        var url = $"{Constants.ArtBaseUrl}{card.Passcode}.{Constants.ArtFileType}";
 
                         //$"https://storage.googleapis.com/ygoprodeck.com/pics_artgame/{passcode}.jpg"
-                        Console.WriteLine($"{passcodeKv.Key}\n{Constants.ArtBaseUrl}{passcodeKv.Value}.{Constants.ArtFileType}");
+                        Console.WriteLine($"{card.Name}\n{Constants.ArtBaseUrl}{card.Passcode}.{Constants.ArtFileType}");
 
                         using (var stream = await Web.GetStream(url))
-                            await UploadAsync(stream, $"{GenObufscatedString()}.{Constants.ArtFileType}", $":stopwatch: You have **{_setting.GuessTime}** seconds to guess what card this art belongs to! Case sensitive!");
+                            await UploadAsync(stream, $"{GenObufscatedString()}.{Constants.ArtFileType}", $":stopwatch: You have **{_guildConfig.GuessTime}** seconds to guess what card this art belongs to! Case sensitive!");
 
                         e = null;
 
@@ -85,9 +76,9 @@ namespace YuGiOh.Bot.Modules
                 } while (e != null);
 
                 //_criteria.AddCriterion(new GuessCriteria(art.Key));
-                _criteria.AddCriterion(new GuessCriteria(passcodeKv.Key));
+                _criteria.AddCriterion(new GuessCriteria(card.Name));
 
-                var answer = await NextMessageAsync(_criteria, TimeSpan.FromSeconds(_setting.GuessTime));
+                var answer = await NextMessageAsync(_criteria, TimeSpan.FromSeconds(_guildConfig.GuessTime));
 
                 if (answer != null)
                 {
@@ -95,15 +86,15 @@ namespace YuGiOh.Bot.Modules
                     var author = answer.Author as SocketGuildUser;
 
                     //await ReplyAsync($":trophy: The winner is **{author.Nickname ?? author.Username}**! The card was `{art.Key}`!");
-                    await ReplyAsync($":trophy: The winner is **{author.Nickname ?? author.Username}**! The card was `{passcodeKv.Key}`!");
+                    await ReplyAsync($":trophy: The winner is **{author.Nickname ?? author.Username}**! The card was `{card.Name}`!");
 
                 }
                 else
-                    await ReplyAsync($":stop_button: Ran out of time! The card was `{passcodeKv.Key}`!");
+                    await ReplyAsync($":stop_button: Ran out of time! The card was `{card.Name}`!");
 
             }
             else
-                await ReplyAsync($":game_die: There is a game in progress!");
+                await ReplyAsync(":game_die: There is a game in progress!");
             Cache.GuessInProgress.TryRemove(Context.Channel.Id, out _);
 
         }
@@ -113,10 +104,11 @@ namespace YuGiOh.Bot.Modules
         public async Task HangmanCommand()
         {
 
-            var card = Cache.Uppercase.RandomSubset(1, Rand).First();
+            var card = await YuGiOhDbService.GetRandomCardAsync();
+            var name = card.Name;
             var counter = 0;
 
-            var indexToDisplay = card.Select(c =>
+            var indexToDisplay = name.Select(c =>
             {
 
                 if (char.IsLetterOrDigit(c))
@@ -126,11 +118,11 @@ namespace YuGiOh.Bot.Modules
                 else
                     return c.ToString();
 
-            }).ToDictionary(s => counter++, s => s);
+            }).ToDictionary(_ => counter++, s => s);
 
             var display = indexToDisplay.Values.Join("");
 
-            var check = new StringBuilder(card.Select(c =>
+            var check = new StringBuilder(name.Select(c =>
             {
 
                 if (char.IsLetterOrDigit(c))
@@ -141,13 +133,13 @@ namespace YuGiOh.Bot.Modules
             }).Join(""));
 
             //await ReplyAsync(card);
-            AltConsole.Write("Command", "Hangman", $"{card}");
+            AltConsole.Write("Command", "Hangman", $"{name}");
             await ReplyAsync($"You have **5** minutes to figure this card out!\n{display}");
 
             var cts = new CancellationTokenSource();
             var timer = new Timer((token) => (token as CancellationTokenSource).Cancel(), cts, TimeSpan.FromSeconds(300), TimeSpan.FromSeconds(300));
 
-            var lower = card.ToLower();
+            var lower = name.ToLower();
             var hanging = 0;
             SocketGuildUser winner = null;
 
@@ -187,68 +179,58 @@ namespace YuGiOh.Bot.Modules
                     for (int i = lower.IndexOf(content); i != -1; i = lower.IndexOf(content, ++i))
                         indexes.Add(i);
 
-                    indexes.ForEach(i => check[i] = card[i]);
-                    indexes.ForEach(i => indexToDisplay[i] = $"__{card[i]}__ ");
+                    indexes.ForEach(i => check[i] = name[i]);
+                    indexes.ForEach(i => indexToDisplay[i] = $"__{name[i]}__ ");
                     guesses.Add(content);
 
                     await ReplyAsync(indexToDisplay.Values.Join(""));
 
-                    if (check.ToString() == card)
+                    if (check.ToString() == name)
                         winner = input.Author as SocketGuildUser;
 
                 }
 
-            } while (check.ToString() != card);
+            } while (check.ToString() != name);
 
 
             if (winner != null)
                 await ReplyAsync($":trophy: The winner is **{winner.Nickname ?? winner.Username}**!");
             else if (hanging == 6)
-                await ReplyAsync($":stop_button: The guy got hanged! There was no winner. The card was `{card}`!");
+                await ReplyAsync($":stop_button: The guy got hanged! There was no winner. The card was `{name}`!");
             else
-                await ReplyAsync($":stop_button: Time is up! There was no winner. The card was `{card}`!");
+                await ReplyAsync($":stop_button: Time is up! There was no winner. The card was `{name}`!");
 
         }
 
         private string GetHangman(int hangman)
         {
 
-            var noose = " _________     \n" +
-                        "|         |    \n";
+            const string noose = " _________     \n" +
+                                 "|         |    \n";
 
-            switch (hangman)
+            return hangman switch
             {
-
-                case 1:
-                    return noose +
-                        "|         0    \n";
-                case 2:
-                    return noose +
-                        "|         0    \n" +
-                        "|         |    \n";
-                case 3:
-                    return noose +
+                1 => noose +
+                    "|         0    \n",
+                2 => noose +
                     "|         0    \n" +
-                    "|        /|    \n";
-                case 4:
-                    return noose +
+                    "|         |    \n",
+                3 => noose +
                     "|         0    \n" +
-                    "|        /|\\  \n";
-                case 5:
-                    return noose +
+                    "|        /|    \n",
+                4 => noose +
+                    "|         0    \n" +
+                    "|        /|\\  \n",
+                5 => noose +
                     "|         0    \n" +
                     "|        /|\\  \n" +
-                    "|        /     \n";
-                case 6:
-                    return noose +
+                    "|        /     \n",
+                6 => noose +
                     "|         0    \n" +
                     "|        /|\\  \n" +
-                    "|        / \\  \n";
-                default:
-                    return "";
-
-            }
-
+                    "|        / \\  \n",
+                _ => "",
+            };
         }
 
         private string GenObufscatedString()

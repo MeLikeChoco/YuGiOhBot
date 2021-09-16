@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,7 +19,7 @@ namespace YuGiOh.Bot.Core
         {
 
             AltConsole.Initialize();
-            AltConsole.Write("Info", "Entry Point", "Welcome to YuGiOh Bot V2");
+            AltConsole.Write("Info", "Entry Point", $"Welcome to {Assembly.GetExecutingAssembly().GetName()}");
             AltConsole.Write("Info", "Entry Point", $"Using Discord.NET v{DiscordConfig.Version}");
 
             try
@@ -26,9 +27,10 @@ namespace YuGiOh.Bot.Core
 
                 var events = new Events();
 
-                await events.GetReadyForBlastOff();
+                await events.Initialize();
 
-            }catch(Exception e)
+            }
+            catch (Exception e)
             {
 
                 await File.WriteAllTextAsync("Error.txt", $"{e.Message}\n{e.StackTrace}");

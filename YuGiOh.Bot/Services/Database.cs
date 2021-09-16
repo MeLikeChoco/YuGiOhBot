@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using YuGiOh.Bot.Models;
 using Dapper.Contrib.Extensions;
 using System.Collections.Concurrent;
+using YuGiOh.Bot.Services.Interfaces;
 
 namespace YuGiOh.Bot.Services
 {

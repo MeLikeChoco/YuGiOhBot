@@ -36,7 +36,8 @@ async void DumpDatabaseAndScrape(object _)
 
     var config = await Config.GetConfig();
 
-    await BackupDatabase(config);
+    await BackupYuGiOhDatabase(config);
+    await BackupGuildConfigsDatabase(config);
     //await RecreateDatabase(config);
     await StartScraper(config);
     //await CreateIndexes(config);
@@ -48,10 +49,10 @@ async void DumpDatabaseAndScrape(object _)
 
 }
 
-async Task BackupDatabase(Config config)
+async Task BackupYuGiOhDatabase(Config config)
 {
 
-    Logger.Info("Backing up the database.");
+    Logger.Info("Backing up the yugioh database.");
 
     var guid = Guid.NewGuid();
 
@@ -63,7 +64,7 @@ async Task BackupDatabase(Config config)
         using (var recordBackupCmd = connection.CreateCommand())
         {
 
-            recordBackupCmd.CommandText = "insert into backups(guid) values(@guid)";
+            recordBackupCmd.CommandText = "insert into yugioh(guid) values(@guid)";
 
             recordBackupCmd.Parameters.AddWithValue("guid", guid);
             await recordBackupCmd.ExecuteNonQueryAsync();
@@ -74,7 +75,7 @@ async Task BackupDatabase(Config config)
 
     }
 
-    var backupFilePath = Path.Combine(config.Directories.BackupsDirectory, guid.ToString());
+    var backupFilePath = Path.Combine(config.Directories.YuGiOhBackups, guid.ToString());
 
     using (var process = new Process())
     {
@@ -83,7 +84,7 @@ async Task BackupDatabase(Config config)
         {
 
             FileName = "pg_dump",
-            Arguments = string.Format(config.ProcessArgs.PgDump, config.Database.Username, backupFilePath),
+            Arguments = string.Format(config.ProcessArgs.PgDump, config.Database.Username, backupFilePath, "yugioh"),
             RedirectStandardOutput = true
 
         };
@@ -95,32 +96,83 @@ async Task BackupDatabase(Config config)
     }
 
     Logger.Info($"Wrote to {backupFilePath}");
-    Logger.Info("Finished backing up the database.");
+    Logger.Info("Finished backing up the yugioh database.");
 
 }
 
-async Task RecreateDatabase(Config config)
+async Task BackupGuildConfigsDatabase(Config config)
 {
 
-    Logger.Info("Dropping tables.");
+    Logger.Info("Backing up the guild configs database.");
 
-    var sql = await File.ReadAllTextAsync(Path.Combine(config.Directories.SqlDirectory, "Table Deletion.sql"));
+    var guid = Guid.NewGuid();
 
-    using var connection = GetNpgsqlConnection(config, "yugioh");
+    using (var connection = GetNpgsqlConnection(config, "backups"))
+    {
 
-    await connection.OpenAsync();
-    await connection.ExecuteAsync(sql);
+        await connection.OpenAsync();
 
-    Logger.Info("Wiped tables.");
-    Logger.Info("Creating tables.");
+        using (var recordBackupCmd = connection.CreateCommand())
+        {
 
-    sql = await File.ReadAllTextAsync(Path.Combine(config.Directories.SqlDirectory, "Table Creation.sql"));
+            recordBackupCmd.CommandText = "insert into guilds(guid) values(@guid)";
 
-    await connection.ExecuteAsync(sql);
+            recordBackupCmd.Parameters.AddWithValue("guid", guid);
+            await recordBackupCmd.ExecuteNonQueryAsync();
 
-    Logger.Info("Created tables.");
+        }
+
+        await connection.CloseAsync();
+
+    }
+
+    var backupFilePath = Path.Combine(config.Directories.GuildConfigsBackups, guid.ToString());
+
+    using (var process = new Process())
+    {
+
+        process.StartInfo = new ProcessStartInfo
+        {
+
+            FileName = "pg_dump",
+            Arguments = string.Format(config.ProcessArgs.PgDump, config.Database.Username, backupFilePath, "guilds"),
+            RedirectStandardOutput = true
+
+        };
+
+        process.Start();
+        process.BeginOutputReadLine();
+        await process.WaitForExitAsync();
+
+    }
+
+    Logger.Info($"Wrote to {backupFilePath}");
+    Logger.Info("Finished backing up the guild configs database.");
 
 }
+
+//async Task RecreateDatabase(Config config)
+//{
+
+//    Logger.Info("Dropping tables.");
+
+//    var sql = await File.ReadAllTextAsync(Path.Combine(config.Directories.SqlDirectory, "Table Deletion.sql"));
+
+//    using var connection = GetNpgsqlConnection(config, "yugioh");
+
+//    await connection.OpenAsync();
+//    await connection.ExecuteAsync(sql);
+
+//    Logger.Info("Wiped tables.");
+//    Logger.Info("Creating tables.");
+
+//    sql = await File.ReadAllTextAsync(Path.Combine(config.Directories.SqlDirectory, "Table Creation.sql"));
+
+//    await connection.ExecuteAsync(sql);
+
+//    Logger.Info("Created tables.");
+
+//}
 
 async Task StartScraper(Config config)
 {
@@ -162,25 +214,25 @@ async Task StartScraper(Config config)
 
 }
 
-async Task CreateIndexes(Config config)
-{
+//async Task CreateIndexes(Config config)
+//{
 
-    Logger.Info("Creating indexes.");
+//    Logger.Info("Creating indexes.");
 
-    var sql = await File.ReadAllTextAsync(Path.Combine(config.Directories.SqlDirectory, "Index Creation.sql"));
+//    var sql = await File.ReadAllTextAsync(Path.Combine(config.Directories.SqlDirectory, "Index Creation.sql"));
 
-    using (var connection = GetNpgsqlConnection(config, "yugioh"))
-    {
+//    using (var connection = GetNpgsqlConnection(config, "yugioh"))
+//    {
 
-        await connection.OpenAsync();
-        await connection.ExecuteAsync(sql);
-        await connection.CloseAsync();
+//        await connection.OpenAsync();
+//        await connection.ExecuteAsync(sql);
+//        await connection.CloseAsync();
 
-    }
+//    }
 
-    Logger.Info("Created indexes.");
+//    Logger.Info("Created indexes.");
 
-}
+//}
 
 NpgsqlConnection GetNpgsqlConnection(Config config, string database = null)
 {
@@ -261,8 +313,9 @@ namespace YuGiOh.Database
     public class Directories
     {
 
-        public string SqlDirectory { get; set; }
-        public string BackupsDirectory {  get; set; }
+        public string Sql { get; set; }
+        public string YuGiOhBackups {  get; set; }
+        public string GuildConfigsBackups { get; set; }
 
     }
 
