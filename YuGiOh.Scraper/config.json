@@ -1,0 +1,12 @@
+{
+  "Database": {
+
+    "Host": "",
+    "Port": 0,
+    "Username": "",
+    "Password": ""
+
+  },
+  "RetryDelay": "00:00:30",
+  "MaxRetry": 3
+}

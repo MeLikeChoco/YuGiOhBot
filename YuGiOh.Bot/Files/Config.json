@@ -1,0 +1,31 @@
+﻿{
+  "Guild Invite": "",
+  "Bot Invite": "",
+  "Feedback Channel": 0,
+  "Owner Id": 0,
+  "Is Test": false,
+  "Databases": {
+    "YuGiOh": {
+      "Host": "",
+      "Port": 0,
+      "Username": "",
+      "Password": ""
+    },
+    "Guilds": {
+      "Host": "",
+      "Port": 0,
+      "Username": "",
+      "Password": ""
+    }
+  },
+  "Tokens": {
+    "Discord": {
+      "Legit": "",
+      "Test": ""
+    },
+    "Bot List": {
+      "Black": "",
+      "Blue":  ""
+    }
+  }
+}

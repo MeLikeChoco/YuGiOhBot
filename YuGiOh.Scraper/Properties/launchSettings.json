@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "YuGiOh.Scraper": {
+      "commandName": "Project",
+      "hotReloadEnabled": false
+    }
+  }
+}
