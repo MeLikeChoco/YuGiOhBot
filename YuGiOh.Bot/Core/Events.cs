@@ -43,7 +43,7 @@ namespace YuGiOh.Bot.Core
             LogLevel = LogSeverity.Verbose,
             MessageCacheSize = 30,
             TotalShards = 1,
-            UseInternalRatelimiting = false            
+            UseInternalRatelimiting = false
 
         };
 
@@ -292,7 +292,12 @@ namespace YuGiOh.Bot.Core
 
             Print("Registering commands...");
 
-            _chat = new Chat(_cache, _services.GetService<IGuildConfigDbService>(), new Web());
+            _chat = new Chat(
+                _cache,
+                _services.GetService<Web>(),
+                _services.GetService<IYuGiOhDbService>(),
+                _services.GetService<IGuildConfigDbService>()
+             );
 
             _client.MessageReceived += HandleCommand;
             _client.MessageReceived += (message) =>

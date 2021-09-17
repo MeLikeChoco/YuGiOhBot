@@ -57,7 +57,7 @@ namespace YuGiOh.Bot.Modules
             var card = await YuGiOhDbService.GetCardAsync(input);
 
             if (card != null)
-                await SendCardEmbed(card.GetEmbedBuilder(), _minimal, Web);
+                await SendCardEmbed(card.GetEmbedBuilder(), _guildConfig.Minimal, Web);
             else
                 await NoResultError(input);
 
@@ -75,7 +75,7 @@ namespace YuGiOh.Bot.Modules
 
             var card = await YuGiOhDbService.GetRandomCardAsync();
 
-            await SendCardEmbed(card.GetEmbedBuilder(), _minimal, Web);
+            await SendCardEmbed(card.GetEmbedBuilder(), _guildConfig.Minimal, Web);
 
         }
 

@@ -1,18 +1,14 @@
 ﻿create or replace function search_cards(input varchar)
-returns setof varchar
+returns setof cards
 language plpgsql
 as $$
 begin
 
-	-- the union order matters or it cannot union due to type mismatch
-
 	return query
-		select * from (
-			select get_cards_contains(input)
-			union			
-			select name from get_card_exact(input)
-		) as cards
-		order by 1 asc;
+		select * from get_card_exact(input)
+		union
+		select * from get_cards_contains(input)
+		order by name asc;
 
 end
 $$;

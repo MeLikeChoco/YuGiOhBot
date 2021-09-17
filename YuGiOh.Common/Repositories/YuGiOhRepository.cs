@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Dapper;
 using Dapper.FluentMap;
@@ -228,14 +229,14 @@ namespace YuGiOh.Common.Repositories
 
         }
 
-        public async Task<IEnumerable<string>> SearchCardsAsync(string input)
+        public async Task<IEnumerable<CardEntity>> SearchCardsAsync(string input)
         {
 
             var connection = _config.GetYuGiOhDbConnection();
 
             await connection.OpenAsync();
 
-            var cards = await connection.QueryProcAsync<string>("search_cards", new { input });
+            var cards = await connection.QueryProcAsync<CardEntity>("search_cards", new { input });
 
             await connection.CloseAsync();
 
@@ -243,23 +244,37 @@ namespace YuGiOh.Common.Repositories
 
         }
 
-        public async Task<IEnumerable<string>> GetCardsContainsAllAsync(string input)
+        public async Task<IEnumerable<CardEntity>> GetCardsContainsAllAsync(string input)
         {
-
-            IEnumerable<string> cards;
 
             using var connection = _config.GetYuGiOhDbConnection();
 
             await connection.OpenAsync();
 
             var inputWords = input.Split(' ');
-            var results = await connection.SelectAsync<CardEntity>(card =>
-                inputWords.All(word => card.Name.ContainsIgnoreCase(word))
-            );
+            //var results = await connection.SelectAsync<CardEntity>(card =>
+            //    inputWords.All(word => card.Name.ContainsIgnoreCase(word))
+            //);
+
+            var sqlBuilder = new SqlBuilder();
+            var selector = sqlBuilder.AddTemplate("select * from cards /**where**/ order by char_length(name)");
+            var parameters = new DynamicParameters();
+
+            for(var i = 0; i < inputWords.Length; i++)
+            {
+
+                var key = $"@{i}";
+
+                sqlBuilder.Where($"name ~* {key}");
+                parameters.Add(key, inputWords[i]);
+
+            }
+
+            var cards = await connection.QueryAsync<CardEntity>(selector.RawSql, parameters);
 
             await connection.CloseAsync();
 
-            cards = results.Select(card => card.Name);
+            //cards = results.Select(card => card.Name);
 
             return cards;
 
@@ -309,14 +324,14 @@ namespace YuGiOh.Common.Repositories
 
         }
 
-        public async Task<IEnumerable<string>> GetCardsInArchetypeAsync(string input)
+        public async Task<IEnumerable<CardEntity>> GetCardsInArchetypeAsync(string input)
         {
 
             using var connection = _config.GetYuGiOhDbConnection();
 
             await connection.OpenAsync();
 
-            var cards = await connection.QueryProcAsync<string>("get_cards_in_archetype", new { input });
+            var cards = await connection.QueryProcAsync<CardEntity>("get_cards_in_archetype", new { input });
 
             await connection.CloseAsync();
 
@@ -324,14 +339,14 @@ namespace YuGiOh.Common.Repositories
 
         }
 
-        public async Task<IEnumerable<string>> GetCardsInSupportAsync(string input)
+        public async Task<IEnumerable<CardEntity>> GetCardsInSupportAsync(string input)
         {
 
             using var connection = _config.GetYuGiOhDbConnection();
 
             await connection.OpenAsync();
 
-            var cards = await connection.QueryProcAsync<string>("get_cards_in_support", new { input });
+            var cards = await connection.QueryProcAsync<CardEntity>("get_cards_in_support", new { input });
 
             await connection.CloseAsync();
 
@@ -339,14 +354,14 @@ namespace YuGiOh.Common.Repositories
 
         }
 
-        public async Task<IEnumerable<string>> GetCardsInAntisupportAsync(string input)
+        public async Task<IEnumerable<CardEntity>> GetCardsInAntisupportAsync(string input)
         {
 
             using var connection = _config.GetYuGiOhDbConnection();
 
             await connection.OpenAsync();
 
-            var cards = await connection.QueryProcAsync<string>("get_cards_in_antisupport", new { input });
+            var cards = await connection.QueryProcAsync<CardEntity>("get_cards_in_antisupport", new { input });
 
             await connection.CloseAsync();
 

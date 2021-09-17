@@ -41,13 +41,13 @@ namespace YuGiOh.Scraper
 
             var ocgLinks = await GetLinks(ConstantString.MediaWikiOcgCards);
 
-            Log("Getting Skill cards...");
+            Log("Filtering cards...");
 
-            var skillLinks = await GetLinks(ConstantString.MediaWikiSkillCards);
+            var links = await GetLinks(ConstantString.MediaWikiSkillCards);
 
-            Log("Processing cards.");
+            Log("Filtered cards.");
 
-            var cardProcResponse = ProcessCards(tcgLinks, ocgLinks, skillLinks);
+            var cardProcResponse = ProcessCards(tcgLinks, ocgLinks, links);
 
             Log($"Processed {cardProcResponse.Count} cards. There were {cardProcResponse.Errors.Count} errors.");
             Log("Getting TCG booster packs.");
@@ -73,25 +73,36 @@ namespace YuGiOh.Scraper
 
         }
 
-        public CardProcessorResponse ProcessCards(IDictionary<string, string> tcgLinks, IDictionary<string, string> ocgLinks, IDictionary<string, string> skillLinks)
+        public async Task<IDictionary<string, string>> FilterCardLinks(IDictionary<string, string> tcgLinks, IDictionary<string, string> ocgLinks)
         {
 
-            var nameToLinks = tcgLinks
-                .Concat(ocgLinks.Where(kv => !tcgLinks.ContainsKey(kv.Key)))
-                .Except(skillLinks);
-            var size = nameToLinks.Count();
+            var links = tcgLinks.Union(ocgLinks);
+
+            var tokenLinks = await GetLinks(ConstantString.MediaWikiTokenCards);
+            var skillLinks = await GetLinks(ConstantString.MediaWikiSkillCards);
+
+            return links
+                .Except(tokenLinks)
+                .Except(skillLinks)
+                .ToDictionary(kv => kv.Key, kv => kv.Value);
+
+        }
+
+        public CardProcessorResponse ProcessCards(IDictionary<string, string> tcgLinks, IDictionary<string, string> ocgLinks, IDictionary<string, string> links)
+        {
+
+            var size = links.Count;
 
             if (Options.MaxCardsToParse <= size)
-                nameToLinks = nameToLinks.RandomSubset(Options.MaxCardsToParse);
+                links = links.RandomSubset(Options.MaxCardsToParse).ToDictionary(kv => kv.Key, kv => kv.Value);
             //nameToLinks = nameToLinks.Take(Options.MaxCardsToParse);
 
-            size = nameToLinks.Count();
             var errors = new ConcurrentBag<Error>();
             var repo = new YuGiOhRepository(this);
             var count = 0;
             var countLock = new object();
 
-            Parallel.ForEach(nameToLinks, _parallelOptions, (nameToLink, _) =>
+            Parallel.ForEach(links, _parallelOptions, (nameToLink, _) =>
             {
 
                 var retryCount = 0;
@@ -173,8 +184,7 @@ namespace YuGiOh.Scraper
         public BoosterProcessorResponse ProcessBoosters(IDictionary<string, string> tcgLinks, IDictionary<string, string> ocgLinks)
         {
 
-            var nameToLinks = tcgLinks
-                .Concat(ocgLinks.Where(kv => !tcgLinks.ContainsKey(kv.Key)));
+            var nameToLinks = tcgLinks.Union(ocgLinks);
             var size = nameToLinks.Count();
 
             if (Options.MaxBoostersToParse <= size)

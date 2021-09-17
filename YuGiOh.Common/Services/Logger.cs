@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reflection;
+using System.Text;
 
 namespace YuGiOh.Common.Services
 {
@@ -12,6 +13,11 @@ namespace YuGiOh.Common.Services
         private static string DefaultCategory
         {
             get => _defaultCategory ??= Assembly.GetEntryAssembly().GetName().Name;
+        }
+
+        static Logger()
+        {
+            Console.OutputEncoding = Encoding.UTF8;
         }
 
         public static void Log(LogLevel logLevel, string message)

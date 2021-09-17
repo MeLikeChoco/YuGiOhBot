@@ -1,10 +1,7 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using CommandLine;
+using Newtonsoft.Json;
 
 namespace YuGiOh.Bot.Models
 {
@@ -21,6 +18,9 @@ namespace YuGiOh.Bot.Models
         public ulong OwnerId { get; set; }
         [JsonProperty("Is Test")]
         public bool IsTest { get; set; }
+        [JsonIgnore]
+        [Option('s', "is_sub_proc", Default = false)]
+        public bool IsSubProc { get; set; }
         public Databases Databases { get; set; }
         public Tokens Tokens { get; set; }
 
@@ -47,12 +47,31 @@ namespace YuGiOh.Bot.Models
         }
 
         [JsonIgnore]
-        public static Config Instance { get => _instance ??= JsonConvert.DeserializeObject<Config>(File.ReadAllText("Files/Config.json")); }
+        public static Config Instance
+        {
+            get
+            {
+
+                if (_instance == null)
+                {
+
+                    _instance = JsonConvert.DeserializeObject<Config>(File.ReadAllText("Files/Config.json"));
+
+                    Parser.Default
+                        .ParseArguments<Config>(Environment.GetCommandLineArgs())
+                        .WithParsed(config => _instance.IsSubProc = config.IsSubProc);
+
+                }
+
+                return _instance;
+
+            }
+        }
 
         [JsonIgnore]
         private static Config _instance;
 
-        public void Reload()
+        public static void Reload()
         {
 
             _instance = JsonConvert.DeserializeObject<Config>(File.ReadAllText("Files/Config.json"));

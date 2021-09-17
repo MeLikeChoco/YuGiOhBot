@@ -10,16 +10,17 @@ namespace YuGiOh.Bot.Services.Interfaces
     public interface IYuGiOhDbService
     {
 
-        Task<IEnumerable<string>> GetCardsAsync(string input);
-        Task<IEnumerable<string>> SearchCardsAsync(string input);
+        Task<IEnumerable<Card>> GetCardsAsync(string input);
+        Task<IEnumerable<Card>> SearchCardsAsync(string input);
+        Task<IEnumerable<Card>> GetCardsContainsAllAsync(string input);
 
         Task<Card> GetCardAsync(string name);
         Task<Card> GetRandomCardAsync();
         Task<Card> GetClosestCardAsync(string input);
 
-        Task<IEnumerable<string>> GetCardsInArchetype(string input);
-        Task<IEnumerable<string>> GetCardsFromSupportAsync(string input);
-        Task<IEnumerable<string>> GetCardsFromAntisupportAsync(string input);
+        Task<IEnumerable<Card>> GetCardsInArchetype(string input);
+        Task<IEnumerable<Card>> GetCardsFromSupportAsync(string input);
+        Task<IEnumerable<Card>> GetCardsFromAntisupportAsync(string input);
 
         Task<string> GetImageLinkAsync(string input);
         Task<string> GetNameWithPasscodeAsync(string passcode);

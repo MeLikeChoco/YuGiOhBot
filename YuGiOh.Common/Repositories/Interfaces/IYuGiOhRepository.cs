@@ -15,13 +15,14 @@ namespace YuGiOh.Common.Repositories.Interfaces
         Task InsertErrorAsync(Error error);
 
         Task<CardEntity> GetCardAsync(string name);
-        Task<IEnumerable<string>> SearchCardsAsync(string input);
+        Task<IEnumerable<CardEntity>> SearchCardsAsync(string input);
+        Task<IEnumerable<CardEntity>> GetCardsContainsAllAsync(string input);
         Task<CardEntity> GetCardFuzzyAsync(string input);
         Task<CardEntity> GetRandomCardAsync();
 
-        Task<IEnumerable<string>> GetCardsInArchetypeAsync(string input);
-        Task<IEnumerable<string>> GetCardsInSupportAsync(string input);
-        Task<IEnumerable<string>> GetCardsInAntisupportAsync(string input);
+        Task<IEnumerable<CardEntity>> GetCardsInArchetypeAsync(string input);
+        Task<IEnumerable<CardEntity>> GetCardsInSupportAsync(string input);
+        Task<IEnumerable<CardEntity>> GetCardsInAntisupportAsync(string input);
 
         Task<string> GetNameWithPasscodeAsync(string passcode);
         Task<string> GetImageLinkAsync(string input);

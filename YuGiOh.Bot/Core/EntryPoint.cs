@@ -18,7 +18,6 @@ namespace YuGiOh.Bot.Core
         private static async Task Main(string[] args)
         {
 
-            AltConsole.Initialize();
             AltConsole.Write("Info", "Entry Point", $"Welcome to {Assembly.GetExecutingAssembly().GetName()}");
             AltConsole.Write("Info", "Entry Point", $"Using Discord.NET v{DiscordConfig.Version}");
 

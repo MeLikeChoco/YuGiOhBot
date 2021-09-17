@@ -17,7 +17,7 @@ namespace YuGiOh.Bot.Modules
     {
 
         public CommandService CommandService { get; set; }
-        public IServiceProvider ServiceProvider { get; set; }
+        public IServiceProvider Services { get; set; }
 
         [Command("search"), Alias("s")]
         [Summary("Returns results based on your input! No proper capitalization needed!")]
@@ -28,9 +28,9 @@ namespace YuGiOh.Bot.Modules
             var amount = cards.Count();
 
             if (amount == 1)
-                await CardCommand(cards.First());
+                await CardCommand(cards.First().Name);
             else if (amount != 0)
-                await ReceiveInput(amount, cards);
+                await ReceiveInput(amount, cards.Select(card => card.Name));
             else
                 await NoResultError(input);
 
@@ -44,7 +44,7 @@ namespace YuGiOh.Bot.Modules
             var cards = await YuGiOhDbService.GetCardsInArchetype(input);
 
             if (cards.Any())
-                await ReceiveInput(cards.Count(), cards);
+                await ReceiveInput(cards.Count(), cards.Select(card => card.Name));
             else
                 await NoResultError("archetypes", input);
 
@@ -58,7 +58,7 @@ namespace YuGiOh.Bot.Modules
             var cards = await YuGiOhDbService.GetCardsFromSupportAsync(input);
 
             if (cards.Any())
-                await ReceiveInput(cards.Count(), cards);
+                await ReceiveInput(cards.Count(), cards.Select(card => card.Name));
             else
                 await NoResultError("supports", input);
 
@@ -72,7 +72,7 @@ namespace YuGiOh.Bot.Modules
             var cards = await YuGiOhDbService.GetCardsFromAntisupportAsync(input);
 
             if (cards.Any())
-                await ReceiveInput(cards.Count(), cards);
+                await ReceiveInput(cards.Count(), cards.Select(card => card.Name));
             else
                 await NoResultError("antisupports", input);
 
@@ -159,7 +159,7 @@ namespace YuGiOh.Bot.Modules
 
             AltConsole.Write("Info", "Command", "Executing card command from search module...");
 
-            return CommandService.Commands.First(command => command.Name == "card").ExecuteAsync(Context, new List<object>(1) { card }, null, ServiceProvider);
+            return CommandService.Commands.First(command => command.Name == "card").ExecuteAsync(Context, new List<object>(1) { card }, null, Services);
 
         }
 

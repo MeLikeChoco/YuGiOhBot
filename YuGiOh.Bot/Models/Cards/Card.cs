@@ -121,7 +121,7 @@ namespace YuGiOh.Bot.Models.Cards
     public enum CardType
     {
 
-        SuperDuperSecretType,
+        Unknown,
         Monster,
         Trap,
         Spell

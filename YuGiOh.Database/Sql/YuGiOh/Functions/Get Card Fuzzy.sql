@@ -4,7 +4,7 @@ as $func$
 begin
 	
 	return query
-		select name from cards order by levenshtein(name, input) asc, name asc limit 1;
+		select * from cards order by levenshtein(name, input) asc, name asc limit 1;
 
 end;
 $func$

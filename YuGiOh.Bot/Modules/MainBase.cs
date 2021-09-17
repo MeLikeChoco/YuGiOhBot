@@ -22,7 +22,6 @@ namespace YuGiOh.Bot.Modules
         public Web Web { get; set; }
         public Random Rand { get; set; }
 
-        protected bool _minimal;
         protected GuildConfig _guildConfig;
 
         protected PaginatedAppearanceOptions PagedOptions => new()
@@ -38,7 +37,7 @@ namespace YuGiOh.Bot.Modules
         protected override void BeforeExecute(CommandInfo command)
         {
 
-            Task.Run(async () => _guildConfig = Context.Channel is not SocketDMChannel ? await GuildConfigDbService.GetGuildConfigAsync(Context.Guild.Id) : await GuildConfigDbService.GetGuildConfigAsync(0)).GetAwaiter().GetResult();
+            _guildConfig = Context.Channel is not SocketDMChannel ? GuildConfigDbService.GetGuildConfigAsync(Context.Guild.Id).GetAwaiter().GetResult() : GuildConfigDbService.GetGuildConfigAsync(0).GetAwaiter().GetResult();
 
         }
 

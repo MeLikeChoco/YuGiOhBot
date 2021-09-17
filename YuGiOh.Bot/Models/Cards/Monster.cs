@@ -70,7 +70,7 @@ namespace YuGiOh.Bot.Models.Cards
     public enum MonsterAttribute
     {
 
-        SuperDuperSecretAttribute,
+        Unknown,
         WIND,
         DARK,
         LIGHT,

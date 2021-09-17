@@ -22,7 +22,6 @@ namespace YuGiOh.Bot.Services
         public List<Card> Cards { get; private set; }
         public Dictionary<string, Card> NameToCard { get; private set; }
         public Dictionary<string, BoosterPack> BoosterPacks { get; private set; }
-        public HashSet<string> Lowercase { get; private set; }
         public ConcurrentDictionary<ulong, object> GuessInProgress { get; }
         public Banlist Banlist { get; private set; }
         public int FYeahYgoCardArtPosts { get; private set; }
@@ -54,7 +53,6 @@ namespace YuGiOh.Bot.Services
             var cardParsers = AquireGoodies();
 
             AquireFancyMessages(cardParsers);
-            BuildHouse(cardParsers);
             AquireTheUntouchables();
             UnlockTheShock();
             AquireGoodiePacks();
@@ -122,19 +120,6 @@ namespace YuGiOh.Bot.Services
             //Embeds = new Dictionary<string, EmbedBuilder>(tempDict, IgnoreCase);
 
             Log("Finished generating embeds.");
-
-        }
-
-        private void BuildHouse(IEnumerable<CardParser> parsers)
-        {
-
-            Log("Building cache...");
-
-            Task.WaitAll(
-                Task.Run(() => Lowercase = new HashSet<string>(parsers.Select(parser => parser.Name.ToLower())))
-                );
-
-            Log("Finished building cache.");
 
         }
 

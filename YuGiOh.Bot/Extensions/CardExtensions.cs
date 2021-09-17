@@ -41,7 +41,7 @@ namespace YuGiOh.Bot.Extensions
 
             card.Name = entity.Name;
             card.RealName = entity.RealName;
-            card.CardType = Enum.Parse<CardType>(entity.CardType);
+            card.CardType = Enum.TryParse<CardType>(entity.CardType, true, out var cardType) ? cardType : CardType.Unknown;
             card.Lore = entity.Lore?.Replace(@"\n", "\n");
             card.Archetypes = entity.Archetypes;
             card.Supports = entity.Supports;
@@ -66,7 +66,7 @@ namespace YuGiOh.Bot.Extensions
             if (card is Monster monster)
             {
 
-                monster.Attribute = Enum.Parse<MonsterAttribute>(entity.Attribute, true);
+                monster.Attribute = Enum.TryParse<MonsterAttribute>(entity.Attribute, true, out var attribute) ? attribute : MonsterAttribute.Unknown;
                 monster.Types = entity.Types.Split(" / ");
 
                 if (monster is IHasAtk hasAtk)

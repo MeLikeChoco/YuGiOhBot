@@ -1,23 +1,22 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace YuGiOh.Bot
 {
     public static class AltConsole
     {
-        
-        private static StreamWriter _logger;
+
+        private readonly static StreamWriter _logger;
         //private static object _loggerLock;
 
-        public static void Initialize()
+        static AltConsole()
         {
 
             //_loggerLock = new object();
+
+            Console.OutputEncoding = Encoding.UTF8;
 
             if (File.Exists("Log.txt"))
                 File.Delete("Log.txt");
@@ -53,7 +52,7 @@ namespace YuGiOh.Bot
 
             }
 
-            if(log)
+            if (log)
                 Log(message);
 
         }
@@ -84,8 +83,8 @@ namespace YuGiOh.Bot
                 Console.WriteLine($"{message}\t\t{exception}");
 
             }
-            
-            if(log)
+
+            if (log)
                 Log(message);
 
         }

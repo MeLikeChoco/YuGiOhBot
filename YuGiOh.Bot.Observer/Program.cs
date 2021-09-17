@@ -1,65 +1,58 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 
-namespace YuGiOh.Bot.Observer
+Process botProc;
+
+Console.OutputEncoding = Encoding.UTF8;
+
+Console.WriteLine("Starting bot...");
+
+CreateProc();
+
+await Task.Delay(-1);
+
+void CreateProc()
 {
-    public static class Program
+
+    botProc = new Process
     {
 
-        private static Process _botProcess;
-
-        public static async Task Main(string[] _)
-        {
-            CreateProcess(null, null);
-            await Task.Delay(-1);
-        }
-
-        private static void CreateProcess(object _, EventArgs _e)
+        StartInfo = new ProcessStartInfo
         {
 
-            Console.WriteLine("Starting bot...");
+            RedirectStandardError = true,
+            RedirectStandardOutput = true,
+            UseShellExecute = false,
+            FileName = "dotnet",
+            Arguments = $"{File.ReadAllText("file.txt")}"
 
-            _botProcess = new Process
-            {
+        },
+        EnableRaisingEvents = true
 
-                StartInfo = new ProcessStartInfo
-                {
+    };
 
-                    RedirectStandardError = true,
-                    RedirectStandardOutput = true,
-                    UseShellExecute = false,
-                    FileName = "dotnet",
-                    Arguments = $"{File.ReadAllText("file.txt")}"
+    botProc.OutputDataReceived += RedirectOutput;
+    botProc.ErrorDataReceived += RedirectOutput;
+    botProc.Exited += async (object _, EventArgs _) =>
+    {
 
-                },
-                EnableRaisingEvents = true
+        Console.WriteLine("Bot exited. Waiting 10 seconds for bot restart...");
 
-            };
+        botProc.OutputDataReceived -= RedirectOutput;
+        botProc.ErrorDataReceived -= RedirectOutput;
 
-            _botProcess.OutputDataReceived += RedirectOutput;
-            _botProcess.ErrorDataReceived += RedirectOutput;
-            _botProcess.Exited += async (object _, EventArgs _) =>
-            {
+        await Task.Delay(TimeSpan.FromSeconds(10)).ContinueWith(_ => CreateProc());
 
-                Console.WriteLine("Bot exited. Waiting 10 seconds for bot restart...");
+    };
 
-                _botProcess.OutputDataReceived -= RedirectOutput;
-                _botProcess.ErrorDataReceived -= RedirectOutput;
+    botProc.Start();
+    botProc.BeginOutputReadLine();
+    botProc.BeginErrorReadLine();
 
-                await Task.Delay(TimeSpan.FromSeconds(10)).ContinueWith(_ => CreateProcess(null, null));
-
-            };
-
-            _botProcess.Start();
-            _botProcess.BeginOutputReadLine();
-            _botProcess.BeginErrorReadLine();
-
-        }
-
-        private static void RedirectOutput(object _, DataReceivedEventArgs args)
-            => Console.WriteLine(args.Data);
-
-    }
 }
+
+static void RedirectOutput(object _, DataReceivedEventArgs args)
+    => Console.WriteLine(args.Data);

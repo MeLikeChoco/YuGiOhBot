@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using YuGiOh.Bot.Extensions;
 using YuGiOh.Bot.Models.Cards;
@@ -25,8 +26,23 @@ namespace YuGiOh.Bot.Services
 
         }
 
-        public Task<IEnumerable<string>> SearchCardsAsync(string input)
-            => _repo.SearchCardsAsync(input);
+        public async Task<IEnumerable<Card>> SearchCardsAsync(string input)
+        {
+
+            var entities = await _repo.SearchCardsAsync(input);
+
+            return entities.Select(entity => entity.ToModel());
+
+        }
+
+        public async Task<IEnumerable<Card>> GetCardsContainsAllAsync(string input)
+        {
+
+            var entities = await _repo.GetCardsContainsAllAsync(input);
+
+            return entities.Select(entity => entity.ToModel());
+
+        }
 
         public async Task<Card> GetRandomCardAsync()
         {
@@ -37,24 +53,47 @@ namespace YuGiOh.Bot.Services
 
         }
 
-        public Task<IEnumerable<string>> GetCardsAsync(string input)
-            => _repo.SearchCardsAsync(input);
+        public async Task<IEnumerable<Card>> GetCardsAsync(string input)
+        {
 
-        public Task<IEnumerable<string>> GetCardsInArchetype(string input)
-            => _repo.GetCardsInArchetypeAsync(input);
+            var entities = await _repo.SearchCardsAsync(input);
 
-        public Task<IEnumerable<string>> GetCardsFromSupportAsync(string input)
-            => _repo.GetCardsInSupportAsync(input);
+            return entities.Select(entity => entity.ToModel());
 
-        public Task<IEnumerable<string>> GetCardsFromAntisupportAsync(string input)
-            => _repo.GetCardsInAntisupportAsync(input);
+        }
+
+        public async Task<IEnumerable<Card>> GetCardsInArchetype(string input)
+        {
+
+            var entities = await _repo.GetCardsInArchetypeAsync(input);
+
+            return entities.Select(entity => entity.ToModel());
+
+        }
+
+        public async Task<IEnumerable<Card>> GetCardsFromSupportAsync(string input)
+        {
+
+            var entities = await _repo.GetCardsInSupportAsync(input);
+
+            return entities.Select(entity => entity.ToModel());
+
+        }
+
+        public async Task<IEnumerable<Card>> GetCardsFromAntisupportAsync(string input)
+        {
+
+            var entities = await _repo.GetCardsInAntisupportAsync(input);
+            return entities.Select(entity => entity.ToModel());
+
+        }
 
         public async Task<Card> GetClosestCardAsync(string input)
         {
 
-            var card = await _repo.GetCardFuzzyAsync(input);
+            var entity = await _repo.GetCardFuzzyAsync(input);
 
-            throw new NotImplementedException();
+            return entity.ToModel();
 
         }
 
