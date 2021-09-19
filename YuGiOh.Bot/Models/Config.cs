@@ -52,7 +52,7 @@ namespace YuGiOh.Bot.Models
             get
             {
 
-                if (_instance == null)
+                if (_instance is null)
                 {
 
                     _instance = JsonConvert.DeserializeObject<Config>(File.ReadAllText("Files/Config.json"));

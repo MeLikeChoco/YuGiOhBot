@@ -54,9 +54,9 @@ namespace MoreLinq
         public static IEnumerable<TResult> Batch<TSource, TResult>(this IEnumerable<TSource> source, int size,
             Func<IEnumerable<TSource>, TResult> resultSelector)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source is null) throw new ArgumentNullException(nameof(source));
             if (size <= 0) throw new ArgumentOutOfRangeException(nameof(size));
-            if (resultSelector == null) throw new ArgumentNullException(nameof(resultSelector));
+            if (resultSelector is null) throw new ArgumentNullException(nameof(resultSelector));
 
             return _(); IEnumerable<TResult> _()
             {
@@ -65,7 +65,7 @@ namespace MoreLinq
 
                 foreach (var item in source)
                 {
-                    if (bucket == null)
+                    if (bucket is null)
                     {
                         bucket = new TSource[size];
                     }
@@ -85,7 +85,7 @@ namespace MoreLinq
                 }
 
                 // Return the last bucket with all remaining elements
-                if (bucket != null && count > 0)
+                if (bucket is not null && count > 0)
                 {
                     Array.Resize(ref bucket, count);
                     yield return resultSelector(bucket);

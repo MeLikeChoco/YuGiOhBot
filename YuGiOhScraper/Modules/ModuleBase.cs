@@ -200,7 +200,7 @@ namespace YuGiOhScraper.Modules
 
                 }
 
-            } while (exception != null);
+            } while (exception is not null);
 
         }
 
@@ -243,7 +243,7 @@ namespace YuGiOhScraper.Modules
 
                 }
 
-            } while (exception != null);
+            } while (exception is not null);
 
             return Task.CompletedTask;
 

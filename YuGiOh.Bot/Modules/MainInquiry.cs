@@ -30,7 +30,7 @@ namespace YuGiOh.Bot.Modules
         //        var cards = booster.Open();
         //        var cardNumberLength = 0;
 
-        //        if (cards.All(card => card.CardNumber != null))
+        //        if (cards.All(card => card.CardNumber is not null))
         //            cardNumberLength = cards.Max(card => card.CardNumber.Length);
 
         //        var cardNameLength = cards.Max(card => card.Name.Length);
@@ -56,7 +56,7 @@ namespace YuGiOh.Bot.Modules
 
             var card = await YuGiOhDbService.GetCardAsync(input);
 
-            if (card != null)
+            if (card is not null)
                 await SendCardEmbed(card.GetEmbedBuilder(), _guildConfig.Minimal, Web);
             else
                 await NoResultError(input);
@@ -86,7 +86,7 @@ namespace YuGiOh.Bot.Modules
 
             var card = await YuGiOhDbService.GetCardAsync(input);
 
-            if (card != null)
+            if (card is not null)
             {
 
                 using (Context.Channel.EnterTypingState())
@@ -111,7 +111,7 @@ namespace YuGiOh.Bot.Modules
 
             var card = await YuGiOhDbService.GetCardAsync(input);
 
-            if (card != null)
+            if (card is not null)
             {
 
                 Stream stream;
@@ -146,7 +146,7 @@ namespace YuGiOh.Bot.Modules
 
             var card = await YuGiOhDbService.GetCardAsync(input);
 
-            if (card != null)
+            if (card is not null)
             {
 
                 if (!card.TcgExists)
@@ -162,7 +162,7 @@ namespace YuGiOh.Bot.Modules
 
                     var response = await Web.GetPrices(card.Name) ?? await Web.GetPrices(card.RealName);
 
-                    if (response == null)
+                    if (response is null)
                     {
 
                         await ReplyAsync($"There was an error in retrieving the prices for \"{input}\". Please try again later.");

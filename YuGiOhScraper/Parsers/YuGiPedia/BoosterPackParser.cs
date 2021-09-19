@@ -27,7 +27,7 @@ namespace YuGiOhScraper.Parsers.YuGiPedia
             var dates = GetReleaseDates(dom);
             var table = dom.GetElementsByClassName("card-list").FirstOrDefault()?.FirstElementChild.Children;
 
-            if (table == null)
+            if (table is null)
                 throw new NullReferenceException($"No card list exists for {Name}");
 
             var tableHead = table.First();
@@ -51,7 +51,7 @@ namespace YuGiOhScraper.Parsers.YuGiPedia
             {
 
                 Name = Name,
-                Dates = dates == null ? null : JsonConvert.SerializeObject(dates),
+                Dates = dates is null ? null : JsonConvert.SerializeObject(dates),
                 Cards = JsonConvert.SerializeObject(cards),
                 Url = Url
 
@@ -66,7 +66,7 @@ namespace YuGiOhScraper.Parsers.YuGiPedia
             var infobox = dom.GetElementsByClassName("infobox").FirstOrDefault()?.FirstElementChild.Children;
             var releaseDateHeader = infobox.FirstOrDefault(element => !string.IsNullOrEmpty(element.TextContent) && element.TextContent.Contains("release dates", StringComparison.InvariantCultureIgnoreCase));
 
-            if (releaseDateHeader != null)
+            if (releaseDateHeader is not null)
             {
 
                 var startIndex = infobox.Index(releaseDateHeader) + 1;

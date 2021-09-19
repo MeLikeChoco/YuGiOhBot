@@ -39,7 +39,7 @@ namespace YuGiOh.Bot
             Console.Write($"[{secondBracket}] ");
             Console.ForegroundColor = ConsoleColor.Gray;
 
-            if (exception == null)
+            if (exception is null)
             {
 
                 Console.WriteLine($"{message}");
@@ -71,7 +71,7 @@ namespace YuGiOh.Bot
             Console.Write($"[{secondBracket}] ");
             Console.ForegroundColor = ConsoleColor.Gray;
 
-            if (exception == null)
+            if (exception is null)
             {
 
                 Console.Write($"{message}\r");

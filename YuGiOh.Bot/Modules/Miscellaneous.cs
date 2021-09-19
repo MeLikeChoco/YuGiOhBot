@@ -107,7 +107,7 @@ namespace YuGiOh.Bot.Modules
 
             }
 
-            if (boosterPack != null)
+            if (boosterPack is not null)
             {
 
                 var descBuilder = new StringBuilder()
@@ -243,7 +243,7 @@ namespace YuGiOh.Bot.Modules
 
                 }
 
-                if (boosterPack != null)
+                if (boosterPack is not null)
                 {
 
                     var cards = new Dictionary<string, string>(9);

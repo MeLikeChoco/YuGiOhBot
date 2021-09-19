@@ -22,10 +22,10 @@ namespace YuGiOh.Bot.Models
 
                 var propertyInfo = member as PropertyInfo;
 
-                if (propertyInfo != null)
+                if (propertyInfo is not null)
                 {
 
-                    var hasPrivateSetter = propertyInfo.GetSetMethod(true) != null;
+                    var hasPrivateSetter = propertyInfo.GetSetMethod(true) is not null;
                     property.Writable = hasPrivateSetter;
 
                 }

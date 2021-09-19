@@ -23,7 +23,7 @@ namespace YuGiOh.Bot.Models
 
             string assemblyPath = _dependencyResolver.ResolveAssemblyToPath(assemblyName);
 
-            if (assemblyPath != null)
+            if (assemblyPath is not null)
                 return LoadFromAssemblyPath(assemblyPath);
 
             return null;

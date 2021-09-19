@@ -50,7 +50,7 @@ namespace YuGiOhScraper.Parsers.YuGiOhWikia
             {
 
                 Name = Name,
-                Dates = dates == null ? null : JsonConvert.SerializeObject(dates),
+                Dates = dates is null ? null : JsonConvert.SerializeObject(dates),
                 Cards = JsonConvert.SerializeObject(cards),
                 Url = Url
 

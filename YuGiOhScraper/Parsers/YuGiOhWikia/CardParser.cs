@@ -27,7 +27,7 @@ namespace YuGiOhScraper.Parsers.YuGiOhWikia
             var response = ScraperConstants.HtmlParser.ParseDocument(html);
             var table = response.GetElementByClassName("cardtable");
 
-            if (table == null)
+            if (table is null)
                 throw new NullReferenceException("Missing card table");
 
             var card = new Card()
@@ -172,27 +172,27 @@ namespace YuGiOhScraper.Parsers.YuGiOhWikia
 
             var cardSearchCategories = table.GetElementByClassName("cardtable-categories")?.Children;
 
-            if (cardSearchCategories != null && cardSearchCategories.Any())
+            if (cardSearchCategories is not null && cardSearchCategories.Any())
             {
 
                 #region Archetypes
                 var archetypeRow = cardSearchCategories.FirstOrDefault(hlist => hlist.TextContent.Contains("archetypes", StringComparison.OrdinalIgnoreCase));
 
-                if (archetypeRow != null)
+                if (archetypeRow is not null)
                     card.Archetype = AggregateCardCategoryData(archetypeRow);
                 #endregion Archetypes
 
                 #region Supports
                 var supportsRow = cardSearchCategories.FirstOrDefault(hlist => hlist.TextContent.Contains("supports", StringComparison.OrdinalIgnoreCase));
 
-                if (supportsRow != null)
+                if (supportsRow is not null)
                     card.Supports = AggregateCardCategoryData(supportsRow);
                 #endregion Supports
 
                 #region Anti-Supports
                 var antiSupportsRow = cardSearchCategories.FirstOrDefault(hlist => hlist.TextContent.Contains("anti-support", StringComparison.OrdinalIgnoreCase));
 
-                if (antiSupportsRow != null)
+                if (antiSupportsRow is not null)
                     card.AntiSupports = AggregateCardCategoryData(antiSupportsRow);
                 #endregion Anti-Supports
 

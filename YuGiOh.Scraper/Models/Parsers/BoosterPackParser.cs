@@ -31,7 +31,7 @@ namespace YuGiOh.Scraper.Models.Parsers
             var dates = GetReleaseDates(parserOutput);
             var table = dom.GetElementsByClassName("card-list").FirstOrDefault()?.FirstElementChild.Children;
 
-            if (table == null)
+            if (table is null)
                 throw new NullReferenceException($"No card list exists for {_name}");
 
             var tableHead = table.First();
@@ -81,7 +81,7 @@ namespace YuGiOh.Scraper.Models.Parsers
             var infobox = parserOutput.GetElementsByClassName("infobox").FirstOrDefault()?.FirstElementChild.Children;
             var releaseDateHeader = infobox.FirstOrDefault(element => !string.IsNullOrEmpty(element.TextContent) && element.TextContent.Contains("release dates", StringComparison.InvariantCultureIgnoreCase));
 
-            if (releaseDateHeader != null)
+            if (releaseDateHeader is not null)
             {
 
                 var startIndex = infobox.Index(releaseDateHeader) + 1;

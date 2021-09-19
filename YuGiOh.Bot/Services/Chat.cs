@@ -205,10 +205,10 @@ namespace YuGiOh.Bot.Services
             {
                 //throw new NotImplementedException();
                 if (xcost > 0)
-                    //return l2 + 1 - 2*(memchr(s2, *s1, l2) != NULL);
+                    //return l2 + 1 - 2*(memchr(s2, *s1, l2) is not null);
                     return l2 + 1 - 2 * MemchrRPLC(s2, *s1, l2);
                 else
-                    //return l2 - (memchr(s2, *s1, l2) != NULL);
+                    //return l2 - (memchr(s2, *s1, l2) is not null);
                     return l2 - MemchrRPLC(s2, *s1, l2);
             }
 

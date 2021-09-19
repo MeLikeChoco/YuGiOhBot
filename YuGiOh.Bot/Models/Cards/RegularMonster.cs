@@ -21,7 +21,7 @@ namespace YuGiOh.Bot.Models.Cards
             => Level >= 0 ? base.GetDescription().With($"**Level:** {Level}") : base.GetDescription();
 
         protected override EmbedBuilder AddLore(EmbedBuilder body)
-            => Lore == null ? base.AddLore(body) : body.AddField($"[ {Types.Join(" / ")} ]", Lore);
+            => Lore is null ? base.AddLore(body) : body.AddField($"[ {Types.Join(" / ")} ]", Lore);
 
         protected override EmbedBuilder AddAdditionalFields(EmbedBuilder body)
             => base.AddAdditionalFields(

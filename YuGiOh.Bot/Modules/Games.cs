@@ -73,14 +73,14 @@ namespace YuGiOh.Bot.Modules
                     }
                     catch (NullReferenceException nullref) { e = nullref; }
 
-                } while (e != null);
+                } while (e is not null);
 
                 //_criteria.AddCriterion(new GuessCriteria(art.Key));
                 _criteria.AddCriterion(new GuessCriteria(card.Name));
 
                 var answer = await NextMessageAsync(_criteria, TimeSpan.FromSeconds(_guildConfig.GuessTime));
 
-                if (answer != null)
+                if (answer is not null)
                 {
 
                     var author = answer.Author as SocketGuildUser;
@@ -150,12 +150,12 @@ namespace YuGiOh.Bot.Modules
 
                 var input = await NextMessageAsync(_criteria, token: cts.Token);
 
-                if (cts.Token.IsCancellationRequested && input == null)
+                if (cts.Token.IsCancellationRequested && input is null)
                     break;
 
                 var content = input?.Content?.ToLower();
 
-                if (content == null)
+                if (content is null)
                     continue;
                 else if (content.Length != 1)
                     continue;
@@ -193,7 +193,7 @@ namespace YuGiOh.Bot.Modules
             } while (check.ToString() != name);
 
 
-            if (winner != null)
+            if (winner is not null)
                 await ReplyAsync($":trophy: The winner is **{winner.Nickname ?? winner.Username}**!");
             else if (hanging == 6)
                 await ReplyAsync($":stop_button: The guy got hanged! There was no winner. The card was `{name}`!");

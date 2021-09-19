@@ -59,9 +59,9 @@ namespace YuGiOhScraper.Modules
         private void PasscodeForGodCards(IEnumerable<Card> cards)
         {
 
-            cards.FirstOrDefault(card => card.Name.Contains("obelisk", StringComparison.OrdinalIgnoreCase) && card.Name.Contains("tormentor", StringComparison.OrdinalIgnoreCase)).DoIf(card => card != null, card => card.Passcode = "10000000");
-            cards.FirstOrDefault(card => card.Name.Contains("slifer", StringComparison.OrdinalIgnoreCase) && card.Name.Contains("sky dragon", StringComparison.OrdinalIgnoreCase)).DoIf(card => card != null, card => card.Passcode = "10000010");
-            cards.FirstOrDefault(card => card.Name.Contains("ra", StringComparison.OrdinalIgnoreCase) && card.Name.Contains("winged dragon", StringComparison.OrdinalIgnoreCase)).DoIf(card => card != null, card => card.Passcode = "10000020");
+            cards.FirstOrDefault(card => card.Name.Contains("obelisk", StringComparison.OrdinalIgnoreCase) && card.Name.Contains("tormentor", StringComparison.OrdinalIgnoreCase)).DoIf(card => card is not null, card => card.Passcode = "10000000");
+            cards.FirstOrDefault(card => card.Name.Contains("slifer", StringComparison.OrdinalIgnoreCase) && card.Name.Contains("sky dragon", StringComparison.OrdinalIgnoreCase)).DoIf(card => card is not null, card => card.Passcode = "10000010");
+            cards.FirstOrDefault(card => card.Name.Contains("ra", StringComparison.OrdinalIgnoreCase) && card.Name.Contains("winged dragon", StringComparison.OrdinalIgnoreCase)).DoIf(card => card is not null, card => card.Passcode = "10000020");
 
         }
 
@@ -128,7 +128,7 @@ namespace YuGiOhScraper.Modules
 
                         Name = kv.Key,
                         Exception = $"{exception.Message}\t{exception.StackTrace}",
-                        InnerException = exception.InnerException == null ? null : $"{exception.InnerException}\t{exception.InnerException.StackTrace}",
+                        InnerException = exception.InnerException is null ? null : $"{exception.InnerException}\t{exception.InnerException.StackTrace}",
                         Url = kv.Value,
                         Type = "Booster Pack"
 

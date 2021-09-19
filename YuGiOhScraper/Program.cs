@@ -213,7 +213,7 @@ namespace YuGiOhScraper
 
         //        }
 
-        //    } while (exception != null);            
+        //    } while (exception is not null);            
 
         //}
 
@@ -247,7 +247,7 @@ namespace YuGiOhScraper
 
         //                Name = kv.Key,
         //                Exception = $"{exception.Message}\t{exception.StackTrace}",
-        //                InnerException = exception.InnerException == null ? null : $"{exception.InnerException}\t{exception.InnerException.StackTrace}",
+        //                InnerException = exception.InnerException is null ? null : $"{exception.InnerException}\t{exception.InnerException.StackTrace}",
         //                Url = kv.Value,
         //                Type = "Booster Pack"
 

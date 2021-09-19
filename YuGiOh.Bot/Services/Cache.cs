@@ -193,7 +193,7 @@ namespace YuGiOh.Bot.Services
         //    else
         //        body.AddField("Effect", card.Lore?.Replace(@"\n", "\n") ?? "Not yet released.");
 
-        //    if (card.Archetypes != null)
+        //    if (card.Archetypes is not null)
         //        body.AddField(card.Archetypes.Length > 1 ? "Archetypes" : "Archetype", card.Archetypes.Join(", "));
 
         //    return body;
@@ -280,7 +280,7 @@ namespace YuGiOh.Bot.Services
         //            return new Color(150, 208, 189);
         //        else if (monster is IHasRank)
         //            return new Color(0, 0, 1);
-        //        else if (monster.Types != null)
+        //        else if (monster.Types is not null)
         //        {
 
         //            if (monster.Types.Contains("Fusion"))

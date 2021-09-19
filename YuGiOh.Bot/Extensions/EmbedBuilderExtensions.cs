@@ -24,7 +24,7 @@ namespace YuGiOh.Bot.Extensions
             var clone = embed.DeepClone();
             TimeSpan time;
 
-            if (searchTime != null)
+            if (searchTime is not null)
             {
 
                 time = searchTime.Value;
@@ -59,7 +59,7 @@ namespace YuGiOh.Bot.Extensions
 
                 var response = await web.GetPrices(clone.Author.Name, realName);
 
-                if (response.Data != null)
+                if (response.Data is not null)
                 {
 
                     IEnumerable<Datum> prices;

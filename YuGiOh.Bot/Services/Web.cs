@@ -92,7 +92,7 @@ namespace YuGiOh.Bot.Services
 
             var response = await GetDeserializedContent<YuGiOhPrices>($"{PricesBaseUrl}{Uri.EscapeUriString(name)}").ConfigureAwait(false);
 
-            if ((response == null || response.Status == "fail") && !string.IsNullOrEmpty(realName))
+            if ((response is null || response.Status == "fail") && !string.IsNullOrEmpty(realName))
                 response = await GetDeserializedContent<YuGiOhPrices>($"{PricesBaseUrl}{Uri.EscapeUriString(realName)}");
 
             return response;

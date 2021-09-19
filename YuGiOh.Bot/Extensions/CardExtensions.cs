@@ -17,7 +17,7 @@ namespace YuGiOh.Bot.Extensions
             Card card;
             var types = entity.Types?.ToLower().Split(" / ");
 
-            if (types != null)
+            if (types is not null)
             {
 
                 if (types.Contains("link"))

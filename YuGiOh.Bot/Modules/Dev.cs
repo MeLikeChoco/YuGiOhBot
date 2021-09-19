@@ -46,7 +46,7 @@ namespace YuGiOh.Bot.Modules
 
             var file = attachments.FirstOrDefault(attachment => Path.GetExtension(attachment.Filename) == ".ydk");
 
-            if (file == null)
+            if (file is null)
             {
 
                 await ReplyAsync("Invalid file provided! Must be a ydk or text file!");
@@ -98,7 +98,7 @@ namespace YuGiOh.Bot.Modules
             var attachments = Context.Message.Attachments;
             var file = attachments.FirstOrDefault(attachment => Path.GetExtension(attachment.Filename) == ".ydk");
 
-            if (file != null)
+            if (file is not null)
             {
 
                 var url = file.Url;
@@ -173,7 +173,7 @@ namespace YuGiOh.Bot.Modules
             var passcode = group.First();
             var name = await YuGiOhDbService.GetNameWithPasscodeAsync(passcode);
 
-            if (name != null)
+            if (name is not null)
             {
 
                 var response = await Web.GetResponseMessage(Constants.FandomWikiUrl + passcode);

@@ -57,8 +57,8 @@ namespace MoreLinq
 
         public static IEnumerable<T> RandomSubset<T>(this IEnumerable<T> source, int subsetSize, Random rand)
         {
-            if (rand == null) throw new ArgumentNullException(nameof(rand));
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (rand is null) throw new ArgumentNullException(nameof(rand));
+            if (source is null) throw new ArgumentNullException(nameof(source));
             if (subsetSize < 0) throw new ArgumentOutOfRangeException(nameof(subsetSize));
 
             return RandomSubsetImpl(source, rand, seq => (seq.ToArray(), subsetSize));

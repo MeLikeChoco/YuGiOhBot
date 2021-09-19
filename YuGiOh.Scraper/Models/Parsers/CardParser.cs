@@ -338,7 +338,7 @@ namespace YuGiOh.Scraper.Models.Parsers
 
             var firstH2Element = parserOutput.Children.FirstOrDefault(element => element.TagName.ContainsIgnoreCase("h2") && element.TextContent.ContainsIgnoreCase("search categories"));
 
-            if (firstH2Element == null)
+            if (firstH2Element is null)
                 return null;
 
             var startIndex = parserOutput.Children.Index(firstH2Element) + 1;
@@ -371,7 +371,7 @@ namespace YuGiOh.Scraper.Models.Parsers
                 .Children
                 .FirstOrDefault(element => element.TextContent.ContainsIgnoreCase("Trivia"));
 
-            if (triviaUrlElement != null)
+            if (triviaUrlElement is not null)
             {
 
                 var triviaLink = triviaUrlElement.GetElementByTagName("a").GetAttribute("href");
@@ -385,7 +385,7 @@ namespace YuGiOh.Scraper.Models.Parsers
                     var triviaElements = parserOutput?.Children
                         .Where(element => element.TagName == "UL");
 
-                    if (triviaElements != null)
+                    if (triviaElements is not null)
                     {
 
                         var trivias = new List<string>(triviaElements.Count());

@@ -28,7 +28,7 @@ namespace YuGiOhScraper.Parsers.YuGiPedia
             //var html = dom.Html(); //for debugging purposes
             var table = parserOutput.GetElementByClassName("card-table");
 
-            if (table == null)
+            if (table is null)
                 throw new NullReferenceException("Missing card table");
 
             var card = new Card()
@@ -367,7 +367,7 @@ namespace YuGiOhScraper.Parsers.YuGiPedia
             //    .Children
             //    .FirstOrDefault(element => element.TextContent.ContainsIgnoreCase("Trivia"));
 
-            //if (triviaUrlElement != null)
+            //if (triviaUrlElement is not null)
             //{
 
             //    var title = triviaUrlElement.FirstElementChild.GetAttribute("href");
@@ -383,7 +383,7 @@ namespace YuGiOhScraper.Parsers.YuGiPedia
             //        var triviaElements = parserOutput?.Children
             //            .Where(element => element.TagName == "UL");
 
-            //        if (triviaElements != null)
+            //        if (triviaElements is not null)
             //        {
 
             //            var trivias = new List<string>(triviaElements.Count());
@@ -418,7 +418,7 @@ namespace YuGiOhScraper.Parsers.YuGiPedia
 
             var firstH2Element = dom.Children.FirstOrDefault(element => element.TagName.ContainsIgnoreCase("h2") && element.TextContent.ContainsIgnoreCase("search categories"));
 
-            if (firstH2Element == null)
+            if (firstH2Element is null)
                 return null;
 
             var startIndex = dom.Children.Index(firstH2Element) + 1;

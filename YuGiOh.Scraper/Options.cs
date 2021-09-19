@@ -20,7 +20,7 @@ namespace YuGiOh.Scraper
             get
             {
 
-                if (_instance == null)
+                if (_instance is null)
                 {
                     _ = Parser.Default
                         .ParseArguments<Options>(Environment.GetCommandLineArgs())
@@ -41,7 +41,7 @@ namespace YuGiOh.Scraper
             get
             {
 
-                if (_config == null)
+                if (_config is null)
                 {
 
                     using var file = File.OpenText("config.json");

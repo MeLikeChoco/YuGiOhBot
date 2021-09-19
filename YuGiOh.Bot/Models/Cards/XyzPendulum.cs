@@ -24,7 +24,7 @@ namespace YuGiOh.Bot.Models.Cards
 
             var effects = Lore?.StartsWith("Pendulum Effect") == true ? Lore?.Split("Monster Effect") : null;
 
-            return effects == null ?
+            return effects is null ?
                 base.AddLore(body) :
                 body
                 .AddField("Pendulum Effect", effects[0].Substring(15).Trim())

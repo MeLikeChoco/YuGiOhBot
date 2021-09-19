@@ -148,7 +148,7 @@ namespace YuGiOh.Scraper
 
                     }
 
-                } while (check != null && retryCount < Options.Config.MaxRetry);
+                } while (check is not null && retryCount < Options.Config.MaxRetry);
 
                 Task.Run(() =>
                 {
@@ -243,7 +243,7 @@ namespace YuGiOh.Scraper
 
                     }
 
-                } while (check != null && retryCount < Options.Config.MaxRetry);
+                } while (check is not null && retryCount < Options.Config.MaxRetry);
 
                 Task.Run(() =>
                 {

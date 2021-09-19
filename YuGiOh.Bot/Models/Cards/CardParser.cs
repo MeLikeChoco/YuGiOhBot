@@ -51,7 +51,7 @@ namespace YuGiOh.Bot.Models.Cards
             Card card;
             var types = Types?.ToLower().Split(" / ");
 
-            if (types != null)
+            if (types is not null)
             {
 
                 if (types.Contains("link"))

@@ -23,7 +23,7 @@ namespace YuGiOh.Bot.Modules
             var dom = await Web.GetDom($"http://yugioh.wikia.com/wiki/Special:Search?query={search}");
             var results = dom.GetElementsByClassName("Results").FirstOrDefault();
 
-            if (results != null)
+            if (results is not null)
             {
 
                 var children = results.Children.Where(element => !element.ClassList.Contains("video-addon-results"));

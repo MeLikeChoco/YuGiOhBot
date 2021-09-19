@@ -74,7 +74,7 @@ namespace YuGiOh.Common.Repositories
             var cardSupportsId = await connection.ExecuteScalarAsync("select supports from cards where id = @Id", new { card.Id });
             var cardAntiSupportsId = await connection.ExecuteScalarAsync("select antisupports from cards where id = @Id", new { card.Id });
 
-            if (card.Archetypes != null)
+            if (card.Archetypes is not null)
             {
 
                 foreach (var archetype in card.Archetypes)
@@ -98,7 +98,7 @@ namespace YuGiOh.Common.Repositories
 
             }
 
-            if (card.Supports != null)
+            if (card.Supports is not null)
             {
 
                 foreach (var support in card.Supports)
@@ -122,7 +122,7 @@ namespace YuGiOh.Common.Repositories
 
             }
 
-            if (card.AntiSupports != null)
+            if (card.AntiSupports is not null)
             {
 
                 foreach (var antiSupport in card.AntiSupports)

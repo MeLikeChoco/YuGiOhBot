@@ -31,9 +31,9 @@ namespace YuGiOhScraper.Modules
         protected override Task DoBeforeSaveToDb(IEnumerable<Card> cards, IEnumerable<BoosterPack> boosterPacks, IEnumerable<Error> errors)
         {
 
-            cards.FirstOrDefault(card => card.Name.Contains("obelisk", StringComparison.OrdinalIgnoreCase) && card.Name.Contains("tormentor", StringComparison.OrdinalIgnoreCase))?.DoIf(card => card != null, card => card.Passcode = "10000000");
-            cards.FirstOrDefault(card => card.Name == "The Winged Dragon of Ra")?.DoIf(card => card != null, card => card.Passcode = "10000010"); //too many card names contain "Winged Dragon of Ra", i have to use the actual name
-            cards.FirstOrDefault(card => card.Name.Contains("slifer", StringComparison.OrdinalIgnoreCase) && card.Name.Contains("sky dragon", StringComparison.OrdinalIgnoreCase))?.DoIf(card => card != null, card => card.Passcode = "10000020");
+            cards.FirstOrDefault(card => card.Name.Contains("obelisk", StringComparison.OrdinalIgnoreCase) && card.Name.Contains("tormentor", StringComparison.OrdinalIgnoreCase))?.DoIf(card => card is not null, card => card.Passcode = "10000000");
+            cards.FirstOrDefault(card => card.Name == "The Winged Dragon of Ra")?.DoIf(card => card is not null, card => card.Passcode = "10000010"); //too many card names contain "Winged Dragon of Ra", i have to use the actual name
+            cards.FirstOrDefault(card => card.Name.Contains("slifer", StringComparison.OrdinalIgnoreCase) && card.Name.Contains("sky dragon", StringComparison.OrdinalIgnoreCase))?.DoIf(card => card is not null, card => card.Passcode = "10000020");
 
             return Task.CompletedTask;
 
@@ -135,7 +135,7 @@ namespace YuGiOhScraper.Modules
 
                         Name = kv.Key,
                         Exception = $"{exception.Message}\t{exception.StackTrace}",
-                        InnerException = exception.InnerException == null ? null : $"{exception.InnerException}\t{exception.InnerException.StackTrace}",
+                        InnerException = exception.InnerException is null ? null : $"{exception.InnerException}\t{exception.InnerException.StackTrace}",
                         Url = kv.Value,
                         Type = "Booster Pack"
 
@@ -224,7 +224,7 @@ namespace YuGiOhScraper.Modules
                         Url = kv.Value,
                         Type = "Card"
 
-                    }.DoIf(_ => exception.InnerException != null, error =>
+                    }.DoIf(_ => exception.InnerException is not null, error =>
                     {
 
                         error.InnerException = $"{exception.InnerException.Message}\n{exception.InnerException.StackTrace}";

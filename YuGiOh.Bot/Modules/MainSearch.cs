@@ -28,7 +28,7 @@ namespace YuGiOh.Bot.Modules
             var amount = cards.Count();
 
             if (amount == 1)
-                await CardCommand(cards.First().Name);
+                await ExecuteCardCommand(cards.First().Name);
             else if (amount != 0)
                 await ReceiveInput(amount, cards.Select(card => card.Name));
             else
@@ -121,8 +121,8 @@ namespace YuGiOh.Bot.Modules
 
             var input = await NextMessageAsync(criteria, TimeSpan.FromSeconds(60), token);
 
-            if (!token.IsCancellationRequested && input != null && int.TryParse(input.Content, out var selection) && selection > 0 && selection <= cards.Count())
-                await CardCommand(cards.ElementAt(selection - 1));
+            if (!token.IsCancellationRequested && input is not null && int.TryParse(input.Content, out var selection) && selection > 0 && selection <= cards.Count())
+                await ExecuteCardCommand(cards.ElementAt(selection - 1));
 
         }
 
@@ -154,7 +154,7 @@ namespace YuGiOh.Bot.Modules
 
         }
 
-        private Task CardCommand(string card)
+        private Task ExecuteCardCommand(string card)
         {
 
             AltConsole.Write("Info", "Command", "Executing card command from search module...");
