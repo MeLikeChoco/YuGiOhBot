@@ -25,6 +25,7 @@ void CreateProc()
 
             RedirectStandardError = true,
             RedirectStandardOutput = true,
+            StandardOutputEncoding = Encoding.UTF8,
             UseShellExecute = false,
             FileName = "dotnet",
             Arguments = $"{File.ReadAllText("file.txt")}"
