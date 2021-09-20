@@ -24,7 +24,7 @@ namespace YuGiOh.Bot.Core
         private DiscordShardedClient _client;
         private CommandService _commandService;
         private Stats _stats;
-        private Chat _chat;
+        private ChatHandler _chat;
         private Cache _cache;
         private Web _web;
         //private ServiceObserver _serviceObserver;
@@ -278,6 +278,7 @@ namespace YuGiOh.Bot.Core
                 .AddTransient<IYuGiOhDbService, YuGiOhDbService>()
                 .AddTransient<IGuildConfigDbService, GuildConfigDbService>()
                 .AddSingleton(_client)
+                .AddSingleton(_commandService)
                 .AddSingleton(_cache)
                 .AddSingleton(_interactive)
                 .AddSingleton(_web)
@@ -292,22 +293,18 @@ namespace YuGiOh.Bot.Core
 
             Print("Registering commands...");
 
-            _chat = new Chat(
+            _chat = new ChatHandler(
                 _cache,
                 _services.GetService<Web>(),
                 _services.GetService<IYuGiOhDbService>(),
                 _services.GetService<IGuildConfigDbService>()
              );
 
-            _client.MessageReceived += HandleCommand;
-            _client.MessageReceived += (message) =>
-            {
-
-                Task.Run(() => _chat.SOMEONEGETTINGACARDBOIS(message));
-
-                return Task.CompletedTask;
-
-            };
+            //_client.MessageReceived += HandleCommand;
+            //_client.MessageReceived += somethingsomethingchat
+            //i will have to monitor these changes in case of performance issues
+            _client.MessageReceived += (message) => ActivatorUtilities.CreateInstance<CommandHandler>(_services).HandleCommand(message);
+            _client.MessageReceived += (message) => ActivatorUtilities.CreateInstance<ChatHandler>(_services).HandlePotentialInlineSearch(message);
 
             _commandService.AddTypeReader<string>(new StringInputTypeReader());
             await _commandService.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
@@ -316,63 +313,65 @@ namespace YuGiOh.Bot.Core
 
         }
 
-        private async Task HandleCommand(SocketMessage message)
-        {
+        //private async Task HandleCommand(SocketMessage message)
+        //{
 
-            if (message is not SocketUserMessage
-                || message.Author.IsBot
-                || string.IsNullOrEmpty(message.Content))
-                return;
+        //    var test = _services.GetService<IServiceProvider>();
 
-            var prefix = "y!";
+        //    if (message is not SocketUserMessage
+        //        || message.Author.IsBot
+        //        || string.IsNullOrEmpty(message.Content))
+        //        return;
 
-            if (message.Channel is SocketTextChannel textChannel)
-            {
+        //    var prefix = "y!";
 
-                var id = textChannel.Guild.Id;
-                var guildConfigDbService = _services.GetService<IGuildConfigDbService>();
-                var guildConfig = await guildConfigDbService.GetGuildConfigAsync(id);
-                prefix = guildConfig.Prefix;
+        //    if (message.Channel is SocketTextChannel textChannel)
+        //    {
 
-            }
+        //        var id = textChannel.Guild.Id;
+        //        var guildConfigDbService = _services.GetService<IGuildConfigDbService>();
+        //        var guildConfig = await guildConfigDbService.GetGuildConfigAsync(id);
+        //        prefix = guildConfig.Prefix;
 
-            var possibleCmd = message as SocketUserMessage;
-            var argPos = 0;
+        //    }
 
-            if ((possibleCmd.HasStringPrefix(prefix, ref argPos) || possibleCmd.HasMentionPrefix(_client.CurrentUser, ref argPos)) &&
-                possibleCmd.Content.Trim() != prefix)
-            {
+        //    var possibleCmd = message as SocketUserMessage;
+        //    var argPos = 0;
 
-                var context = new ShardedCommandContext(_client, possibleCmd);
+        //    if ((possibleCmd.HasStringPrefix(prefix, ref argPos) || possibleCmd.HasMentionPrefix(_client.CurrentUser, ref argPos)) &&
+        //        possibleCmd.Content.Trim() != prefix)
+        //    {
 
-                if (message.Channel is SocketDMChannel)
-                    AltConsole.Write("Info", "Command", $"{possibleCmd.Author.Username} in DM's");
-                else if (message.Channel is SocketTextChannel txtChannel)
-                    AltConsole.Write("Info", "Command", $"{possibleCmd.Author.Username} from {txtChannel.Guild.Name}");
+        //        var context = new ShardedCommandContext(_client, possibleCmd);
 
-                AltConsole.Write("Info", "Command", $"{possibleCmd.Content}");
+        //        if (message.Channel is SocketDMChannel)
+        //            AltConsole.Write("Info", "Command", $"{possibleCmd.Author.Username} in DM's");
+        //        else if (message.Channel is SocketTextChannel txtChannel)
+        //            AltConsole.Write("Info", "Command", $"{possibleCmd.Author.Username} from {txtChannel.Guild.Name}");
 
-                var result = await _commandService.ExecuteAsync(context, argPos, _services);
+        //        AltConsole.Write("Info", "Command", $"{possibleCmd.Content}");
 
-                if (!result.IsSuccess)
-                {
+        //        var result = await _commandService.ExecuteAsync(context, argPos, _services);
 
-                    if (result.ErrorReason.Contains("unknown command", StringComparison.OrdinalIgnoreCase))
-                        return;
-                    else if (result.ErrorReason.Contains("you are currently in timeout", StringComparison.OrdinalIgnoreCase))
-                        await context.Channel.SendMessageAsync("Please wait 5 seconds between each type of paginator command!");
+        //        if (!result.IsSuccess)
+        //        {
 
-                    //await context.Channel.SendMessageAsync("https://goo.gl/JieFJM");
+        //            if (result.ErrorReason.Contains("unknown command", StringComparison.OrdinalIgnoreCase))
+        //                return;
+        //            else if (result.ErrorReason.Contains("you are currently in timeout", StringComparison.OrdinalIgnoreCase))
+        //                await context.Channel.SendMessageAsync("Please wait 5 seconds between each type of paginator command!");
 
-                    AltConsole.Write("Error", "Error", result.ErrorReason);
-                    //debug purposes
-                    //await context.Channel.SendMessageAsync($"**Error:** {result.ErrorReason}");
+        //            //await context.Channel.SendMessageAsync("https://goo.gl/JieFJM");
 
-                }
+        //            AltConsole.Write("Error", "Error", result.ErrorReason);
+        //            //debug purposes
+        //            //await context.Channel.SendMessageAsync($"**Error:** {result.ErrorReason}");
 
-            }
+        //        }
 
-        }
+        //    }
+
+        //}
 
         private void RegisterLogging()
         {

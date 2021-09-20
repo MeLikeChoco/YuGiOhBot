@@ -11,119 +11,130 @@ using YuGiOh.Bot.Services.Interfaces;
 
 namespace YuGiOh.Bot.Services
 {
-    public class Chat
+    public class ChatHandler
     {
 
         private readonly Cache _cache;
         private readonly Web _web;
         private readonly IYuGiOhDbService _yuGiOhDbService;
         private readonly IGuildConfigDbService _guildConfigDbService;
-        private readonly IgnoreCaseComparer _ignoreCaseComparer;
+        //private readonly IgnoreCaseComparer _ignoreCaseComparer;
 
         private const string Pattern = @"(\[\[.+?\]\])";
 
-        public Chat(Cache cache, Web web, IYuGiOhDbService yuGiOhDbService, IGuildConfigDbService guildConfigDbService)
+        public ChatHandler(
+            Cache cache,
+            Web web,
+            IYuGiOhDbService yuGiOhDbService,
+            IGuildConfigDbService guildConfigDbService)
         {
 
             _cache = cache;
             _web = web;
             _yuGiOhDbService = yuGiOhDbService;
             _guildConfigDbService = guildConfigDbService;
-            _ignoreCaseComparer = new IgnoreCaseComparer();
+            //_ignoreCaseComparer = new IgnoreCaseComparer();
 
         }
 
-        public async Task SOMEONEGETTINGACARDBOIS(SocketMessage message)
+        public Task HandlePotentialInlineSearch(SocketMessage message)
         {
 
-            if (message.Author.IsBot || string.IsNullOrEmpty(message.Content))
-                return;
-
-            if (message.Channel is SocketGuildChannel guildChannel)
+            Task.Run(async () =>
             {
 
-                var guild = guildChannel.Guild.Id;
-                var guildConfig = await _guildConfigDbService.GetGuildConfigAsync(guild);
-
-                if (!guildConfig.Inline)
+                if (message.Author.IsBot || string.IsNullOrEmpty(message.Content))
                     return;
 
-            }
-
-            var matches = Regex.Matches(message.Content, Pattern);
-            var watch = new Stopwatch();
-            var channel = message.Channel;
-            bool minimal = false;
-
-            if (matches.Count > 0 && matches.Count < 4)
-            {
-
-                if (channel is SocketTextChannel)
+                if (message.Channel is SocketGuildChannel guildChannel)
                 {
 
-                    AltConsole.Write("Info", "Command", $"{message.Author.Username} from {(channel as SocketTextChannel).Guild.Name}");
-                    var id = (channel as SocketTextChannel).Guild.Id;
-                    var guildConfig = await _guildConfigDbService.GetGuildConfigAsync(id);
-                    minimal = guildConfig.Minimal;
+                    var guild = guildChannel.Guild.Id;
+                    var guildConfig = await _guildConfigDbService.GetGuildConfigAsync(guild);
+
+                    if (!guildConfig.Inline)
+                        return;
 
                 }
 
-                AltConsole.Write("Info", "Inline", $"{message.Content}");
+                var matches = Regex.Matches(message.Content, Pattern);
+                var watch = new Stopwatch();
+                var channel = message.Channel;
+                bool minimal = false;
 
-                foreach (var match in matches)
+                if (matches.Count > 0 && matches.Count < 4)
                 {
 
-                    watch.Start();
-
-                    string cardName = match.ToString().ConvertTypesetterToTypewriter();
-                    cardName = cardName[2..^2].ToLower().Trim(); //lose the brackets and trim whitespace
-
-                    if (string.IsNullOrEmpty(cardName) || string.IsNullOrWhiteSpace(cardName)) //continue if there is no input
-                        continue;
-
-                    var input = cardName.Split(' ');
-
-                    //check if the card list contains anything from the input and return that instead
-                    //ex. kaiju slumber would return Interrupted Kaiju Slumber
-                    //note: it has problems such as "red eyes" will return Hundred Eyes Dragon instead of Red-Eyes B. Dragon
-                    //how to accurately solve this problem is not easy                            
-                    //string closestCard = _cache.Lowercase.AsParallel().FirstOrDefault(card => card == cardName);
-                    var closestCard = await _yuGiOhDbService.GetCardAsync(cardName) ??
-                        (await _yuGiOhDbService.SearchCardsAsync(cardName)).FirstOrDefault() ??
-                        (await _yuGiOhDbService.GetCardsContainsAllAsync(cardName)).FirstOrDefault() ??
-                        await _yuGiOhDbService.GetClosestCardAsync(cardName);
-
-                    //if(string.IsNullOrEmpty(closestCard))
-                    //    closestCard = _cache.Lowercase.AsParallel().FirstOrDefault(card => card.Contains(cardName));
-
-                    //if (string.IsNullOrEmpty(closestCard))
-                    //    closestCard = _cache.Lowercase.AsParallel().Where(card => input.All(i => card.Contains(i))).MinBy(card => card.Length).FirstOrDefault();
-
-                    //if (string.IsNullOrEmpty(closestCard))
-                    //    closestCard = _cache.Lowercase.AsParallel().MinBy(card => YetiLevenshtein(card, cardName)).FirstOrDefault();
-
-                    watch.Stop();
-
-                    var time = watch.Elapsed;
-
-                    AltConsole.Write("Info", "Inline", $"{cardName} took {time.TotalSeconds} seconds to complete.");
-
-                    //var embed = _cache.NameToCard[closestCard].GetEmbedBuilder();
-                    var embed = closestCard.GetEmbedBuilder();
-
-                    try
+                    if (channel is SocketTextChannel)
                     {
 
-                        await channel.SendMessageAsync("", embed: (await embed.WithPrices(minimal, _web, time)).Build());
+                        AltConsole.Write("Info", "Command", $"{message.Author.Username} from {(channel as SocketTextChannel).Guild.Name}");
+                        var id = (channel as SocketTextChannel).Guild.Id;
+                        var guildConfig = await _guildConfigDbService.GetGuildConfigAsync(id);
+                        minimal = guildConfig.Minimal;
 
                     }
-                    catch (Exception ex) { AltConsole.Write("Service", "Chat", $"{ex.InnerException.Message}\n{ex.InnerException.StackTrace}"); }
+
+                    AltConsole.Write("Info", "Inline", $"{message.Content}");
+
+                    foreach (var match in matches)
+                    {
+
+                        watch.Start();
+
+                        string cardName = match.ToString().ConvertTypesetterToTypewriter();
+                        cardName = cardName[2..^2].ToLower().Trim(); //lose the brackets and trim whitespace
+
+                        if (string.IsNullOrEmpty(cardName) || string.IsNullOrWhiteSpace(cardName)) //continue if there is no input
+                            continue;
+
+                        var input = cardName.Split(' ');
+
+                        //check if the card list contains anything from the input and return that instead
+                        //ex. kaiju slumber would return Interrupted Kaiju Slumber
+                        //note: it has problems such as "red eyes" will return Hundred Eyes Dragon instead of Red-Eyes B. Dragon
+                        //how to accurately solve this problem is not easy                            
+                        //string closestCard = _cache.Lowercase.AsParallel().FirstOrDefault(card => card == cardName);
+                        var closestCard = await _yuGiOhDbService.GetCardAsync(cardName) ??
+                            (await _yuGiOhDbService.SearchCardsAsync(cardName)).FirstOrDefault() ??
+                            (await _yuGiOhDbService.GetCardsContainsAllAsync(cardName)).FirstOrDefault() ??
+                            await _yuGiOhDbService.GetClosestCardAsync(cardName);
+
+                        //if(string.IsNullOrEmpty(closestCard))
+                        //    closestCard = _cache.Lowercase.AsParallel().FirstOrDefault(card => card.Contains(cardName));
+
+                        //if (string.IsNullOrEmpty(closestCard))
+                        //    closestCard = _cache.Lowercase.AsParallel().Where(card => input.All(i => card.Contains(i))).MinBy(card => card.Length).FirstOrDefault();
+
+                        //if (string.IsNullOrEmpty(closestCard))
+                        //    closestCard = _cache.Lowercase.AsParallel().MinBy(card => YetiLevenshtein(card, cardName)).FirstOrDefault();
+
+                        watch.Stop();
+
+                        var time = watch.Elapsed;
+
+                        AltConsole.Write("Info", "Inline", $"{cardName} took {time.TotalSeconds} seconds to complete.");
+
+                        //var embed = _cache.NameToCard[closestCard].GetEmbedBuilder();
+                        var embed = closestCard.GetEmbedBuilder();
+
+                        try
+                        {
+
+                            await channel.SendMessageAsync("", embed: (await embed.WithPrices(minimal, _web, time)).Build());
+
+                        }
+                        catch (Exception ex) { AltConsole.Write("Service", "Chat", $"{ex.InnerException.Message}\n{ex.InnerException.StackTrace}"); }
+
+                    }
 
                 }
 
-            }
+            });
 
-        } //look at em brackets
+            return Task.CompletedTask;
+
+        }
 
         #region Levenshtein Distance
         //dont even ask me what the fuck im doing
