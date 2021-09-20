@@ -2,15 +2,12 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Dapper;
 using MoreLinq;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Npgsql;
+using YuGiOh.Common.Extensions;
 using YuGiOh.Common.Interfaces;
 using YuGiOh.Common.Models.YuGiOh;
 using YuGiOh.Common.Repositories;
@@ -58,12 +55,12 @@ namespace YuGiOh.Scraper
 
             ocgLinks = await GetLinks(ConstantString.MediaWikiOcgPacks);
 
-            Log($"Processing boosterpacks.");
+            Log("Processing boosterpacks.");
 
             var boosterProcResponse = ProcessBoosters(tcgLinks, ocgLinks);
 
             Log($"Processed {boosterProcResponse.Count} booster packs. There were {boosterProcResponse.Errors.Count} errors.");
-            Log($"Processing errors.");
+            Log("Processing errors.");
 
             var errors = cardProcResponse.Errors.Concat(boosterProcResponse.Errors);
 
@@ -84,6 +81,7 @@ namespace YuGiOh.Scraper
             return links
                 .Except(tokenLinks)
                 .Except(skillLinks)
+                .Where(kv => !kv.Key.ContainsIgnoreCase("alternate password"))
                 .ToDictionary(kv => kv.Key, kv => kv.Value);
 
         }
@@ -95,7 +93,7 @@ namespace YuGiOh.Scraper
 
             if (Options.MaxCardsToParse <= size)
                 links = links.RandomSubset(Options.MaxCardsToParse).ToDictionary(kv => kv.Key, kv => kv.Value);
-            //nameToLinks = nameToLinks.Take(Options.MaxCardsToParse);
+            //links = links.Take(Options.MaxCardsToParse);
 
             var errors = new ConcurrentBag<Error>();
             var repo = new YuGiOhRepository(this);
