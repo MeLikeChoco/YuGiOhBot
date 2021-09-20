@@ -1,15 +1,11 @@
-﻿using Discord;
-using Discord.Addons.Interactive;
-using Discord.Commands;
-using Discord.WebSocket;
-using MoreLinq;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
+using Discord;
+using Discord.Commands;
 using YuGiOh.Bot.Extensions;
 using YuGiOh.Bot.Models;
 using YuGiOh.Bot.Services;
@@ -49,7 +45,7 @@ namespace YuGiOh.Bot.Modules
 
         //}
 
-        [Command("card"), Alias("c")]
+        [Command(Constants.CardCommand), Alias("c")]
         [Summary("Gets a card! No proper capitalization needed!")]
         public async Task CardCommand([Remainder] string input)
         {

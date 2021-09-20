@@ -19,6 +19,29 @@ namespace YuGiOh.Bot.Modules
         public CommandService CommandService { get; set; }
         public IServiceProvider Services { get; set; }
 
+        private static CommandInfo _cardCommand;
+        private static readonly object CardCmdLock = new();
+
+        protected override void BeforeExecute(CommandInfo command)
+        {
+
+            base.BeforeExecute(command);
+
+            Task.Run(() =>
+            {
+
+                lock (CardCmdLock)
+                {
+
+                    if (_cardCommand == null)
+                        _cardCommand = CommandService.Commands.First(cmd => cmd.Name == Constants.CardCommand);
+
+                }
+
+            });
+
+        }
+
         [Command("search"), Alias("s")]
         [Summary("Returns results based on your input! No proper capitalization needed!")]
         public async Task SearchCommand([Remainder] string input)
@@ -159,7 +182,7 @@ namespace YuGiOh.Bot.Modules
 
             AltConsole.Write("Info", "Command", "Executing card command from search module...");
 
-            return CommandService.Commands.First(command => command.Name == "card").ExecuteAsync(Context, new List<object>(1) { card }, null, Services);
+            return _cardCommand.ExecuteAsync(Context, new List<object>(1) { card }, null, Services);
 
         }
 

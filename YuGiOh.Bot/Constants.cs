@@ -21,6 +21,8 @@ namespace YuGiOh.Bot
         public const string BlackDiscordBotUrl = "https://bots.discord.pw/api/bots/{0}/stats";
         //public const string BlueDiscordBotUrl = "https://discordbots.org/api/bots/{0}/stats";
 
+        public const string CardCommand = "card";
+
     }
 
 }
