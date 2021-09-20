@@ -6,10 +6,9 @@ using System.Threading.Tasks;
 using Discord.WebSocket;
 using MoreLinq;
 using YuGiOh.Bot.Extensions;
-using YuGiOh.Bot.Models.Comparers;
 using YuGiOh.Bot.Services.Interfaces;
 
-namespace YuGiOh.Bot.Services
+namespace YuGiOh.Bot.Handlers
 {
     public class ChatHandler
     {

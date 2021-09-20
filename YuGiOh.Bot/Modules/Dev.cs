@@ -30,7 +30,18 @@ namespace YuGiOh.Bot.Modules
         public async Task TestCommand()
         {
 
-            Environment.Exit(0);
+            var slashCmdBuilder = new SlashCommandBuilder()
+                .WithName("test")
+                .WithDescription("For testing purposes");
+
+            try
+            {
+                await Context.Client.Rest.CreateGlobalCommand(slashCmdBuilder.Build());
+            }
+            catch (Exception ex)
+            {
+                AltConsole.Write("Test", "Test", "", ex);
+            }
 
         }
 

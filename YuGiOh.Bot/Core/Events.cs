@@ -9,6 +9,7 @@ using Discord.Addons.Interactive;
 using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
+using YuGiOh.Bot.Handlers;
 using YuGiOh.Bot.Models;
 using YuGiOh.Bot.Services;
 using YuGiOh.Bot.Services.Interfaces;
@@ -24,7 +25,7 @@ namespace YuGiOh.Bot.Core
         private DiscordShardedClient _client;
         private CommandService _commandService;
         private Stats _stats;
-        private ChatHandler _chat;
+        //private ChatHandler _chat;
         private Cache _cache;
         private Web _web;
         //private ServiceObserver _serviceObserver;
@@ -293,18 +294,19 @@ namespace YuGiOh.Bot.Core
 
             Print("Registering commands...");
 
-            _chat = new ChatHandler(
-                _cache,
-                _services.GetService<Web>(),
-                _services.GetService<IYuGiOhDbService>(),
-                _services.GetService<IGuildConfigDbService>()
-             );
+            //_chat = new ChatHandler(
+            //    _cache,
+            //    _services.GetService<Web>(),
+            //    _services.GetService<IYuGiOhDbService>(),
+            //    _services.GetService<IGuildConfigDbService>()
+            // );
 
             //_client.MessageReceived += HandleCommand;
             //_client.MessageReceived += somethingsomethingchat
             //i will have to monitor these changes in case of performance issues
             _client.MessageReceived += (message) => ActivatorUtilities.CreateInstance<CommandHandler>(_services).HandleCommand(message);
             _client.MessageReceived += (message) => ActivatorUtilities.CreateInstance<ChatHandler>(_services).HandlePotentialInlineSearch(message);
+            _client.InteractionCreated += (interaction) => ActivatorUtilities.CreateInstance<InteractionHandler>(_services).HandleInteraction(interaction);
 
             _commandService.AddTypeReader<string>(new StringInputTypeReader());
             await _commandService.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
