@@ -66,7 +66,7 @@ namespace YuGiOh.Bot.Modules
                         Console.WriteLine($"{card.Name}\n{Constants.ArtBaseUrl}{card.Passcode}.{Constants.ArtFileType}");
 
                         using (var stream = await Web.GetStream(url))
-                            await UploadAsync(stream, $"{GenObufscatedString()}.{Constants.ArtFileType}", $":stopwatch: You have **{_guildConfig.GuessTime}** seconds to guess what card this art belongs to! Case sensitive!");
+                            await UploadAsync(stream, $"{GenObufscatedString()}.{Constants.ArtFileType}", $":stopwatch: You have **{_guildConfig.GuessTime}** seconds to guess what card this art belongs to! Case insensitive (used to be case sensitive)!");
 
                         e = null;
 
