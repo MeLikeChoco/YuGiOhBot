@@ -18,8 +18,14 @@ namespace YuGiOh.Bot.Models.Criterion
         public GuessCriteria(string answer)
             => _answer = answer;
 
-        public Task<bool> JudgeAsync(SocketCommandContext sourceContext, SocketMessage parameter)
-            => Task.FromResult(parameter.Content.Equals(_answer, StringComparison.OrdinalIgnoreCase));
+        public Task<bool> JudgeAsync(SocketCommandContext sourceContext, SocketMessage message)
+        {
+
+            var input = message.Content.ConvertTypesetterToTypewriter();
+
+            return Task.FromResult(input.Equals(_answer, StringComparison.OrdinalIgnoreCase));
+
+        }
 
     }
 }

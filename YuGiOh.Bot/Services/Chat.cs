@@ -75,7 +75,7 @@ namespace YuGiOh.Bot.Services
 
                     watch.Start();
 
-                    string cardName = match.ToString();
+                    string cardName = match.ToString().ConvertTypesetterToTypewriter();
                     cardName = cardName[2..^2].ToLower().Trim(); //lose the brackets and trim whitespace
 
                     if (string.IsNullOrEmpty(cardName) || string.IsNullOrWhiteSpace(cardName)) //continue if there is no input
@@ -102,9 +102,10 @@ namespace YuGiOh.Bot.Services
                     //if (string.IsNullOrEmpty(closestCard))
                     //    closestCard = _cache.Lowercase.AsParallel().MinBy(card => YetiLevenshtein(card, cardName)).FirstOrDefault();
 
+                    watch.Stop();
+
                     var time = watch.Elapsed;
 
-                    watch.Stop();
                     AltConsole.Write("Info", "Inline", $"{cardName} took {time.TotalSeconds} seconds to complete.");
 
                     //var embed = _cache.NameToCard[closestCard].GetEmbedBuilder();

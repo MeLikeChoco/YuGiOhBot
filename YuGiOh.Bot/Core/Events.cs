@@ -22,7 +22,7 @@ namespace YuGiOh.Bot.Core
     {
 
         private DiscordShardedClient _client;
-        private CommandService _commands;
+        private CommandService _commandService;
         private Stats _stats;
         private Chat _chat;
         private Cache _cache;
@@ -76,7 +76,7 @@ namespace YuGiOh.Bot.Core
 
             ClientConfig.TotalShards = _recommendedShards;
             _client = new DiscordShardedClient(ClientConfig);
-            _commands = new CommandService(CommandConfig);
+            _commandService = new CommandService(CommandConfig);
             _web = new Web();
             _cache = new Cache();
             _interactive = new InteractiveService(_client);
@@ -309,8 +309,8 @@ namespace YuGiOh.Bot.Core
 
             };
 
-            _commands.AddTypeReader<string>(new StringInputTypeReader());
-            await _commands.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
+            _commandService.AddTypeReader<string>(new StringInputTypeReader());
+            await _commandService.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
 
             Print("Commands registered.");
 
@@ -324,12 +324,12 @@ namespace YuGiOh.Bot.Core
                 || string.IsNullOrEmpty(message.Content))
                 return;
 
-            string prefix = "y!";
+            var prefix = "y!";
 
-            if (message.Channel is not SocketDMChannel)
+            if (message.Channel is SocketTextChannel textChannel)
             {
 
-                var id = (message.Channel as SocketTextChannel).Guild.Id;
+                var id = textChannel.Guild.Id;
                 var guildConfigDbService = _services.GetService<IGuildConfigDbService>();
                 var guildConfig = await guildConfigDbService.GetGuildConfigAsync(id);
                 prefix = guildConfig.Prefix;
@@ -339,20 +339,20 @@ namespace YuGiOh.Bot.Core
             var possibleCmd = message as SocketUserMessage;
             var argPos = 0;
 
-            if ((possibleCmd.HasStringPrefix(prefix, ref argPos) || possibleCmd.HasMentionPrefix(_client.CurrentUser, ref argPos))
-                && possibleCmd.Content.Trim() != prefix)
+            if ((possibleCmd.HasStringPrefix(prefix, ref argPos) || possibleCmd.HasMentionPrefix(_client.CurrentUser, ref argPos)) &&
+                possibleCmd.Content.Trim() != prefix)
             {
 
                 var context = new ShardedCommandContext(_client, possibleCmd);
 
                 if (message.Channel is SocketDMChannel)
                     AltConsole.Write("Info", "Command", $"{possibleCmd.Author.Username} in DM's");
-                else if (message.Channel is SocketTextChannel textChannel)
-                    AltConsole.Write("Info", "Command", $"{possibleCmd.Author.Username} from {textChannel.Guild.Name}");
+                else if (message.Channel is SocketTextChannel txtChannel)
+                    AltConsole.Write("Info", "Command", $"{possibleCmd.Author.Username} from {txtChannel.Guild.Name}");
 
                 AltConsole.Write("Info", "Command", $"{possibleCmd.Content}");
 
-                var result = await _commands.ExecuteAsync(context, argPos, _services);
+                var result = await _commandService.ExecuteAsync(context, argPos, _services);
 
                 if (!result.IsSuccess)
                 {
@@ -380,7 +380,7 @@ namespace YuGiOh.Bot.Core
             _client.Log += (message)
                 => Task.Run(()
                 => AltConsole.Write(message.Severity.ToString(), message.Source, message.Message, message.Exception));
-            _commands.Log += (message)
+            _commandService.Log += (message)
                 => Task.Run(()
                 => AltConsole.Write(message.Severity.ToString(), message.Source, message.Message, message.Exception));
 

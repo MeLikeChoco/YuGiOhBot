@@ -39,14 +39,18 @@ namespace YuGiOh.Bot.Extensions
 
         }
 
+        /// <summary>
+        /// Replace Typesetter apostraphe and quotation marks to Typewriter
+        /// </summary>
+        /// <param name="input"></param>
         public static string ConvertTypesetterToTypewriter(this string input)
         {
 
             return input
-                .Replace('\u2018', '\'')
-                .Replace('\u2019', '\'')
-                .Replace('\u201c', '\"')
-                .Replace('\u201d', '\"');
+                .Replace('‘', '\'') //‘ \u2018
+                .Replace('’', '\'') //’ \u2019
+                .Replace('“', '\"') //“ \u201c
+                .Replace('”', '\"'); //” \u201d
 
         }
 
