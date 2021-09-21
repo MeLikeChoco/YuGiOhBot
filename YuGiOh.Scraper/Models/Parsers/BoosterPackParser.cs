@@ -74,11 +74,13 @@ namespace YuGiOh.Scraper.Models.Parsers
 
         }
 
-        private static List<BoosterPackDate> GetReleaseDates(IElement parserOutput)
+        //non static for debugging reasons
+        //easier to access private properties
+        private List<BoosterPackDate> GetReleaseDates(IElement parserOutput)
         {
 
             var dates = new List<BoosterPackDate>();
-            var infobox = parserOutput.GetElementsByClassName("infobox").FirstOrDefault()?.FirstElementChild.Children;
+            var infobox = parserOutput.GetElementByClassName("infobox")?.FirstElementChild.Children;
             var releaseDateHeader = infobox.FirstOrDefault(element => !string.IsNullOrEmpty(element.TextContent) && element.TextContent.Contains("release dates", StringComparison.InvariantCultureIgnoreCase));
 
             if (releaseDateHeader is not null)
@@ -86,7 +88,7 @@ namespace YuGiOh.Scraper.Models.Parsers
 
                 var startIndex = infobox.Index(releaseDateHeader) + 1;
 
-                for (int i = startIndex; i < infobox.Length; i++)
+                for (var i = startIndex; i < infobox.Length; i++)
                 {
 
                     var dateInfo = infobox[i];

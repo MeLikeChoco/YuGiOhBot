@@ -40,7 +40,7 @@ namespace YuGiOh.Scraper
 
             Log("Filtering cards...");
 
-            var links = await GetLinks(ConstantString.MediaWikiSkillCards);
+            var links = await FilterCardLinks(tcgLinks, ocgLinks);
 
             Log("Filtered cards.");
 
