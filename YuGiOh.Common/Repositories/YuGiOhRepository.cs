@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Dapper;
 using Dapper.FluentMap;
@@ -232,11 +231,17 @@ namespace YuGiOh.Common.Repositories
         public async Task<IEnumerable<CardEntity>> SearchCardsAsync(string input)
         {
 
-            var connection = _config.GetYuGiOhDbConnection();
+            using var connection = _config.GetYuGiOhDbConnection();
 
             await connection.OpenAsync();
 
-            var cards = await connection.QueryProcAsync<CardEntity>("search_cards", new { input });
+            var parameterizedInput = $"%{input}%";
+            var parameters = new DynamicParameters();
+
+            parameters.Add("input", input);
+            parameters.Add("parameterized_input", parameterizedInput);
+
+            var cards = await connection.QueryProcAsync<CardEntity>("search_cards", parameters);
 
             await connection.CloseAsync();
 
@@ -260,13 +265,13 @@ namespace YuGiOh.Common.Repositories
             var selector = sqlBuilder.AddTemplate("select * from cards /**where**/ order by char_length(name)");
             var parameters = new DynamicParameters();
 
-            for(var i = 0; i < inputWords.Length; i++)
+            for (var i = 0; i < inputWords.Length; i++)
             {
 
                 var key = $"@{i}";
 
-                sqlBuilder.Where($"name ~* {key}");
-                parameters.Add(key, inputWords[i]);
+                sqlBuilder.Where($"name ~~* {key}");
+                parameters.Add(key, $"%{inputWords[i]}%");
 
             }
 

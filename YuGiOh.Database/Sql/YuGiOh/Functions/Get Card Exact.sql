@@ -1,6 +1,7 @@
 ﻿create or replace function get_card_exact(input varchar)
 returns setof cards
-as $func$
+language plpgsql
+as $$
 begin
 	
 	return query
@@ -11,6 +12,5 @@ begin
 		order by name
 		limit 1;
 
-end;
-$func$
-language plpgsql;
+end
+$$;
