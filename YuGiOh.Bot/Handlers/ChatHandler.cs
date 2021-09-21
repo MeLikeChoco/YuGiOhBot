@@ -20,7 +20,7 @@ namespace YuGiOh.Bot.Handlers
         private readonly IGuildConfigDbService _guildConfigDbService;
         //private readonly IgnoreCaseComparer _ignoreCaseComparer;
 
-        private const string Pattern = @"(\[\[.+?\]\])";
+        private const string Pattern = @"(\[{2}.+?\]{2})";
 
         public ChatHandler(
             Cache cache,
@@ -121,7 +121,7 @@ namespace YuGiOh.Bot.Handlers
                         try
                         {
 
-                            await channel.SendMessageAsync("", embed: (await embed.WithPrices(minimal, _web, time)).Build());
+                            await channel.SendMessageAsync(embed: (await embed.WithPrices(minimal, _web, time)).Build());
 
                         }
                         catch (Exception ex) { AltConsole.Write("Service", "Chat", $"{ex.InnerException.Message}\n{ex.InnerException.StackTrace}"); }
