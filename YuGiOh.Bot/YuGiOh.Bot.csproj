@@ -31,7 +31,7 @@
     <PackageReference Include="Dapper" Version="2.0.90" />
     <PackageReference Include="Dapper.Contrib" Version="2.0.78" />
     <PackageReference Include="DeepCloner" Version="0.10.2" />
-    <PackageReference Include="Discord.Net.Labs" Version="3.0.4" />
+    <PackageReference Include="Discord.Net.Labs" Version="3.1.0" />
     <PackageReference Include="DiscordBotsList.Api.Adapter.Discord.Net" Version="1.4.5" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="5.0.10" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.2" />

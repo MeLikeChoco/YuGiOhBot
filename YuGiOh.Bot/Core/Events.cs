@@ -43,8 +43,7 @@ namespace YuGiOh.Bot.Core
             ConnectionTimeout = 60000, //had to include this as my bot got bigger and there were more guilds to connect to per shard
             LogLevel = LogSeverity.Verbose,
             MessageCacheSize = 30,
-            TotalShards = 1,
-            UseInternalRatelimiting = false
+            TotalShards = 1
 
         };
 
