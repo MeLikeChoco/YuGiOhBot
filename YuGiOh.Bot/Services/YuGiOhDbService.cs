@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using YuGiOh.Bot.Extensions;
 using YuGiOh.Bot.Models.Cards;
 using YuGiOh.Bot.Services.Interfaces;
+using YuGiOh.Common.Models.YuGiOh;
 using YuGiOh.Common.Repositories.Interfaces;
 
 namespace YuGiOh.Bot.Services
@@ -102,6 +103,9 @@ namespace YuGiOh.Bot.Services
 
         public Task<string> GetNameWithPasscodeAsync(string passcode)
             => _repo.GetNameWithPasscodeAsync(passcode);
+
+        public Task<Banlist> GetBanlistAsync(BanlistFormats format)
+            => _repo.GetBanlistAsync(format);
 
     }
 }

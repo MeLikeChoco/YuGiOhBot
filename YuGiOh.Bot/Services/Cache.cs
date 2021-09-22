@@ -23,7 +23,7 @@ namespace YuGiOh.Bot.Services
         public Dictionary<string, Card> NameToCard { get; private set; }
         public Dictionary<string, BoosterPack> BoosterPacks { get; private set; }
         public ConcurrentDictionary<ulong, object> GuessInProgress { get; }
-        public Banlist Banlist { get; private set; }
+        //public Banlist Banlist { get; private set; }
         public int FYeahYgoCardArtPosts { get; private set; }
         public string TumblrKey { get; private set; }
         public string BitlyKey { get; private set; }
@@ -53,7 +53,7 @@ namespace YuGiOh.Bot.Services
             var cardParsers = AquireGoodies();
 
             AquireFancyMessages(cardParsers);
-            AquireTheUntouchables();
+            //AquireTheUntouchables();
             UnlockTheShock();
             AquireGoodiePacks();
 
@@ -355,55 +355,55 @@ namespace YuGiOh.Bot.Services
 
         //}
 
-        private void AquireTheUntouchables()
-        {
+        //private void AquireTheUntouchables()
+        //{
 
-            var banlist = new Banlist();
+        //    var banlist = new Banlist();
 
-            Log("Getting OCG banlist...");
+        //    Log("Getting OCG banlist...");
 
-            var ocgBanlist = banlist.OcgBanlist;
-            var ocgCards = Cards.Where(card => card.OcgExists);
-            ocgBanlist.Forbidden = ocgCards.Where(card => card.OcgStatus == CardStatus.Forbidden).Select(card => card.Name);
-            ocgBanlist.Limited = ocgCards.Where(card => card.OcgStatus == CardStatus.Limited).Select(card => card.Name);
-            ocgBanlist.SemiLimited = ocgCards.Where(card => card.OcgStatus == CardStatus.SemiLimited).Select(card => card.Name);
+        //    var ocgBanlist = banlist.OcgBanlist;
+        //    var ocgCards = Cards.Where(card => card.OcgExists);
+        //    ocgBanlist.Forbidden = ocgCards.Where(card => card.OcgStatus == CardStatus.Forbidden).Select(card => card.Name);
+        //    ocgBanlist.Limited = ocgCards.Where(card => card.OcgStatus == CardStatus.Limited).Select(card => card.Name);
+        //    ocgBanlist.SemiLimited = ocgCards.Where(card => card.OcgStatus == CardStatus.SemiLimited).Select(card => card.Name);
 
-            Log("Getting TCG Adv banlist...");
+        //    Log("Getting TCG Adv banlist...");
 
-            var tcgCards = Cards.Where(card => card.TcgExists);
+        //    var tcgCards = Cards.Where(card => card.TcgExists);
 
-            var tcgAdvBanlist = banlist.TcgAdvBanlist;
-            tcgAdvBanlist.Forbidden = tcgCards.Where(card => card.TcgAdvStatus == CardStatus.Forbidden).Select(card => card.Name);
-            tcgAdvBanlist.Limited = tcgCards.Where(card => card.TcgAdvStatus == CardStatus.Limited).Select(card => card.Name);
-            tcgAdvBanlist.SemiLimited = tcgCards.Where(card => card.TcgAdvStatus == CardStatus.SemiLimited).Select(card => card.Name);
+        //    var tcgAdvBanlist = banlist.TcgAdvBanlist;
+        //    tcgAdvBanlist.Forbidden = tcgCards.Where(card => card.TcgAdvStatus == CardStatus.Forbidden).Select(card => card.Name);
+        //    tcgAdvBanlist.Limited = tcgCards.Where(card => card.TcgAdvStatus == CardStatus.Limited).Select(card => card.Name);
+        //    tcgAdvBanlist.SemiLimited = tcgCards.Where(card => card.TcgAdvStatus == CardStatus.SemiLimited).Select(card => card.Name);
 
-            Log("Getting TCG Traditional banlist...");
+        //    Log("Getting TCG Traditional banlist...");
 
-            var tcgTradBanlist = banlist.TcgTradBanlist;
-            tcgTradBanlist.Forbidden = tcgCards.Where(card => card.TcgTrnStatus == CardStatus.Forbidden).Select(card => card.Name);
-            tcgTradBanlist.Limited = tcgCards.Where(card => card.TcgTrnStatus == CardStatus.Limited).Select(card => card.Name);
-            tcgTradBanlist.SemiLimited = tcgCards.Where(card => card.TcgTrnStatus == CardStatus.SemiLimited).Select(card => card.Name);
+        //    var tcgTradBanlist = banlist.TcgTradBanlist;
+        //    tcgTradBanlist.Forbidden = tcgCards.Where(card => card.TcgTrnStatus == CardStatus.Forbidden).Select(card => card.Name);
+        //    tcgTradBanlist.Limited = tcgCards.Where(card => card.TcgTrnStatus == CardStatus.Limited).Select(card => card.Name);
+        //    tcgTradBanlist.SemiLimited = tcgCards.Where(card => card.TcgTrnStatus == CardStatus.SemiLimited).Select(card => card.Name);
 
-            //_db.Open();
+        //    //_db.Open();
 
-            //Log("Getting OCG banlist...");
-            //tempban.OcgBanlist.Forbidden = _db.Query<string>("select name from Card where ocgStatus like 'forbidden' or ocgStatus like 'illegal'");
-            //tempban.OcgBanlist.Limited = _db.Query<string>("select name from Card where ocgStatus like 'limited'");
-            //tempban.OcgBanlist.SemiLimited = _db.Query<string>("select name from Card where ocgStatus like 'semi-limited'");
-            //Log("Getting TCG Adv banlist...");
-            //tempban.TcgAdvBanlist.Forbidden = _db.Query<string>("select name from Card where tcgAdvStatus like 'forbidden' or tcgAdvStatus like 'illegal'");
-            //tempban.TcgAdvBanlist.Limited = _db.Query<string>("select name from Card where tcgAdvStatus like 'limited'");
-            //tempban.TcgTradBanlist.SemiLimited = _db.Query<string>("select name from Card where tcgAdvStatus like 'semi-limited'");
-            //Log("Getting TCG Traditional banlist...");
-            //tempban.TcgTradBanlist.Forbidden = _db.Query<string>("select name from Card where tcgTrnStatus like 'forbidden' or tcgTrnStatus like 'illegal'");
-            //tempban.TcgTradBanlist.Limited = _db.Query<string>("select name from Card where tcgTrnStatus like 'limited'");
-            //tempban.TcgTradBanlist.SemiLimited = _db.Query<string>("select name from Card where tcgTrnStatus like 'semi-limited'");
+        //    //Log("Getting OCG banlist...");
+        //    //tempban.OcgBanlist.Forbidden = _db.Query<string>("select name from Card where ocgStatus like 'forbidden' or ocgStatus like 'illegal'");
+        //    //tempban.OcgBanlist.Limited = _db.Query<string>("select name from Card where ocgStatus like 'limited'");
+        //    //tempban.OcgBanlist.SemiLimited = _db.Query<string>("select name from Card where ocgStatus like 'semi-limited'");
+        //    //Log("Getting TCG Adv banlist...");
+        //    //tempban.TcgAdvBanlist.Forbidden = _db.Query<string>("select name from Card where tcgAdvStatus like 'forbidden' or tcgAdvStatus like 'illegal'");
+        //    //tempban.TcgAdvBanlist.Limited = _db.Query<string>("select name from Card where tcgAdvStatus like 'limited'");
+        //    //tempban.TcgTradBanlist.SemiLimited = _db.Query<string>("select name from Card where tcgAdvStatus like 'semi-limited'");
+        //    //Log("Getting TCG Traditional banlist...");
+        //    //tempban.TcgTradBanlist.Forbidden = _db.Query<string>("select name from Card where tcgTrnStatus like 'forbidden' or tcgTrnStatus like 'illegal'");
+        //    //tempban.TcgTradBanlist.Limited = _db.Query<string>("select name from Card where tcgTrnStatus like 'limited'");
+        //    //tempban.TcgTradBanlist.SemiLimited = _db.Query<string>("select name from Card where tcgTrnStatus like 'semi-limited'");
 
-            //_db.Close();
+        //    //_db.Close();
 
-            Banlist = banlist;
+        //    Banlist = banlist;
 
-        }
+        //}
 
         private IEnumerable<CardParser> AquireGoodies()
         {

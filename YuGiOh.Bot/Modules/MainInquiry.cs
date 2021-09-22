@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using YuGiOh.Bot.Extensions;
-using YuGiOh.Bot.Models;
 using YuGiOh.Bot.Services;
+using YuGiOh.Common.Models.YuGiOh;
 
 namespace YuGiOh.Bot.Modules
 {
@@ -201,37 +201,72 @@ namespace YuGiOh.Bot.Modules
 
         [Command("banlist")]
         [Summary("Get the banlist of a specified format! OCG or 1, TCGADV or 2, TCGTRAD or 3")]
-        public async Task BanlistCommand([Remainder] string format)
+        public async Task BanlistCommand([Remainder] string input)
         {
 
-            BanlistFormat banlist;
+            BanlistFormats format;
 
-            switch (format.ToLower())
+            switch (input.ToLower())
             {
 
                 case "ocg":
                 case "1":
-                    banlist = Cache.Banlist.OcgBanlist;
+                    format = BanlistFormats.OCG;
                     break;
-                case "tcgadv":
+                case "tcg":
                 case "2":
-                    banlist = Cache.Banlist.TcgAdvBanlist;
+                    format = BanlistFormats.TCG;
                     break;
                 case "tcgtrad":
+                case "trad":
                 case "3":
-                    banlist = Cache.Banlist.TcgTradBanlist;
+                    format = BanlistFormats.TRAD;
                     break;
                 default:
-                    await ReplyAsync("The valid formats are OCG or 1, TCGADV or 2, TCGTRAD or 3!");
-                    return;
+                    format = BanlistFormats.TCG;
+                    break;
 
             }
 
-            if (banlist.Forbidden.Any())
-                await DirectMessageAsync("", FormatBanlist("Forbidden", banlist.Forbidden));
+            var banlist = await YuGiOhDbService.GetBanlistAsync(format);
 
-            await DirectMessageAsync("", FormatBanlist("Limited", banlist.Limited));
-            await DirectMessageAsync("", FormatBanlist("Semi-Limited", banlist.SemiLimited));
+            if (banlist.Forbidden.Any())
+                await DirectMessageAsync(FormatBanlist("Forbidden", banlist.Forbidden));
+
+            if (banlist.Limited.Any())
+                await DirectMessageAsync(FormatBanlist("Limited", banlist.Limited));
+
+            if (banlist.SemiLimited.Any())
+                await DirectMessageAsync(FormatBanlist("Semi-Limited", banlist.SemiLimited));
+
+            //BanlistFormat banlist;
+
+            //switch (format.ToLower())
+            //{
+
+            //    case "ocg":
+            //    case "1":
+            //        banlist = Cache.Banlist.OcgBanlist;
+            //        break;
+            //    case "tcgadv":
+            //    case "2":
+            //        banlist = Cache.Banlist.TcgAdvBanlist;
+            //        break;
+            //    case "tcgtrad":
+            //    case "3":
+            //        banlist = Cache.Banlist.TcgTradBanlist;
+            //        break;
+            //    default:
+            //        await ReplyAsync("The valid formats are OCG or 1, TCGADV or 2, TCGTRAD or 3!");
+            //        return;
+
+            //}
+
+            //if (banlist.Forbidden.Any())
+            //    await DirectMessageAsync("", FormatBanlist("Forbidden", banlist.Forbidden));
+
+            //await DirectMessageAsync("", FormatBanlist("Limited", banlist.Limited));
+            //await DirectMessageAsync("", FormatBanlist("Semi-Limited", banlist.SemiLimited));
 
         }
 
@@ -239,20 +274,20 @@ namespace YuGiOh.Bot.Modules
         {
 
             var descBuilder = new StringBuilder();
-            var cardStack = new Stack<string>(cards);
+            var cardQueue = new Queue<string>(cards);
             var counter = 0;
 
-            while (cardStack.Any())
+            while (cardQueue.Count > 0)
             {
 
-                var card = cardStack.Peek();
+                var card = cardQueue.Peek();
                 counter += card.Length + 2;
 
                 if (counter >= 2048)
                     break;
 
                 descBuilder.AppendLine(card);
-                cardStack.Pop();
+                cardQueue.Dequeue();
 
             }
 
@@ -261,7 +296,7 @@ namespace YuGiOh.Bot.Modules
                 .WithRandomColor()
                 .WithDescription(descBuilder.ToString());
 
-            while (cardStack.Any())
+            while (cardQueue.Count > 0)
             {
 
                 counter = 0;
@@ -270,16 +305,16 @@ namespace YuGiOh.Bot.Modules
                 do
                 {
 
-                    var card = cardStack.Peek();
+                    var card = cardQueue.Peek();
                     counter += card.Length + 2;
 
                     if (counter >= 1024)
                         break;
 
                     valueBuilder.AppendLine(card);
-                    cardStack.Pop();
+                    cardQueue.Dequeue();
 
-                } while (cardStack.Any());
+                } while (cardQueue.Count > 0);
 
                 body.AddField("cont.", valueBuilder.ToString());
 

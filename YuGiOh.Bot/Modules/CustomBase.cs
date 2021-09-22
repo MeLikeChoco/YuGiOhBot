@@ -1,12 +1,8 @@
-﻿using Discord;
+﻿using System.IO;
+using System.Threading.Tasks;
+using Discord;
 using Discord.Addons.Interactive;
 using Discord.Commands;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using YuGiOh.Bot.Extensions;
 using YuGiOh.Bot.Services;
 
@@ -14,6 +10,12 @@ namespace YuGiOh.Bot.Modules
 {
     public class CustomBase : InteractiveBase<ShardedCommandContext>
     {
+
+        public Task DirectMessageAsync(Embed embed)
+            => Context.User.SendMessageAsync(embed: embed);
+
+        public Task DirectMessageAsync(EmbedBuilder embedBuilder)
+            => DirectMessageAsync(embedBuilder.Build());
 
         public Task DirectMessageAsync(string message, Embed embed)
             => Context.User.SendMessageAsync(message, embed: embed);

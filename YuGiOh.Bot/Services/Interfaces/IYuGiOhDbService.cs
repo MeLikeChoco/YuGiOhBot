@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using YuGiOh.Bot.Models.Cards;
+using YuGiOh.Common.Models.YuGiOh;
 
 namespace YuGiOh.Bot.Services.Interfaces
 {
@@ -24,6 +25,8 @@ namespace YuGiOh.Bot.Services.Interfaces
 
         Task<string> GetImageLinkAsync(string input);
         Task<string> GetNameWithPasscodeAsync(string passcode);
+
+        Task<Banlist> GetBanlistAsync(BanlistFormats format);
 
     }
 }

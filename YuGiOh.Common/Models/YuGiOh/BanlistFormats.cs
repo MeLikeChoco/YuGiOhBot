@@ -6,12 +6,12 @@ using System.Threading.Tasks;
 
 namespace YuGiOh.Common.Models.YuGiOh
 {
-    public enum CardEntityFormats
+    public enum BanlistFormats
     {
 
         OCG,
         TCG,
-        TCGTRAD
+        TRAD
 
     }
 }

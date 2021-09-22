@@ -404,15 +404,15 @@ namespace YuGiOh.Common.Repositories
 
         }
 
-        public async Task<IEnumerable<string>> GetBanlistCards(CardEntityFormats format)
+        public async Task<Banlist> GetBanlistAsync(BanlistFormats format)
         {
 
             var formatStr = format switch
             {
 
-                CardEntityFormats.OCG => "ocgstatus",
-                CardEntityFormats.TCG => "tcgstatus",
-                CardEntityFormats.TCGTRAD => "tcgtrnstatus",
+                BanlistFormats.OCG => "ocgstatus",
+                BanlistFormats.TCG => "tcgadvstatus",
+                BanlistFormats.TRAD => "tcgtrnstatus",
                 _ => null
 
             };
@@ -421,11 +421,14 @@ namespace YuGiOh.Common.Repositories
 
             await connection.OpenAsync();
 
-            var cards = await connection.QueryAsync<string>("select name from cards where @formatStr in ('Forbidden', 'Semi-Limited', 'Limited')");
+            var banlist = new Banlist();
+            banlist.Forbidden = await connection.QueryAsync<string>($"select name from cards where {formatStr} ~~* 'forbidden' order by name asc");
+            banlist.Limited = await connection.QueryAsync<string>($"select name from cards where {formatStr} ~~* 'limited' order by name asc");
+            banlist.SemiLimited = await connection.QueryAsync<string>($"select name from cards where {formatStr} ~~* 'semi-limited' order by name asc");
 
             await connection.CloseAsync();
 
-            return cards;
+            return banlist;
 
         }
 

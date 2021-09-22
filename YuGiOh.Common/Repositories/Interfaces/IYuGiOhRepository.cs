@@ -26,7 +26,7 @@ namespace YuGiOh.Common.Repositories.Interfaces
 
         Task<string> GetNameWithPasscodeAsync(string passcode);
         Task<string> GetImageLinkAsync(string input);
-        Task<IEnumerable<string>> GetBanlistCards(CardEntityFormats format);
+        Task<Banlist> GetBanlistAsync(BanlistFormats format);
 
     }
 }
