@@ -37,7 +37,7 @@ void CreateProc()
 
     botProc.OutputDataReceived += RedirectOutput;
     botProc.ErrorDataReceived += RedirectOutput;
-    botProc.Exited += async (object _, EventArgs _) =>
+    botProc.Exited += (object _, EventArgs _) =>
     {
 
         Console.WriteLine("Bot exited. Waiting 10 seconds for bot restart...");
@@ -45,7 +45,7 @@ void CreateProc()
         botProc.OutputDataReceived -= RedirectOutput;
         botProc.ErrorDataReceived -= RedirectOutput;
 
-        await Task.Delay(TimeSpan.FromSeconds(10)).ContinueWith(_ => CreateProc());
+        Task.Delay(TimeSpan.FromSeconds(10)).ContinueWith(_ => CreateProc());
 
     };
 

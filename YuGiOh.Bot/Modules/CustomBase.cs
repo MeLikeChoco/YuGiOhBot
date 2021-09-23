@@ -23,11 +23,11 @@ namespace YuGiOh.Bot.Modules
         public Task UploadAsync(Stream stream, string filename, string text = null)
             => Context.Channel.SendFileAsync(stream, filename, text);
 
-        public async Task SendCardEmbed(EmbedBuilder embed, bool minimal, Web web)
-            => await ReplyAsync(embed: (await embed.WithPrices(minimal, web)).Build());
+        public async Task SendCardEmbedAsync(EmbedBuilder embed, bool minimal, Web web)
+            => await Context.Channel.SendMessageAsync(embed: (await embed.WithPrices(minimal, web)).Build());
 
-        public async Task SendEmbed(EmbedBuilder embed)
-            => await ReplyAsync(embed: embed.Build());
+        public Task SendEmbedAsync(EmbedBuilder embed)
+            => Context.Channel.SendMessageAsync(embed: embed.Build());
 
         public Task NoResultError(string input = null)
             => NoResultError("cards", input);

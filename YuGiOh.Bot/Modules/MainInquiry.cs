@@ -53,7 +53,7 @@ namespace YuGiOh.Bot.Modules
             var card = await YuGiOhDbService.GetCardAsync(input);
 
             if (card is not null)
-                await SendCardEmbed(card.GetEmbedBuilder(), _guildConfig.Minimal, Web);
+                await SendCardEmbedAsync(card.GetEmbedBuilder(), _guildConfig.Minimal, Web);
             else
                 await NoResultError(input);
 
@@ -71,7 +71,7 @@ namespace YuGiOh.Bot.Modules
 
             var card = await YuGiOhDbService.GetRandomCardAsync();
 
-            await SendCardEmbed(card.GetEmbedBuilder(), _guildConfig.Minimal, Web);
+            await SendCardEmbedAsync(card.GetEmbedBuilder(), _guildConfig.Minimal, Web);
 
         }
 
@@ -189,7 +189,7 @@ namespace YuGiOh.Bot.Modules
                     foreach (var datum in data)
                         body.AddPrice(datum, true);
 
-                    await SendEmbed(body);
+                    await SendEmbedAsync(body);
 
                 }
 

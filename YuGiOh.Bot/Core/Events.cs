@@ -277,6 +277,7 @@ namespace YuGiOh.Bot.Core
                 .AddTransient<IGuildConfigRepository, GuildConfigRepository>()
                 .AddTransient<IYuGiOhDbService, YuGiOhDbService>()
                 .AddTransient<IGuildConfigDbService, GuildConfigDbService>()
+                .AddTransient<PerformanceMetrics>()
                 .AddSingleton(_client)
                 .AddSingleton(_commandService)
                 .AddSingleton(_cache)

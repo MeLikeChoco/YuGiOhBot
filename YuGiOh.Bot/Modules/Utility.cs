@@ -1,12 +1,13 @@
-﻿using Discord;
-using Discord.Commands;
-using Discord.WebSocket;
-using System;
-using System.Collections.Generic;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using Discord;
+using Discord.Commands;
+using Discord.WebSocket;
 using YuGiOh.Bot.Extensions;
 using YuGiOh.Bot.Models;
 using YuGiOh.Bot.Services;
@@ -19,12 +20,13 @@ namespace YuGiOh.Bot.Modules
         public Stats Stats { get; set; }
         public Random Rand { get; set; }
         public Config Config { get; set; }
+        public PerformanceMetrics PerfMetrics { get; set; }
 
         [Command("feedback")]
         [Summary("Send feedback to the bot owner!")]
-        public async Task FeedbackCommand([Remainder]string message)
+        public async Task FeedbackCommand([Remainder] string message)
         {
-            
+
             var author = new EmbedAuthorBuilder()
                 .WithName(Context.User.Username)
                 .WithIconUrl(Context.User.GetAvatarUrl());
@@ -51,7 +53,7 @@ namespace YuGiOh.Bot.Modules
 
         [Command("uptime")]
         [Summary("Gets the uptime of the bot!")]
-        public async Task UptimeCommand() 
+        public async Task UptimeCommand()
             => await ReplyAsync(GetUptime());
 
         [Command("stats")]
@@ -78,7 +80,7 @@ namespace YuGiOh.Bot.Modules
                     .WithRandomColor()
                     .WithDescription(desc);
 
-                await SendEmbed(body);
+                await SendEmbedAsync(body);
 
             }
             else
@@ -93,18 +95,41 @@ namespace YuGiOh.Bot.Modules
 
         [Command("info")]
         [Summary("Get info on the bot!")]
-        public Task InfoCommand()
+        public async Task InfoCommand()
         {
+
+            var getAppInfoTask = Context.Client.GetApplicationInfoAsync();
+            var getOSInfoTask = PerfMetrics.GetOperatingSystem();
+            var calcCpuUsageTask = PerfMetrics.GetCpuUsage();
+            var calcMemUsageTask = PerfMetrics.GetMemUsage();
+
+            var strBuilder = new StringBuilder()
+                .Append("**Discord API Version:** ").Append(DiscordConfig.APIVersion).AppendLine()
+                .Append("**Discord.NET Version:** ").AppendLine(DiscordConfig.Version);
+
+            var appInfo = await getAppInfoTask;
+
+            strBuilder
+                .Append("**Owner/Developer:** ").AppendLine(appInfo.Owner.ToString())
+                .Append("**Shards:** ").Append(Context.Client.Shards.Count).AppendLine();
+
+            var osInfo = await getOSInfoTask;
+
+            strBuilder
+                .Append("**Operating System:** ").AppendLine(osInfo)
+                .Append("**Processor Count:** ").Append(Environment.ProcessorCount).AppendLine();
+
+            var cpuUsage = await calcCpuUsageTask;
+            var memUsage = await calcMemUsageTask;
+
+            strBuilder.Append("**Cpu Usage:** ").Append(cpuUsage.ToString("0.##")).AppendLine("%");
+            strBuilder.Append("**Memory Usage:** ").Append(memUsage.UsedMem.ToString("0.##")).Append(" GB / ").Append(memUsage.TotalMem).AppendLine(" GB");
 
             var body = new EmbedBuilder()
                 .WithRandomColor()
-                .WithDescription($"**Discord API Version:** {DiscordConfig.APIVersion}\n" +
-                $"**Discord.NET Version:** {DiscordConfig.Version}" +
-                $"**Operating System:** {Environment.OSVersion.VersionString}\n" +
-                $"**Processor Count:** {Environment.ProcessorCount}\n" +
-                $"**Shards:** {Context.Client.Shards.Count}\n");
+                .WithDescription(strBuilder.ToString());
 
-            return SendEmbed(body);
+            await SendEmbedAsync(body);
 
         }
 

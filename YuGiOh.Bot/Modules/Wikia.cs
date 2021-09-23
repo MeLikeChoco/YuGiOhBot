@@ -56,7 +56,7 @@ namespace YuGiOh.Bot.Modules
                 }
 
                 body.WithDescription(builder.ToString());
-                await SendEmbed(body);
+                await SendEmbedAsync(body);
 
             }
             else
