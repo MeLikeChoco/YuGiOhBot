@@ -161,6 +161,7 @@ namespace YuGiOh.Bot.Modules
             => DisplaySetting("Minimal", _guildConfig.Minimal);
 
         [Command("inline")]
+        [RequireUserPermission(GuildPermission.Administrator)]
         [Summary("Enable (true) or disable (false) inline search!")]
         public async Task InlineCommand(bool input)
         {
