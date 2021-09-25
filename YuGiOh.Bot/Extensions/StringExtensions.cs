@@ -9,8 +9,20 @@ namespace YuGiOh.Bot.Extensions
     public static class StringExtensions
     {
 
-        public static bool ContainsIgnoreCase(this string str, string value, StringComparison comparisonType = StringComparison.OrdinalIgnoreCase)
-            => str.Contains(value, comparisonType);
+        public enum IgnoreCaseComparison
+        {
+
+            OrdinalIgnoreCase = StringComparison.OrdinalIgnoreCase,
+            InvariantCultureIgnoreCase = StringComparison.InvariantCultureIgnoreCase,
+            CurrentCultureIgnoreCase = StringComparison.CurrentCultureIgnoreCase
+
+        }
+
+        public static bool ContainsIgnoreCase(this string str, string value, IgnoreCaseComparison comparisonType = IgnoreCaseComparison.OrdinalIgnoreCase)
+            => str.Contains(value, (StringComparison)comparisonType);
+
+        public static bool EqualsIgnoreCase(this string str, string value, IgnoreCaseComparison comparisonType = IgnoreCaseComparison.OrdinalIgnoreCase)
+            => str.Equals(value, (StringComparison)comparisonType);
 
         public static string Title(this string str)
         {

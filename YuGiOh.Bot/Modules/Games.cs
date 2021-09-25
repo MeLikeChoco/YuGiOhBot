@@ -1,23 +1,19 @@
-﻿using Discord.Addons.Interactive;
-using Discord.Commands;
-using Discord.WebSocket;
-using MoreLinq;
-using Newtonsoft.Json.Linq;
-using System;
-using System.Collections;
-using System.Collections.Concurrent;
+﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using YuGiOh.Bot.Models;
+using Discord.Addons.Interactive;
+using Discord.Commands;
+using Discord.WebSocket;
+using MoreLinq;
+using Newtonsoft.Json.Linq;
+using YuGiOh.Bot.Extensions;
+using YuGiOh.Bot.Models.Cards;
 using YuGiOh.Bot.Models.Criterion;
 using YuGiOh.Bot.Models.Deserializers;
 using YuGiOh.Bot.Services;
-using YuGiOh.Bot.Extensions;
-using YuGiOh.Bot.Models.Cards;
 
 namespace YuGiOh.Bot.Modules
 {
@@ -37,18 +33,6 @@ namespace YuGiOh.Bot.Modules
             if (Cache.GuessInProgress.TryAdd(Context.Channel.Id, null))
             {
 
-                //var art = await GetArt();
-
-                //Console.WriteLine(art.Value);
-
-                //using (var stream = await _web.GetStream(art.Value).ConfigureAwait(false))
-                //{
-
-                //    await UploadAsync(stream, $"{GenObufscatedString()}.png", ":stopwatch: You have **60** seconds to guess what card this art belongs to! Case sensitive!");
-                //    await stream.FlushAsync();
-
-                //}
-
                 Card card = null;
                 Exception e;
 
@@ -63,7 +47,14 @@ namespace YuGiOh.Bot.Modules
                         var url = $"{Constants.ArtBaseUrl}{card.Passcode}.{Constants.ArtFileType}";
 
                         //$"https://storage.googleapis.com/ygoprodeck.com/pics_artgame/{passcode}.jpg"
-                        Console.WriteLine($"{card.Name}\n{Constants.ArtBaseUrl}{card.Passcode}.{Constants.ArtFileType}");
+                        var consoleOutput = $"{card.Name}";
+
+                        if (!string.IsNullOrEmpty(card.RealName))
+                            consoleOutput += $" / {card.RealName}";
+
+                        consoleOutput += $"\n{Constants.ArtBaseUrl}{card.Passcode}.{Constants.ArtFileType}";
+
+                        Console.WriteLine(consoleOutput);
 
                         using (var stream = await Web.GetStream(url))
                             await UploadAsync(stream, $"{GenObufscatedString()}.{Constants.ArtFileType}", $":stopwatch: You have **{_guildConfig.GuessTime}** seconds to guess what card this art belongs to! Case insensitive (used to be case sensitive)!");
@@ -75,8 +66,10 @@ namespace YuGiOh.Bot.Modules
 
                 } while (e is not null);
 
+                var criteria = new GuessCriteria(card.Name, card.RealName);
+
                 //_criteria.AddCriterion(new GuessCriteria(art.Key));
-                _criteria.AddCriterion(new GuessCriteria(card.Name));
+                _criteria.AddCriterion(criteria);
 
                 var answer = await NextMessageAsync(_criteria, TimeSpan.FromSeconds(_guildConfig.GuessTime));
 
@@ -86,15 +79,22 @@ namespace YuGiOh.Bot.Modules
                     var author = answer.Author as SocketGuildUser;
 
                     //await ReplyAsync($":trophy: The winner is **{author.Nickname ?? author.Username}**! The card was `{art.Key}`!");
-                    await ReplyAsync($":trophy: The winner is **{author.Nickname ?? author.Username}**! The card was `{card.Name}`!");
+                    await ReplyAsync($":trophy: The winner is **{author.Nickname ?? author.Username}**! The card was `{criteria.Answer}`!");
 
                 }
                 else
-                    await ReplyAsync($":stop_button: Ran out of time! The card was `{card.Name}`!");
+                {
+
+                    var possibleAnswersOutput = criteria.PossibleAnswers.Skip(1).Aggregate(new StringBuilder($"`{criteria.PossibleAnswers.First()}`"), (strBuilder, possibleAnswer) => strBuilder.Append(" or `").Append(possibleAnswer).Append('`'));
+
+                    await ReplyAsync($":stop_button: Ran out of time! The card was {possibleAnswersOutput}!");
+
+                }
 
             }
             else
                 await ReplyAsync(":game_die: There is a game in progress!");
+
             Cache.GuessInProgress.TryRemove(Context.Channel.Id, out _);
 
         }
