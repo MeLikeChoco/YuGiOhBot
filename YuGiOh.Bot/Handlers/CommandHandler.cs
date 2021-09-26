@@ -55,11 +55,12 @@ namespace YuGiOh.Bot.Handlers
             {
 
                 var context = new ShardedCommandContext(_client, possibleCmd);
+                var user = possibleCmd.Author;
 
                 if (message.Channel is SocketDMChannel)
-                    AltConsole.Write("Info", "Command", $"{possibleCmd.Author.Username} in DM's");
+                    AltConsole.Write("Info", "Command", $"{user.Username}#{user.Discriminator} in DM's");
                 else if (message.Channel is SocketTextChannel txtChannel)
-                    AltConsole.Write("Info", "Command", $"{possibleCmd.Author.Username} from {txtChannel.Guild.Name}");
+                    AltConsole.Write("Info", "Command", $"{user.Username}#{user.Discriminator} from {txtChannel.Guild.Name}/{txtChannel.Name}");
 
                 AltConsole.Write("Info", "Command", $"{possibleCmd.Content}");
 

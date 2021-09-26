@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
-using MoreLinq;
+using YuGiOh.Bot.Models.Interfaces;
+using YuGiOh.Bot.Services.Interfaces;
 
 namespace YuGiOh.Bot.Services
 {
-    public class PerformanceMetrics
+    public class PerformanceMetrics : IPerformanceMetrics
     {
 
         public Task<string> GetOperatingSystem()
@@ -30,7 +30,7 @@ namespace YuGiOh.Bot.Services
 
         }
 
-        public Task<MemoryMetrics> GetMemUsage()
+        public Task<IMemoryMetrics> GetMemUsage()
         {
 
             if (IsUnix())
@@ -120,14 +120,14 @@ namespace YuGiOh.Bot.Services
 
         }
 
-        private async Task<MemoryMetrics> GetMemUsageUnix()
+        private async Task<IMemoryMetrics> GetMemUsageUnix()
         {
 
             var procStartInfo = new ProcessStartInfo
             {
 
                 FileName = "/bin/bash",
-                Arguments = $"-c \"free --mega\"",
+                Arguments = "-c \"free --mega\"",
                 RedirectStandardOutput = true
 
             };
@@ -143,14 +143,14 @@ namespace YuGiOh.Bot.Services
             return new MemoryMetrics
             {
 
-                TotalMem = (int)Math.Round(double.Parse(entries[1]) / 1024),
+                TotalMem = double.Parse(entries[1]) / 1024,
                 UsedMem = double.Parse(entries[2]) / 1024
 
             };
 
         }
 
-        private async Task<MemoryMetrics> GetMemUsageWindows()
+        private async Task<IMemoryMetrics> GetMemUsageWindows()
         {
 
             var procStartInfo = new ProcessStartInfo
@@ -169,7 +169,7 @@ namespace YuGiOh.Bot.Services
 
             output = output.Trim();
             var entries = output.Split('\n');
-            var totalMem = (int)Math.Round(double.Parse(entries[1].Split('=')[1]) / 1024 / 1024);
+            var totalMem = double.Parse(entries[1].Split('=')[1]) / 1024 / 1024;
 
             return new MemoryMetrics
             {
@@ -186,10 +186,10 @@ namespace YuGiOh.Bot.Services
 
     }
 
-    public class MemoryMetrics
+    public class MemoryMetrics : IMemoryMetrics
     {
 
-        public int TotalMem { get; set; }
+        public double TotalMem { get; set; }
         public double UsedMem { get; set; }
 
     }

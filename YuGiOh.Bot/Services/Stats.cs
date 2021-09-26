@@ -31,7 +31,7 @@ namespace YuGiOh.Bot.Services
         private readonly Timer _calculateStats;
         private readonly ulong _id;
         private Web _web;
-        private readonly AuthDiscordBotListApi _discordBotListApi;
+        private readonly AuthDiscordBotListApi _topGG;
 
         public Stats(DiscordShardedClient client, Web web)
         {
@@ -40,7 +40,7 @@ namespace YuGiOh.Bot.Services
             IsReady = false;
             _armedTimer = false;
             _id = client.CurrentUser.Id;
-            _discordBotListApi = new AuthDiscordBotListApi(_id, Config.Instance.Tokens.BotList.Blue);
+            _topGG = new AuthDiscordBotListApi(_id, Config.Instance.Tokens.BotList.Blue);
             _calculateStats = new Timer(CalculateStats, client, TimeSpan.FromSeconds(300), TimeSpan.FromHours(1));
 
         }
@@ -90,42 +90,23 @@ namespace YuGiOh.Bot.Services
         private async void SendStats(DiscordShardedClient client)
         {
 
-            var shards = client.Shards;
-            var shardCount = shards.Count;
+            var payload = JsonConvert.SerializeObject(new { guildCount = client.Guilds.Count });
 
-            foreach (DiscordSocketClient shard in shards)
-            {
-
-                var payload = JsonConvert.SerializeObject(new GuildCount(shard.ShardId, shardCount, shard.Guilds.Count));
-
-                try
-                {
-
-                    Log($"Sending shard {shard.ShardId} stats to black discord bots...");
-                    //var response = await _web.Post($"https://bots.discord.pw/api/bots/{_id}/stats", $"{{\"server_count\": {GuildCount}}}", await File.ReadAllTextAsync("Files/Bot List Tokens/Black.txt"));
-                    var response = await _web.Post(string.Format(Constants.BlackDiscordBotUrl, _id), payload, authorization: Config.Instance.Tokens.BotList.Black);
-                    Log($"Status: {response.StatusCode}");
-
-                }
-                catch
-                {
-
-                    Log("Error in sending stats to black discord bots.");
-
-                }
-
-            }
+            Log($"Sending stats to black discord bots...");
+            //var response = await _web.Post($"https://bots.discord.pw/api/bots/{_id}/stats", $"{{\"server_count\": {GuildCount}}}", await File.ReadAllTextAsync("Files/Bot List Tokens/Black.txt"));
+            var response = await _web.Post(string.Format(Constants.BlackDiscordBotUrl, _id), payload, authorization: Config.Instance.Tokens.BotList.Black);
+            Log($"Status: {response.StatusCode}");
 
             try
             {
 
-                var bot = await _discordBotListApi.GetMeAsync();
+                var bot = await _topGG.GetMeAsync();
 
-                Log("Sending stats to blue discord bots...");
+                Log("Sending stats to top.gg...");
                 //var response = await _web.Post($"https://discordbots.org/api/bots/{_id}/stats", $"{{\"server_count\": {GuildCount}}}", await File.ReadAllTextAsync("Files/Bot List Tokens/Blue.txt"));
                 //var response = await _web.Post($"https://discordbots.org/api/bots/{_id}/stats", payload, await File.ReadAllTextAsync("Files/Bot List Tokens/Blue.txt"));
                 await bot.UpdateStatsAsync(client.Guilds.Count);
-                Log($"Status: Sent stats to blue discord bots.");
+                Log("Status: Sent stats to top.gg.");
 
             }
             catch

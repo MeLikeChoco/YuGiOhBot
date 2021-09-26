@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using Discord;
@@ -11,6 +8,7 @@ using Discord.WebSocket;
 using YuGiOh.Bot.Extensions;
 using YuGiOh.Bot.Models;
 using YuGiOh.Bot.Services;
+using YuGiOh.Bot.Services.Interfaces;
 
 namespace YuGiOh.Bot.Modules
 {
@@ -20,7 +18,7 @@ namespace YuGiOh.Bot.Modules
         public Stats Stats { get; set; }
         public Random Rand { get; set; }
         public Config Config { get; set; }
-        public PerformanceMetrics PerfMetrics { get; set; }
+        public IPerformanceMetrics PerfMetrics { get; set; }
 
         [Command("feedback")]
         [Summary("Send feedback to the bot owner!")]
@@ -98,38 +96,45 @@ namespace YuGiOh.Bot.Modules
         public async Task InfoCommand()
         {
 
-            var getAppInfoTask = Context.Client.GetApplicationInfoAsync();
-            var getOSInfoTask = PerfMetrics.GetOperatingSystem();
-            var calcCpuUsageTask = PerfMetrics.GetCpuUsage();
-            var calcMemUsageTask = PerfMetrics.GetMemUsage();
+            using (Context.Channel.EnterTypingState())
+            {
 
-            var strBuilder = new StringBuilder()
-                .Append("**Discord API Version:** ").Append(DiscordConfig.APIVersion).AppendLine()
-                .Append("**Discord.NET Version:** ").AppendLine(DiscordConfig.Version);
+                var getAppInfoTask = Context.Client.GetApplicationInfoAsync();
+                var getOSInfoTask = PerfMetrics.GetOperatingSystem();
+                var calcCpuUsageTask = PerfMetrics.GetCpuUsage();
+                var calcMemUsageTask = PerfMetrics.GetMemUsage();
 
-            var appInfo = await getAppInfoTask;
+                var strBuilder = new StringBuilder()
+                    .Append("**Discord API Version:** ").Append(DiscordConfig.APIVersion).AppendLine()
+                    .Append("**Discord.NET Version:** ").AppendLine(DiscordConfig.Version);
 
-            strBuilder
-                .Append("**Owner/Developer:** ").AppendLine(appInfo.Owner.ToString())
-                .Append("**Shards:** ").Append(Context.Client.Shards.Count).AppendLine();
+                var appInfo = await getAppInfoTask;
 
-            var osInfo = await getOSInfoTask;
+                strBuilder
+                    .Append("**Owner/Developer:** ").AppendLine(appInfo.Owner.ToString())
+                    .Append("**Shards:** ").Append(Context.Client.Shards.Count).AppendLine();
 
-            strBuilder
-                .Append("**Operating System:** ").AppendLine(osInfo)
-                .Append("**Processor Count:** ").Append(Environment.ProcessorCount).AppendLine();
+                var osInfo = await getOSInfoTask;
 
-            var cpuUsage = await calcCpuUsageTask;
-            var memUsage = await calcMemUsageTask;
+                strBuilder
+                    .Append("**Operating System:** ").AppendLine(osInfo)
+                    .Append("**Processor Count:** ").Append(Environment.ProcessorCount).AppendLine();
 
-            strBuilder.Append("**Cpu Usage:** ").Append(cpuUsage.ToString("0.##")).AppendLine("%");
-            strBuilder.Append("**Memory Usage:** ").Append(memUsage.UsedMem.ToString("0.##")).Append(" GB / ").Append(memUsage.TotalMem).AppendLine(" GB");
+                var cpuUsage = await calcCpuUsageTask;
+                var memUsage = await calcMemUsageTask;
+                var usedMem = Math.Round(memUsage.UsedMem, 2);
+                var totalMem = Math.Round(memUsage.TotalMem, 2);
 
-            var body = new EmbedBuilder()
-                .WithRandomColor()
-                .WithDescription(strBuilder.ToString());
+                strBuilder.Append("**Cpu Usage:** ").Append(cpuUsage.ToString("0.##")).AppendLine("%");
+                strBuilder.Append("**Memory Usage:** ").Append(usedMem.ToString("0.##")).Append(" GB / ").Append(totalMem.ToString("0.##")).AppendLine(" GB");
 
-            await SendEmbedAsync(body);
+                var body = new EmbedBuilder()
+                    .WithRandomColor()
+                    .WithDescription(strBuilder.ToString());
+
+                await SendEmbedAsync(body);
+
+            }
 
         }
 
