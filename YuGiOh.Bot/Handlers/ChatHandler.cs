@@ -20,7 +20,7 @@ namespace YuGiOh.Bot.Handlers
         private readonly IGuildConfigDbService _guildConfigDbService;
         //private readonly IgnoreCaseComparer _ignoreCaseComparer;
 
-        private const string Pattern = @"(\[{2}.+?\]{2})";
+        private const string Pattern = @"(\[{2}[^\[\]].+?[^\[\]]\]{2})";
 
         public ChatHandler(
             Cache cache,
