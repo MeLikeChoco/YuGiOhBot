@@ -9,7 +9,6 @@ using Discord.Commands;
 using Discord.WebSocket;
 using MoreLinq;
 using Newtonsoft.Json.Linq;
-using YuGiOh.Bot.Extensions;
 using YuGiOh.Bot.Models.Cards;
 using YuGiOh.Bot.Models.Criterion;
 using YuGiOh.Bot.Models.Deserializers;
@@ -21,16 +20,25 @@ namespace YuGiOh.Bot.Modules
     public class Games : MainBase
     {
 
-        private readonly Criteria<SocketMessage> _criteria = new Criteria<SocketMessage>()
+        private Criteria<SocketMessage> BaseCriteria => new Criteria<SocketMessage>()
                 .AddCriterion(new EnsureSourceChannelCriterion())
-                .AddCriterion(new EnsureNotBot());
+                .AddCriterion(new NotBotCriteria());
 
         [Command("guess")]
         [Summary("Starts an image/card guessing game!")]
         public async Task GuessCommand()
         {
 
-            if (Cache.GuessInProgress.TryAdd(Context.Channel.Id, null))
+            if (Cache.GuessInProgress.ContainsKey(Context.Channel.Id))
+            {
+
+                await ReplyAsync(":game_die: There is a game in progress!");
+
+                return;
+
+            }
+
+            try
             {
 
                 Card card = null;
@@ -44,9 +52,11 @@ namespace YuGiOh.Bot.Modules
 
                         card = await YuGiOhDbService.GetRandomCardAsync();
 
-                        var url = $"{Constants.ArtBaseUrl}{card.Passcode}.{Constants.ArtFileType}";
+                        if (string.IsNullOrEmpty(card.Passcode))
+                            throw new NullReferenceException(nameof(card.Passcode));
 
-                        //$"https://storage.googleapis.com/ygoprodeck.com/pics_artgame/{passcode}.jpg"
+                        //https://storage.googleapis.com/ygoprodeck.com/pics_artgame/{passcode}.jpg
+                        var url = $"{Constants.ArtBaseUrl}{card.Passcode}.{Constants.ArtFileType}";
                         var consoleOutput = $"{card.Name}";
 
                         if (!string.IsNullOrEmpty(card.RealName))
@@ -67,18 +77,13 @@ namespace YuGiOh.Bot.Modules
                 } while (e is not null);
 
                 var criteria = new GuessCriteria(card.Name, card.RealName);
-
-                //_criteria.AddCriterion(new GuessCriteria(art.Key));
-                _criteria.AddCriterion(criteria);
-
-                var answer = await NextMessageAsync(_criteria, TimeSpan.FromSeconds(_guildConfig.GuessTime));
+                var answer = await NextMessageAsync(BaseCriteria.AddCriterion(criteria), TimeSpan.FromSeconds(_guildConfig.GuessTime));
 
                 if (answer is not null)
                 {
 
                     var author = answer.Author as SocketGuildUser;
 
-                    //await ReplyAsync($":trophy: The winner is **{author.Nickname ?? author.Username}**! The card was `{art.Key}`!");
                     await ReplyAsync($":trophy: The winner is **{author.Nickname ?? author.Username}**! The card was `{criteria.Answer}`!");
 
                 }
@@ -92,10 +97,15 @@ namespace YuGiOh.Bot.Modules
                 }
 
             }
-            else
-                await ReplyAsync(":game_die: There is a game in progress!");
+            catch (Exception ex)
+            {
+                AltConsole.Write("Command", "Guess", "There was a problem with guess!", exception: ex);
+            }
+            finally
+            {
+                Cache.GuessInProgress.TryRemove(Context.Channel.Id, out _);
+            }
 
-            Cache.GuessInProgress.TryRemove(Context.Channel.Id, out _);
 
         }
 
@@ -104,133 +114,112 @@ namespace YuGiOh.Bot.Modules
         public async Task HangmanCommand()
         {
 
-            var card = await YuGiOhDbService.GetRandomCardAsync();
-            var name = card.Name;
-            var counter = 0;
-
-            var indexToDisplay = name.Select(c =>
+            if (Cache.HangmanInProgress.ContainsKey(Context.Channel.Id))
             {
 
-                if (char.IsLetterOrDigit(c))
-                    return "\\_ ";
-                else if (char.IsWhiteSpace(c))
-                    return "   ";
-                else
-                    return c.ToString();
+                await ReplyAsync(":game_die: There is a game in progress in this channel!");
 
-            }).ToDictionary(_ => counter++, s => s);
+                return;
 
-            var display = indexToDisplay.Values.Join("");
+            }
 
-            var check = new StringBuilder(name.Select(c =>
+            Cache.HangmanInProgress[Context.Channel.Id] = null;
+
+            try
             {
+                var card = await YuGiOhDbService.GetRandomCardAsync();
 
-                if (char.IsLetterOrDigit(c))
-                    return ' ';
-                else
-                    return c;
+                AltConsole.Write("Command", "Hangman", card.Name);
 
-            }).Join(""));
+                var cts = new CancellationTokenSource();
+                var hangmanService = new HangmanService(card.Name);
 
-            //await ReplyAsync(card);
-            AltConsole.Write("Command", "Hangman", $"{name}");
-            await ReplyAsync($"You have **5** minutes to figure this card out!\n{display}");
+                var criteria = BaseCriteria
+                    .AddCriterion(new NotCommandCriteria(_guildConfig))
+                    .AddCriterion(new NotInlineSearchCriteria());
 
-            var cts = new CancellationTokenSource();
-            var timer = new Timer((token) => (token as CancellationTokenSource).Cancel(), cts, TimeSpan.FromSeconds(300), TimeSpan.FromSeconds(300));
+                var time = TimeSpan.FromSeconds(_guildConfig.HangmanTime);
+                string timeStr;
 
-            var lower = name.ToLower();
-            var hanging = 0;
-            SocketGuildUser winner = null;
-
-            var guesses = new List<string>();
-
-            do
-            {
-
-                var input = await NextMessageAsync(_criteria, token: cts.Token);
-
-                if (cts.Token.IsCancellationRequested && input is null)
-                    break;
-
-                var content = input?.Content?.ToLower();
-
-                if (content is null)
-                    continue;
-                else if (content.Length != 1)
-                    continue;
-                else if (guesses.Contains(content))
-                    await ReplyAsync($"You already guessed `{content}`!");
-                else if (!lower.Contains(content))
+                if (time.TotalSeconds >= 60)
                 {
 
-                    await ReplyAsync($"```fix\n{GetHangman(++hanging)}```");
-                    guesses.Add(content);
+                    timeStr = $"{time.Minutes} minutes";
 
-                    if (hanging == 6)
+                    if (time.Seconds > 0)
+                        timeStr += $" {time.Seconds} seconds";
+
+                }
+                else
+                {
+                    timeStr = $"{time.TotalSeconds:0.##} seconds";
+                }
+
+                await ReplyAsync("You can now type more than a letter for hangman!\n" +
+                    "As well as change the hangman time (y!hangmantime <seconds>)! Ask an admin about it!\n" +
+                    $"You have **{timeStr}**!\n" +
+                    hangmanService.GetCurrentDisplay());
+
+                var _ = new Timer((cts) => (cts as CancellationTokenSource)?.Cancel(), cts, TimeSpan.FromSeconds(_guildConfig.HangmanTime), Timeout.InfiniteTimeSpan);
+                SocketMessage input;
+
+                do
+                {
+
+                    input = await NextMessageAsync(criteria, token: cts.Token);
+
+                    if (cts.IsCancellationRequested)
                         break;
 
+                    switch (hangmanService.AddGuess(input.Content))
+                    {
+
+                        case GuessStatus.Duplicate:
+                            await ReplyAsync($"You already guessed `{input}`!\n" +
+                                hangmanService.GetCurrentDisplay());
+                            break;
+                        case GuessStatus.Nonexistent:
+                            await ReplyAsync($"```fix\n{hangmanService.GetHangman()}```\n" +
+                                hangmanService.GetCurrentDisplay());
+                            break;
+                        case GuessStatus.Accepted:
+                            await ReplyAsync(hangmanService.GetCurrentDisplay());
+                            break;
+
+                    }
+
+                } while (!cts.IsCancellationRequested && hangmanService.CompletionStatus == CompletionStatus.Incomplete);
+
+                if (cts.IsCancellationRequested)
+                {
+                    await ReplyAsync($"Time is up! No one won! The card is `{hangmanService.Word}`");
                 }
                 else
                 {
 
-                    var indexes = new List<int>(5);
+                    switch (hangmanService.CompletionStatus)
+                    {
 
-                    for (int i = lower.IndexOf(content); i != -1; i = lower.IndexOf(content, ++i))
-                        indexes.Add(i);
+                        case CompletionStatus.Complete:
+                            await ReplyAsync($":trophy: The winner is {input.Author.Mention}!");
+                            break;
+                        case CompletionStatus.Hanged:
+                            await ReplyAsync($"You have been hanged! The card was `{hangmanService.Word}`.");
+                            break;
 
-                    indexes.ForEach(i => check[i] = name[i]);
-                    indexes.ForEach(i => indexToDisplay[i] = $"__{name[i]}__ ");
-                    guesses.Add(content);
-
-                    await ReplyAsync(indexToDisplay.Values.Join(""));
-
-                    if (check.ToString() == name)
-                        winner = input.Author as SocketGuildUser;
+                    }
 
                 }
-
-            } while (check.ToString() != name);
-
-
-            if (winner is not null)
-                await ReplyAsync($":trophy: The winner is **{winner.Nickname ?? winner.Username}**!");
-            else if (hanging == 6)
-                await ReplyAsync($":stop_button: The guy got hanged! There was no winner. The card was `{name}`!");
-            else
-                await ReplyAsync($":stop_button: Time is up! There was no winner. The card was `{name}`!");
-
-        }
-
-        private string GetHangman(int hangman)
-        {
-
-            const string noose = " _________     \n" +
-                                 "|         |    \n";
-
-            return hangman switch
+            }
+            catch (Exception ex)
             {
-                1 => noose +
-                    "|         0    \n",
-                2 => noose +
-                    "|         0    \n" +
-                    "|         |    \n",
-                3 => noose +
-                    "|         0    \n" +
-                    "|        /|    \n",
-                4 => noose +
-                    "|         0    \n" +
-                    "|        /|\\  \n",
-                5 => noose +
-                    "|         0    \n" +
-                    "|        /|\\  \n" +
-                    "|        /     \n",
-                6 => noose +
-                    "|         0    \n" +
-                    "|        /|\\  \n" +
-                    "|        / \\  \n",
-                _ => "",
-            };
+                AltConsole.Write("Command", "Hangman", "There was a problem with hangman!", exception: ex);
+            }
+            finally
+            {
+                Cache.HangmanInProgress.TryRemove(Context.Channel.Id, out _);
+            }
+
         }
 
         private string GenObufscatedString()

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using YuGiOh.Bot.Extensions;
 using YuGiOh.Bot.Models;
@@ -13,6 +10,8 @@ namespace YuGiOh.Bot.Services
     public class GuildConfigDbService : IGuildConfigDbService
     {
 
+        private static readonly ConcurrentDictionary<ulong, GuildConfig> Cache = new ConcurrentDictionary<ulong, GuildConfig>();
+
         private readonly IGuildConfigRepository _repo;
 
         public GuildConfigDbService(IGuildConfigRepository repo)
@@ -21,9 +20,15 @@ namespace YuGiOh.Bot.Services
         public async Task<GuildConfig> GetGuildConfigAsync(ulong id)
         {
 
-            var guildConfig = await _repo.GetGuildConfigAsync(id.ToString());
+            if (!Cache.TryGetValue(id, out var guildConfig))
+            {
 
-            return guildConfig.ToModel();
+                var entity = await _repo.GetGuildConfigAsync(id.ToString());
+                guildConfig = entity.ToModel();
+
+            }
+
+            return guildConfig;
 
         }
 

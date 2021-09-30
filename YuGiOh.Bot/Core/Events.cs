@@ -29,7 +29,6 @@ namespace YuGiOh.Bot.Core
         private Cache _cache;
         private Web _web;
         //private ServiceObserver _serviceObserver;
-        private InteractiveService _interactive;
         private IServiceProvider _services;
         private int _recommendedShards, _currentShards;
         private bool _isInitialized;
@@ -52,6 +51,13 @@ namespace YuGiOh.Bot.Core
 
             DefaultRunMode = RunMode.Async,
             LogLevel = LogSeverity.Verbose
+
+        };
+
+        private static readonly InteractiveServiceConfig InteractiveServiceConfig = new()
+        {
+
+            DefaultTimeout = Timeout.InfiniteTimeSpan
 
         };
 
@@ -79,7 +85,6 @@ namespace YuGiOh.Bot.Core
             _commandService = new CommandService(CommandConfig);
             _web = new Web();
             _cache = new Cache();
-            _interactive = new InteractiveService(_client);
             _reconnectTimers = new ConcurrentDictionary<DiscordSocketClient, Timer>();
             //_reconnectors = new List<Reconnector<DiscordSocketClient>>();
             //_serviceObserver = new ServiceObserver();
@@ -278,10 +283,11 @@ namespace YuGiOh.Bot.Core
                 .AddTransient<IYuGiOhDbService, YuGiOhDbService>()
                 .AddTransient<IGuildConfigDbService, GuildConfigDbService>()
                 .AddTransient<IPerformanceMetrics, PerformanceMetrics>()
+                .AddTransient<InteractiveService>()
+                .AddSingleton(InteractiveServiceConfig)
                 .AddSingleton(_client)
                 .AddSingleton(_commandService)
                 .AddSingleton(_cache)
-                .AddSingleton(_interactive)
                 .AddSingleton(_web)
                 .AddSingleton(_stats)
                 .AddSingleton<Random>()
@@ -314,66 +320,6 @@ namespace YuGiOh.Bot.Core
             Print("Commands registered.");
 
         }
-
-        //private async Task HandleCommand(SocketMessage message)
-        //{
-
-        //    var test = _services.GetService<IServiceProvider>();
-
-        //    if (message is not SocketUserMessage
-        //        || message.Author.IsBot
-        //        || string.IsNullOrEmpty(message.Content))
-        //        return;
-
-        //    var prefix = "y!";
-
-        //    if (message.Channel is SocketTextChannel textChannel)
-        //    {
-
-        //        var id = textChannel.Guild.Id;
-        //        var guildConfigDbService = _services.GetService<IGuildConfigDbService>();
-        //        var guildConfig = await guildConfigDbService.GetGuildConfigAsync(id);
-        //        prefix = guildConfig.Prefix;
-
-        //    }
-
-        //    var possibleCmd = message as SocketUserMessage;
-        //    var argPos = 0;
-
-        //    if ((possibleCmd.HasStringPrefix(prefix, ref argPos) || possibleCmd.HasMentionPrefix(_client.CurrentUser, ref argPos)) &&
-        //        possibleCmd.Content.Trim() != prefix)
-        //    {
-
-        //        var context = new ShardedCommandContext(_client, possibleCmd);
-
-        //        if (message.Channel is SocketDMChannel)
-        //            AltConsole.Write("Info", "Command", $"{possibleCmd.Author.Username} in DM's");
-        //        else if (message.Channel is SocketTextChannel txtChannel)
-        //            AltConsole.Write("Info", "Command", $"{possibleCmd.Author.Username} from {txtChannel.Guild.Name}");
-
-        //        AltConsole.Write("Info", "Command", $"{possibleCmd.Content}");
-
-        //        var result = await _commandService.ExecuteAsync(context, argPos, _services);
-
-        //        if (!result.IsSuccess)
-        //        {
-
-        //            if (result.ErrorReason.Contains("unknown command", StringComparison.OrdinalIgnoreCase))
-        //                return;
-        //            else if (result.ErrorReason.Contains("you are currently in timeout", StringComparison.OrdinalIgnoreCase))
-        //                await context.Channel.SendMessageAsync("Please wait 5 seconds between each type of paginator command!");
-
-        //            //await context.Channel.SendMessageAsync("https://goo.gl/JieFJM");
-
-        //            AltConsole.Write("Error", "Error", result.ErrorReason);
-        //            //debug purposes
-        //            //await context.Channel.SendMessageAsync($"**Error:** {result.ErrorReason}");
-
-        //        }
-
-        //    }
-
-        //}
 
         private void RegisterLogging()
         {

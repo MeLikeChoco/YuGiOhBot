@@ -23,6 +23,7 @@ namespace YuGiOh.Bot.Services
         public Dictionary<string, Card> NameToCard { get; private set; }
         public Dictionary<string, BoosterPack> BoosterPacks { get; private set; }
         public ConcurrentDictionary<ulong, object> GuessInProgress { get; }
+        public ConcurrentDictionary<ulong, object> HangmanInProgress { get; }
         //public Banlist Banlist { get; private set; }
         public int FYeahYgoCardArtPosts { get; private set; }
         public string TumblrKey { get; private set; }
@@ -39,6 +40,7 @@ namespace YuGiOh.Bot.Services
             Log("Beginning cache initialization...");
 
             GuessInProgress = new ConcurrentDictionary<ulong, object>();
+            HangmanInProgress = new ConcurrentDictionary<ulong, object>();
 
             //made a seperate method so other classes may update the embeds when I want them to
             Initialize();

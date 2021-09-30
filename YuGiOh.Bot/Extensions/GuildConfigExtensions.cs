@@ -20,6 +20,7 @@ namespace YuGiOh.Bot.Extensions
                 Id = ulong.Parse(entity.Id),
                 AutoDelete = entity.AutoDelete,
                 GuessTime = entity.GuessTime,
+                HangmanTime = entity.HangmanTime,
                 Inline = entity.Inline,
                 Minimal = entity.Minimal,
                 Prefix = entity.Prefix

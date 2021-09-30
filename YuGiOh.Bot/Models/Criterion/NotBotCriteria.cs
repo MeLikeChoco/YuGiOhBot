@@ -9,7 +9,7 @@ using Discord.Commands;
 
 namespace YuGiOh.Bot.Models.Criterion
 {
-    public class EnsureNotBot : ICriterion<SocketMessage>
+    public class NotBotCriteria : ICriterion<SocketMessage>
     {
 
         public Task<bool> JudgeAsync(SocketCommandContext sourceContext, SocketMessage parameter)

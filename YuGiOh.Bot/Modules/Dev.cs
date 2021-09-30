@@ -1,20 +1,22 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Discord;
+using Discord.Addons.Interactive;
 using Discord.Commands;
+using Discord.WebSocket;
 using MoreLinq;
 using Newtonsoft.Json.Linq;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
 using YuGiOh.Bot.Models.Attributes;
+using YuGiOh.Bot.Models.Criterion;
 using YuGiOh.Bot.Services;
-using Image = SixLabors.ImageSharp.Image;
 using Point = System.Drawing.Point;
 using Rectangle = System.Drawing.Rectangle;
 
@@ -42,6 +44,94 @@ namespace YuGiOh.Bot.Modules
             catch (Exception ex)
             {
                 AltConsole.Write("Test", "Test", "", ex);
+            }
+
+        }
+
+        private static readonly HashSet<ulong> _ongoing = new();
+
+        [Command("tangman")]
+        public async Task TangmanCommand()
+        {
+
+            if (_ongoing.Contains(Context.Channel.Id))
+            {
+
+                await ReplyAsync(":game_die: There is a game in progress in this channel!");
+
+                return;
+
+            }
+
+            _ongoing.Add(Context.Channel.Id);
+
+            try
+            {
+                var card = await YuGiOhDbService.GetRandomCardAsync();
+                var cts = new CancellationTokenSource();
+                var hangmanService = new HangmanService(card.Name);
+
+                var criteria = new Criteria<SocketMessage>()
+                    .AddCriterion(new EnsureSourceChannelCriterion())
+                    .AddCriterion(new NotBotCriteria())
+                    .AddCriterion(new NotCommandCriteria(_guildConfig))
+                    .AddCriterion(new NotInlineSearchCriteria());
+
+                var _ = new Timer((cts) => (cts as CancellationTokenSource)?.Cancel(), cts, TimeSpan.FromSeconds(30), Timeout.InfiniteTimeSpan);
+                SocketMessage input;
+
+                await ReplyAsync(hangmanService.Word);
+
+                do
+                {
+
+                    await ReplyAsync($"{hangmanService.GetCurrentDisplay()}");
+
+                    input = await NextMessageAsync(criteria, token: cts.Token);
+
+                    if (cts.IsCancellationRequested)
+                        break;
+
+                    switch (hangmanService.AddGuess(input.Content))
+                    {
+
+                        case GuessStatus.Duplicate:
+                            await ReplyAsync($"You already guessed `{input}`!");
+                            break;
+                        case GuessStatus.Nonexistent:
+                            await ReplyAsync($"```fix\n{hangmanService.GetHangman()}```");
+                            break;
+
+                    }
+
+                } while (!cts.IsCancellationRequested && hangmanService.CompletionStatus == CompletionStatus.Incomplete);
+
+                if (cts.IsCancellationRequested)
+                {
+                    await ReplyAsync($"Time is up! No one won! The card is `{hangmanService.Word}`");
+                }
+                else
+                {
+
+                    switch (hangmanService.CompletionStatus)
+                    {
+
+                        case CompletionStatus.Complete:
+                            await ReplyAsync($"{hangmanService.GetCurrentDisplay()}");
+                            await ReplyAsync($":trophy: The winner is {input.Author.Mention}!");
+                            break;
+                        case CompletionStatus.Hanged:
+                            await ReplyAsync($"You have been hanged! The card was `{hangmanService.Word}`.");
+                            break;
+
+                    }
+
+                }
+            }
+            catch (Exception) { }
+            finally
+            {
+                _ongoing.Remove(Context.Channel.Id);
             }
 
         }
