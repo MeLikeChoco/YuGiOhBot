@@ -177,45 +177,6 @@ namespace YuGiOh.Bot.Modules
 
                 return PagedReplyAsync(paginator);
 
-                //var builder = new EmbedBuilder()
-                //    .WithAuthor(boosterPack.Name, url: boosterPack.Url)
-                //    .WithDescription($"**Amount:** {boosterPack.Cards.Length} cards")
-                //    .WithColor(Rand.NextColor())
-                //    .AddField("Release dates", boosterPack.ReleaseDates.Aggregate("", (current, kv) => $"{current}\n**{kv.Key}:** {kv.Value: MM/dd/yyyy}"));
-
-                //foreach (var kv in boosterPack.RarityToCards)
-                //{
-
-                //    var cards = kv.Value.Aggregate(new StringBuilder(), (current, next) => current.AppendLine(next)).ToString();
-
-                //    if (cards.Length >= 1024)
-                //    {
-
-                //        do
-                //        {
-
-                //            const int maxLength = 1000;
-
-                //            var substring = cards.Substring(0, maxLength);
-                //            var cutoff = substring.LastIndexOf('\n');
-                //            substring = cards.Substring(0, cutoff);
-                //            var cardsField = $"```{substring}```";
-
-                //            builder.AddField(kv.Key, cardsField);
-
-                //            if (cards.Length >= maxLength)
-                //                cards = cards[cutoff..];
-
-                //        } while (cards.Length >= 1024);
-
-                //    }
-
-                //    builder.AddField(kv.Key, $"```{cards}```");
-
-                //}
-
-                //return SendEmbed(builder);
-
             }
             else
                 return NoResultError("booster packs", input);

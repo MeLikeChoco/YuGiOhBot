@@ -81,16 +81,17 @@ namespace YuGiOh.Bot.Modules
 
                 if (answer is not null)
                 {
-
-                    var author = answer.Author as SocketGuildUser;
-
-                    await ReplyAsync($":trophy: The winner is **{author.Nickname ?? author.Username}**! The card was `{criteria.Answer}`!");
-
+                    await ReplyAsync($":trophy: The winner is **{(answer.Author as SocketGuildUser)?.Nickname ?? answer.Author.Username}**! The card was `{criteria.Answer}`!");
                 }
                 else
                 {
 
-                    var possibleAnswersOutput = criteria.PossibleAnswers.Skip(1).Aggregate(new StringBuilder($"`{criteria.PossibleAnswers.First()}`"), (strBuilder, possibleAnswer) => strBuilder.Append(" or `").Append(possibleAnswer).Append('`'));
+                    var possibleAnswersOutput = criteria.PossibleAnswers
+                        .Skip(1)
+                        .Aggregate(
+                            new StringBuilder($"`{criteria.PossibleAnswers.First()}`"),
+                            (strBuilder, possibleAnswer) => strBuilder.Append(" or `").Append(possibleAnswer).Append('`')
+                        );
 
                     await ReplyAsync($":stop_button: Ran out of time! The card was {possibleAnswersOutput}!");
 
@@ -152,7 +153,7 @@ namespace YuGiOh.Bot.Modules
                 }
                 else
                 {
-                    timeStr = $"{time.TotalSeconds:0.##} seconds";
+                    timeStr = $"{time.TotalSeconds} seconds";
                 }
 
                 await ReplyAsync("You can now type more than a letter for hangman!\n" +
@@ -161,15 +162,17 @@ namespace YuGiOh.Bot.Modules
                     hangmanService.GetCurrentDisplay());
 
                 var _ = new Timer((cts) => (cts as CancellationTokenSource)?.Cancel(), cts, TimeSpan.FromSeconds(_guildConfig.HangmanTime), Timeout.InfiniteTimeSpan);
-                SocketMessage input;
+                SocketUser user = null;
 
                 do
                 {
 
-                    input = await NextMessageAsync(criteria, token: cts.Token);
+                    var input = await NextMessageAsync(criteria, token: cts.Token);
 
                     if (cts.IsCancellationRequested)
                         break;
+
+                    user = input.Author;
 
                     switch (hangmanService.AddGuess(input.Content))
                     {
@@ -201,7 +204,7 @@ namespace YuGiOh.Bot.Modules
                     {
 
                         case CompletionStatus.Complete:
-                            await ReplyAsync($":trophy: The winner is {input.Author.Mention}!");
+                            await ReplyAsync($":trophy: The winner is **{(user as SocketGuildUser)?.Nickname ?? user.Username}**!");
                             break;
                         case CompletionStatus.Hanged:
                             await ReplyAsync($"You have been hanged! The card was `{hangmanService.Word}`.");
