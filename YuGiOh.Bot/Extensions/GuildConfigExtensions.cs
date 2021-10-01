@@ -38,6 +38,7 @@ namespace YuGiOh.Bot.Extensions
                 Id = guildConfig.Id.ToString(),
                 AutoDelete = guildConfig.AutoDelete,
                 GuessTime = guildConfig.GuessTime,
+                HangmanTime = guildConfig.HangmanTime,
                 Inline = guildConfig.Inline,
                 Minimal = guildConfig.Minimal,
                 Prefix = guildConfig.Prefix
