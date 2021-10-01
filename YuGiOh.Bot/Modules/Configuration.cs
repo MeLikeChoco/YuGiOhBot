@@ -81,6 +81,30 @@ namespace YuGiOh.Bot.Modules
         public Task GetGuessTimeCommand()
             => ReplyAsync($"**Guess time:** {_guildConfig.GuessTime} seconds");
 
+        [Command("hangmantime")]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        [Summary("Sets the amount of seconds for hangman!")]
+        public async Task SetHangmanTimeCommand(int seconds)
+        {
+
+            _guildConfig.HangmanTime = seconds;
+
+            await GuildConfigDbService.UpdateGuildConfigAsync(_guildConfig);
+            await ReplyAsync($"The time for hangman has been set to `{seconds}` seconds!");
+
+        }
+
+        [Command("hangmantime")]
+        [RequireOwner]
+        [Summary("Sets the amount of seconds for hangman!")]
+        public Task SetHangmanTimeCommandOwner(int seconds)
+            => SetHangmanTimeCommand(seconds);
+
+        [Command("hangmantime")]
+        [Summary("Get the amount of time for hangman game!")]
+        public Task GetHangmanTimeCommand()
+            => ReplyAsync($"**Hangman Time:** {_guildConfig.HangmanTime} seconds");
+
         [Command("prefix")]
         [RequireUserPermission(GuildPermission.Administrator)]
         [Summary("Sets the prefix for the bot in this guild!")]
