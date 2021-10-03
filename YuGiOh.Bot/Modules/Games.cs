@@ -9,6 +9,7 @@ using Discord.Commands;
 using Discord.WebSocket;
 using MoreLinq;
 using Newtonsoft.Json.Linq;
+using YuGiOh.Bot.Extensions;
 using YuGiOh.Bot.Models.Cards;
 using YuGiOh.Bot.Models.Criterion;
 using YuGiOh.Bot.Models.Deserializers;
@@ -139,26 +140,15 @@ namespace YuGiOh.Bot.Modules
                     .AddCriterion(new NotCommandCriteria(_guildConfig))
                     .AddCriterion(new NotInlineSearchCriteria());
 
+                if (!_guildConfig.HangmanAllowWords)
+                    criteria.AddCriterion(new CharacterOnlyCriteria());
+
                 var time = TimeSpan.FromSeconds(_guildConfig.HangmanTime);
-                string timeStr;
-
-                if (time.TotalSeconds >= 60)
-                {
-
-                    timeStr = $"{time.Minutes} minutes";
-
-                    if (time.Seconds > 0)
-                        timeStr += $" {time.Seconds} seconds";
-
-                }
-                else
-                {
-                    timeStr = $"{time.TotalSeconds} seconds";
-                }
 
                 await ReplyAsync("You can now type more than a letter for hangman!\n" +
-                    "As well as change the hangman time (y!hangmantime <seconds>)! Ask an admin about it!\n" +
-                    $"You have **{timeStr}**!\n" +
+                    $"As well as change the hangman time ({_guildConfig.Prefix}hangmantime <seconds>)! Ask an admin about it!\n" +
+                    $"You may also disable the ability to input more than one letter! ({_guildConfig.Prefix}hangmanwords <true/false>)\n" +
+                    $"You have **{time.ToPrettyString()}**!\n" +
                     hangmanService.GetCurrentDisplay());
 
                 var _ = new Timer((cts) => (cts as CancellationTokenSource)?.Cancel(), cts, TimeSpan.FromSeconds(_guildConfig.HangmanTime), Timeout.InfiniteTimeSpan);

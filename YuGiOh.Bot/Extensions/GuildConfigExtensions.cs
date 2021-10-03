@@ -23,7 +23,8 @@ namespace YuGiOh.Bot.Extensions
                 HangmanTime = entity.HangmanTime,
                 Inline = entity.Inline,
                 Minimal = entity.Minimal,
-                Prefix = entity.Prefix
+                Prefix = entity.Prefix,
+                HangmanAllowWords = entity.HangmanAllowWords,
 
             };
 
@@ -41,7 +42,8 @@ namespace YuGiOh.Bot.Extensions
                 HangmanTime = guildConfig.HangmanTime,
                 Inline = guildConfig.Inline,
                 Minimal = guildConfig.Minimal,
-                Prefix = guildConfig.Prefix
+                Prefix = guildConfig.Prefix,
+                HangmanAllowWords = guildConfig.HangmanAllowWords,
 
             };
 

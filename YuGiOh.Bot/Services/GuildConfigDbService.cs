@@ -10,7 +10,7 @@ namespace YuGiOh.Bot.Services
     public class GuildConfigDbService : IGuildConfigDbService
     {
 
-        private static readonly ConcurrentDictionary<ulong, GuildConfig> Cache = new ConcurrentDictionary<ulong, GuildConfig>();
+        private static readonly ConcurrentDictionary<ulong, GuildConfig> Cache = new();
 
         private readonly IGuildConfigRepository _repo;
 

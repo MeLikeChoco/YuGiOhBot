@@ -16,6 +16,7 @@ namespace YuGiOh.Bot.Models
         public int HangmanTime { get; set; } = 300;
         public bool AutoDelete { get; set; } = true;
         public bool Inline { get; set; } = true;
+        public bool HangmanAllowWords { get; set; } = true;
 
     }
 }
