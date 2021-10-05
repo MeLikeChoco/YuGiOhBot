@@ -254,6 +254,19 @@ namespace YuGiOh.Common.Repositories
 
             var cards = await connection.QueryProcAsync<CardEntity>("search_cards", parameters);
 
+            foreach (var card in cards)
+            {
+
+                var archetypes = await connection.QueryProcAsync<string>("get_card_archetypes", new { id = card.ArchetypesId });
+                var supports = await connection.QueryProcAsync<string>("get_card_supports", new { id = card.ArchetypesId });
+                var antiSupports = await connection.QueryProcAsync<string>("get_card_antisupports", new { id = card.ArchetypesId });
+
+                card.Archetypes = archetypes.ToList();
+                card.Supports = supports.ToList();
+                card.AntiSupports = antiSupports.ToList();
+
+            }
+
             await connection.CloseAsync();
 
             return cards;
