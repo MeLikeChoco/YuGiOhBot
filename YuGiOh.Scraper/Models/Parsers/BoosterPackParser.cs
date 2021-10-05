@@ -22,7 +22,7 @@ namespace YuGiOh.Scraper.Models.Parsers
             _id = id;
         }
 
-        public async Task<BoosterPack> Parse()
+        public async Task<BoosterPackEntity> Parse()
         {
 
             var url = string.Format(ConstantString.MediaWikiParseIdUrl, _id);
@@ -61,7 +61,7 @@ namespace YuGiOh.Scraper.Models.Parsers
 
             }
 
-            return new BoosterPack()
+            return new BoosterPackEntity()
             {
 
                 Id = int.Parse(_id),

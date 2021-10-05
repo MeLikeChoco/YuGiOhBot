@@ -10,7 +10,7 @@ using Dommel;
 namespace YuGiOh.Common.Models.YuGiOh
 {
     [Table("boosterpacks")]
-    public class BoosterPack
+    public class BoosterPackEntity
     {
 
         [Key, DatabaseGenerated(DatabaseGeneratedOption.None)]

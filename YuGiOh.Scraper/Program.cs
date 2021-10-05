@@ -13,6 +13,7 @@ using YuGiOh.Common.Models.YuGiOh;
 using YuGiOh.Common.Repositories;
 using YuGiOh.Common.Services;
 using YuGiOh.Scraper.Constants;
+using YuGiOh.Scraper.Extensions;
 using YuGiOh.Scraper.Models.Parsers;
 using YuGiOh.Scraper.Models.Responses;
 
@@ -104,7 +105,7 @@ namespace YuGiOh.Scraper
             {
 
                 var retryCount = 0;
-                Exception check;
+                Exception check = null;
 
                 do
                 {
@@ -113,11 +114,18 @@ namespace YuGiOh.Scraper
                     {
 
                         var parser = new CardParser(nameToLink.Key, nameToLink.Value);
+                        var parserHash = parser.GetParseOutput().Result.GetMurMurHash();
+
+                        //this is to determine whether or not to parse
+                        if (repo.GetCardHashAsync(parser.Id).Result == parserHash)
+                            continue;
+
                         var card = parser.Parse().Result;
                         card.TcgExists = tcgLinks.ContainsKey(nameToLink.Key);
                         card.OcgExists = ocgLinks.ContainsKey(nameToLink.Key);
 
                         repo.InsertCardAsync(card).GetAwaiter().GetResult();
+                        repo.InsertCardHashAsync(card.Id, parserHash).GetAwaiter().GetResult();
 
                         check = null;
 

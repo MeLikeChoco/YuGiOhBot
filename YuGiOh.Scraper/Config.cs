@@ -13,6 +13,7 @@ namespace YuGiOh.Scraper
         public Database Database { get; set; }
         public TimeSpan RetryDelay { get; set; }
         public int MaxRetry { get; set; }
+        public uint Seed { get; set; }
 
     }
 

@@ -91,3 +91,8 @@ create table configs (
 	hangmantime integer default 300,
 	hangmanallowwords boolean default true
 );
+
+create table card_hashes (
+    id integer primary key,
+	hash varchar
+);

@@ -11,7 +11,8 @@ namespace YuGiOh.Common.Repositories.Interfaces
     {
 
         Task InsertCardAsync(CardEntity card);
-        Task InsertBoosterPack(BoosterPack boosterPack);
+        Task InsertCardHashAsync(int id, string hash);
+        Task InsertBoosterPack(BoosterPackEntity boosterPack);
         Task InsertErrorAsync(Error error);
 
         Task<CardEntity> GetCardAsync(string name);
@@ -19,6 +20,7 @@ namespace YuGiOh.Common.Repositories.Interfaces
         Task<IEnumerable<CardEntity>> GetCardsContainsAllAsync(string input);
         Task<CardEntity> GetCardFuzzyAsync(string input);
         Task<CardEntity> GetRandomCardAsync();
+        Task<string> GetCardHashAsync(int id);
 
         Task<IEnumerable<CardEntity>> GetCardsInArchetypeAsync(string input);
         Task<IEnumerable<CardEntity>> GetCardsInSupportAsync(string input);
@@ -27,6 +29,8 @@ namespace YuGiOh.Common.Repositories.Interfaces
         Task<string> GetNameWithPasscodeAsync(string passcode);
         Task<string> GetImageLinkAsync(string input);
         Task<Banlist> GetBanlistAsync(BanlistFormats format);
+
+        Task<BoosterPackEntity> GetBoosterPackAsync(string input);
 
     }
 }

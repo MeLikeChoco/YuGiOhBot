@@ -33,7 +33,7 @@ namespace YuGiOh.Common.Repositories
                 config
                     .AddConvention<LowerCaseConvention>()
                     .ForEntity<CardEntity>()
-                    .ForEntity<BoosterPack>();
+                    .ForEntity<BoosterPackEntity>();
 
                 config.AddMap(new CardEntityMapper());
                 config.ForDommel();
@@ -56,22 +56,22 @@ namespace YuGiOh.Common.Repositories
 
             using var connection = _config.GetYuGiOhDbConnection();
 
-            await connection.OpenAsync();
+            await connection.OpenAsync().ConfigureAwait(false);
 
             //instead of insert on conflict update
             //this is done for readability and laziness
             //easier to let dapper handle the insertion than write out all the column names
             //and have them not clash with parameter names (if using function)
-            var doesExistBit = await connection.ExecuteScalarAsync<int>("select count(1) from cards where id = @Id", new { card.Id });
+            var doesExistBit = await connection.ExecuteScalarAsync<int>("select count(1) from cards where id = @Id", new { card.Id }).ConfigureAwait(false);
 
             if (doesExistBit == 1)
-                await connection.UpdateAsync(card);
+                await connection.UpdateAsync(card).ConfigureAwait(false);
             else
-                await connection.InsertAsync(card);
+                await connection.InsertAsync(card).ConfigureAwait(false);
 
-            var cardArchetypesId = await connection.ExecuteScalarAsync("select archetypes from cards where id = @Id", new { card.Id });
-            var cardSupportsId = await connection.ExecuteScalarAsync("select supports from cards where id = @Id", new { card.Id });
-            var cardAntiSupportsId = await connection.ExecuteScalarAsync("select antisupports from cards where id = @Id", new { card.Id });
+            var cardArchetypesId = await connection.ExecuteScalarAsync("select archetypes from cards where id = @Id", new { card.Id }).ConfigureAwait(false);
+            var cardSupportsId = await connection.ExecuteScalarAsync("select supports from cards where id = @Id", new { card.Id }).ConfigureAwait(false);
+            var cardAntiSupportsId = await connection.ExecuteScalarAsync("select antisupports from cards where id = @Id", new { card.Id }).ConfigureAwait(false);
 
             if (card.Archetypes is not null)
             {
@@ -79,7 +79,7 @@ namespace YuGiOh.Common.Repositories
                 foreach (var archetype in card.Archetypes)
                 {
 
-                    var archetypeId = await connection.QuerySingleProcAsync<int>("insert_or_get_archetype", new { input = archetype });
+                    var archetypeId = await connection.QuerySingleProcAsync<int>("insert_or_get_archetype", new { input = archetype }).ConfigureAwait(false);
 
                     //var archetypeId =
                     //    await connection.ExecuteScalarAsync("select id from archetypes where name = @archetype", new { archetype }) ??
@@ -91,7 +91,7 @@ namespace YuGiOh.Common.Repositories
                        {
                            cardArchetypesId,
                            archetypeId
-                       });
+                       }).ConfigureAwait(false);
 
                 }
 
@@ -103,7 +103,7 @@ namespace YuGiOh.Common.Repositories
                 foreach (var support in card.Supports)
                 {
 
-                    var supportId = await connection.QuerySingleProcAsync<int>("insert_or_get_support", new { input = support });
+                    var supportId = await connection.QuerySingleProcAsync<int>("insert_or_get_support", new { input = support }).ConfigureAwait(false);
 
                     //object supportId =
                     //    await connection.ExecuteScalarAsync("select id from supports where name = @support", new { support }) ??
@@ -115,7 +115,7 @@ namespace YuGiOh.Common.Repositories
                         {
                             cardSupportsId,
                             supportId
-                        });
+                        }).ConfigureAwait(false);
 
                 }
 
@@ -127,7 +127,7 @@ namespace YuGiOh.Common.Repositories
                 foreach (var antiSupport in card.AntiSupports)
                 {
 
-                    var antiSupportId = await connection.QuerySingleAsync<int>("insert_or_get_antisupport", new { input = antiSupport }, commandType: CommandType.StoredProcedure);
+                    var antiSupportId = await connection.QuerySingleAsync<int>("insert_or_get_antisupport", new { input = antiSupport }, commandType: CommandType.StoredProcedure).ConfigureAwait(false);
 
                     //object antiSupportId =
                     //    await connection.ExecuteScalarAsync("select id from antisupports where name = @antiSupport", new { antiSupport }) ??
@@ -139,29 +139,40 @@ namespace YuGiOh.Common.Repositories
                         {
                             cardAntiSupportsId,
                             antiSupportId
-                        });
+                        }).ConfigureAwait(false);
 
                 }
 
             }
 
-            await connection.CloseAsync();
+            await connection.CloseAsync().ConfigureAwait(false);
 
         }
 
-        public async Task InsertBoosterPack(BoosterPack boosterPack)
+        public async Task InsertCardHashAsync(int id, string hash)
         {
 
             using var connection = _config.GetYuGiOhDbConnection();
 
-            await connection.OpenAsync();
+            await connection.OpenAsync().ConfigureAwait(false);
+            await connection.ExecuteAsync("insert into card_hashes values(@id, @hash) on conflict on constraint card_hashes_pkey do update set hash = @hash", new { id, hash }).ConfigureAwait(false);
+            await connection.CloseAsync();
 
-            var doesExistBit = await connection.ExecuteScalarAsync<int>("select count(1) from boosterpacks where id = @Id", new { boosterPack.Id });
+        }
+
+        public async Task InsertBoosterPack(BoosterPackEntity boosterPack)
+        {
+
+            using var connection = _config.GetYuGiOhDbConnection();
+
+            await connection.OpenAsync().ConfigureAwait(false);
+
+            var doesExistBit = await connection.ExecuteScalarAsync<int>("select count(1) from boosterpacks where id = @Id", new { boosterPack.Id }).ConfigureAwait(false);
 
             if (doesExistBit == 1)
-                await connection.UpdateAsync(boosterPack);
+                await connection.UpdateAsync(boosterPack).ConfigureAwait(false);
             else
-                await connection.InsertAsync(boosterPack);
+                await connection.InsertAsync(boosterPack).ConfigureAwait(false);
 
             using (var update = connection.CreateCommand())
             {
@@ -172,11 +183,11 @@ namespace YuGiOh.Common.Repositories
                 update.Parameters.AddWithValue("dates", JsonConvert.SerializeObject(boosterPack.Dates));
                 update.Parameters.AddWithValue("cards", JsonConvert.SerializeObject(boosterPack.Cards));
 
-                await update.ExecuteNonQueryAsync();
+                await update.ExecuteNonQueryAsync().ConfigureAwait(false);
 
             }
 
-            await connection.CloseAsync();
+            await connection.CloseAsync().ConfigureAwait(false);
 
         }
 
@@ -329,6 +340,21 @@ namespace YuGiOh.Common.Repositories
 
         }
 
+        public async Task<string> GetCardHashAsync(int id)
+        {
+
+            using var connection = _config.GetYuGiOhDbConnection();
+
+            await connection.OpenAsync();
+
+            var serverHash = await connection.QueryFirstOrDefaultAsync<string>("select hash from card_hashes where id = @id", new { id });
+
+            await connection.CloseAsync();
+
+            return serverHash?.Trim();
+
+        }
+
         public async Task<IEnumerable<CardEntity>> GetCardsInArchetypeAsync(string input)
         {
 
@@ -429,6 +455,21 @@ namespace YuGiOh.Common.Repositories
             await connection.CloseAsync();
 
             return banlist;
+
+        }
+
+        public async Task<BoosterPackEntity> GetBoosterPackAsync(string input)
+        {
+
+            using var connection = _config.GetYuGiOhDbConnection();
+
+            await connection.OpenAsync();
+
+            var entity = await connection.QueryFirstAsync<BoosterPackEntity>("select * from boosterpacks where name ~~* @input", new { input });
+
+            await connection.CloseAsync();
+
+            return entity;
 
         }
 

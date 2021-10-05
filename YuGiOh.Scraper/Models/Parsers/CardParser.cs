@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AngleSharp.Dom;
@@ -21,26 +20,43 @@ namespace YuGiOh.Scraper.Models.Parsers
         private static readonly string[] ArchetypesHeaderMustHaveWords = new string[] { "archetypes", "series" };
         private static readonly string[] PendulumLoreAdditionalTypesCanHaveWords = new string[] { "synchro", "fusion", "xyz" };
 
-        private readonly string _name, _id;
+        private string _parseOutput;
+
+        public int Id { get; }
+        public string Name { get; }
 
         public CardParser(string name, string id)
         {
-            _name = name;
-            _id = id;
+            Name = name;
+            Id = int.Parse(id);
+        }
+
+        public async Task<string> GetParseOutput()
+        {
+
+            if (_parseOutput == null)
+            {
+
+                var url = string.Format(ConstantString.MediaWikiParseIdUrl, Id);
+                _parseOutput = await Constant.HttpClient.GetStringAsync(url);
+
+            }
+
+            return _parseOutput;
+
         }
 
         public async Task<CardEntity> Parse()
         {
 
-            var url = string.Format(ConstantString.MediaWikiParseIdUrl, _id);
-            var dom = await GetDom(url);
+            var dom = await GetDom();
             var parserOutput = dom.GetElementByClassName("mw-parser-output");
             var imgElement = parserOutput.GetElementByClassName("cardtable-main_image-wrapper").GetElementByTagName("img");
 
             var card = new CardEntity
             {
 
-                Name = _name,
+                Name = Name,
                 Img = imgElement.GetAttribute("srcset")?.Split(' ').ElementAtOrDefault(2) ?? imgElement.GetAttribute("src")
 
             };
@@ -48,7 +64,7 @@ namespace YuGiOh.Scraper.Models.Parsers
             var table = parserOutput.GetElementByClassName("card-table");
             var realName = table.FirstElementChild.TextContent?.Trim();
 
-            if (_name != realName)
+            if (Name != realName)
                 card.RealName = realName;
 
             //don't inline for readability
@@ -306,8 +322,8 @@ namespace YuGiOh.Scraper.Models.Parsers
             #endregion Search Categories
 
             //card.CardTrivia = await GetCardTrivia(parserOutput);
-            card.Url = string.Format(ConstantString.YugipediaUrl + ConstantString.MediaWikiIdUrl, _id);
-            card.Id = int.Parse(_id);
+            card.Url = string.Format(ConstantString.YugipediaUrl + ConstantString.MediaWikiIdUrl, Id);
+            card.Id = Id;
 
             return card;
 
@@ -361,7 +377,7 @@ namespace YuGiOh.Scraper.Models.Parsers
 
         }
 
-        private static async Task<string> GetCardTrivia(IElement parserOutput)
+        private async Task<string> GetCardTrivia(IElement parserOutput)
         {
 
             var triviaUrlElement = parserOutput
@@ -380,7 +396,7 @@ namespace YuGiOh.Scraper.Models.Parsers
                 {
 
                     var triviaUrl = string.Format(ConstantString.MediaWikiParseNameUrl, Uri.EscapeDataString(triviaLink));
-                    var dom = await GetDom(triviaUrl);
+                    var dom = await GetDom();
                     parserOutput = dom.GetElementByClassName("mw-parser-output");
                     var triviaElements = parserOutput?.Children
                         .Where(element => element.TagName == "UL");
@@ -414,10 +430,10 @@ namespace YuGiOh.Scraper.Models.Parsers
 
         }
 
-        private static async Task<IDocument> GetDom(string url)
+        private async Task<IDocument> GetDom()
         {
 
-            var parseResponse = await Constant.HttpClient.GetStringAsync(url);
+            var parseResponse = await GetParseOutput();
             var parseJToken = JObject.Parse(parseResponse)["parse"];
             var html = parseJToken.Value<string>("text") ?? parseJToken["text"].Value<string>("*");
 
