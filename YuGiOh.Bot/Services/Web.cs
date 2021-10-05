@@ -1,14 +1,12 @@
-﻿using AngleSharp.Html.Dom;
-using AngleSharp.Html.Parser;
-using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Text;
 using System.Threading.Tasks;
+using AngleSharp.Html.Dom;
+using AngleSharp.Html.Parser;
+using Newtonsoft.Json;
 using YuGiOh.Bot.Models.Deserializers;
 
 namespace YuGiOh.Bot.Services
@@ -61,7 +59,7 @@ namespace YuGiOh.Bot.Services
             if (!string.IsNullOrEmpty(authorizationScheme))
                 message.Headers.Authorization = new AuthenticationHeaderValue(authorizationScheme, authorization);
 
-            if(!string.IsNullOrEmpty(authorization))
+            if (!string.IsNullOrEmpty(authorization))
                 message.Headers.Authorization = new AuthenticationHeaderValue(authorization);
 
             switch (contentType)
@@ -75,7 +73,7 @@ namespace YuGiOh.Bot.Services
                     break;
 
             }
-            
+
             return _http.SendAsync(message, HttpCompletionOption.ResponseHeadersRead);
 
         }
@@ -90,7 +88,7 @@ namespace YuGiOh.Bot.Services
         public async Task<YuGiOhPrices> GetPrices(string name, string realName = null)
         {
 
-            var response = await GetDeserializedContent<YuGiOhPrices>($"{PricesBaseUrl}{Uri.EscapeUriString(name)}").ConfigureAwait(false);
+            var response = await GetDeserializedContent<YuGiOhPrices>($"{PricesBaseUrl}{Uri.EscapeDataString(name)}").ConfigureAwait(false);
 
             if ((response is null || response.Status == "fail") && !string.IsNullOrEmpty(realName))
                 response = await GetDeserializedContent<YuGiOhPrices>($"{PricesBaseUrl}{Uri.EscapeUriString(realName)}");
@@ -133,7 +131,7 @@ namespace YuGiOh.Bot.Services
             HttpResponseMessage response = null;
             //var counter = 0;
 
-            for(int i = 0; response?.IsSuccessStatusCode != true && i != 3; i++)
+            for (int i = 0; response?.IsSuccessStatusCode != true && i != 3; i++)
                 response = await GetResponseMessage(url);
 
             //do
