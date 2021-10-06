@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -32,7 +33,7 @@ namespace YuGiOh.Bot.Services
 
         private readonly char[] _current;
         private int _nooseStage;
-        private readonly HashSet<string> _guesses;
+        private readonly ConcurrentDictionary<string, object> _guesses;
 
         public HangmanService(string word)
         {
@@ -40,7 +41,7 @@ namespace YuGiOh.Bot.Services
             Word = word;
             _current = new char[word.Length];
             _nooseStage = 0;
-            _guesses = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            _guesses = new ConcurrentDictionary<string, object>(StringComparer.OrdinalIgnoreCase);
 
             for (var i = 0; i < word.Length; i++)
             {
@@ -57,20 +58,20 @@ namespace YuGiOh.Bot.Services
         public GuessStatus AddGuess(string guess)
         {
 
+            if (_guesses.ContainsKey(guess))
+                return GuessStatus.Duplicate;
+
             if (!Word.ContainsIgnoreCase(guess))
             {
 
-                _guesses.Add(guess);
+                _guesses[guess] = null;
                 _nooseStage++;
 
                 return GuessStatus.Nonexistent;
 
             }
 
-            if (_guesses.Contains(guess))
-                return GuessStatus.Duplicate;
-
-            _guesses.Add(guess);
+            _guesses[guess] = null;
 
             guess = Regex.Escape(guess);
 
