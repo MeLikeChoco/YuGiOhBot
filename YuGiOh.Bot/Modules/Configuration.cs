@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using YuGiOh.Bot.Extensions;
 using YuGiOh.Bot.Models;
 using YuGiOh.Bot.Services;
 
@@ -79,7 +80,7 @@ namespace YuGiOh.Bot.Modules
         [Command("guesstime")]
         [Summary("Get the amount of seconds for the guessing game!")]
         public Task GetGuessTimeCommand()
-            => ReplyAsync($"**Guess time:** {_guildConfig.GuessTime} seconds");
+            => DisplaySetting("Guess Time", TimeSpan.FromSeconds(_guildConfig.GuessTime).ToPrettyString());
 
         [Command("hangmantime")]
         [RequireUserPermission(GuildPermission.Administrator)]
@@ -103,7 +104,7 @@ namespace YuGiOh.Bot.Modules
         [Command("hangmantime")]
         [Summary("Get the amount of time for hangman game!")]
         public Task GetHangmanTimeCommand()
-            => ReplyAsync($"**Hangman Time:** {_guildConfig.HangmanTime} seconds");
+            => DisplaySetting("Hangman Time", TimeSpan.FromSeconds(_guildConfig.HangmanTime).ToPrettyString());
 
         [Command("prefix")]
         [RequireUserPermission(GuildPermission.Administrator)]
@@ -224,6 +225,30 @@ namespace YuGiOh.Bot.Modules
         [Summary("Check if inline search is disabled!")]
         public Task InlineCommandOwner()
             => ReplyAsync($"Inline search enabled: **{_guildConfig.Inline}**");
+
+        [Command("hangmanallowwords")]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        [Summary("Enable (true) or disable (false) multi-character input for hangman")]
+        public async Task HangmanWordsCommand(bool input)
+        {
+
+            _guildConfig.HangmanAllowWords = input;
+
+            await GuildConfigDbService.UpdateGuildConfigAsync(_guildConfig);
+            await ReplyAsync($"The ability for multi-character input has been {(_guildConfig.HangmanAllowWords ? "enabled" : "disabled")}");
+
+        }
+
+        [Command("hangmanallowwords")]
+        [RequireOwner]
+        [Summary("Enable (true) or disable (false) multi-character input for hangman")]
+        public Task HangmanWordsCommandOwner(bool input)
+            => HangmanWordsCommand(input);
+
+        [Command("hangmanallowwords")]
+        [Summary("Check if multi-character input is allowed for hangman")]
+        public Task HangmanWordsCommand()
+            => DisplaySetting("Hangman Words", _guildConfig.HangmanAllowWords);
 
         private Task DisplaySetting(string setting, object value)
             => ReplyAsync($"**{setting}:** {value}");
