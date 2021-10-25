@@ -137,7 +137,7 @@ namespace YuGiOh.Scraper.Models.Parsers
                         //var statuses = tableRows.Where(element => !element.Children.Any(child => child.ClassName == "cardtablerowheader" || child.ClassName == "cardtablespanrow") &&
                         //    element.Children.Length == 1).Select(element => element.FirstElementChild);
                         var statuses = row.Children[1].FirstElementChild?.Children ?? row.Children[1].Children;
-                        var count = statuses.Count();
+                        var count = statuses.Length;
 
                         foreach (var element in statuses)
                         {
@@ -151,12 +151,19 @@ namespace YuGiOh.Scraper.Models.Parsers
 
                             if (rawStatus.ContainsIgnoreCase("ocg"))
                                 card.OcgStatus = status;
-                            else if (rawStatus.ContainsIgnoreCase("adv"))
-                                card.TcgAdvStatus = status;
-                            else if (rawStatus.ContainsIgnoreCase("trad"))
-                                card.TcgTrnStatus = status;
                             else if (rawStatus.ContainsIgnoreCase("tcg"))
-                                card.TcgAdvStatus = status;
+                            {
+
+                                if (rawStatus.ContainsIgnoreCase("speed duel"))
+                                    card.TcgTrnStatus = status;
+                                else
+                                    card.TcgAdvStatus = status;
+
+                            }
+                            //else if (rawStatus.ContainsIgnoreCase("trad"))
+                            //    card.TcgTrnStatus = status;
+                            //else if (rawStatus.ContainsIgnoreCase("tcg"))
+                            //    card.TcgAdvStatus = status;
 
                         }
 

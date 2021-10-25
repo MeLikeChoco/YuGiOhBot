@@ -117,7 +117,7 @@ namespace YuGiOh.Scraper
                         var parserHash = parser.GetParseOutput().Result.GetMurMurHash();
 
                         //this is to determine whether or not to parse
-                        if (repo.GetCardHashAsync(parser.Id).Result == parserHash)
+                        if (!Options.ShouldIgnoreHash && repo.GetCardHashAsync(parser.Id).Result == parserHash)
                             continue;
 
                         var card = parser.Parse().Result;

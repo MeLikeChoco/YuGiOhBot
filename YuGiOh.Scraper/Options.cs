@@ -78,5 +78,8 @@ namespace YuGiOh.Scraper
         [Option('b', "boosters", Default = int.MaxValue)]
         public int MaxBoostersToParse { get; set; }
 
+        [Option("ignore_hash", Default = false)]
+        public bool ShouldIgnoreHash { get; set; }
+
     }
 }

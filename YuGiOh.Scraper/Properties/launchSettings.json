@@ -2,6 +2,7 @@
   "profiles": {
     "YuGiOh.Scraper": {
       "commandName": "Project",
+      "commandLineArgs": "--ignore_hash",
       "hotReloadEnabled": false
     }
   }
