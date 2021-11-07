@@ -42,6 +42,8 @@ namespace YuGiOh.Bot.Modules
             try
             {
 
+                Cache.GuessInProgress.TryAdd(Context.Channel.Id, null);
+
                 Card card = null;
                 Exception e;
 
