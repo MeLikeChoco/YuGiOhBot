@@ -121,7 +121,7 @@ namespace YuGiOh.Bot.Handlers
                         try
                         {
 
-                            await channel.SendMessageAsync(embed: (await embed.WithPrices(minimal, _web, time)).Build());
+                            await channel.SendMessageAsync(embed: (await embed.WithCardPrices(minimal, _web, time)).Build());
 
                         }
                         catch (Exception ex) { AltConsole.Write("Service", "Chat", $"{ex.InnerException.Message}\n{ex.InnerException.StackTrace}"); }
