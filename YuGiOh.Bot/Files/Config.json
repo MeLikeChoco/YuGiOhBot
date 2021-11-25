@@ -9,13 +9,15 @@
       "Host": "",
       "Port": 0,
       "Username": "",
-      "Password": ""
+      "Password": "",
+      "Database": ""
     },
     "Guilds": {
       "Host": "",
       "Port": 0,
       "Username": "",
-      "Password": ""
+      "Password": "",
+      "Database": ""
     }
   },
   "Tokens": {
