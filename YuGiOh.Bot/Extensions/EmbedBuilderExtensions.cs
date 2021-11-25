@@ -18,10 +18,9 @@ namespace YuGiOh.Bot.Extensions
         public static EmbedBuilder WithRandomColor(this EmbedBuilder builder)
             => builder.WithColor(_rand.NextColor());
 
-        public static async Task<EmbedBuilder> WithPrices(this EmbedBuilder embed, bool minimal, Web web, TimeSpan? searchTime = null)
+        public static async Task<EmbedBuilder> WithCardPrices(this EmbedBuilder embed, bool minimal, Web web, TimeSpan? searchTime = null)
         {
 
-            var clone = embed.DeepClone();
             TimeSpan time;
 
             if (searchTime is not null)
@@ -30,15 +29,15 @@ namespace YuGiOh.Bot.Extensions
                 time = searchTime.Value;
                 var rounded = Math.Round(time.TotalSeconds, 5, MidpointRounding.ToEven).ToString("0.00000");
 
-                clone.Footer.WithText($"Search time: {rounded} seconds");
+                embed.Footer.WithText($"Search time: {rounded} seconds");
 
             }
 
             if (minimal)
             {
 
-                clone.ThumbnailUrl = clone.ImageUrl;
-                clone.ImageUrl = null;
+                embed.ThumbnailUrl = embed.ImageUrl;
+                embed.ImageUrl = null;
 
             }
             else
@@ -46,20 +45,20 @@ namespace YuGiOh.Bot.Extensions
 
                 string realName;
 
-                if (clone.Description.Contains("Real Name"))
+                if (embed.Description.Contains("Real Name"))
                 {
 
-                    var indexOne = clone.Description.IndexOf(':');
-                    var indexTwo = clone.Description.IndexOf("**Format");
-                    realName = clone.Description.Substring(indexOne, indexTwo).Trim();
+                    var indexOne = embed.Description.IndexOf(':');
+                    var indexTwo = embed.Description.IndexOf("**Format");
+                    realName = embed.Description.Substring(indexOne, indexTwo).Trim();
 
                 }
                 else
-                    realName = clone.Author.Name;
+                    realName = embed.Author.Name;
 
-                var response = await web.GetPrices(clone.Author.Name, realName);
+                var response = await web.GetPrices((string)embed.Author.Name, realName);
 
-                if (response.Data is not null)
+                if (response?.Data is not null)
                 {
 
                     IEnumerable<Datum> prices;
@@ -67,7 +66,7 @@ namespace YuGiOh.Bot.Extensions
                     if (response.Data.Count >= 4)
                     {
 
-                        clone.AddField("Prices", "**Showing the first 3 prices due to too many to show**");
+                        embed.AddField("Prices", "**Showing the first 3 prices due to too many to show**");
 
                         prices = response.Data.Take(3);
 
@@ -79,19 +78,19 @@ namespace YuGiOh.Bot.Extensions
                     {
 
                         if (string.IsNullOrEmpty(info.PriceData.Message))
-                            clone.AddPriceShort(info);
+                            EmbedBuilderExtensions.AddPriceShort(embed, (Datum)info);
                         else
-                            clone.AddField(info.Name, info.PriceData.Message);
+                            embed.AddField(info.Name, info.PriceData.Message);
 
                     }
 
                 }
                 else
-                    clone.AddField("Prices", "**No prices to show for this card!**");
+                    embed.AddField("Prices", "**No prices to show for this card at this time!**");
 
             }
 
-            return clone;
+            return embed;
 
         }
 
