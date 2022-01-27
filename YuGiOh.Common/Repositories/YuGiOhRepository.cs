@@ -8,6 +8,7 @@ using Dapper.FluentMap;
 using Dapper.FluentMap.Dommel;
 using Dommel;
 using Newtonsoft.Json;
+using Npgsql;
 using YuGiOh.Common.DatabaseMappers;
 using YuGiOh.Common.Extensions;
 using YuGiOh.Common.Interfaces;
@@ -197,9 +198,9 @@ namespace YuGiOh.Common.Repositories
             using (var connection = _config.GetYuGiOhDbConnection())
             {
 
-                await connection.OpenAsync();
-                await connection.InsertAsync(error);
-                await connection.CloseAsync();
+                await connection.OpenAsync().ConfigureAwait(false);
+                await connection.InsertAsync(error).ConfigureAwait(false);
+                await connection.CloseAsync().ConfigureAwait(false);
 
             }
 
@@ -211,19 +212,13 @@ namespace YuGiOh.Common.Repositories
             var connection = _config.GetYuGiOhDbConnection();
             CardEntity card;
 
-            await connection.OpenAsync();
+            await connection.OpenAsync().ConfigureAwait(false);
 
             try
             {
 
-                card = await connection.QuerySingleProcAsync<CardEntity>("get_card_exact", new { input });
-                var archetypes = await connection.QueryProcAsync<string>("get_card_archetypes", new { id = card.ArchetypesId });
-                var supports = await connection.QueryProcAsync<string>("get_card_supports", new { id = card.ArchetypesId });
-                var antiSupports = await connection.QueryProcAsync<string>("get_card_antisupports", new { id = card.ArchetypesId });
-
-                card.Archetypes = archetypes.ToList();
-                card.Supports = supports.ToList();
-                card.AntiSupports = antiSupports.ToList();
+                card = await connection.QuerySingleProcAsync<CardEntity>("get_card_exact", new { input }).ConfigureAwait(false);
+                card = await FillCardEntity(connection, card).ConfigureAwait(false);
 
             }
             catch (Exception)
@@ -232,7 +227,7 @@ namespace YuGiOh.Common.Repositories
             }
             finally
             {
-                await connection.CloseAsync();
+                await connection.CloseAsync().ConfigureAwait(false);
             }
 
             return card;
@@ -244,7 +239,7 @@ namespace YuGiOh.Common.Repositories
 
             using var connection = _config.GetYuGiOhDbConnection();
 
-            await connection.OpenAsync();
+            await connection.OpenAsync().ConfigureAwait(false);
 
             var parameterizedInput = $"%{input}%";
             var parameters = new DynamicParameters();
@@ -252,22 +247,12 @@ namespace YuGiOh.Common.Repositories
             parameters.Add("input", input);
             parameters.Add("parameterized_input", parameterizedInput);
 
-            var cards = await connection.QueryProcAsync<CardEntity>("search_cards", parameters);
+            var cards = await connection.QueryProcAsync<CardEntity>("search_cards", parameters).ConfigureAwait(false);
 
             foreach (var card in cards)
-            {
+                await FillCardEntity(connection, card).ConfigureAwait(false);
 
-                var archetypes = await connection.QueryProcAsync<string>("get_card_archetypes", new { id = card.ArchetypesId });
-                var supports = await connection.QueryProcAsync<string>("get_card_supports", new { id = card.ArchetypesId });
-                var antiSupports = await connection.QueryProcAsync<string>("get_card_antisupports", new { id = card.ArchetypesId });
-
-                card.Archetypes = archetypes.ToList();
-                card.Supports = supports.ToList();
-                card.AntiSupports = antiSupports.ToList();
-
-            }
-
-            await connection.CloseAsync();
+            await connection.CloseAsync().ConfigureAwait(false);
 
             return cards;
 
@@ -278,7 +263,7 @@ namespace YuGiOh.Common.Repositories
 
             using var connection = _config.GetYuGiOhDbConnection();
 
-            await connection.OpenAsync();
+            await connection.OpenAsync().ConfigureAwait(false);
 
             var inputWords = input.Split(' ');
             //var results = await connection.SelectAsync<CardEntity>(card =>
@@ -299,9 +284,12 @@ namespace YuGiOh.Common.Repositories
 
             }
 
-            var cards = await connection.QueryAsync<CardEntity>(selector.RawSql, parameters);
+            var cards = await connection.QueryAsync<CardEntity>(selector.RawSql, parameters).ConfigureAwait(false);
 
-            await connection.CloseAsync();
+            foreach (var card in cards)
+                await FillCardEntity(connection, card).ConfigureAwait(false);
+
+            await connection.CloseAsync().ConfigureAwait(false);
 
             //cards = results.Select(card => card.Name);
 
@@ -314,18 +302,12 @@ namespace YuGiOh.Common.Repositories
 
             using var connection = _config.GetYuGiOhDbConnection();
 
-            await connection.OpenAsync();
+            await connection.OpenAsync().ConfigureAwait(false);
 
-            var card = await connection.QuerySingleProcAsync<CardEntity>("get_card_fuzzy", new { input });
-            var archetypes = await connection.QueryProcAsync<string>("get_card_archetypes", new { id = card.ArchetypesId });
-            var supports = await connection.QueryProcAsync<string>("get_card_supports", new { id = card.ArchetypesId });
-            var antiSupports = await connection.QueryProcAsync<string>("get_card_antisupports", new { id = card.ArchetypesId });
+            var card = await connection.QuerySingleProcAsync<CardEntity>("get_card_fuzzy", new { input }).ConfigureAwait(false);
+            card = await FillCardEntity(connection, card).ConfigureAwait(false);
 
-            await connection.CloseAsync();
-
-            card.Archetypes = archetypes.ToList();
-            card.Supports = supports.ToList();
-            card.AntiSupports = antiSupports.ToList();
+            await connection.CloseAsync().ConfigureAwait(false);
 
             return card;
 
@@ -336,18 +318,12 @@ namespace YuGiOh.Common.Repositories
 
             using var connection = _config.GetYuGiOhDbConnection();
 
-            await connection.OpenAsync();
+            await connection.OpenAsync().ConfigureAwait(false);
 
-            var card = await connection.QuerySingleProcAsync<CardEntity>("get_random_card");
-            var archetypes = await connection.QueryProcAsync<string>("get_card_archetypes", new { id = card.ArchetypesId });
-            var supports = await connection.QueryProcAsync<string>("get_card_supports", new { id = card.SupportsId });
-            var antisupports = await connection.QueryProcAsync<string>("get_card_antisupports", new { id = card.AntiSupportsId });
+            var card = await connection.QuerySingleProcAsync<CardEntity>("get_random_card").ConfigureAwait(false);
+            card = await FillCardEntity(connection, card).ConfigureAwait(false);
 
-            await connection.CloseAsync();
-
-            card.Archetypes = archetypes.ToList();
-            card.Supports = supports.ToList();
-            card.AntiSupports = antisupports.ToList();
+            await connection.CloseAsync().ConfigureAwait(false);
 
             return card;
 
@@ -358,11 +334,11 @@ namespace YuGiOh.Common.Repositories
 
             using var connection = _config.GetYuGiOhDbConnection();
 
-            await connection.OpenAsync();
+            await connection.OpenAsync().ConfigureAwait(false);
 
-            var serverHash = await connection.QueryFirstOrDefaultAsync<string>("select hash from card_hashes where id = @id", new { id });
+            var serverHash = await connection.QueryFirstOrDefaultAsync<string>("select hash from card_hashes where id = @id", new { id }).ConfigureAwait(false);
 
-            await connection.CloseAsync();
+            await connection.CloseAsync().ConfigureAwait(false);
 
             return serverHash?.Trim();
 
@@ -373,11 +349,14 @@ namespace YuGiOh.Common.Repositories
 
             using var connection = _config.GetYuGiOhDbConnection();
 
-            await connection.OpenAsync();
+            await connection.OpenAsync().ConfigureAwait(false);
 
-            var cards = await connection.QueryProcAsync<CardEntity>("get_cards_in_archetype", new { input });
+            var cards = await connection.QueryProcAsync<CardEntity>("get_cards_in_archetype", new { input }).ConfigureAwait(false);
 
-            await connection.CloseAsync();
+            foreach (var card in cards)
+                await FillCardEntity(connection, card).ConfigureAwait(false);
+
+            await connection.CloseAsync().ConfigureAwait(false);
 
             return cards;
 
@@ -388,11 +367,14 @@ namespace YuGiOh.Common.Repositories
 
             using var connection = _config.GetYuGiOhDbConnection();
 
-            await connection.OpenAsync();
+            await connection.OpenAsync().ConfigureAwait(false);
 
-            var cards = await connection.QueryProcAsync<CardEntity>("get_cards_in_support", new { input });
+            var cards = await connection.QueryProcAsync<CardEntity>("get_cards_in_support", new { input }).ConfigureAwait(false);
 
-            await connection.CloseAsync();
+            foreach (var card in cards)
+                await FillCardEntity(connection, card).ConfigureAwait(false);
+
+            await connection.CloseAsync().ConfigureAwait(false);
 
             return cards;
 
@@ -403,11 +385,14 @@ namespace YuGiOh.Common.Repositories
 
             using var connection = _config.GetYuGiOhDbConnection();
 
-            await connection.OpenAsync();
+            await connection.OpenAsync().ConfigureAwait(false);
 
-            var cards = await connection.QueryProcAsync<CardEntity>("get_cards_in_antisupport", new { input });
+            var cards = await connection.QueryProcAsync<CardEntity>("get_cards_in_antisupport", new { input }).ConfigureAwait(false);
 
-            await connection.CloseAsync();
+            foreach (var card in cards)
+                await FillCardEntity(connection, card).ConfigureAwait(false);
+
+            await connection.CloseAsync().ConfigureAwait(false);
 
             return cards;
 
@@ -418,11 +403,11 @@ namespace YuGiOh.Common.Repositories
 
             using var connection = _config.GetYuGiOhDbConnection();
 
-            await connection.OpenAsync();
+            await connection.OpenAsync().ConfigureAwait(false);
 
-            var name = await connection.ExecuteScalarAsync<string>("select name from cards where passcode = @passcode", new { passcode });
+            var name = await connection.ExecuteScalarAsync<string>("select name from cards where passcode = @passcode", new { passcode }).ConfigureAwait(false);
 
-            await connection.CloseAsync();
+            await connection.CloseAsync().ConfigureAwait(false);
 
             return name;
 
@@ -433,11 +418,11 @@ namespace YuGiOh.Common.Repositories
 
             using var connection = _config.GetYuGiOhDbConnection();
 
-            await connection.OpenAsync();
+            await connection.OpenAsync().ConfigureAwait(false);
 
-            var imgLink = await connection.QuerySingleAsync<string>("select img from cards where name ~~* @input", new { input });
+            var imgLink = await connection.QuerySingleAsync<string>("select img from cards where name ~~* @input", new { input }).ConfigureAwait(false);
 
-            await connection.CloseAsync();
+            await connection.CloseAsync().ConfigureAwait(false);
 
             return imgLink;
 
@@ -458,14 +443,14 @@ namespace YuGiOh.Common.Repositories
 
             using var connection = _config.GetYuGiOhDbConnection();
 
-            await connection.OpenAsync();
+            await connection.OpenAsync().ConfigureAwait(false);
 
             var banlist = new Banlist();
-            banlist.Forbidden = await connection.QueryAsync<string>($"select name from cards where {formatStr} ~~* 'forbidden' order by name asc");
-            banlist.Limited = await connection.QueryAsync<string>($"select name from cards where {formatStr} ~~* 'limited' order by name asc");
-            banlist.SemiLimited = await connection.QueryAsync<string>($"select name from cards where {formatStr} ~~* 'semi-limited' order by name asc");
+            banlist.Forbidden = await connection.QueryAsync<string>($"select name from cards where {formatStr} ~~* 'forbidden' order by name asc").ConfigureAwait(false);
+            banlist.Limited = await connection.QueryAsync<string>($"select name from cards where {formatStr} ~~* 'limited' order by name asc").ConfigureAwait(false);
+            banlist.SemiLimited = await connection.QueryAsync<string>($"select name from cards where {formatStr} ~~* 'semi-limited' order by name asc").ConfigureAwait(false);
 
-            await connection.CloseAsync();
+            await connection.CloseAsync().ConfigureAwait(false);
 
             return banlist;
 
@@ -476,11 +461,26 @@ namespace YuGiOh.Common.Repositories
 
             using var connection = _config.GetYuGiOhDbConnection();
 
-            await connection.OpenAsync();
+            await connection.OpenAsync().ConfigureAwait(false);
 
-            var entity = await connection.QueryFirstAsync<BoosterPackEntity>("select * from boosterpacks where name ~~* @input", new { input });
+            var entity = await connection.QueryFirstAsync<BoosterPackEntity>("select * from boosterpacks where name ~~* @input", new { input }).ConfigureAwait(false);
 
-            await connection.CloseAsync();
+            await connection.CloseAsync().ConfigureAwait(false);
+
+            return entity;
+
+        }
+
+        private async Task<CardEntity> FillCardEntity(NpgsqlConnection connection, CardEntity entity)
+        {
+
+            var archetypes = await connection.QueryProcAsync<string>("get_card_archetypes", new { id = entity.ArchetypesId }).ConfigureAwait(false);
+            var supports = await connection.QueryProcAsync<string>("get_card_supports", new { id = entity.SupportsId }).ConfigureAwait(false);
+            var antisupports = await connection.QueryProcAsync<string>("get_card_antisupports", new { id = entity.AntiSupportsId }).ConfigureAwait(false);
+
+            entity.Archetypes = archetypes.ToList();
+            entity.Supports = supports.ToList();
+            entity.AntiSupports = antisupports.ToList();
 
             return entity;
 
