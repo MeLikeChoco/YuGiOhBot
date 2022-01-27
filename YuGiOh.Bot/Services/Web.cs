@@ -16,21 +16,17 @@ namespace YuGiOh.Bot.Services
 
         public string FandomUrl = "https://yugioh.fandom.com/wiki/";
 
-        private HttpClient _http;
+        //private HttpClient _http;
+        private IHttpClientFactory _httpClientFactory;
         private HtmlParser _parser;
 
         private const string PricesBaseUrl = "http://yugiohprices.com/api/get_card_prices/";
         private const string ImagesBaseUrl = "http://yugiohprices.com/api/card_image/";
 
-        public Web()
+        public Web(IHttpClientFactory httpClientFactory)
         {
 
-            _http = new HttpClient(new HttpClientHandler
-            {
-                UseProxy = false,
-                Proxy = null
-            });
-
+            _httpClientFactory = httpClientFactory;
             _parser = new HtmlParser();
 
         }
@@ -74,7 +70,7 @@ namespace YuGiOh.Bot.Services
 
             }
 
-            return _http.SendAsync(message, HttpCompletionOption.ResponseHeadersRead);
+            return _httpClientFactory.CreateClient().SendAsync(message, HttpCompletionOption.ResponseHeadersRead);
 
         }
 
@@ -91,7 +87,7 @@ namespace YuGiOh.Bot.Services
             var response = await GetDeserializedContent<YuGiOhPrices>($"{PricesBaseUrl}{Uri.EscapeDataString(name)}").ConfigureAwait(false);
 
             if ((response is null || response.Status == "fail") && !string.IsNullOrEmpty(realName))
-                response = await GetDeserializedContent<YuGiOhPrices>($"{PricesBaseUrl}{Uri.EscapeUriString(realName)}");
+                response = await GetDeserializedContent<YuGiOhPrices>($"{PricesBaseUrl}{Uri.EscapeDataString(realName)}");
 
             return response;
 
@@ -150,7 +146,7 @@ namespace YuGiOh.Bot.Services
         }
 
         public Task<HttpResponseMessage> GetResponseMessage(string url)
-            => _http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
+            => _httpClientFactory.CreateClient().GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
 
         public enum ContentType
         {

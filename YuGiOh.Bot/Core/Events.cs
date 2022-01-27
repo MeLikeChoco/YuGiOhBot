@@ -42,7 +42,7 @@ namespace YuGiOh.Bot.Core
             ConnectionTimeout = 60000, //had to include this as my bot got bigger and there were more guilds to connect to per shard
             LogLevel = LogSeverity.Verbose,
             MessageCacheSize = 30,
-            TotalShards = 1
+            TotalShards = 1,
 
         };
 
@@ -83,7 +83,7 @@ namespace YuGiOh.Bot.Core
             ClientConfig.TotalShards = _recommendedShards;
             _client = new DiscordShardedClient(ClientConfig);
             _commandService = new CommandService(CommandConfig);
-            _web = new Web();
+            //_web = new Web();
             _cache = new Cache();
             _reconnectTimers = new ConcurrentDictionary<DiscordSocketClient, Timer>();
             //_reconnectors = new List<Reconnector<DiscordSocketClient>>();
@@ -219,7 +219,7 @@ namespace YuGiOh.Bot.Core
         private async Task YouAintDoneYet()
         {
 
-            LoadStats();
+            //LoadStats();
             BuildServices();
             AddFreshBlood();
             await RegisterCommands();
@@ -283,15 +283,19 @@ namespace YuGiOh.Bot.Core
                 .AddTransient<IYuGiOhDbService, YuGiOhDbService>()
                 .AddTransient<IGuildConfigDbService, GuildConfigDbService>()
                 .AddTransient<IPerformanceMetrics, PerformanceMetrics>()
+                .AddTransient<Web>()
                 .AddTransient<InteractiveService>()
+                .AddHttpClient()
                 .AddSingleton(InteractiveServiceConfig)
                 .AddSingleton(_client)
                 .AddSingleton(_commandService)
                 .AddSingleton(_cache)
-                .AddSingleton(_web)
-                .AddSingleton(_stats)
+                .AddSingleton<Stats>()
                 .AddSingleton<Random>()
                 .BuildServiceProvider();
+
+            //initialize the stats gathering timer
+            _services.GetService<Stats>();
 
         }
 
