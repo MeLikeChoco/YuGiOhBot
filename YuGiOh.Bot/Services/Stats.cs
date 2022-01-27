@@ -1,20 +1,11 @@
-﻿using Discord;
+﻿using System;
+using System.Linq;
+using System.Threading;
+using Discord;
 using Discord.WebSocket;
 using DiscordBotsList.Api;
-using DiscordBotsList.Api.Adapter.Discord.Net;
-using DiscordBotsList.Api.Objects;
-using MoreLinq;
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using YuGiOh.Bot.Models;
-using YuGiOh.Bot.Models.Serializers;
 
 namespace YuGiOh.Bot.Services
 {
@@ -27,7 +18,6 @@ namespace YuGiOh.Bot.Services
         public int GuildCount { get; set; }
         public bool IsReady { get; set; }
 
-        private bool _armedTimer;
         private readonly Timer _calculateStats;
         private readonly ulong _id;
         private Web _web;
@@ -38,7 +28,6 @@ namespace YuGiOh.Bot.Services
 
             _web = web;
             IsReady = false;
-            _armedTimer = false;
             _id = client.CurrentUser.Id;
             _topGG = new AuthDiscordBotListApi(_id, Config.Instance.Tokens.BotList.Blue);
             _calculateStats = new Timer(CalculateStats, client, TimeSpan.FromSeconds(300), TimeSpan.FromHours(1));
@@ -57,7 +46,7 @@ namespace YuGiOh.Bot.Services
                     Log("Calculating stats...");
 
                     var guilds = client.Guilds;
-                    var maxGuild = guilds.Where(guild => !guild.Name.Contains("Bot")).MaxBy(guild => guild.MemberCount).FirstOrDefault();
+                    var maxGuild = guilds.Where(guild => !guild.Name.Contains("Bot")).MaxBy(guild => guild.MemberCount);
                     MaxGuild = maxGuild.Name;
                     MaxGuildCount = maxGuild.MemberCount;
                     UniqueUserCount = guilds.Sum(guild => guild.MemberCount);
