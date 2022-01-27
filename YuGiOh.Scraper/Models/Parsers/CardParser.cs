@@ -147,14 +147,14 @@ namespace YuGiOh.Scraper.Models.Parsers
                             var index = status.IndexOf('(');
 
                             if (index != -1)
-                                status = status.Substring(0, index).Trim();
+                                status = status[..index].Trim();
 
                             if (rawStatus.ContainsIgnoreCase("ocg"))
                                 card.OcgStatus = status;
                             else if (rawStatus.ContainsIgnoreCase("tcg"))
                             {
 
-                                if (rawStatus.ContainsIgnoreCase("speed duel"))
+                                if (rawStatus.ContainsIgnoreCase("speed duel") || rawStatus.ContainsIgnoreCase("traditional"))
                                     card.TcgTrnStatus = status;
                                 else
                                     card.TcgAdvStatus = status;
