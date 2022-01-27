@@ -29,7 +29,7 @@ namespace YuGiOh.Bot.Models
                 Port = guildsDbConfig.Port,
                 Username = guildsDbConfig.Username,
                 Password = guildsDbConfig.Password,
-                Database = "guilds"
+                Database = guildsDbConfig.Database
 
             }.ToString();
 
@@ -49,7 +49,7 @@ namespace YuGiOh.Bot.Models
                 Port = yugiohDbConfig.Port,
                 Username = yugiohDbConfig.Username,
                 Password = yugiohDbConfig.Password,
-                Database = "yugioh"
+                Database = yugiohDbConfig.Database
 
             }.ToString();
 

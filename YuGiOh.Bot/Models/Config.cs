@@ -85,18 +85,19 @@ namespace YuGiOh.Bot.Models
     public class Databases
     {
 
-        public Database YuGiOh { get; set; }
-        public Database Guilds { get; set; }
+        public DatabaseConnectionConfig YuGiOh { get; set; }
+        public DatabaseConnectionConfig Guilds { get; set; }
 
     }
 
-    public class Database
+    public class DatabaseConnectionConfig
     {
 
         public string Host { get; set; }
         public int Port { get; set; }
         public string Username { get; set; }
         public string Password { get; set; }
+        public string Database { get; set; }
 
     }
 
