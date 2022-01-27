@@ -6,7 +6,9 @@ using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using MoreLinq;
 using YuGiOh.Bot.Extensions;
+using YuGiOh.Bot.Models.Cards;
 using YuGiOh.Bot.Services;
 using YuGiOh.Common.Models.YuGiOh;
 
@@ -83,20 +85,20 @@ namespace YuGiOh.Bot.Modules
             var card = await YuGiOhDbService.GetCardAsync(input);
 
             if (card is not null)
-            {
-
-                using (Context.Channel.EnterTypingState())
-                {
-
-                    var stream = await Web.GetStream(card.Img);
-
-                    await Context.Channel.SendFileAsync(stream, $"{input.ToLower().Replace(" ", "")}.png");
-
-                }
-
-            }
+                await UploadImage(card.Name, card.Img);
             else
                 await NoResultError(input);
+
+        }
+
+        [Command("randomimage"), Alias("rimage", "ri")]
+        [Summary("Gets random card image!")]
+        public async Task RandomImageCommand()
+        {
+
+            var card = await YuGiOhDbService.GetRandomCardAsync();
+
+            await UploadImage(card.Name, card.Img);
 
         }
 
@@ -108,29 +110,46 @@ namespace YuGiOh.Bot.Modules
             var card = await YuGiOhDbService.GetCardAsync(input);
 
             if (card is not null)
+                await UploadImage(card.Name, GetArtUrl(card.Passcode));
+            else
+                await NoResultError(input);
+
+        }
+
+        [Command("randomart"), Alias("rart", "ra", "rat")]
+        [Summary("Gets random card art!")]
+        public async Task RandomCardArtCommand()
+        {
+
+            var card = await YuGiOhDbService.GetRandomCardAsync();
+
+            await UploadImage(card.Name, GetArtUrl(card.Passcode));
+
+        }
+
+        private async Task UploadImage(string name, string url)
+        {
+
+            try
             {
 
-                Stream stream;
-
-                try
+                using (Context.Channel.EnterTypingState())
                 {
 
-                    stream = await GetArtGithub(card.Passcode);
+                    var stream = await Web.GetStream(url);
 
-                    await UploadAsync(stream, $"{Uri.EscapeUriString(card.Name)}.jpg");
-
-                }
-                catch
-                {
-
-                    await ReplyAsync("There was a problem while retrieving the art, please try again later.");
-                    return;
+                    await UploadAsync(stream, $"{Uri.EscapeUriString(name)}.png");
 
                 }
 
             }
-            else
-                await NoResultError(input);
+            catch
+            {
+
+                await ReplyAsync("There was a problem while uploading the image, please try again later.");
+                return;
+
+            }
 
         }
 
@@ -324,13 +343,16 @@ namespace YuGiOh.Bot.Modules
 
         }
 
-        private Task<Stream> GetArtGithub(string passcode)
+        private Task<Stream> GetArt(string passcode)
         {
 
             var url = $"{Constants.ArtBaseUrl}{passcode}.{Constants.ArtFileType}";
             return Web.GetStream(url);
 
         }
+
+        private string GetArtUrl(string passcode)
+            => $"{Constants.ArtBaseUrl}{passcode}.{Constants.ArtFileType}";
 
         //public string GetFormattedList(IEnumerable<string> cards, string top = null)
         //{

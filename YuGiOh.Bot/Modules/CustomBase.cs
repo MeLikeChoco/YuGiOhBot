@@ -24,7 +24,7 @@ namespace YuGiOh.Bot.Modules
             => Context.Channel.SendFileAsync(stream, filename, text);
 
         public async Task SendCardEmbedAsync(EmbedBuilder embed, bool minimal, Web web)
-            => await ReplyAsync(embed: (await embed.WithPrices(minimal, web)).Build());
+            => await ReplyAsync(embed: (await embed.WithCardPrices(minimal, web)).Build());
 
         public Task SendEmbedAsync(EmbedBuilder embed)
             => ReplyAsync(embed: embed.Build());

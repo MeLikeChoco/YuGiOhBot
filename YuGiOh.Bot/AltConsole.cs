@@ -48,7 +48,7 @@ namespace YuGiOh.Bot
             else
             {
 
-                Console.WriteLine($"{message}\t\t{exception}");
+                Console.WriteLine($"{message}\n{exception}");
 
             }
 
