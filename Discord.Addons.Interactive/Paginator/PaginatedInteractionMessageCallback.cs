@@ -1,23 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
-using Discord.Commands;
+using Discord.Interactions;
 using Discord.WebSocket;
 
-namespace Discord.Addons.Interactive
+namespace Discord.Addons.Interactive.Paginator
 {
-    public class PaginatedMessageCallback : IReactionCallback
+    public class PaginatedInteractionMessageCallback<TContext> : IReactionInteractionCallback<TContext>
+        where TContext : IInteractionContext
     {
 
-        public SocketCommandContext Context { get; }
-        public InteractiveService Interactive { get; }
+        public TContext Context { get; }
+        public InteractiveInteractionService<TContext> Interactive { get; }
         public IUserMessage Message { get; private set; }
 
         public RunMode RunMode => RunMode.Sync;
         public ICriterion<SocketReaction> Criterion { get; }
         public TimeSpan? Timeout => Options.Timeout;
+
         private readonly PaginatedMessage _pager;
+        private readonly bool _isDeferred;
 
         private PaginatedAppearanceOptions Options => _pager.Options;
 
@@ -25,17 +29,19 @@ namespace Discord.Addons.Interactive
         private int _page = 1;
 
 
-        public PaginatedMessageCallback(
-            InteractiveService interactive,
-            SocketCommandContext sourceContext,
+        public PaginatedInteractionMessageCallback(
+            InteractiveInteractionService<TContext> interactive,
+            TContext sourceContext,
             PaginatedMessage pager,
-            ICriterion<SocketReaction> criterion = null)
+            ICriterion<SocketReaction> criterion = null,
+            bool isDeferred = false)
         {
             Interactive = interactive;
             Context = sourceContext;
             Criterion = criterion ?? new EmptyCriterion<SocketReaction>();
             _pager = pager;
             _pages = _pager.Pages.Count();
+            _isDeferred = isDeferred;
             if (_pager.Pages is IEnumerable<EmbedFieldBuilder>)
                 _pages = ((_pager.Pages.Count() - 1) / Options.FieldsPerPage) + 1;
         }
@@ -43,8 +49,21 @@ namespace Discord.Addons.Interactive
         public async Task DisplayAsync()
         {
             var embed = BuildEmbed();
-            var message = await Context.Channel.SendMessageAsync(_pager.Content, embed: embed).ConfigureAwait(false);
+            IUserMessage message;
+
+            if (_isDeferred)
+                message = await Context.Interaction.FollowupAsync(_pager.Content, embed: embed).ConfigureAwait(false);
+            else
+            {
+
+                await Context.Interaction.RespondAsync(_pager.Content, embed: embed).ConfigureAwait(false);
+
+                message = await Context.Interaction.GetOriginalResponseAsync().ConfigureAwait(false);
+
+            }
+
             Message = message;
+
             Interactive.AddReactionCallback(message, this);
             // Reactions take a while to add, don't wait for them
             _ = Task.Run(async () =>
@@ -66,13 +85,15 @@ namespace Discord.Addons.Interactive
                 if (Options.DisplayInformationIcon)
                     await message.AddReactionAsync(Options.Info);
             });
+
             // TODO: (Next major version) timeouts need to be handled at the service-level!
             if (Timeout.HasValue && Timeout.Value != null)
             {
                 _ = Task.Delay(Timeout.Value).ContinueWith(_ =>
                 {
                     Interactive.RemoveReactionCallback(message);
-                    _ = Message.DeleteAsync();
+                    Context.Interaction.DeleteOriginalResponseAsync();
+                    //_ = Message.DeleteAsync();
                 });
             }
         }
@@ -156,7 +177,7 @@ namespace Discord.Addons.Interactive
         private async Task RenderAsync()
         {
             var embed = BuildEmbed();
-            await Message.ModifyAsync(m => m.Embed = embed).ConfigureAwait(false);
+            await Context.Interaction.ModifyOriginalResponseAsync(m => m.Embed = embed).ConfigureAwait(false);
         }
 
     }

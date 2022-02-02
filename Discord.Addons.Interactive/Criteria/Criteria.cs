@@ -1,12 +1,14 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Discord.Commands;
+using Discord.Interactions;
+using Discord.WebSocket;
 
 namespace Discord.Addons.Interactive
 {
     public class Criteria<T> : ICriterion<T>
     {
-        private List<ICriterion<T>> _critiera = new List<ICriterion<T>>();
+        private readonly List<ICriterion<T>> _critiera = new();
 
         public Criteria<T> AddCriterion(ICriterion<T> criterion)
         {
@@ -15,6 +17,16 @@ namespace Discord.Addons.Interactive
         }
 
         public async Task<bool> JudgeAsync(SocketCommandContext sourceContext, T parameter)
+        {
+            foreach (var criterion in _critiera)
+            {
+                var result = await criterion.JudgeAsync(sourceContext, parameter).ConfigureAwait(false);
+                if (!result) return false;
+            }
+            return true;
+        }
+
+        public async Task<bool> JudgeAsync(IInteractionContext sourceContext, T parameter)
         {
             foreach (var criterion in _critiera)
             {

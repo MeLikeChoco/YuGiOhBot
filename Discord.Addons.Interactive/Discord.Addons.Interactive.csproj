@@ -19,7 +19,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Discord.Net.Labs" Version="3.3.3" />
+    <PackageReference Include="Discord.Net.Labs" Version="3.6.1" />
   </ItemGroup>
 
 </Project>
