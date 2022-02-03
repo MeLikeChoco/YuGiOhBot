@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Discord.Addons.Interactive.Callbacks;
 using Discord.Interactions;
 using Discord.WebSocket;
 
@@ -13,7 +14,7 @@ namespace Discord.Addons.Interactive.Paginator
     {
 
         public TContext Context { get; }
-        public InteractiveInteractionService<TContext> Interactive { get; }
+        public InteractiveService<TContext> Interactive { get; }
         public IUserMessage Message { get; private set; }
 
         public RunMode RunMode => RunMode.Sync;
@@ -30,7 +31,7 @@ namespace Discord.Addons.Interactive.Paginator
 
 
         public PaginatedInteractionMessageCallback(
-            InteractiveInteractionService<TContext> interactive,
+            InteractiveService<TContext> interactive,
             TContext sourceContext,
             PaginatedMessage pager,
             ICriterion<SocketReaction> criterion = null,
@@ -161,6 +162,7 @@ namespace Discord.Addons.Interactive.Paginator
                 .WithColor(_pager.Color)
                 .WithFooter(f => f.Text = string.Format(Options.FooterFormat, _page, _pages))
                 .WithTitle(_pager.Title);
+
             if (_pager.Pages is IEnumerable<EmbedFieldBuilder> efb)
             {
                 builder.Fields = efb.Skip((_page - 1) * Options.FieldsPerPage).Take(Options.FieldsPerPage).ToList();

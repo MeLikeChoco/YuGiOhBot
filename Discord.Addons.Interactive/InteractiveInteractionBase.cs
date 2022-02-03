@@ -32,7 +32,7 @@ namespace Discord.Addons.Interactive
         where TContext : class, IInteractionContext
     {
 
-        public InteractiveInteractionService<TContext> Interactive { get; set; }
+        public InteractiveService<TContext> Interactive { get; set; }
 
         protected bool IsDeferred { get; set; }
 
@@ -71,6 +71,20 @@ namespace Discord.Addons.Interactive
         public Task<IUserMessage> PagedReplyAsync(PaginatedMessage pager, ICriterion<SocketReaction> criterion)
             => Interactive.SendPaginatedMessageAsync(Context, pager, criterion, IsDeferred);
 
+        public Task<IUserMessage> PagedComponentReplyAsync(PaginatedMessage pager, bool fromSourceUser = true)
+        {
+
+            var criterion = new Criteria<SocketInteraction>();
+
+            if (fromSourceUser)
+                criterion.AddCriterion(new EnsureInteractionFromSourceUserCriterion());
+
+            return PagedComponentReplyAsync(pager, criterion);
+
+        }
+
+        public Task<IUserMessage> PagedComponentReplyAsync(PaginatedMessage pager, ICriterion<SocketInteraction> criterion)
+            => Interactive.SendPaginatedComponentMessageAsync(Context, pager, criterion, IsDeferred);
 
     }
 }
