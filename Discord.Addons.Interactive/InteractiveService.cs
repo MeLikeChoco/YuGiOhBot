@@ -7,19 +7,61 @@ using Discord.Addons.Interactive.Callbacks;
 using Discord.Addons.Interactive.Paginator;
 using Discord.Commands;
 using Discord.Interactions;
+using Discord.Rest;
 using Discord.WebSocket;
 
 namespace Discord.Addons.Interactive
 {
 
-    public class InteractiveService : IDisposable
+    public abstract class BaseInteractiveService : IDisposable
     {
 
-        public BaseSocketClient Discord { get; }
+        protected BaseSocketClient Discord { get; }
+        protected TimeSpan DefaultTimeout { get; }
+
+        protected BaseInteractiveService(BaseSocketClient client, InteractiveServiceConfig config = null)
+        {
+
+            Discord = client;
+
+            Discord.ReactionAdded += HandleReactionAsync;
+            Discord.InteractionCreated += HandleInteractionAsync;
+            Discord.MessageDeleted += HandleMessageDeleteAsync;
+
+            config ??= new InteractiveServiceConfig();
+            DefaultTimeout = config.DefaultTimeout;
+
+        }
+
+        protected abstract Task HandleReactionAsync(
+            Cacheable<IUserMessage, ulong> message,
+            Cacheable<IMessageChannel, ulong> channel,
+            SocketReaction reaction
+        );
+
+        protected abstract Task HandleInteractionAsync(SocketInteraction interaction);
+
+        protected abstract Task HandleMessageDeleteAsync(
+            Cacheable<IMessage, ulong> message,
+            Cacheable<IMessageChannel, ulong> channel
+        );
+
+        public void Dispose()
+        {
+
+            Discord.ReactionAdded -= HandleReactionAsync;
+            Discord.InteractionCreated -= HandleInteractionAsync;
+            Discord.MessageDeleted -= HandleMessageDeleteAsync;
+
+        }
+
+    }
+
+    public class InteractiveService : BaseInteractiveService
+    {
 
         private readonly Dictionary<ulong, IReactionCallback> _callbacks;
         private readonly Dictionary<ulong, IInteractionCallback> _interactionCallbacks;
-        private readonly TimeSpan _defaultTimeout;
 
         // helpers to allow DI containers to resolve without a custom factory
         public InteractiveService(DiscordSocketClient discord, InteractiveServiceConfig config = null)
@@ -29,13 +71,8 @@ namespace Discord.Addons.Interactive
             : this((BaseSocketClient)discord, config) { }
 
         public InteractiveService(BaseSocketClient discord, InteractiveServiceConfig config = null)
+            : base(discord, config)
         {
-            Discord = discord;
-            Discord.ReactionAdded += HandleReactionAsync;
-
-            config ??= new InteractiveServiceConfig();
-            _defaultTimeout = config.DefaultTimeout;
-
             _callbacks = new();
             _interactionCallbacks = new();
         }
@@ -51,17 +88,14 @@ namespace Discord.Addons.Interactive
 
         public void AddInteractionCallback(IMessage message, IInteractionCallback callback)
             => _interactionCallbacks[message.Id] = callback;
-
         public void RemoveInteractionCallback(IMessage message)
             => RemoveInteractionCallback(message.Id);
-
         public void RemoveInteractionCallback(ulong id)
             => _interactionCallbacks.Remove(id);
-
         public void ClearInteractionCallback()
             => _interactionCallbacks.Clear();
 
-        private async Task HandleReactionAsync(
+        protected override async Task HandleReactionAsync(
             Cacheable<IUserMessage, ulong> message,
             Cacheable<IMessageChannel, ulong> channel,
             SocketReaction reaction)
@@ -88,6 +122,63 @@ namespace Discord.Addons.Interactive
             }
         }
 
+        protected override async Task HandleInteractionAsync(SocketInteraction interaction)
+        {
+
+            if (interaction.User.Id == Discord.CurrentUser.Id)
+                return;
+
+            ulong messageId;
+
+            switch (interaction)
+            {
+
+                case SocketMessageComponent componentMsg:
+                    messageId = componentMsg.Message.Id;
+                    break;
+                default:
+                    return;
+
+            }
+
+            if (!_interactionCallbacks.TryGetValue(messageId, out var callback))
+                return;
+
+            if (!await callback.Criterion.JudgeAsync(callback.Context, interaction))
+                return;
+
+            async Task RemoveCallbackWrapper()
+            {
+                if (await callback.HandleCallbackAsync(interaction).ConfigureAwait(false))
+                    RemoveInteractionCallback(messageId);
+            }
+
+            switch (callback.RunMode)
+            {
+
+                case Commands.RunMode.Async:
+                    _ = RemoveCallbackWrapper();
+                    break;
+                default:
+                    await RemoveCallbackWrapper();
+                    break;
+
+            }
+
+        }
+
+        protected override Task HandleMessageDeleteAsync(
+            Cacheable<IMessage, ulong> message,
+            Cacheable<IMessageChannel, ulong> channel)
+        {
+
+            RemoveReactionCallback(message.Id);
+            RemoveInteractionCallback(message.Id);
+
+            return Task.CompletedTask;
+
+        }
+
         public Task<SocketMessage> NextMessageAsync(
             SocketCommandContext context,
             bool fromSourceUser = true,
@@ -109,7 +200,7 @@ namespace Discord.Addons.Interactive
             TimeSpan? timeout = null,
             CancellationToken token = default)
         {
-            timeout ??= _defaultTimeout;
+            timeout ??= DefaultTimeout;
 
             var eventTrigger = new TaskCompletionSource<SocketMessage>();
             var cancelTrigger = new TaskCompletionSource<bool>();
@@ -145,7 +236,7 @@ namespace Discord.Addons.Interactive
             TimeSpan? timeout = null,
             RequestOptions options = null)
         {
-            timeout ??= _defaultTimeout;
+            timeout ??= DefaultTimeout;
             var message = await context.Channel.SendMessageAsync(content, isTTS, embed, options).ConfigureAwait(false);
             _ = Task.Delay(timeout.Value)
                 .ContinueWith(_ => message.DeleteAsync().ConfigureAwait(false))
@@ -166,34 +257,39 @@ namespace Discord.Addons.Interactive
         public async Task<IUserMessage> SendPaginatedComponentMessageAsync(
             SocketCommandContext context,
             PaginatedMessage pager,
-            ICriterion<SocketInteraction> criterion = null,
-            bool isDeferred = false)
+            ICriterion<SocketInteraction> criterion = null)
         {
 
-            var callback = new PaginatedComponentMessageCallback(this, context, pager, criterion, isDeferred);
+            var callback = new PaginatedComponentMessageCallback(this, context, pager, criterion);
+            var options = pager.Options;
+            var timeout = options.Timeout ?? DefaultTimeout;
 
             await callback.DisplayAsync().ConfigureAwait(false);
 
-            return callback.Message;
+            var message = callback.Message;
 
-        }
+            _ = Task.Delay(timeout).ContinueWith(_ =>
+            {
 
-        public void Dispose()
-        {
-            Discord.ReactionAdded -= HandleReactionAsync;
+                RemoveInteractionCallback(message.Id);
+
+                if (options.ShouldDeleteOnTimeout)
+                    message.DeleteAsync();
+
+            });
+
+            return message;
+
         }
 
     }
 
-    public class InteractiveService<TContext> : IDisposable
+    public class InteractiveService<TContext> : BaseInteractiveService
        where TContext : IInteractionContext
     {
 
-        public BaseSocketClient Discord { get; }
-
         private readonly Dictionary<ulong, IReactionInteractionCallback<TContext>> _reactionCallbacks;
         private readonly Dictionary<ulong, IInteractionCallback<TContext>> _interactionCallbacks;
-        private readonly TimeSpan _defaultTimeout;
 
         // helpers to allow DI containers to resolve without a custom factory
         public InteractiveService(DiscordSocketClient discord, InteractiveServiceConfig config = null)
@@ -203,43 +299,31 @@ namespace Discord.Addons.Interactive
             : this((BaseSocketClient)discord, config) { }
 
         public InteractiveService(BaseSocketClient discord, InteractiveServiceConfig config = null)
+            : base(discord, config)
         {
-            Discord = discord;
-            Discord.ReactionAdded += HandleReactionAsync;
-            Discord.InteractionCreated += HandleInteractionAsync;
-
-            config ??= new InteractiveServiceConfig();
-            _defaultTimeout = config.DefaultTimeout;
-
             _reactionCallbacks = new();
             _interactionCallbacks = new();
         }
 
         public void AddReactionCallback(IMessage message, IReactionInteractionCallback<TContext> callback)
             => _reactionCallbacks[message.Id] = callback;
-
         public void RemoveReactionCallback(IMessage message)
             => RemoveReactionCallback(message.Id);
-
         public void RemoveReactionCallback(ulong id)
             => _reactionCallbacks.Remove(id);
-
         public void ClearReactionCallbacks()
             => _reactionCallbacks.Clear();
 
         public void AddInteractionCallback(IMessage message, IInteractionCallback<TContext> callback)
             => _interactionCallbacks[message.Id] = callback;
-
         public void RemoveInteractionCallback(IMessage message)
             => RemoveInteractionCallback(message.Id);
-
         public void RemoveInteractionCallback(ulong id)
             => _interactionCallbacks.Remove(id);
-
         public void ClearInteractionCallback()
             => _interactionCallbacks.Clear();
 
-        private async Task HandleReactionAsync(
+        protected override async Task HandleReactionAsync(
             Cacheable<IUserMessage, ulong> message,
             Cacheable<IMessageChannel, ulong> channel,
             SocketReaction reaction)
@@ -266,7 +350,7 @@ namespace Discord.Addons.Interactive
             }
         }
 
-        private async Task HandleInteractionAsync(SocketInteraction interaction)
+        protected override async Task HandleInteractionAsync(SocketInteraction interaction)
         {
 
             if (interaction.User.Id == Discord.CurrentUser.Id)
@@ -311,6 +395,16 @@ namespace Discord.Addons.Interactive
 
         }
 
+        protected override Task HandleMessageDeleteAsync(Cacheable<IMessage, ulong> message, Cacheable<IMessageChannel, ulong> channel)
+        {
+
+            RemoveInteractionCallback(message.Id);
+            RemoveInteractionCallback(message.Id);
+
+            return Task.CompletedTask;
+
+        }
+
         public Task<SocketMessage> NextMessageAsync(
             TContext context,
             bool fromSourceUser = true,
@@ -332,7 +426,7 @@ namespace Discord.Addons.Interactive
             TimeSpan? timeout = null,
             CancellationToken token = default)
         {
-            timeout ??= _defaultTimeout;
+            timeout ??= DefaultTimeout;
 
             var eventTrigger = new TaskCompletionSource<SocketMessage>();
             var cancelTrigger = new TaskCompletionSource<bool>();
@@ -341,9 +435,12 @@ namespace Discord.Addons.Interactive
 
             async Task Handler(SocketMessage message)
             {
+
                 var result = await criterion.JudgeAsync(context, message).ConfigureAwait(false);
+
                 if (result)
                     eventTrigger.SetResult(message);
+
             }
 
             (context.Client as DiscordSocketClient).MessageReceived += Handler;
@@ -370,7 +467,7 @@ namespace Discord.Addons.Interactive
             bool isDeferred = false)
         {
 
-            timeout ??= _defaultTimeout;
+            timeout ??= DefaultTimeout;
             IUserMessage message;
 
             if (isDeferred)
@@ -413,16 +510,25 @@ namespace Discord.Addons.Interactive
         {
 
             var callback = new PaginatedComponentMessageCallback<TContext>(this, context, pager, criterion, isDeferred);
+            var options = pager.Options;
+            var timeout = options.Timeout ?? DefaultTimeout;
 
             await callback.DisplayAsync().ConfigureAwait(false);
 
-            return callback.Message;
+            var message = callback.Message;
 
-        }
+            _ = Task.Delay(timeout).ContinueWith(_ =>
+            {
 
-        public void Dispose()
-        {
-            Discord.ReactionAdded -= HandleReactionAsync;
+                RemoveInteractionCallback(message.Id);
+
+                if (options.ShouldDeleteOnTimeout)
+                    message.DeleteAsync();
+
+            });
+
+            return message;
+
         }
 
     }

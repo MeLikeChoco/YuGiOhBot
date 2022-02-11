@@ -4,7 +4,7 @@ namespace Discord.Addons.Interactive
 {
     public class PaginatedAppearanceOptions
     {
-        public static PaginatedAppearanceOptions Default = new PaginatedAppearanceOptions();
+        public static PaginatedAppearanceOptions Default = new();
 
         public IEmote First = new Emoji("⏮");
         public IEmote Back = new Emoji("◀");
@@ -20,7 +20,8 @@ namespace Discord.Addons.Interactive
         public JumpDisplayOptions JumpDisplayOptions = JumpDisplayOptions.WithManageMessages;
         public bool DisplayInformationIcon = true;
 
-        public TimeSpan? Timeout = null;
+        public TimeSpan? Timeout;
+        public bool ShouldDeleteOnTimeout = true;
         public TimeSpan InfoTimeout = TimeSpan.FromSeconds(30);
 
         public int FieldsPerPage = 6;

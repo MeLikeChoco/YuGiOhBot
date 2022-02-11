@@ -14,19 +14,25 @@ namespace Discord.Addons.Interactive.Paginator
     public abstract class BasePaginatedComponentMessageCallback
     {
 
-        private const string FirstId = "first";
-        private const string PreviousId = "previous";
-        private const string NextId = "next";
-        private const string LastId = "last";
-        private const string StopId = "stop";
-        private const string JumpId = "jump";
-        private const string InfoId = "info";
+        protected const string FirstId = "first";
+        protected const string PreviousId = "previous";
+        protected const string NextId = "next";
+        protected const string LastId = "last";
+        protected const string StopId = "stop";
+        protected const string JumpId = "jump";
+        protected const string InfoId = "info";
 
         protected PaginatedMessage _pager;
         protected int _pages;
         protected int _page = 1;
 
         protected PaginatedAppearanceOptions Options => _pager.Options;
+
+        protected BasePaginatedComponentMessageCallback(PaginatedMessage pager)
+        {
+            _pager = pager;
+            _pages = pager.Pages.Count();
+        }
 
         protected virtual Embed BuildEmbed()
         {
@@ -99,14 +105,6 @@ namespace Discord.Addons.Interactive.Paginator
         IInteractionCallback
     {
 
-        private const string FirstId = "first";
-        private const string PreviousId = "previous";
-        private const string NextId = "next";
-        private const string LastId = "last";
-        private const string StopId = "stop";
-        private const string JumpId = "jump";
-        private const string InfoId = "info";
-
         public SocketCommandContext Context { get; }
         public InteractiveService Interactive { get; }
         public IUserMessage Message { get; private set; }
@@ -115,22 +113,17 @@ namespace Discord.Addons.Interactive.Paginator
         public ICriterion<SocketInteraction> Criterion { get; }
         public TimeSpan? Timeout => Options.Timeout;
 
-        private readonly bool _isDeferred;
-
         public PaginatedComponentMessageCallback(
             InteractiveService interactive,
             SocketCommandContext sourceContext,
             PaginatedMessage pager,
-            ICriterion<SocketInteraction> criterion,
-            bool isDeferred)
+            ICriterion<SocketInteraction> criterion)
+            : base(pager)
         {
 
             Interactive = interactive;
             Context = sourceContext;
             Criterion = criterion ?? new EmptyCriterion<SocketInteraction>();
-            _pager = pager;
-            _pages = _pager.Pages.Count();
-            _isDeferred = isDeferred;
 
             if (_pager.Pages is IEnumerable<EmbedFieldBuilder>)
                 _pages = ((_pager.Pages.Count() - 1) / Options.FieldsPerPage) + 1;
@@ -146,19 +139,6 @@ namespace Discord.Addons.Interactive.Paginator
             Message = message;
 
             Interactive.AddInteractionCallback(message, this);
-
-            if (Timeout.HasValue && Timeout.HasValue != default)
-            {
-
-                _ = Task.Delay(Timeout.Value).ContinueWith(_ =>
-                {
-
-                    Interactive.RemoveInteractionCallback(message);
-                    Context.Message.DeleteAsync();
-
-                });
-
-            }
 
         }
 
@@ -197,7 +177,7 @@ namespace Discord.Addons.Interactive.Paginator
                     _page = _pages;
                     break;
                 case StopId:
-                    await interaction.DeleteOriginalResponseAsync().ConfigureAwait(false);
+                    await Message.DeleteAsync().ConfigureAwait(false);
                     return true;
                 case JumpId:
                     {
@@ -246,14 +226,6 @@ namespace Discord.Addons.Interactive.Paginator
         where TContext : IInteractionContext
     {
 
-        private const string FirstId = "first";
-        private const string PreviousId = "previous";
-        private const string NextId = "next";
-        private const string LastId = "last";
-        private const string StopId = "stop";
-        private const string JumpId = "jump";
-        private const string InfoId = "info";
-
         public TContext Context { get; }
         public InteractiveService<TContext> Interactive { get; }
         public IUserMessage Message { get; private set; }
@@ -270,13 +242,12 @@ namespace Discord.Addons.Interactive.Paginator
             PaginatedMessage pager,
             ICriterion<SocketInteraction> criterion,
             bool isDeferred)
+            : base(pager)
         {
 
             Interactive = interactive;
             Context = sourceContext;
             Criterion = criterion ?? new EmptyCriterion<SocketInteraction>();
-            _pager = pager;
-            _pages = _pager.Pages.Count();
             _isDeferred = isDeferred;
 
             if (_pager.Pages is IEnumerable<EmbedFieldBuilder>)
@@ -306,19 +277,6 @@ namespace Discord.Addons.Interactive.Paginator
 
             Interactive.AddInteractionCallback(message, this);
 
-            if (Timeout.HasValue && Timeout.HasValue != default)
-            {
-
-                _ = Task.Delay(Timeout.Value).ContinueWith(_ =>
-                {
-
-                    Interactive.RemoveInteractionCallback(message);
-                    Context.Interaction.DeleteOriginalResponseAsync();
-
-                });
-
-            }
-
         }
 
         public async Task<bool> HandleCallbackAsync(SocketInteraction interaction)
@@ -342,7 +300,7 @@ namespace Discord.Addons.Interactive.Paginator
                     _page = _pages;
                     break;
                 case StopId:
-                    await Message.DeleteAsync().ConfigureAwait(false);
+                    await Message.DeleteAsync().ConfigureAwait(false); //i have to delete the message through the message object because DeleteOriginalMessageAsync throws 404
                     return true;
                 case JumpId:
                     {
