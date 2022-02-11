@@ -24,6 +24,7 @@ namespace YuGiOh.Common.Repositories
         private const string ReplaceEscapeSqlParameterRegex = "[$1]";
 
         private readonly IYuGiOhRepositoryConfiguration _config;
+        private readonly Dictionary<int, CardEntity> _entities;
 
         static YuGiOhRepository()
         {
@@ -50,6 +51,7 @@ namespace YuGiOh.Common.Repositories
         public YuGiOhRepository(IYuGiOhRepositoryConfiguration config)
         {
             _config = config;
+            _entities = new();
         }
 
         public async Task InsertCardAsync(CardEntity card)
@@ -80,6 +82,9 @@ namespace YuGiOh.Common.Repositories
                 foreach (var archetype in card.Archetypes)
                 {
 
+                    if (string.IsNullOrEmpty(archetype))
+                        continue;
+
                     var archetypeId = await connection.QuerySingleProcAsync<int>("insert_or_get_archetype", new { input = archetype }).ConfigureAwait(false);
 
                     //var archetypeId =
@@ -104,6 +109,9 @@ namespace YuGiOh.Common.Repositories
                 foreach (var support in card.Supports)
                 {
 
+                    if (string.IsNullOrEmpty(support))
+                        continue;
+
                     var supportId = await connection.QuerySingleProcAsync<int>("insert_or_get_support", new { input = support }).ConfigureAwait(false);
 
                     //object supportId =
@@ -127,6 +135,9 @@ namespace YuGiOh.Common.Repositories
 
                 foreach (var antiSupport in card.AntiSupports)
                 {
+
+                    if (string.IsNullOrEmpty(antiSupport))
+                        continue;
 
                     var antiSupportId = await connection.QuerySingleAsync<int>("insert_or_get_antisupport", new { input = antiSupport }, commandType: CommandType.StoredProcedure).ConfigureAwait(false);
 
@@ -157,7 +168,7 @@ namespace YuGiOh.Common.Repositories
 
             await connection.OpenAsync().ConfigureAwait(false);
             await connection.ExecuteAsync("insert into card_hashes values(@id, @hash) on conflict on constraint card_hashes_pkey do update set hash = @hash", new { id, hash }).ConfigureAwait(false);
-            await connection.CloseAsync();
+            await connection.CloseAsync().ConfigureAwait(false);
 
         }
 
@@ -195,14 +206,11 @@ namespace YuGiOh.Common.Repositories
         public async Task InsertErrorAsync(Error error)
         {
 
-            using (var connection = _config.GetYuGiOhDbConnection())
-            {
+            using var connection = _config.GetYuGiOhDbConnection();
 
-                await connection.OpenAsync().ConfigureAwait(false);
-                await connection.InsertAsync(error).ConfigureAwait(false);
-                await connection.CloseAsync().ConfigureAwait(false);
-
-            }
+            await connection.OpenAsync().ConfigureAwait(false);
+            await connection.InsertAsync(error).ConfigureAwait(false);
+            await connection.CloseAsync().ConfigureAwait(false);
 
         }
 
@@ -216,10 +224,7 @@ namespace YuGiOh.Common.Repositories
 
             try
             {
-
-                card = await connection.QuerySingleProcAsync<CardEntity>("get_card_exact", new { input }).ConfigureAwait(false);
-                card = await FillCardEntity(connection, card).ConfigureAwait(false);
-
+                card = await connection.QuerySingleCardProcAsync("get_card_exact", new { input }).ConfigureAwait(false);
             }
             catch (Exception)
             {
@@ -241,16 +246,24 @@ namespace YuGiOh.Common.Repositories
 
             await connection.OpenAsync().ConfigureAwait(false);
 
-            var parameterizedInput = $"%{input}%";
-            var parameters = new DynamicParameters();
+            //input = $"%{input}%";
 
-            parameters.Add("input", input);
-            parameters.Add("parameterized_input", parameterizedInput);
+            var cards = await connection.QueryCardProcAsync("search_cards", new { input }).ConfigureAwait(false);
 
-            var cards = await connection.QueryProcAsync<CardEntity>("search_cards", parameters).ConfigureAwait(false);
+            await connection.CloseAsync().ConfigureAwait(false);
 
-            foreach (var card in cards)
-                await FillCardEntity(connection, card).ConfigureAwait(false);
+            return cards;
+
+        }
+
+        public async Task<IEnumerable<CardEntity>> GetCardsAutocomplete(string input)
+        {
+
+            using var connection = _config.GetYuGiOhDbConnection();
+
+            await connection.OpenAsync().ConfigureAwait(false);
+
+            var cards = await connection.QueryCardProcAsync("get_cards_autocomplete", new { input });
 
             await connection.CloseAsync().ConfigureAwait(false);
 
@@ -271,7 +284,7 @@ namespace YuGiOh.Common.Repositories
             //);
 
             var sqlBuilder = new SqlBuilder();
-            var selector = sqlBuilder.AddTemplate("select * from cards /**where**/ order by char_length(name)");
+            var selector = sqlBuilder.AddTemplate("select * from joined_cards /**where**/ order by char_length(name)");
             var parameters = new DynamicParameters();
 
             for (var i = 0; i < inputWords.Length; i++)
@@ -279,15 +292,15 @@ namespace YuGiOh.Common.Repositories
 
                 var key = $"@{i}";
 
-                sqlBuilder.Where($"name ~~* {key}");
+                sqlBuilder.Where($"name ilike {key}");
                 parameters.Add(key, $"%{inputWords[i]}%");
 
             }
 
-            var cards = await connection.QueryAsync<CardEntity>(selector.RawSql, parameters).ConfigureAwait(false);
+            var cards = await connection.QueryCardAsync(selector.RawSql, parameters).ConfigureAwait(false);
 
-            foreach (var card in cards)
-                await FillCardEntity(connection, card).ConfigureAwait(false);
+            //foreach (var card in cards)
+            //    await FillCardEntity(connection, card).ConfigureAwait(false);
 
             await connection.CloseAsync().ConfigureAwait(false);
 
@@ -351,14 +364,26 @@ namespace YuGiOh.Common.Repositories
 
             await connection.OpenAsync().ConfigureAwait(false);
 
-            var cards = await connection.QueryProcAsync<CardEntity>("get_cards_in_archetype", new { input }).ConfigureAwait(false);
-
-            foreach (var card in cards)
-                await FillCardEntity(connection, card).ConfigureAwait(false);
+            var cards = await connection.QueryCardProcAsync("get_cards_in_archetype", new { input }).ConfigureAwait(false);
 
             await connection.CloseAsync().ConfigureAwait(false);
 
             return cards;
+
+        }
+
+        public async Task<IEnumerable<string>> GetArchetypesAutocomplete(string input)
+        {
+
+            using var connection = _config.GetYuGiOhDbConnection();
+
+            await connection.OpenAsync().ConfigureAwait(false);
+
+            var archetypes = await connection.QueryProcAsync<string>("get_archetypes_autocomplete", new { input }).ConfigureAwait(false);
+
+            await connection.CloseAsync().ConfigureAwait(false);
+
+            return archetypes;
 
         }
 

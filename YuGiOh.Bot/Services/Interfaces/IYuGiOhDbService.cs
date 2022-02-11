@@ -13,6 +13,7 @@ namespace YuGiOh.Bot.Services.Interfaces
 
         Task<IEnumerable<Card>> GetCardsAsync(string input);
         Task<IEnumerable<Card>> SearchCardsAsync(string input);
+        Task<IEnumerable<Card>> GetCardsAutocomplete(string input);
         Task<IEnumerable<Card>> GetCardsContainsAllAsync(string input);
 
         Task<Card> GetCardAsync(string name);
@@ -20,6 +21,7 @@ namespace YuGiOh.Bot.Services.Interfaces
         Task<Card> GetClosestCardAsync(string input);
 
         Task<IEnumerable<Card>> GetCardsInArchetype(string input);
+        Task<IEnumerable<string>> GetArchetypesAutocomplete(string input);
         Task<IEnumerable<Card>> GetCardsFromSupportAsync(string input);
         Task<IEnumerable<Card>> GetCardsFromAntisupportAsync(string input);
 

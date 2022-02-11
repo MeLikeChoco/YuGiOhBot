@@ -36,6 +36,15 @@ namespace YuGiOh.Bot.Services
 
         }
 
+        public async Task<IEnumerable<Card>> GetCardsAutocomplete(string input)
+        {
+
+            var entities = await _repo.GetCardsAutocomplete(input);
+
+            return entities.Select(entity => entity.ToModel());
+
+        }
+
         public async Task<IEnumerable<Card>> GetCardsContainsAllAsync(string input)
         {
 
@@ -71,6 +80,9 @@ namespace YuGiOh.Bot.Services
             return entities.Select(entity => entity.ToModel());
 
         }
+
+        public Task<IEnumerable<string>> GetArchetypesAutocomplete(string input)
+            => _repo.GetArchetypesAutocomplete(input);
 
         public async Task<IEnumerable<Card>> GetCardsFromSupportAsync(string input)
         {

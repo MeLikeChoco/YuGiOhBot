@@ -6,6 +6,6 @@ begin
 	return query
 		select name from archetypes;
 
-end;
+end
 $$ 
 language plpgsql;
