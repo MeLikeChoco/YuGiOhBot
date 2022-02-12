@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
+using Discord;
 using Discord.Addons.Interactive;
 using Discord.Commands;
 using Discord.WebSocket;
@@ -18,6 +15,9 @@ namespace YuGiOh.Bot.Models.Criterion
             => _guildConfig = guildConfig;
 
         public Task<bool> JudgeAsync(SocketCommandContext sourceContext, SocketMessage parameter)
+            => Task.FromResult(!parameter.Content.StartsWith(_guildConfig.Prefix));
+
+        public Task<bool> JudgeAsync(IInteractionContext sourceContext, SocketMessage parameter)
             => Task.FromResult(!parameter.Content.StartsWith(_guildConfig.Prefix));
 
     }

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Discord;
 using Discord.Addons.Interactive;
 using Discord.Commands;
 using Discord.WebSocket;
@@ -29,5 +30,13 @@ namespace YuGiOh.Bot.Models.Criterion
 
         }
 
+        public Task<bool> JudgeAsync(IInteractionContext sourceContext, SocketMessage parameter)
+        {
+
+            var input = parameter.Content.ConvertTypesetterToTypewriter();
+            Answer = PossibleAnswers.FirstOrDefault(possibleAnswer => possibleAnswer.EqualsIgnoreCase(input));
+
+            return Task.FromResult(!string.IsNullOrEmpty(Answer));
+        }
     }
 }

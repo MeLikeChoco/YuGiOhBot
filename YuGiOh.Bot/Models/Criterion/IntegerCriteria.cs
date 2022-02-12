@@ -6,6 +6,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Discord.Commands;
+using Discord.Interactions;
+using Discord;
 
 namespace YuGiOh.Bot.Models.Criterion
 {
@@ -26,6 +28,15 @@ namespace YuGiOh.Bot.Models.Criterion
         }
 
         public Task<bool> JudgeAsync(SocketCommandContext sourceContext, SocketMessage parameter)
+        {
+
+            var content = parameter.Content;
+
+            return Task.FromResult(int.TryParse(content, out var selection) && selection <= _max && selection >= _min);
+
+        }
+
+        public Task<bool> JudgeAsync(IInteractionContext sourceContext, SocketMessage parameter)
         {
 
             var content = parameter.Content;
