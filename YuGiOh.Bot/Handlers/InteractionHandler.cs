@@ -1,17 +1,31 @@
-﻿using System.Threading.Tasks;
-using Discord.Commands;
+﻿using System;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Discord.Interactions;
 using Discord.WebSocket;
+using YuGiOh.Bot.Extensions;
 
 namespace YuGiOh.Bot.Handlers
 {
     public class InteractionHandler
     {
 
-        private readonly CommandService _commandService;
+        private readonly DiscordShardedClient _client;
+        private readonly InteractionService _interactionService;
+        private readonly InteractionServiceConfig _interactionConfig;
+        private readonly IServiceProvider _serviceProvider;
 
-        public InteractionHandler(CommandService commandService)
+        public InteractionHandler(
+            DiscordShardedClient client,
+            InteractionService interactionService,
+            InteractionServiceConfig interactionConfig,
+            IServiceProvider serviceProvider)
         {
-            _commandService = commandService;
+            _client = client;
+            _interactionService = interactionService;
+            _interactionConfig = interactionConfig;
+            _serviceProvider = serviceProvider;
         }
 
         public async Task HandleInteraction(SocketInteraction interaction)
@@ -21,12 +35,50 @@ namespace YuGiOh.Bot.Handlers
             {
 
                 case SocketSlashCommand slashCommand:
-
+                    await HandleSlashCommand(slashCommand);
                     break;
-                default:
+                case SocketAutocompleteInteraction autocomplete:
+                    await HandleAutocomplete(autocomplete);
                     break;
 
             }
+
+        }
+
+        private async Task HandleSlashCommand(SocketSlashCommand interaction)
+        {
+
+            if (interaction.User.IsBot)
+                return;
+
+            var user = interaction.User;
+
+            if (interaction.Channel is SocketDMChannel)
+                AltConsole.Write("Info", "Command", $"{user.Username}#{user.Discriminator} in DM's");
+            else if (interaction.Channel is SocketTextChannel txtChannel)
+                AltConsole.Write("Info", "Command", $"{user.Username}#{user.Discriminator} from {txtChannel.Guild.Name}/{txtChannel.Name}");
+
+            AltConsole.Write("Info", "Interaction Command", interaction.GetCmdString());
+
+            var context = new ShardedInteractionContext<SocketSlashCommand>(_client, interaction);
+            var result = await _interactionService.ExecuteCommandAsync(context, _serviceProvider);
+
+            if (_interactionConfig.DefaultRunMode != RunMode.Async && !result.IsSuccess)
+                AltConsole.Write("Error", "Error", result.ErrorReason);
+
+        }
+
+        private async Task HandleAutocomplete(SocketAutocompleteInteraction interaction)
+        {
+
+            if (interaction.User.IsBot)
+                return;
+
+            var context = new ShardedInteractionContext<SocketAutocompleteInteraction>(_client, interaction);
+            var result = await _interactionService.ExecuteCommandAsync(context, _serviceProvider);
+
+            if (!result.IsSuccess)
+                AltConsole.Write("Error", "Error", result.ErrorReason);
 
         }
 

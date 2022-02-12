@@ -12,7 +12,7 @@ using YuGiOh.Bot.Extensions;
 using YuGiOh.Bot.Models.Attributes;
 using YuGiOh.Bot.Models.BoosterPacks;
 
-namespace YuGiOh.Bot.Modules
+namespace YuGiOh.Bot.Modules.Commands
 {
     public class Miscellaneous : MainBase
     {

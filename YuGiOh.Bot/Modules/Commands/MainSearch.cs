@@ -11,7 +11,7 @@ using MoreLinq;
 using YuGiOh.Bot.Extensions;
 using YuGiOh.Bot.Models.Criterion;
 
-namespace YuGiOh.Bot.Modules
+namespace YuGiOh.Bot.Modules.Commands
 {
     public class MainSearch : MainBase
     {

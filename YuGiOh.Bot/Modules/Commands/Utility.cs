@@ -10,7 +10,7 @@ using YuGiOh.Bot.Models;
 using YuGiOh.Bot.Services;
 using YuGiOh.Bot.Services.Interfaces;
 
-namespace YuGiOh.Bot.Modules
+namespace YuGiOh.Bot.Modules.Commands
 {
     public class Utility : CustomBase
     {

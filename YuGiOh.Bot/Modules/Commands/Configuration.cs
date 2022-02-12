@@ -9,7 +9,7 @@ using YuGiOh.Bot.Extensions;
 using YuGiOh.Bot.Models;
 using YuGiOh.Bot.Services;
 
-namespace YuGiOh.Bot.Modules
+namespace YuGiOh.Bot.Modules.Commands
 {
     [RequireContext(ContextType.Guild)]
     public class Configuration : MainBase

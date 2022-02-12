@@ -15,7 +15,7 @@ using YuGiOh.Bot.Models.Criterion;
 using YuGiOh.Bot.Models.Deserializers;
 using YuGiOh.Bot.Services;
 
-namespace YuGiOh.Bot.Modules
+namespace YuGiOh.Bot.Modules.Commands
 {
     [RequireContext(ContextType.Guild)]
     public class Games : MainBase

@@ -10,7 +10,7 @@ using MoreLinq;
 using YuGiOh.Bot.Extensions;
 using YuGiOh.Bot.Models;
 
-namespace YuGiOh.Bot.Modules
+namespace YuGiOh.Bot.Modules.Commands
 {
     public class Help : MainBase
     {

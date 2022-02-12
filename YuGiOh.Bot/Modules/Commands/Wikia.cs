@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using YuGiOh.Bot.Extensions;
 using YuGiOh.Bot.Services;
 
-namespace YuGiOh.Bot.Modules
+namespace YuGiOh.Bot.Modules.Commands
 {
     public class Wikia : CustomBase
     {
@@ -21,13 +21,13 @@ namespace YuGiOh.Bot.Modules
         {
 
             var dom = await Web.GetDom($"http://yugioh.wikia.com/wiki/Special:Search?query={search}");
-            var results = dom.GetElementsByClassName("Results").FirstOrDefault();
+            var results = dom.GetElementsByClassName("unified-search__results").FirstOrDefault();
 
             if (results is not null)
             {
 
                 var children = results.Children.Where(element => !element.ClassList.Contains("video-addon-results"));
-                var count = dom.GetElementsByClassName("result-count").First();
+                var count = dom.GetElementsByClassName("unified-search__results__count").First();
                 var limit = children.Count() >= 10 ? 10 : children.Count();
                 var author = new EmbedAuthorBuilder()
                     .WithIconUrl("https://cdn3.iconfinder.com/data/icons/7-millennium-items/512/Milennium_Puzzle_Icon_Colored-512.png")
@@ -51,7 +51,7 @@ namespace YuGiOh.Bot.Modules
                     var link = topic.GetAttribute("href").Replace("(", "%28").Replace(")", "%29");
 
                     //discord keeps cutting off the parentheses at the end of links, cause it thinks the links end there
-                    builder.AppendLine($"**{i}**. [{title}]({link})");
+                    builder.Append("**").Append(i).Append("**. [").Append(title).Append("](").Append(link).AppendLine(")");
 
                 }
 

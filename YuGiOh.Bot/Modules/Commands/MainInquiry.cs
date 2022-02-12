@@ -12,7 +12,7 @@ using YuGiOh.Bot.Models.Cards;
 using YuGiOh.Bot.Services;
 using YuGiOh.Common.Models.YuGiOh;
 
-namespace YuGiOh.Bot.Modules
+namespace YuGiOh.Bot.Modules.Commands
 {
     public class MainInquiry : MainBase
     {
@@ -138,7 +138,7 @@ namespace YuGiOh.Bot.Modules
 
                     var stream = await Web.GetStream(url);
 
-                    await UploadAsync(stream, $"{Uri.EscapeUriString(name)}.png");
+                    await UploadAsync(stream, $"{Uri.EscapeDataString(name)}.png");
 
                 }
 
