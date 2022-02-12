@@ -20,7 +20,8 @@ namespace YuGiOh.Bot.Handlers
         private readonly IGuildConfigDbService _guildConfigDbService;
         //private readonly IgnoreCaseComparer _ignoreCaseComparer;
 
-        private const string Pattern = @"(\[{2}[^\[\]].+?[^\[\]]\]{2})";
+        //private const string Pattern = @"(\[{2}[^\[\]].+?[^\[\]]\]{2})";
+        private const string Pattern = @"(?<=\[{2}).+?(?=\]{2})";
 
         public ChatHandler(
             Cache cache,
@@ -82,32 +83,36 @@ namespace YuGiOh.Bot.Handlers
 
                         watch.Start();
 
-                        string cardName = match.ToString().ConvertTypesetterToTypewriter();
-                        cardName = cardName[2..^2].ToLower().Trim(); //lose the brackets and trim whitespace
+                        string cardName = match.ToString().ConvertTypesetterToTypewriter().Trim();
 
                         if (string.IsNullOrEmpty(cardName) || string.IsNullOrWhiteSpace(cardName)) //continue if there is no input
                             continue;
 
                         var input = cardName.Split(' ');
-
-                        //check if the card list contains anything from the input and return that instead
-                        //ex. kaiju slumber would return Interrupted Kaiju Slumber
-                        //note: it has problems such as "red eyes" will return Hundred Eyes Dragon instead of Red-Eyes B. Dragon
-                        //how to accurately solve this problem is not easy                            
-                        //string closestCard = _cache.Lowercase.AsParallel().FirstOrDefault(card => card == cardName);
                         var closestCard = await _yuGiOhDbService.GetCardAsync(cardName) ??
                             (await _yuGiOhDbService.SearchCardsAsync(cardName)).FirstOrDefault() ??
                             (await _yuGiOhDbService.GetCardsContainsAllAsync(cardName)).FirstOrDefault() ??
                             await _yuGiOhDbService.GetClosestCardAsync(cardName);
 
-                        //if(string.IsNullOrEmpty(closestCard))
-                        //    closestCard = _cache.Lowercase.AsParallel().FirstOrDefault(card => card.Contains(cardName));
+                        //for easier debugging
+                        //var closestCard = await _yuGiOhDbService.GetCardAsync(cardName);
 
-                        //if (string.IsNullOrEmpty(closestCard))
-                        //    closestCard = _cache.Lowercase.AsParallel().Where(card => input.All(i => card.Contains(i))).MinBy(card => card.Length).FirstOrDefault();
+                        //if (closestCard == null)
+                        //{
 
-                        //if (string.IsNullOrEmpty(closestCard))
-                        //    closestCard = _cache.Lowercase.AsParallel().MinBy(card => YetiLevenshtein(card, cardName)).FirstOrDefault();
+                        //    closestCard = await _yuGiOhDbService.SearchCardsAsync(cardName, 1).ContinueWith(task => task.Result.FirstOrDefault());
+
+                        //    if (closestCard == null)
+                        //    {
+
+                        //        closestCard = await _yuGiOhDbService.GetCardsContainsAllAsync(cardName).ContinueWith(task => task.Result.FirstOrDefault());
+
+                        //        if (closestCard == null)
+                        //            closestCard = await _yuGiOhDbService.GetClosestCardAsync(cardName);
+
+                        //    }
+
+                        //}
 
                         watch.Stop();
 
@@ -115,16 +120,14 @@ namespace YuGiOh.Bot.Handlers
 
                         AltConsole.Write("Info", "Inline", $"{cardName} took {time.TotalSeconds} seconds to complete.");
 
-                        //var embed = _cache.NameToCard[closestCard].GetEmbedBuilder();
-                        var embed = closestCard.GetEmbedBuilder();
-
                         try
                         {
 
+                            var embed = closestCard.GetEmbedBuilder();
                             await channel.SendMessageAsync(embed: (await embed.WithCardPrices(minimal, _web, time)).Build());
 
                         }
-                        catch (Exception ex) { AltConsole.Write("Service", "Chat", $"{ex.InnerException.Message}\n{ex.InnerException.StackTrace}"); }
+                        catch (Exception ex) { AltConsole.Write("Service", "Chat", $"{ex}"); }
 
                     }
 
@@ -136,8 +139,8 @@ namespace YuGiOh.Bot.Handlers
 
         }
 
-        #region Levenshtein Distance
         //dont even ask me what the fuck im doing
+        #region Levenshtein Distance
         private unsafe int YetiLevenshtein(string s1, string s2)
         {
             fixed (char* p1 = s1)
@@ -152,7 +155,7 @@ namespace YuGiOh.Bot.Handlers
             int xc = substitionCost - 1;
             if (xc < 0 || xc > 1)
             {
-                throw new ArgumentException("", "substitionCost");
+                throw new ArgumentException("", nameof(substitionCost));
             }
 
             fixed (char* p1 = s1)

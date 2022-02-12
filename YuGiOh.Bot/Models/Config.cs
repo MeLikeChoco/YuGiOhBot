@@ -104,13 +104,13 @@ namespace YuGiOh.Bot.Models
     public class Tokens
     {
 
-        public Discord Discord { get; set; }
+        public DiscordTokenConfig Discord { get; set; }
         [JsonProperty("Bot List")]
         public BotList BotList { get; set; }
 
     }
 
-    public class Discord
+    public class DiscordTokenConfig
     {
 
         public string Legit { get; set; }

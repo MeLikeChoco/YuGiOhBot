@@ -100,7 +100,18 @@ namespace YuGiOh.Bot.Models.Cards
             => string.IsNullOrEmpty(Lore) ? body.AddField("Not released yet", "\u200B") : body.AddField("Effect", Lore);
 
         protected virtual EmbedBuilder AddAdditionalFields(EmbedBuilder body)
-            => Archetypes?.Any() == true ? body.AddField("Archetypes", Archetypes.Join(", ")) : body;
+        {
+
+            body = Archetypes?.Any() == true ? body.AddField("Archetypes", Archetypes.Join(", ")) : body;
+            body = Supports?.Any() == true ? body.AddField("Supports", Supports.Join(", "), true) : body;
+            body = AntiSupports?.Any() == true ? body.AddField("Antisupports", AntiSupports.Join(", "), true) : body;
+
+            return body;
+
+        }
+
+        public string GetArtUrl()
+            => $"{Constants.ArtBaseUrl}{Passcode}.{Constants.ArtFileType}";
 
     }
 

@@ -10,12 +10,12 @@ using Discord;
 
 namespace YuGiOh.Bot.Core
 {
-    public class EntryPoint
+    public static class EntryPoint
     {
 
         //private static CancellationTokenSource TkSource;
 
-        private static async Task Main(string[] args)
+        public static async Task Main()
         {
 
             AltConsole.Write("Info", "Entry Point", $"Welcome to {Assembly.GetExecutingAssembly().GetName()}");
