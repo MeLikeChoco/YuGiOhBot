@@ -2,16 +2,14 @@
 //don't shame me ;_;
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Dapper;
 using Newtonsoft.Json;
 using Npgsql;
+using YuGiOh.Common.Repositories;
 using YuGiOh.Common.Services;
 using YuGiOh.Database;
 
@@ -39,13 +37,13 @@ async void DumpDatabaseAndScrape(object _)
     await BackupYuGiOhDatabase(config);
     await BackupGuildConfigsDatabase(config);
     //await RecreateDatabase(config);
-    await StartScraper(config);
+    //await StartScraper(config);
     //await CreateIndexes(config);
 
-    var scrapeDate = DateTime.Now;
+    var runDate = DateTime.Now;
 
-    await File.WriteAllTextAsync("time.txt", scrapeDate.ToString());
-    Logger.Info($"Finished scraping at {scrapeDate}");
+    await File.WriteAllTextAsync("time.txt", runDate.ToString());
+    Logger.Info($"Finished scraping at {runDate}");
 
 }
 
@@ -84,13 +82,18 @@ async Task BackupYuGiOhDatabase(Config config)
         {
 
             FileName = "pg_dump",
-            Arguments = string.Format(config.ProcessArgs.PgDump, config.Database.Username, backupFilePath, "yugioh"),
+            Arguments = string.Format(config.ProcessArgs.PgDump, config.Database.Username, "yugioh"),
             RedirectStandardOutput = true
 
         };
 
         process.Start();
-        process.BeginOutputReadLine();
+
+        using var reader = process.StandardOutput;
+        using var writer = new StreamWriter(backupFilePath);
+
+        await reader.BaseStream.CopyToAsync(writer.BaseStream);
+        writer.Close();
         await process.WaitForExitAsync();
 
     }
@@ -135,13 +138,18 @@ async Task BackupGuildConfigsDatabase(Config config)
         {
 
             FileName = "pg_dump",
-            Arguments = string.Format(config.ProcessArgs.PgDump, config.Database.Username, backupFilePath, "guilds"),
+            Arguments = string.Format(config.ProcessArgs.PgDump, config.Database.Username, "guilds"),
             RedirectStandardOutput = true
 
         };
 
         process.Start();
-        process.BeginOutputReadLine();
+
+        using var reader = process.StandardOutput;
+        using var writer = new StreamWriter(backupFilePath);
+
+        await reader.BaseStream.CopyToAsync(writer.BaseStream);
+        writer.Close();
         await process.WaitForExitAsync();
 
     }
@@ -174,45 +182,45 @@ async Task BackupGuildConfigsDatabase(Config config)
 
 //}
 
-async Task StartScraper(Config config)
-{
+//async Task StartScraper(Config config)
+//{
 
-    if (config.ShouldRunScraper)
-    {
+//    if (config.ShouldRunScraper)
+//    {
 
-        Logger.Info("Starting scraper.");
+//        Logger.Info("Starting scraper.");
 
-        if (!File.Exists(config.ScraperDllPath))
-        {
-            Logger.Error("Scraper is currently not available.");
-            return;
-        }
+//        if (!File.Exists(config.ScraperDllPath))
+//        {
+//            Logger.Error("Scraper is currently not available.");
+//            return;
+//        }
 
-        var processInfo = new ProcessStartInfo
-        {
+//        var processInfo = new ProcessStartInfo
+//        {
 
-            FileName = "dotnet",
-            Arguments = string.Format(config.ProcessArgs.Scraper, config.ScraperDllPath),
-            RedirectStandardOutput = true,
-            RedirectStandardError = true
+//            FileName = "dotnet",
+//            Arguments = string.Format(config.ProcessArgs.Scraper, config.ScraperDllPath),
+//            RedirectStandardOutput = true,
+//            RedirectStandardError = true
 
-        };
+//        };
 
-        var process = new Process { StartInfo = processInfo };
+//        var process = new Process { StartInfo = processInfo };
 
-        process.OutputDataReceived += (_, eventArgs) => Logger.Info(eventArgs.Data);
-        process.ErrorDataReceived += (_, eventArgs) => Logger.Error(eventArgs.Data);
+//        process.OutputDataReceived += (_, eventArgs) => Logger.Info(eventArgs.Data);
+//        process.ErrorDataReceived += (_, eventArgs) => Logger.Error(eventArgs.Data);
 
-        process.Start();
-        process.BeginOutputReadLine();
-        process.BeginErrorReadLine();
-        await process.WaitForExitAsync();
+//        process.Start();
+//        process.BeginOutputReadLine();
+//        process.BeginErrorReadLine();
+//        await process.WaitForExitAsync();
 
-        Logger.Info("Scraper finished.");
+//        Logger.Info("Scraper finished.");
 
-    }
+//    }
 
-}
+//}
 
 //async Task CreateIndexes(Config config)
 //{
@@ -314,7 +322,7 @@ namespace YuGiOh.Database
     {
 
         public string Sql { get; set; }
-        public string YuGiOhBackups {  get; set; }
+        public string YuGiOhBackups { get; set; }
         public string GuildConfigsBackups { get; set; }
 
     }

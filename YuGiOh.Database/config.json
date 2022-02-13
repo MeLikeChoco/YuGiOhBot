@@ -11,7 +11,8 @@
   "Directories": {
 
     "SqlDirectory": "Sql",
-    "BackupsDirectory": "backups"
+    "YuGiOhBackups": "Backups/YuGiOh",
+    "GuildConfigBackups": "Backups/GuildConfigs"
 
   },
   "ProcessArgs": {
