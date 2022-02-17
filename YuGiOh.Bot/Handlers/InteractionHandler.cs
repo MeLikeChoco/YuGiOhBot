@@ -20,7 +20,8 @@ namespace YuGiOh.Bot.Handlers
             DiscordShardedClient client,
             InteractionService interactionService,
             InteractionServiceConfig interactionConfig,
-            IServiceProvider serviceProvider)
+            IServiceProvider serviceProvider
+        )
         {
             _client = client;
             _interactionService = interactionService;
@@ -53,10 +54,15 @@ namespace YuGiOh.Bot.Handlers
 
             var user = interaction.User;
 
-            if (interaction.Channel is SocketDMChannel)
-                AltConsole.Write("Info", "Command", $"{user.Username}#{user.Discriminator} in DM's");
-            else if (interaction.Channel is SocketTextChannel txtChannel)
-                AltConsole.Write("Info", "Command", $"{user.Username}#{user.Discriminator} from {txtChannel.Guild.Name}/{txtChannel.Name}");
+            switch (interaction.Channel)
+            {
+                case SocketDMChannel:
+                    AltConsole.Write("Info", "Command", $"{user.Username}#{user.Discriminator} in DM's");
+                    break;
+                case SocketTextChannel txtChannel:
+                    AltConsole.Write("Info", "Command", $"{user.Username}#{user.Discriminator} from {txtChannel.Guild.Name}/{txtChannel.Name}");
+                    break;
+            }
 
             AltConsole.Write("Info", "Interaction Command", interaction.GetCmdString());
 
@@ -73,6 +79,18 @@ namespace YuGiOh.Bot.Handlers
 
             if (interaction.User.IsBot)
                 return;
+
+            var user = interaction.User;
+
+            switch (interaction.Channel)
+            {
+                case SocketDMChannel:
+                    AltConsole.Write("Info", "Command", $"{user.Username}#{user.Discriminator} in DM's");
+                    break;
+                case SocketTextChannel txtChannel:
+                    AltConsole.Write("Info", "Command", $"{user.Username}#{user.Discriminator} from {txtChannel.Guild.Name}/{txtChannel.Name}");
+                    break;
+            }
 
             var context = new ShardedInteractionContext<SocketAutocompleteInteraction>(_client, interaction);
             var result = await _interactionService.ExecuteCommandAsync(context, _serviceProvider);
