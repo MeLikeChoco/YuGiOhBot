@@ -5,14 +5,28 @@
   "Owner Id": 0,
   "Is Test": false,
   "Databases": {
-    "YuGiOh": {
+    "YuGiOh Prod": {
       "Host": "",
       "Port": 0,
       "Username": "",
       "Password": "",
       "Database": ""
     },
-    "Guilds": {
+    "YuGiOh Staging": {
+      "Host": "",
+      "Port": 0,
+      "Username": "",
+      "Password": "",
+      "Database": ""
+    },
+    "Guilds Prod": {
+      "Host": "",
+      "Port": 0,
+      "Username": "",
+      "Password": "",
+      "Database": ""
+    },
+    "Guilds Staging": {
       "Host": "",
       "Port": 0,
       "Username": "",
@@ -26,8 +40,9 @@
       "Test": ""
     },
     "Bot List": {
-      "Black": "",
-      "Blue":  ""
+      "BotsOnDiscordXyz": "",
+      "TopGG":  "",
+      "DiscordBotsGG": ""
     }
   }
 }
