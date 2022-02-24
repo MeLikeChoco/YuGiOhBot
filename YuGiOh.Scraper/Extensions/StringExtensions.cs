@@ -1,16 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+﻿using System.IO;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace YuGiOh.Scraper.Extensions
 {
     public static class StringExtensions
     {
 
-        private static readonly uint Seed = Options.Instance.Config.Seed;
+        private static readonly uint Seed = Options.Instance.Config.HashSeed;
 
         public static string GetMurMurHash(this string str)
         {
@@ -18,26 +14,26 @@ namespace YuGiOh.Scraper.Extensions
             const uint c1 = 0xcc9e2d51;
             const uint c2 = 0x1b873593;
 
-            uint h1 = Seed;
-            uint k1 = 0;
+            var h1 = Seed;
             uint streamLength = 0;
 
             using (var stream = new MemoryStream(Encoding.UTF8.GetBytes(str)))
             using (var reader = new BinaryReader(stream))
             {
-                byte[] chunk = reader.ReadBytes(4);
+                var chunk = reader.ReadBytes(4);
                 while (chunk.Length > 0)
                 {
-                    streamLength += (uint)chunk.Length;
+                    streamLength += (uint) chunk.Length;
+                    uint k1 = 0;
                     switch (chunk.Length)
                     {
                         case 4:
                             /* Get four bytes from the input into an uint */
                             k1 = (uint)
-                               (chunk[0]
-                              | chunk[1] << 8
-                              | chunk[2] << 16
-                              | chunk[3] << 24);
+                                (chunk[0]
+                                 | chunk[1] << 8
+                                 | chunk[2] << 16
+                                 | chunk[3] << 24);
 
                             /* bitmagic hash */
                             k1 *= c1;
@@ -50,9 +46,9 @@ namespace YuGiOh.Scraper.Extensions
                             break;
                         case 3:
                             k1 = (uint)
-                               (chunk[0]
-                              | chunk[1] << 8
-                              | chunk[2] << 16);
+                                (chunk[0]
+                                 | chunk[1] << 8
+                                 | chunk[2] << 16);
                             k1 *= c1;
                             k1 = Rotl32(k1, 15);
                             k1 *= c2;
@@ -60,15 +56,15 @@ namespace YuGiOh.Scraper.Extensions
                             break;
                         case 2:
                             k1 = (uint)
-                               (chunk[0]
-                              | chunk[1] << 8);
+                                (chunk[0]
+                                 | chunk[1] << 8);
                             k1 *= c1;
                             k1 = Rotl32(k1, 15);
                             k1 *= c2;
                             h1 ^= k1;
                             break;
                         case 1:
-                            k1 = (uint)(chunk[0]);
+                            k1 = chunk[0];
                             k1 *= c1;
                             k1 = Rotl32(k1, 15);
                             k1 *= c2;
@@ -76,6 +72,7 @@ namespace YuGiOh.Scraper.Extensions
                             break;
 
                     }
+
                     chunk = reader.ReadBytes(4);
                 }
             }
@@ -86,7 +83,7 @@ namespace YuGiOh.Scraper.Extensions
 
             unchecked //ignore overflow
             {
-                return ((int)h1).ToString("X");
+                return ((int) h1).ToString("X");
             }
         }
 

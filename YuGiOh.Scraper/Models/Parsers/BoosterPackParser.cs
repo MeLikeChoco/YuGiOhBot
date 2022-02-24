@@ -29,7 +29,7 @@ namespace YuGiOh.Scraper.Models.Parsers
             var dom = await GetDom(url);
             var parserOutput = dom.GetElementByClassName("mw-parser-output");
             var dates = GetReleaseDates(parserOutput);
-            var table = dom.GetElementsByClassName("card-list").FirstOrDefault()?.FirstElementChild.Children;
+            var table = dom.GetElementsByClassName("card-list").FirstOrDefault()?.FirstElementChild?.Children;
 
             if (table is null)
                 throw new NullReferenceException($"No card list exists for {_name}");
@@ -38,30 +38,28 @@ namespace YuGiOh.Scraper.Models.Parsers
             var nameIndex = GetColumnIndex(tableHead, "name");
             var rarityIndex = GetColumnIndex(tableHead, "rarity");
             var cardTable = table.Skip(1);
-            var cards = new List<BoosterPackCard>();
+            var cards = new List<BoosterPackCardEntity>();
 
             foreach (var row in cardTable)
             {
 
                 var name = TrimName(row.Children[nameIndex].TextContent.Trim().Trim('"'));
-                List<string> rarities;
+                var rarities = new List<string>();
 
-                if (rarityIndex == -1)
-                    rarities = null;
-                else
+                if (rarityIndex != -1)
                     rarities = row
                         .Children[rarityIndex]
                         .Children.Select(element => element.TextContent.Trim())
                         .Where(text => !string.IsNullOrEmpty(text))
                         .ToList();
 
-                var card = new BoosterPackCard { Name = name, Rarities = rarities };
+                var card = new BoosterPackCardEntity { Name = name, Rarities = rarities };
 
                 cards.Add(card);
 
             }
 
-            return new BoosterPackEntity()
+            return new BoosterPackEntity
             {
 
                 Id = int.Parse(_id),
@@ -76,48 +74,47 @@ namespace YuGiOh.Scraper.Models.Parsers
 
         //non static for debugging reasons
         //easier to access private properties
-        private List<BoosterPackDate> GetReleaseDates(IElement parserOutput)
+        // ReSharper disable once MemberCanBeMadeStatic.Local
+        private List<BoosterPackDateEntity> GetReleaseDates(IElement parserOutput)
         {
 
-            var dates = new List<BoosterPackDate>();
-            var infobox = parserOutput.GetElementByClassName("infobox")?.FirstElementChild.Children;
-            var releaseDateHeader = infobox.FirstOrDefault(element => !string.IsNullOrEmpty(element.TextContent) && element.TextContent.Contains("release dates", StringComparison.InvariantCultureIgnoreCase));
+            var dates = new List<BoosterPackDateEntity>();
+            var infobox = parserOutput.GetElementByClassName("infobox")?.FirstElementChild?.Children;
+            var releaseDateHeader = infobox?.FirstOrDefault(element => !string.IsNullOrEmpty(element.TextContent) && element.TextContent.Contains("release dates", StringComparison.InvariantCultureIgnoreCase));
 
-            if (releaseDateHeader is not null)
+            if (releaseDateHeader is null)
+                return dates;
+
+            var startIndex = infobox.Index(releaseDateHeader) + 1;
+
+            for (var i = startIndex; i < infobox.Length; i++)
             {
 
-                var startIndex = infobox.Index(releaseDateHeader) + 1;
+                var dateInfo = infobox[i];
 
-                for (var i = startIndex; i < infobox.Length; i++)
+                if (dateInfo.Children.Length == 2)
                 {
 
-                    var dateInfo = infobox[i];
+                    var region = dateInfo.FirstElementChild?.TextContent.Trim();
+                    var date = dateInfo.Children[1].TextContent.Trim();
 
-                    if (dateInfo.Children.Length == 2)
+                    if (date?.Contains('[') == true)
                     {
 
-                        var region = dateInfo.FirstElementChild.TextContent.Trim();
-                        var date = dateInfo.Children[1].TextContent.Trim();
-
-                        if (date?.Contains('[') == true)
-                        {
-
-                            var openBracketIndex = date.IndexOf('[');
-                            date = date.Substring(0, openBracketIndex);
-
-                        }
-
-                        dates.Add(new BoosterPackDate
-                        {
-                            Name = region,
-                            Date = date
-                        });
+                        var openBracketIndex = date.IndexOf('[');
+                        date = date[..openBracketIndex];
 
                     }
-                    else
-                        break;
+
+                    dates.Add(new BoosterPackDateEntity
+                    {
+                        Name = region,
+                        Date = date
+                    });
 
                 }
+                else
+                    break;
 
             }
 
@@ -137,15 +134,13 @@ namespace YuGiOh.Scraper.Models.Parsers
         private static string TrimName(string name)
         {
 
-            if (name.StartsWith('"') && name.EndsWith('"'))
-            {
+            if (!name.StartsWith('"') || !name.EndsWith('"'))
+                return name.Trim();
 
-                if (name[name.Length - 1] == '"' && name[name.Length - 2] == '"')
-                    name = name.TrimStart('"').Substring(0, name.Length - 2);
-                else
-                    name = name.Trim('"');
-
-            }
+            if (name[^1] == '"' && name[^2] == '"')
+                name = name.TrimStart('"')[..(name.Length - 2)];
+            else
+                name = name.Trim('"');
 
             return name.Trim();
 
@@ -156,9 +151,9 @@ namespace YuGiOh.Scraper.Models.Parsers
 
             var parseResponse = await Constant.HttpClient.GetStringAsync(url);
             var parseJToken = JObject.Parse(parseResponse)["parse"];
-            var html = parseJToken.Value<string>("text") ?? parseJToken["text"].Value<string>("*");
+            var html = parseJToken?.Value<string>("text") ?? parseJToken?["text"]?.Value<string>("*");
 
-            return await Constant.HtmlParser.ParseDocumentAsync(html);
+            return html is not null ? await Constant.HtmlParser.ParseDocumentAsync(html) : null;
 
         }
 

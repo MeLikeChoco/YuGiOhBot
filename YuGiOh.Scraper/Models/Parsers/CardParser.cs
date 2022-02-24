@@ -17,8 +17,8 @@ namespace YuGiOh.Scraper.Models.Parsers
     public class CardParser
     {
 
-        private static readonly string[] ArchetypesHeaderMustHaveWords = new string[] { "archetypes", "series" };
-        private static readonly string[] PendulumLoreAdditionalTypesCanHaveWords = new string[] { "synchro", "fusion", "xyz" };
+        private static readonly string[] ArchetypesHeaderMustHaveWords = { "archetypes", "series" };
+        private static readonly string[] PendulumLoreAdditionalTypesCanHaveWords = { "synchro", "fusion", "xyz" };
 
         private string _parseOutput;
 
@@ -31,22 +31,7 @@ namespace YuGiOh.Scraper.Models.Parsers
             Id = int.Parse(id);
         }
 
-        public async Task<string> GetParseOutput()
-        {
-
-            if (_parseOutput == null)
-            {
-
-                var url = string.Format(ConstantString.MediaWikiParseIdUrl, Id);
-                _parseOutput = await Constant.HttpClient.GetStringAsync(url);
-
-            }
-
-            return _parseOutput;
-
-        }
-
-        public async Task<CardEntity> Parse()
+        public async Task<CardEntity> ParseAsync()
         {
 
             var dom = await GetDom();
@@ -62,7 +47,7 @@ namespace YuGiOh.Scraper.Models.Parsers
             };
 
             var table = parserOutput.GetElementByClassName("card-table");
-            var realName = table.FirstElementChild.TextContent?.Trim();
+            var realName = table.FirstElementChild?.TextContent.Trim();
 
             if (Name != realName)
                 card.RealName = realName;
@@ -74,6 +59,7 @@ namespace YuGiOh.Scraper.Models.Parsers
             {
 
                 #region Card Data
+
                 //firstordefault because of statuses not always having a header
                 var header = row.FirstChild?.TextContent?.Trim();
                 var data = row.Children.ElementAtOrDefault(1)?.TextContent?.Trim();
@@ -104,12 +90,12 @@ namespace YuGiOh.Scraper.Models.Parsers
                         card.Materials = data;
                         break;
                     case "ATK / DEF":
-                        var array = data.Split(new string[] { " / " }, StringSplitOptions.None);
+                        var array = data.Split(new[] { " / " }, StringSplitOptions.None);
                         card.Atk = array[0];
                         card.Def = array[1];
                         break;
                     case "ATK / LINK":
-                        array = data.Split(new string[] { " / " }, StringSplitOptions.None);
+                        array = data.Split(new[] { " / " }, StringSplitOptions.None);
 
                         if (array.Length == 2)
                         {
@@ -137,7 +123,6 @@ namespace YuGiOh.Scraper.Models.Parsers
                         //var statuses = tableRows.Where(element => !element.Children.Any(child => child.ClassName == "cardtablerowheader" || child.ClassName == "cardtablespanrow") &&
                         //    element.Children.Length == 1).Select(element => element.FirstElementChild);
                         var statuses = row.Children[1].FirstElementChild?.Children ?? row.Children[1].Children;
-                        var count = statuses.Length;
 
                         foreach (var element in statuses)
                         {
@@ -170,9 +155,11 @@ namespace YuGiOh.Scraper.Models.Parsers
                         break;
 
                 }
+
                 #endregion Card Data
 
                 #region Old Code
+
                 //if (row.FirstElementChild.ClassName == "cardtablespanrow")
                 //{
 
@@ -294,39 +281,16 @@ namespace YuGiOh.Scraper.Models.Parsers
                 //    #endregion Card Data
 
                 //}
+
                 #endregion Old Code
 
             }
 
-            card.Lore = GetLore(card.PendulumScale, card.Types, parserOutput);
+            var isNotPendulum = card.PendulumScale == -1 || (card.PendulumScale >= 0 && PendulumLoreAdditionalTypesCanHaveWords.Any(word => card.Types.ContainsIgnoreCase(word)));
+            card.Lore = GetLore(parserOutput, isNotPendulum);
 
-            #region Search Categories
-            var searchCategories = GetSearchCategories(parserOutput);
-
-            if (searchCategories?.Any() == true)
-            {
-
-                foreach (var searchCategory in searchCategories)
-                {
-
-                    var header = searchCategory.GetElementByTagName("dt").TextContent;
-                    var value = searchCategory.GetElementsByTagName("dd")
-                        .Where(element => !string.IsNullOrEmpty(element.TextContent))
-                        .Select(element => element.TextContent.Trim());
-
-                    //damn im fancy
-                    //please dont criticize, i like to appear flamboyantly unnecessary
-                    if (ArchetypesHeaderMustHaveWords.All(word => header.ContainsIgnoreCase(word)) && !header.ContainsIgnoreCase("related")) //filter out "related archetypes and series"
-                        card.Archetypes = value.ToList();
-                    else if (header.ContainsIgnoreCase("anti-supports"))
-                        card.AntiSupports = value.ToList();
-                    else if (header.ContainsIgnoreCase("supports") && !header.ContainsIgnoreCase("archetypes"))
-                        card.Supports = value.ToList();
-
-                }
-
-            }
-            #endregion Search Categories
+            GetArchetypesSupportsAnti(card, parserOutput);
+            GetTranslations(card, parserOutput);
 
             //card.CardTrivia = await GetCardTrivia(parserOutput);
             card.Url = string.Format(ConstantString.YugipediaUrl + ConstantString.MediaWikiIdUrl, Id);
@@ -336,23 +300,53 @@ namespace YuGiOh.Scraper.Models.Parsers
 
         }
 
-        private static string GetLore(int pendulumScale, string types, IElement parserOutput)
+        private static string GetLore(IElement parserOutput, bool isNotPendlum)
         {
 
             var table = parserOutput.GetElementByClassName("card-table");
             var loreBox = table.GetElementByClassName("lore");
 
-            if (pendulumScale == -1 || (pendulumScale >= 0 && PendulumLoreAdditionalTypesCanHaveWords.Any(word => types.ContainsIgnoreCase(word))))
+            if (!isNotPendlum)
+                return loreBox.TextContent.Replace("\n", "").Trim();
+
+            //I need the new lines because of bullet points
+            var descriptionUnformatted = loreBox.FirstElementChild;
+            var descriptionFormatted = Regex.Replace(descriptionUnformatted.InnerHtml.Replace("<br>", "\\n"), ConstantString.HtmlTagRegex, "").Trim();
+
+            return WebUtility.HtmlDecode(descriptionFormatted);
+
+        }
+
+        #region Search Categories
+
+        private static CardEntity GetArchetypesSupportsAnti(CardEntity card, IElement parserOutput)
+        {
+
+            var searchCategories = GetSearchCategories(parserOutput)?.ToArray();
+
+            if (searchCategories?.Any() != true)
+                return card;
+
+            foreach (var searchCategory in searchCategories)
             {
 
-                //I need the new lines because of bullet points
-                var descriptionUnformatted = loreBox.FirstElementChild;
-                var descriptionFormatted = Regex.Replace(descriptionUnformatted.InnerHtml.Replace("<br>", "\\n"), ConstantString.HtmlTagRegex, "").Trim();
-                return WebUtility.HtmlDecode(descriptionFormatted);
+                var header = searchCategory.GetElementByTagName("dt").TextContent;
+                var value = searchCategory.GetElementsByTagName("dd")
+                    .Where(element => !string.IsNullOrEmpty(element.TextContent))
+                    .Select(element => element.TextContent.Trim());
+
+                //damn im fancy
+                //please dont criticize, i like to appear flamboyantly unnecessary
+                if (ArchetypesHeaderMustHaveWords.All(word => header.ContainsIgnoreCase(word)) && !header.ContainsIgnoreCase("related")) //filter out "related archetypes and series"
+                    card.Archetypes = value.ToList();
+                else if (header.ContainsIgnoreCase("anti-supports"))
+                    card.AntiSupports = value.ToList();
+                else if (header.ContainsIgnoreCase("supports") && !header.ContainsIgnoreCase("archetypes"))
+                    card.Supports = value.ToList();
 
             }
-            else
-                return loreBox.TextContent.Replace("\n", "").Trim();
+
+            return card;
 
         }
 
@@ -368,7 +362,7 @@ namespace YuGiOh.Scraper.Models.Parsers
             var searchCategories = new List<IElement>();
             IElement currentElement;
 
-            for (int i = startIndex; i < parserOutput.Children.Length; i++)
+            for (var i = startIndex; i < parserOutput.Children.Length; i++)
             {
 
                 currentElement = parserOutput.Children[i];
@@ -384,56 +378,126 @@ namespace YuGiOh.Scraper.Models.Parsers
 
         }
 
+        #endregion Search Categories
+
+        #region Translations
+
+        private static CardEntity GetTranslations(CardEntity card, IElement parserOutput)
+        {
+
+            var translations = GetTranslationElements(parserOutput);
+
+            if (translations is null)
+                return card;
+
+            card.Translations = new List<TranslationEntity>();
+
+            foreach (var row in translations)
+            {
+
+                if (row.Children.Length != 3)
+                    continue;
+
+                var translation = new TranslationEntity
+                {
+
+                    Language = row.Children[0].TextContent.Trim(),
+                    Lore = row.Children[2].TextContent.Trim()
+
+                };
+
+                //man, why does only japanese have this problem reeeeeeeeeeeeeeeeeeee
+                if (translation.Language.Equals("japanese", StringComparison.OrdinalIgnoreCase))
+                {
+
+                    var rubyChildren = row.GetElementsByTagName("ruby").SelectMany(element => element.Children);
+
+                    //don't inline for readibility
+                    foreach (var child in rubyChildren)
+                    {
+                        if (child.LocalName != "rb")
+                            child.Remove();
+                    }
+
+                    translation.Name = row.Children[1].TextContent.Trim();
+
+                }
+                else
+                    translation.Name = row.Children[1].TextContent.Trim();
+
+                card.Translations.Add(translation);
+
+            }
+
+            return card;
+
+        }
+
+        private static IEnumerable<IElement> GetTranslationElements(IElement parserOutput)
+        {
+
+            var sectionHeader = parserOutput.QuerySelector("#Other_languages")?.ParentElement;
+
+            if (sectionHeader is null)
+                return null;
+
+            var sectionContent = sectionHeader.NextElementSibling;
+
+            return sectionContent.FirstElementChild.Children.Skip(1); //skip the table header
+
+        }
+
+        #endregion Translations
+
         private async Task<string> GetCardTrivia(IElement parserOutput)
         {
 
             var triviaUrlElement = parserOutput
                 .GetElementsByClassName("hlist")
-                .FirstOrDefault(element => element.TextContent.ContainsIgnoreCase("Trivia"))?
-                .FirstElementChild
-                .Children
+                .FirstOrDefault(element => element.TextContent.ContainsIgnoreCase("Trivia"))
+                ?
+                .FirstElementChild?.Children
                 .FirstOrDefault(element => element.TextContent.ContainsIgnoreCase("Trivia"));
 
-            if (triviaUrlElement is not null)
-            {
+            if (triviaUrlElement is null)
+                return null;
 
-                var triviaLink = triviaUrlElement.GetElementByTagName("a").GetAttribute("href");
+            var triviaLink = triviaUrlElement.GetElementByTagName("a").GetAttribute("href");
 
-                if (!triviaLink.ContainsIgnoreCase("redlink=1"))
-                {
+            if (triviaLink.ContainsIgnoreCase("redlink=1"))
+                return null;
 
-                    var triviaUrl = string.Format(ConstantString.MediaWikiParseNameUrl, Uri.EscapeDataString(triviaLink));
-                    var dom = await GetDom();
-                    parserOutput = dom.GetElementByClassName("mw-parser-output");
-                    var triviaElements = parserOutput?.Children
-                        .Where(element => element.TagName == "UL");
+            // var triviaUrl = string.Format(ConstantString.MediaWikiParseNameUrl, Uri.EscapeDataString(triviaLink));
+            var dom = await GetDom();
+            parserOutput = dom.GetElementByClassName("mw-parser-output");
+            var triviaElements = parserOutput?.Children
+                .Where(element => element.TagName == "UL");
 
-                    if (triviaElements is not null)
-                    {
+            if (triviaElements is null)
+                return null;
 
-                        var trivias = new List<string>(triviaElements.Count());
+            var triviaEleArray = triviaElements as IElement[] ?? triviaElements.ToArray();
+            var trivias = new List<string>(triviaEleArray.Length);
 
-                        foreach (var triviaElement in triviaElements)
-                        {
+            trivias.AddRange(triviaEleArray.Select(triviaElement => triviaElement.InnerHtml)
+                .Select(html
+                    => Regex.Replace(html, ConstantString.HtmlTagRegex, "").Replace("\n", "\\n")
+                ));
 
-                            var html = triviaElement.InnerHtml;
-                            var cleanedTrivia = Regex
-                                .Replace(html, ConstantString.HtmlTagRegex, "")
-                                .Replace("\n", "\\n");
+            return string.Join('|', trivias);
 
-                            trivias.Add(cleanedTrivia);
+        }
 
-                        }
+        private async Task<string> GetParseOutput()
+        {
 
-                        return string.Join('|', trivias);
+            if (_parseOutput != null)
+                return _parseOutput;
 
-                    }
+            var url = string.Format(ConstantString.MediaWikiParseIdUrl, Id);
+            _parseOutput = await Constant.HttpClient.GetStringAsync(url);
 
-                }
-
-            }
-
-            return null;
+            return _parseOutput;
 
         }
 
@@ -442,9 +506,9 @@ namespace YuGiOh.Scraper.Models.Parsers
 
             var parseResponse = await GetParseOutput();
             var parseJToken = JObject.Parse(parseResponse)["parse"];
-            var html = parseJToken.Value<string>("text") ?? parseJToken["text"].Value<string>("*");
+            var html = parseJToken?.Value<string>("text") ?? parseJToken?["text"]?.Value<string>("*");
 
-            return await Constant.HtmlParser.ParseDocumentAsync(html);
+            return html is not null ? await Constant.HtmlParser.ParseDocumentAsync(html) : null;
 
         }
 

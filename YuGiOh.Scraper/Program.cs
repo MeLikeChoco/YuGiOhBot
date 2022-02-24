@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,9 +14,9 @@ using YuGiOh.Common.Models.YuGiOh;
 using YuGiOh.Common.Repositories;
 using YuGiOh.Common.Services;
 using YuGiOh.Scraper.Constants;
-using YuGiOh.Scraper.Extensions;
 using YuGiOh.Scraper.Models.Parsers;
 using YuGiOh.Scraper.Models.Responses;
+using Type = YuGiOh.Common.Models.YuGiOh.Type;
 
 namespace YuGiOh.Scraper
 {
@@ -23,16 +24,16 @@ namespace YuGiOh.Scraper
     {
 
         private static readonly Options Options = Options.Instance;
-        private ParallelOptions _parallelOptions => Options.IsDev ? Constant.SerialOptions : Constant.ParallelOptions;
+        private static ParallelOptions ParallelOptions => Options.IsDev ? Constant.SerialOptions : Constant.ParallelOptions;
 
         public static Task Main()
             => new Program().Run();
 
-        public async Task Run()
+        private async Task Run()
         {
 
             Log($"Dev mode: {Options.IsDev}");
-            Log($"Processing with {_parallelOptions.MaxDegreeOfParallelism} threads");
+            Log($"Processing with {ParallelOptions.MaxDegreeOfParallelism} threads");
             Log("Getting TCG cards.");
 
             var tcgLinks = await GetLinks(ConstantString.MediaWikiTcgCards);
@@ -65,15 +66,18 @@ namespace YuGiOh.Scraper
             Log($"Processed {boosterProcResponse.Count} booster packs. There were {boosterProcResponse.Errors.Count} errors.");
             Log("Processing errors.");
 
-            var errors = cardProcResponse.Errors.Concat(boosterProcResponse.Errors);
+            var errors = cardProcResponse.Errors.Concat(boosterProcResponse.Errors).ToList();
 
             ProcessErrors(errors);
 
-            Log($"Processed {errors.Count()} errors.");
+            Log($"Processed {errors.Count} errors.");
 
         }
 
-        public async Task<IDictionary<string, string>> FilterCardLinks(IDictionary<string, string> tcgLinks, IDictionary<string, string> ocgLinks)
+        public async Task<IDictionary<string, string>> FilterCardLinks(
+            IDictionary<string, string> tcgLinks,
+            IDictionary<string, string> ocgLinks
+        )
         {
 
             var links = tcgLinks.Union(ocgLinks);
@@ -89,7 +93,11 @@ namespace YuGiOh.Scraper
 
         }
 
-        public async Task<CardProcessorResponse> ProcessCards(IDictionary<string, string> tcgLinks, IDictionary<string, string> ocgLinks, IDictionary<string, string> links)
+        public async Task<CardProcessorResponse> ProcessCards(
+            IDictionary<string, string> tcgLinks,
+            IDictionary<string, string> ocgLinks,
+            IDictionary<string, string> links
+        )
         {
 
             var size = links.Count;
@@ -102,7 +110,7 @@ namespace YuGiOh.Scraper
             var repo = new YuGiOhRepository(this);
             var count = 0;
 
-            await Parallel.ForEachAsync(links, _parallelOptions, async (nameToLink, _) =>
+            await Parallel.ForEachAsync(links, ParallelOptions, async (nameToLink, _) =>
             {
 
                 var retryCount = 0;
@@ -111,22 +119,24 @@ namespace YuGiOh.Scraper
                 do
                 {
 
+                    var (name, link) = nameToLink;
+
                     try
                     {
 
-                        var parser = new CardParser(nameToLink.Key, nameToLink.Value);
-                        var parserHash = await parser.GetParseOutput().ContinueWith(outputTask => outputTask.Result.GetMurMurHash()); //wanted to try ContinueWith instead of wrapping await
+                        var parser = new CardParser(name, link);
+                        // var parserHash = await parser.GetParseOutput().ContinueWith(outputTask => outputTask.Result.GetMurMurHash(), _); //wanted to try ContinueWith instead of wrapping await
+                        //
+                        // //this is to determine whether or not to parse
+                        // if (!Options.ShouldIgnoreHash && await repo.GetCardHashAsync(parser.Id) == parserHash)
+                        //     continue;
 
-                        //this is to determine whether or not to parse
-                        if (!Options.ShouldIgnoreHash && await repo.GetCardHashAsync(parser.Id) == parserHash)
-                            continue;
-
-                        var card = await parser.Parse();
-                        card.TcgExists = tcgLinks.ContainsKey(nameToLink.Key);
-                        card.OcgExists = ocgLinks.ContainsKey(nameToLink.Key);
+                        var card = await parser.ParseAsync();
+                        card.TcgExists = tcgLinks.ContainsKey(name);
+                        card.OcgExists = ocgLinks.ContainsKey(name);
 
                         await repo.InsertCardAsync(card);
-                        await repo.InsertCardHashAsync(card.Id, parserHash);
+                        // await repo.InsertCardHashAsync(card.Id, parserHash);
 
                         check = null;
 
@@ -142,11 +152,11 @@ namespace YuGiOh.Scraper
 
                             errors.Add(new Error
                             {
-                                Name = nameToLink.Key,
+                                Name = name,
                                 Message = ex.Message,
                                 StackTrace = ex.StackTrace,
-                                Url = string.Format(ConstantString.YugipediaUrl + ConstantString.MediaWikiIdUrl, nameToLink.Value),
-                                Type = Common.Models.YuGiOh.Type.Card
+                                Url = string.Format(ConstantString.YugipediaUrl + ConstantString.MediaWikiIdUrl, link),
+                                Type = Type.Card
                             });
 
                         }
@@ -154,12 +164,13 @@ namespace YuGiOh.Scraper
                         await Task.Delay(Options.Config.RetryDelay, CancellationToken.None);
 
                     }
-
                 } while (check is not null && retryCount < Options.Config.MaxRetry);
 
                 var __ = WriteProgress("Cards", ref count, size);
 
             });
+            
+            ClearLine();
 
             return new CardProcessorResponse
             {
@@ -174,19 +185,21 @@ namespace YuGiOh.Scraper
         public async Task<BoosterProcessorResponse> ProcessBoosters(IDictionary<string, string> tcgLinks, IDictionary<string, string> ocgLinks)
         {
 
-            var nameToLinks = tcgLinks.Union(ocgLinks);
-            var size = nameToLinks.Count();
+            var nameToLinks = tcgLinks.Union(ocgLinks).ToList();
+            var size = nameToLinks.Count;
 
             if (Options.MaxBoostersToParse <= size)
-                nameToLinks = nameToLinks.RandomSubset(Options.MaxBoostersToParse);
-            //nameToLinks = nameToLinks.Take(Options.MaxBoostersToParse);
+            {
+                nameToLinks = nameToLinks.RandomSubset(Options.MaxBoostersToParse).ToList();
+                size = nameToLinks.Count;
+            }
 
-            size = nameToLinks.Count();
+            //nameToLinks = nameToLinks.Take(Options.MaxBoostersToParse);
             var errors = new ConcurrentBag<Error>();
             var repo = new YuGiOhRepository(this);
             var count = 0;
 
-            await Parallel.ForEachAsync(nameToLinks, _parallelOptions, async (nameToLink, _) =>
+            await Parallel.ForEachAsync(nameToLinks, ParallelOptions, async (nameToLink, _) =>
             {
 
                 var retryCount = 0;
@@ -195,13 +208,15 @@ namespace YuGiOh.Scraper
                 do
                 {
 
+                    var (name, link) = nameToLink;
+
                     try
                     {
 
-                        var parser = new BoosterPackParser(nameToLink.Key, nameToLink.Value);
+                        var parser = new BoosterPackParser(name, link);
                         var card = await parser.Parse();
-                        card.TcgExists = tcgLinks.ContainsKey(nameToLink.Key);
-                        card.OcgExists = ocgLinks.ContainsKey(nameToLink.Key);
+                        card.TcgExists = tcgLinks.ContainsKey(name);
+                        card.OcgExists = ocgLinks.ContainsKey(name);
 
                         await repo.InsertBoosterPack(card);
 
@@ -219,11 +234,11 @@ namespace YuGiOh.Scraper
 
                             errors.Add(new Error
                             {
-                                Name = nameToLink.Key,
+                                Name = name,
                                 Message = ex.Message,
                                 StackTrace = ex.StackTrace,
-                                Url = string.Format(ConstantString.YugipediaUrl + ConstantString.MediaWikiIdUrl, nameToLink.Value),
-                                Type = Common.Models.YuGiOh.Type.Card
+                                Url = string.Format(ConstantString.YugipediaUrl + ConstantString.MediaWikiIdUrl, link),
+                                Type = Type.Card
                             });
 
                         }
@@ -237,6 +252,8 @@ namespace YuGiOh.Scraper
                 var __ = WriteProgress("Booster packs", ref count, size);
 
             });
+            
+            ClearLine();
 
             return new BoosterProcessorResponse
             {
@@ -248,7 +265,7 @@ namespace YuGiOh.Scraper
 
         }
 
-        object _countLock = new();
+        private readonly object _countLock = new();
 
         private Task WriteProgress(string what, ref int current, int size)
         {
@@ -257,7 +274,7 @@ namespace YuGiOh.Scraper
             {
 
                 var curr = Interlocked.Increment(ref current);
-                var display = $"{what} processed: {curr}/{size} ({(double)current / size * 100:0.00}%)";
+                var display = $"{what} processed: {curr}/{size} ({(double) current / size * 100:0.00}%)";
 
                 if (curr % 1000 == 0 && Options.IsSubProc)
                     Log(display);
@@ -275,7 +292,8 @@ namespace YuGiOh.Scraper
 
             var repo = new YuGiOhRepository(this);
             var semaphore = new SemaphoreSlim(ConstantValue.ProcessorCount);
-            var size = errors.Count();
+            var errorList = errors.ToList();
+            var size = errorList.Count;
             var tasks = new Task[size];
             var count = 0;
             var countLock = new object();
@@ -292,14 +310,14 @@ namespace YuGiOh.Scraper
                     try
                     {
 
-                        await repo.InsertErrorAsync(errors.ElementAt(index));
+                        await repo.InsertErrorAsync(errorList[index]);
 
                         lock (countLock)
                         {
 
                             var current = Interlocked.Increment(ref count);
 
-                            var display = $"Cards processed: {current}/{size} ({current / (double)size * 100:0.00}%)";
+                            var display = $"Cards processed: {current}/{size} ({current / (double) size * 100:0.00}%)";
 
                             if (current % 1000 == 0 && Options.IsSubProc)
                                 Log(display);
@@ -309,7 +327,7 @@ namespace YuGiOh.Scraper
                         }
 
                     }
-                    catch (Exception) { }
+                    catch { }
                     finally
                     {
                         semaphore.Release();
@@ -320,6 +338,7 @@ namespace YuGiOh.Scraper
             }
 
             Task.WaitAll(tasks);
+            ClearLine();
 
         }
 
@@ -346,7 +365,7 @@ namespace YuGiOh.Scraper
 
         }
 
-        public void Log(string message)
+        public static void Log(string message)
         {
 
             if (Options.IsSubProc)
@@ -356,7 +375,7 @@ namespace YuGiOh.Scraper
 
         }
 
-        public void InlineLog(string message)
+        public static void InlineLog(string message)
         {
 
             if (Options.IsSubProc)
@@ -366,19 +385,26 @@ namespace YuGiOh.Scraper
 
         }
 
+        public static void ClearLine()
+            => Console.Write("\r" + new string(' ', Console.BufferWidth - 1) + "\r");
+
         public NpgsqlConnection GetYuGiOhDbConnection()
         {
 
-            var config = Options.Config;
+            var isDebug = false;
+
+            GetIsDebug(ref isDebug);
+
+            var config = isDebug ? Options.Config.Databases.Staging : Options.Config.Databases.Production;
 
             var connectionStr = new NpgsqlConnectionStringBuilder
             {
 
-                Host = config.Database.Host,
-                Port = config.Database.Port,
+                Host = config.Host,
+                Port = config.Port,
                 Database = "yugioh",
-                Username = config.Database.Username,
-                Password = config.Database.Password
+                Username = config.Username,
+                Password = config.Password
 
 
             }.ToString();
@@ -386,6 +412,10 @@ namespace YuGiOh.Scraper
             return new NpgsqlConnection(connectionStr);
 
         }
+
+        [Conditional("DEBUG")]
+        private static void GetIsDebug(ref bool isDebug)
+            => isDebug = true;
 
     }
 }

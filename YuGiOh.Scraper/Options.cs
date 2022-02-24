@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Text.Json;
 using CommandLine;
-using Newtonsoft.Json;
 
 namespace YuGiOh.Scraper
 {
@@ -35,30 +31,7 @@ namespace YuGiOh.Scraper
 
         private Config _config;
 
-        public Config Config
-        {
-
-            get
-            {
-
-                if (_config is null)
-                {
-
-                    using var file = File.OpenText("config.json");
-                    using var reader = new JsonTextReader(file);
-
-                    _config = JsonSerializer.CreateDefault().Deserialize<Config>(reader);
-
-                    reader.Close();
-                    file.Close();
-
-                }
-
-                return _config;
-
-            }
-
-        }
+        public Config Config => _config ??= JsonSerializer.Deserialize<Config>(File.ReadAllText("config.json"));
 
         [Option('d', "dev", Default = false)]
         public bool IsDev { get; set; }

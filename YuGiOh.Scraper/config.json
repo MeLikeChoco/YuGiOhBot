@@ -1,13 +1,22 @@
 {
-  "Database": {
+  "Databases": {
 
-    "Host": "",
-    "Port": 0,
-    "Username": "",
-    "Password": ""
+    "Staging": {
+      "Host": "",
+      "Port": 0,
+      "Username": "",
+      "Password": ""
+    },
+
+    "Production": {
+      "Host": "",
+      "Port": 0,
+      "Username": "",
+      "Password": ""
+    }
 
   },
-  "RetryDelay": "00:00:30",
-  "MaxRetry": 3,
-  "HashSeed": 0
+  "Retry Delay": "00:00:30",
+  "Max Retry": 3,
+  "Hash Seed": 0
 }
