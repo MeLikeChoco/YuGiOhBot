@@ -1,8 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using YuGiOh.Bot.Extensions;
+using YuGiOh.Bot.Models.BoosterPacks;
 using YuGiOh.Bot.Models.Cards;
 using YuGiOh.Bot.Services.Interfaces;
 using YuGiOh.Common.Models.YuGiOh;
@@ -36,15 +36,6 @@ namespace YuGiOh.Bot.Services
 
         }
 
-        public async Task<IEnumerable<Card>> GetCardsAutocomplete(string input)
-        {
-
-            var entities = await _repo.GetCardsAutocomplete(input);
-
-            return entities.Select(entity => entity.ToModel());
-
-        }
-
         public async Task<IEnumerable<Card>> GetCardsContainsAllAsync(string input)
         {
 
@@ -72,7 +63,7 @@ namespace YuGiOh.Bot.Services
 
         }
 
-        public async Task<IEnumerable<Card>> GetCardsInArchetype(string input)
+        public async Task<IEnumerable<Card>> GetCardsInArchetypeAsync(string input)
         {
 
             var entities = await _repo.GetCardsInArchetypeAsync(input);
@@ -80,9 +71,6 @@ namespace YuGiOh.Bot.Services
             return entities.Select(entity => entity.ToModel());
 
         }
-
-        public Task<IEnumerable<string>> GetArchetypesAutocomplete(string input)
-            => _repo.GetArchetypesAutocomplete(input);
 
         public async Task<IEnumerable<Card>> GetCardsFromSupportAsync(string input)
         {
@@ -97,9 +85,22 @@ namespace YuGiOh.Bot.Services
         {
 
             var entities = await _repo.GetCardsInAntisupportAsync(input);
+
             return entities.Select(entity => entity.ToModel());
 
         }
+
+        public Task<IEnumerable<string>> GetCardsAutocompleteAsync(string input)
+            => _repo.GetCardsAutocompleteAsync(input);
+
+        public Task<IEnumerable<string>> GetArchetypesAutocompleteAsync(string input)
+            => _repo.GetArchetypesAutocompleteAsync(input);
+
+        public Task<IEnumerable<string>> GetSupportsAutocompleteAsync(string input)
+            => _repo.GetSupportsAutocompleteAsync(input);
+
+        public Task<IEnumerable<string>> GetAntisupportsAutocompleteAsync(string input)
+            => _repo.GetAntisupportsAutocompleteAsync(input);
 
         public async Task<Card> GetClosestCardAsync(string input)
         {
@@ -118,6 +119,15 @@ namespace YuGiOh.Bot.Services
 
         public Task<Banlist> GetBanlistAsync(BanlistFormats format)
             => _repo.GetBanlistAsync(format);
+
+        public async Task<BoosterPack> GetBoosterPackAsync(string input)
+        {
+
+            var entity = await _repo.GetBoosterPackAsync(input);
+
+            return entity.ToModel();
+
+        }
 
     }
 }
