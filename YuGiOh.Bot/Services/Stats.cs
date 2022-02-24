@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 using DiscordBotsList.Api;
 using Newtonsoft.Json;
 using YuGiOh.Bot.Models;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace YuGiOh.Bot.Services
 {
@@ -29,7 +31,7 @@ namespace YuGiOh.Bot.Services
             _web = web;
             IsReady = false;
             _id = client.CurrentUser.Id;
-            _topGG = new AuthDiscordBotListApi(_id, Config.Instance.Tokens.BotList.Blue);
+            _topGG = new AuthDiscordBotListApi(_id, Config.Instance.Tokens.BotList.TopGG);
             _calculateStats = new Timer(CalculateStats, client, TimeSpan.FromSeconds(300), TimeSpan.FromHours(1));
 
         }
@@ -40,30 +42,28 @@ namespace YuGiOh.Bot.Services
             try
             {
 
-                if (state is DiscordShardedClient client && client.Shards.All(socket => socket.ConnectionState == ConnectionState.Connected))
-                {
+                if (state is not DiscordShardedClient client || client.Shards.Any(socket => socket.ConnectionState != ConnectionState.Connected))
+                    return;
 
-                    Log("Calculating stats...");
+                Log("Calculating stats...");
 
-                    var guilds = client.Guilds;
-                    var maxGuild = guilds.Where(guild => !guild.Name.Contains("Bot")).MaxBy(guild => guild.MemberCount);
-                    MaxGuild = maxGuild.Name;
-                    MaxGuildCount = maxGuild.MemberCount;
-                    UniqueUserCount = guilds.Sum(guild => guild.MemberCount);
-                    GuildCount = guilds.Count;
+                var guilds = client.Guilds;
+                var maxGuild = guilds.Where(guild => !guild.Name.Contains("Bot")).MaxBy(guild => guild.MemberCount);
+                MaxGuild = maxGuild.Name;
+                MaxGuildCount = maxGuild.MemberCount;
+                UniqueUserCount = guilds.Sum(guild => guild.MemberCount);
+                GuildCount = guilds.Count;
 
-                    Log("Finished calculating stats.");
+                Log("Finished calculating stats.");
 
-                    IsReady = true;
+                IsReady = true;
 
-                    //SendStats(null);
+                //SendStats(null);
 
-                    if (!Environment.GetCommandLineArgs().Contains("test"))
-                        SendStats(client);
+                if (!Config.Instance.IsTest)
+                    SendStats(client);
 
-                    _calculateStats.Change(TimeSpan.FromHours(1), TimeSpan.FromHours(1));
-
-                }
+                _calculateStats.Change(TimeSpan.FromHours(1), TimeSpan.FromHours(1));
 
             }
             catch (NullReferenceException)
@@ -76,15 +76,62 @@ namespace YuGiOh.Bot.Services
 
         }
 
-        private async void SendStats(DiscordShardedClient client)
+        private void SendStats(DiscordShardedClient client)
         {
 
-            var payload = JsonConvert.SerializeObject(new { guildCount = client.Guilds.Count });
+            _ = SendStatsToBotsOnDiscordXyz(client);
+            _ = SendStatsToDiscordBotsGG(client);
+            _ = SendStatsToTopGG(client);
 
-            Log($"Sending stats to black discord bots...");
-            //var response = await _web.Post($"https://bots.discord.pw/api/bots/{_id}/stats", $"{{\"server_count\": {GuildCount}}}", await File.ReadAllTextAsync("Files/Bot List Tokens/Black.txt"));
-            var response = await _web.Post(string.Format(Constants.BlackDiscordBotUrl, _id), payload, authorization: Config.Instance.Tokens.BotList.Black);
-            Log($"Status: {response.StatusCode}");
+        }
+
+        private Task SendStatsToBotsOnDiscordXyz(DiscordShardedClient client)
+        {
+
+            try
+            {
+
+                // var payload = JsonConvert.SerializeObject(new { guildCount = client.Guilds.Count });
+                //
+                // Log($"Sending stats to bots.ondiscord.xyz...");
+                // var response = await _web.Post(string.Format(Constants.BotsOnDiscordXyzUrl, _id), payload, authorization: Config.Instance.Tokens.BotList.Black);
+                // Log($"Status: ({response.StatusCode}) Sent stats to bots.ondiscord.xyz");
+
+            }
+            catch
+            {
+                Log("Error sending stats to bots.ondiscord.xyz.");
+            }
+
+            return Task.CompletedTask;
+
+        }
+
+        // ReSharper disable once InconsistentNaming
+        private async Task SendStatsToDiscordBotsGG(DiscordShardedClient client)
+        {
+
+            try
+            {
+
+                var payload = JsonSerializer.Serialize(new { guildCount = client.Guilds.Count });
+                // var payload = JsonConvert.SerializeObject(new { guildCount = client.Guilds.Count });
+
+                Log("Sending stats to discord.bots.gg...");
+                var response = await _web.Post(string.Format(Constants.DiscordBotsGG, _id), payload, authorization: Config.Instance.Tokens.BotList.DiscordBotsGG);
+                Log($"Status: ({response.StatusCode}) Sent stats to discord.bots.gg.");
+
+            }
+            catch
+            {
+                Log("Error sending stats to discord.bots.gg.");
+            }
+
+        }
+
+        // ReSharper disable once InconsistentNaming
+        private async Task SendStatsToTopGG(DiscordShardedClient client)
+        {
 
             try
             {
@@ -92,69 +139,19 @@ namespace YuGiOh.Bot.Services
                 var bot = await _topGG.GetMeAsync();
 
                 Log("Sending stats to top.gg...");
-                //var response = await _web.Post($"https://discordbots.org/api/bots/{_id}/stats", $"{{\"server_count\": {GuildCount}}}", await File.ReadAllTextAsync("Files/Bot List Tokens/Blue.txt"));
-                //var response = await _web.Post($"https://discordbots.org/api/bots/{_id}/stats", payload, await File.ReadAllTextAsync("Files/Bot List Tokens/Blue.txt"));
                 await bot.UpdateStatsAsync(client.Guilds.Count);
                 Log("Status: Sent stats to top.gg.");
 
             }
             catch
             {
-
-                Log("Error in sending stats to blue discord bots.");
-
+                Log("Error sending stats to top.gg.");
             }
 
         }
 
-        ////this is what happens when you forget to assign in the constructor
-        ////delete this later
-        //public class SubmissionAdapter : IAdapter
-        //{
-        //    protected AuthDiscordBotListApi api;
-        //    protected IDiscordClient client;
-        //    protected TimeSpan updateTime;
 
-        //    protected DateTime lastTimeUpdated;
-
-        //    public SubmissionAdapter(AuthDiscordBotListApi api, IDiscordClient client, TimeSpan updateTime)
-        //    {
-        //        this.api = api;
-        //        this.client = client;
-        //        this.updateTime = updateTime;
-        //    }
-
-        //    public event Action<string> Log;
-
-        //    public virtual async Task RunAsync()
-        //    {
-        //        if (DateTime.Now > lastTimeUpdated + updateTime)
-        //        {
-        //            await api.UpdateStats(
-        //                (await client.GetGuildsAsync()).Count
-        //            );
-
-        //            lastTimeUpdated = DateTime.Now;
-        //            SendLog("Submitted stats to DiscordBotsList.org");
-        //        }
-        //    }
-
-        //    public virtual void Start()
-        //    {
-
-        //    }
-
-        //    public virtual void Stop()
-        //    {
-        //        throw new NotImplementedException();
-        //    }
-
-        //    protected void SendLog(string msg)
-        //        => Log?.Invoke(msg);
-        //}
-
-
-        private void Log(string message)
+        private static void Log(string message)
             => AltConsole.Write("Info", "Stats", message);
 
     }

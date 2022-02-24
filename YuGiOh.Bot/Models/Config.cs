@@ -1,26 +1,33 @@
 ﻿using System;
 using System.IO;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using CommandLine;
-using Newtonsoft.Json;
 
 namespace YuGiOh.Bot.Models
 {
     public class Config
     {
 
-        [JsonProperty("Guild Invite")]
-        public string GuildInvite { get; set; }
-        [JsonProperty("Bot Invite")]
-        public string BotInvite { get; set; }
-        [JsonProperty("Feedback Channel")]
-        public ulong FeedbackChannel { get; set; }
-        [JsonProperty("Owner Id")]
-        public ulong OwnerId { get; set; }
-        [JsonProperty("Is Test")]
-        public bool IsTest { get; set; }
         [JsonIgnore]
         [Option('s', "is_sub_proc", Default = false)]
         public bool IsSubProc { get; set; }
+
+        [JsonPropertyName("Guild Invite")]
+        public string GuildInvite { get; set; }
+
+        [JsonPropertyName("Bot Invite")]
+        public string BotInvite { get; set; }
+
+        [JsonPropertyName("Feedback Channel")]
+        public ulong FeedbackChannel { get; set; }
+
+        [JsonPropertyName("Owner Id")]
+        public ulong OwnerId { get; set; }
+
+        [JsonPropertyName("Is Test")]
+        public bool IsTest { get; set; }
+
         public Databases Databases { get; set; }
         public Tokens Tokens { get; set; }
 
@@ -37,12 +44,7 @@ namespace YuGiOh.Bot.Models
 
             }
 
-            set
-            {
-
-                File.WriteAllText("Databases/LastScrape.txt", value.ToUniversalTime().ToString());
-
-            }
+            set => File.WriteAllText("Databases/LastScrape.txt", value.ToUniversalTime().ToString());
 
         }
 
@@ -52,16 +54,15 @@ namespace YuGiOh.Bot.Models
             get
             {
 
-                if (_instance is null)
-                {
+                if (_instance is not null)
+                    return _instance;
 
-                    _instance = JsonConvert.DeserializeObject<Config>(File.ReadAllText("Files/Config.json"));
+                _instance = JsonSerializer.Deserialize<Config>(File.ReadAllText("Files/Config.json"));
+                // _instance = JsonConvert.DeserializeObject<Config>(File.ReadAllText("Files/Config.json"));
 
-                    Parser.Default
-                        .ParseArguments<Config>(Environment.GetCommandLineArgs())
-                        .WithParsed(config => _instance.IsSubProc = config.IsSubProc);
-
-                }
+                Parser.Default
+                    .ParseArguments<Config>(Environment.GetCommandLineArgs())
+                    .WithParsed(config => _instance.IsSubProc = config.IsSubProc);
 
                 return _instance;
 
@@ -73,8 +74,9 @@ namespace YuGiOh.Bot.Models
 
         public static void Reload()
         {
-
-            _instance = JsonConvert.DeserializeObject<Config>(File.ReadAllText("Files/Config.json"));
+            
+            _instance = JsonSerializer.Deserialize<Config>(File.ReadAllText("Files/Config.json"));
+            // _instance = JsonConvert.DeserializeObject<Config>(File.ReadAllText("Files/Config.json"));
 
             AltConsole.Write("Config", "Reload", "Config reloaded.");
 
@@ -85,8 +87,17 @@ namespace YuGiOh.Bot.Models
     public class Databases
     {
 
-        public DatabaseConnectionConfig YuGiOh { get; set; }
-        public DatabaseConnectionConfig Guilds { get; set; }
+        [JsonPropertyName("YuGiOh Staging")]
+        public DatabaseConnectionConfig YuGiOhStaging { get; set; }
+
+        [JsonPropertyName("Guilds Staging")]
+        public DatabaseConnectionConfig GuildsStaging { get; set; }
+
+        [JsonPropertyName("YuGiOh Prod")]
+        public DatabaseConnectionConfig YuGiOhProd { get; set; }
+
+        [JsonPropertyName("Guilds Prod")]
+        public DatabaseConnectionConfig GuildsProd { get; set; }
 
     }
 
@@ -105,7 +116,8 @@ namespace YuGiOh.Bot.Models
     {
 
         public DiscordTokenConfig Discord { get; set; }
-        [JsonProperty("Bot List")]
+
+        [JsonPropertyName("Bot List")]
         public BotList BotList { get; set; }
 
     }
@@ -121,8 +133,9 @@ namespace YuGiOh.Bot.Models
     public class BotList
     {
 
-        public string Black { get; set; }
-        public string Blue { get; set; }
+        public string BotsOnDiscordXyz { get; set; }
+        public string TopGG { get; set; }
+        public string DiscordBotsGG { get; set; }
 
     }
 }

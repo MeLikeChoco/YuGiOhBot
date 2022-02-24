@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,7 +17,8 @@ namespace YuGiOh.Bot
 
         public const string ArtBaseUrl = "https://storage.googleapis.com/ygoprodeck.com/pics_artgame/";
         public const string ArtFileType = "jpg";
-        public const string BlackDiscordBotUrl = "https://bots.ondiscord.xyz/bot-api/bots/{0}/guilds";
+        public const string BotsOnDiscordXyzUrl = "https://bots.ondiscord.xyz/bot-api/bots/{0}/guilds";
+        public const string DiscordBotsGG = "https://discord.bots.gg/api/v1/bots/{0}/stats";
         //public const string BlueDiscordBotUrl = "https://discordbots.org/api/bots/{0}/stats";
 
         public const string DatabaseName = "ygopedia";
@@ -26,6 +28,21 @@ namespace YuGiOh.Bot
         public const string CardCommand = "card";
 
         public const string UnixCpuUsageCmdArgs = "<(grep 'cpu ' /proc/stat) <(sleep 0.5 && grep 'cpu ' /proc/stat) | awk -v RS=\\\"\\\" '{print ($13-$2+$15-$4)*100/($13-$2+$15-$4+$16-$5)}'";
+
+        public static bool IsDebug
+        {
+            get
+            {
+                var isDebug = false;
+                GetIsDebug(ref isDebug);
+
+                return isDebug;
+            }
+        }
+
+        [Conditional("DEBUG")]
+        private static void GetIsDebug(ref bool isDebug)
+            => isDebug = true;
 
     }
 
