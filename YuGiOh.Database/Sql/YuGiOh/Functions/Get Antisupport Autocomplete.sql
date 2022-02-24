@@ -1,17 +1,17 @@
-﻿create function get_archetypes_autocomplete(input character varying) returns SETOF character varying
+create function get_antisupports_autocomplete(input character varying) returns SETOF character varying
     language plpgsql
 as
 $$
 declare
     contains varchar;
     starts_with varchar;
-begin
+BEGIN
 
     contains := '%' || input || '%';
     starts_with := input || '%';
 
     return query
-        select name from archetypes
+        select name from antisupports
         where name ilike contains
         order by
             case
@@ -21,5 +21,5 @@ begin
             name
         limit 25;
 
-end
+END;
 $$;

@@ -7,8 +7,6 @@ using Dapper;
 using Dapper.FluentMap;
 using Dapper.FluentMap.Dommel;
 using Dommel;
-using Newtonsoft.Json;
-using Npgsql;
 using YuGiOh.Common.DatabaseMappers;
 using YuGiOh.Common.Extensions;
 using YuGiOh.Common.Interfaces;
@@ -20,11 +18,10 @@ namespace YuGiOh.Common.Repositories
     public class YuGiOhRepository : IYuGiOhRepository
     {
 
-        private const string EscapeSqlParameterRegex = @"([%_\[])";
-        private const string ReplaceEscapeSqlParameterRegex = "[$1]";
+        // private const string EscapeSqlParameterRegex = @"([%_\[])";
+        // private const string ReplaceEscapeSqlParameterRegex = "[$1]";
 
         private readonly IYuGiOhRepositoryConfiguration _config;
-        private readonly Dictionary<int, CardEntity> _entities;
 
         static YuGiOhRepository()
         {
@@ -38,6 +35,7 @@ namespace YuGiOh.Common.Repositories
                     .ForEntity<BoosterPackEntity>();
 
                 config.AddMap(new CardEntityMapper());
+                config.AddMap(new BoosterPackEntityMapper());
                 config.ForDommel();
 
                 var resolver = new LowerCaseConvention();
@@ -51,13 +49,14 @@ namespace YuGiOh.Common.Repositories
         public YuGiOhRepository(IYuGiOhRepositoryConfiguration config)
         {
             _config = config;
-            _entities = new();
         }
+
+        #region Insertions
 
         public async Task InsertCardAsync(CardEntity card)
         {
 
-            using var connection = _config.GetYuGiOhDbConnection();
+            await using var connection = _config.GetYuGiOhDbConnection();
 
             await connection.OpenAsync().ConfigureAwait(false);
 
@@ -72,86 +71,144 @@ namespace YuGiOh.Common.Repositories
             else
                 await connection.InsertAsync(card).ConfigureAwait(false);
 
-            var cardArchetypesId = await connection.ExecuteScalarAsync("select archetypes from cards where id = @Id", new { card.Id }).ConfigureAwait(false);
-            var cardSupportsId = await connection.ExecuteScalarAsync("select supports from cards where id = @Id", new { card.Id }).ConfigureAwait(false);
-            var cardAntiSupportsId = await connection.ExecuteScalarAsync("select antisupports from cards where id = @Id", new { card.Id }).ConfigureAwait(false);
+            // var cardArchetypesId = await connection.ExecuteScalarAsync<int>("select archetypes from cards where id = @Id", new { card.Id }).ConfigureAwait(false);
+            // var cardSupportsId = await connection.ExecuteScalarAsync<int>("select supports from cards where id = @Id", new { card.Id }).ConfigureAwait(false);
+            // var cardAntiSupportsId = await connection.ExecuteScalarAsync<int>("select antisupports from cards where id = @Id", new { card.Id }).ConfigureAwait(false);
 
-            if (card.Archetypes is not null)
+            if (card.Translations is not null && card.Translations.Any())
             {
 
-                foreach (var archetype in card.Archetypes)
+                foreach (var translation in card.Translations)
                 {
 
-                    if (string.IsNullOrEmpty(archetype))
-                        continue;
-
-                    var archetypeId = await connection.QuerySingleProcAsync<int>("insert_or_get_archetype", new { input = archetype }).ConfigureAwait(false);
-
-                    //var archetypeId =
-                    //    await connection.ExecuteScalarAsync("select id from archetypes where name = @archetype", new { archetype }) ??
-                    //    await connection.ExecuteScalarAsync("insert into archetypes(name) values(@archetype) returning id", new { archetype });
+                    translation.CardId = card.Id;
 
                     await connection.ExecuteAsync(
-                       "insert into card_to_archetypes values(@cardArchetypesId, @archetypeId) on conflict on constraint cardarchetypesid_archetypesid_pair_unique do nothing",
-                       new
-                       {
-                           cardArchetypesId,
-                           archetypeId
-                       }).ConfigureAwait(false);
+                            "upsert_translation",
+                            new
+                            {
+                                cardid = translation.CardId,
+                                language = translation.Language,
+                                name = translation.Name,
+                                lore = translation.Lore
+                            },
+                            commandType: CommandType.StoredProcedure
+                        )
+                        .ConfigureAwait(false);
 
                 }
 
             }
 
-            if (card.Supports is not null)
+            if (card.Archetypes is not null && card.Archetypes.Any())
             {
 
-                foreach (var support in card.Supports)
+                var archetypes = card.Archetypes.Where(archetype => !string.IsNullOrEmpty(archetype));
+                var archetypesInDb = await connection
+                    .QueryAsync<string>("select distinct archetypename from joined_cards where id = @id", new { id = card.Id })
+                    .ContinueWith(result => result.Result.ToArray())
+                    .ConfigureAwait(false);
+                var archetypesToDelete = archetypesInDb.Where(archetype => !archetypes.Contains(archetype));
+                var archetypesToInsert = archetypes.Where(archetype => !archetypesInDb.Contains(archetype));
+
+                foreach (var archetype in archetypesToDelete)
+                    await connection.ExecuteAsync("call delete_archetype_relation(@cardname, @archetype)", new { cardname = card.Name, archetype }).ConfigureAwait(false);
+
+                foreach (var archetype in archetypesToInsert)
                 {
 
-                    if (string.IsNullOrEmpty(support))
-                        continue;
+                    await connection.ExecuteAsync("call insert_archetype_relation(@cardname, @archetype)", new { cardname = card.Name, archetype }).ConfigureAwait(false);
 
-                    var supportId = await connection.QuerySingleProcAsync<int>("insert_or_get_support", new { input = support }).ConfigureAwait(false);
-
-                    //object supportId =
-                    //    await connection.ExecuteScalarAsync("select id from supports where name = @support", new { support }) ??
-                    //    await connection.ExecuteScalarAsync("insert into supports(name) values(@support) returning id", new { support });
-
-                    await connection.ExecuteAsync(
-                        "insert into card_to_supports values(@cardSupportsId, @supportId) on conflict on constraint cardsupportsid_supportsid_pair_unique do nothing",
-                        new
-                        {
-                            cardSupportsId,
-                            supportId
-                        }).ConfigureAwait(false);
+                    // var archetypeId = await connection.QuerySingleProcAsync<int>("insert_or_get_archetype", new { input = archetype }).ConfigureAwait(false);
+                    //
+                    // //var archetypeId =
+                    // //    await connection.ExecuteScalarAsync("select id from archetypes where name = @archetype", new { archetype }) ??
+                    // //    await connection.ExecuteScalarAsync("insert into archetypes(name) values(@archetype) returning id", new { archetype });
+                    //
+                    // await connection.ExecuteAsync(
+                    //         "insert into card_to_archetypes values(@cardArchetypesId, @archetypeId) on conflict on constraint cardarchetypesid_archetypesid_pair_unique do nothing",
+                    //         new
+                    //         {
+                    //             cardArchetypesId,
+                    //             archetypeId
+                    //         })
+                    //     .ConfigureAwait(false);
 
                 }
 
             }
 
-            if (card.AntiSupports is not null)
+            if (card.Supports is not null && card.Supports.Any())
             {
 
-                foreach (var antiSupport in card.AntiSupports)
+                var supports = card.Supports.Where(support => !string.IsNullOrEmpty(support));
+                var supportsInDb = await connection
+                    .QueryAsync<string>("select distinct supportname from joined_cards where id = @id", new { id = card.Id })
+                    .ContinueWith(result => result.Result.ToArray())
+                    .ConfigureAwait(false);
+                var supportsToDelete = supportsInDb.Where(support => !supports.Contains(support));
+                var supportsToInsert = supports.Where(support => !supportsInDb.Contains(support));
+
+                foreach (var support in supportsToDelete)
+                    await connection.ExecuteAsync("call delete_support_relation(@cardname, @support)", new { cardname = card.Name, support }).ConfigureAwait(false);
+
+                foreach (var support in supportsToInsert)
                 {
 
-                    if (string.IsNullOrEmpty(antiSupport))
-                        continue;
+                    await connection.ExecuteAsync("call insert_support_relation(@cardname, @support)", new { cardnname = card.Name, support }).ConfigureAwait(false);
 
-                    var antiSupportId = await connection.QuerySingleAsync<int>("insert_or_get_antisupport", new { input = antiSupport }, commandType: CommandType.StoredProcedure).ConfigureAwait(false);
+                    // var supportId = await connection.QuerySingleProcAsync<int>("insert_or_get_support", new { input = support }).ConfigureAwait(false);
+                    //
+                    // //object supportId =
+                    // //    await connection.ExecuteScalarAsync("select id from supports where name = @support", new { support }) ??
+                    // //    await connection.ExecuteScalarAsync("insert into supports(name) values(@support) returning id", new { support });
+                    //
+                    // await connection.ExecuteAsync(
+                    //         "insert into card_to_supports values(@cardSupportsId, @supportId) on conflict on constraint cardsupportsid_supportsid_pair_unique do nothing",
+                    //         new
+                    //         {
+                    //             cardSupportsId,
+                    //             supportId
+                    //         })
+                    //     .ConfigureAwait(false);
 
-                    //object antiSupportId =
-                    //    await connection.ExecuteScalarAsync("select id from antisupports where name = @antiSupport", new { antiSupport }) ??
-                    //    await connection.ExecuteScalarAsync("insert into antisupports(name) values(@antiSupport) returning id", new { antiSupport });
+                }
 
-                    await connection.ExecuteAsync(
-                        "insert into card_to_antisupports values(@cardAntiSupportsId, @antiSupportId) on conflict on constraint cardantisupportsid_antisupportsid_pair_unique do nothing",
-                        new
-                        {
-                            cardAntiSupportsId,
-                            antiSupportId
-                        }).ConfigureAwait(false);
+            }
+
+            if (card.AntiSupports is not null && card.AntiSupports.Any())
+            {
+
+                var antisupports = card.AntiSupports.Where(antisupport => !string.IsNullOrEmpty(antisupport));
+                var antisupportsInDb = await connection
+                    .QueryAsync<string>("select distinct antisupportname from joined_cards where id = @id", new { id = card.Id })
+                    .ContinueWith(result => result.Result.ToArray())
+                    .ConfigureAwait(false);
+                var antisupportsToDelete = antisupportsInDb.Where(antisupport => !antisupport.Contains(antisupport));
+                var antisupportsToInsert = antisupports.Where(antisupport => !antisupportsInDb.Contains(antisupport));
+
+                foreach (var antisupport in antisupportsToDelete)
+                    await connection.ExecuteAsync("call delete_antisupport_relation(@cardname, @antisupport)", new { cardname = card.Name, antisupport }).ConfigureAwait(false);
+
+                foreach (var antisupport in antisupportsToInsert)
+                {
+
+                    await connection.ExecuteAsync("call insert_antisupport_relation(@cardname, @antisupport)", new { cardname = card.Name, antisupport }).ConfigureAwait(false);
+
+                    // var antiSupportId = await connection.QuerySingleAsync<int>("insert_or_get_antisupport", new { input = antiSupport }, commandType: CommandType.StoredProcedure).ConfigureAwait(false);
+                    //
+                    // //object antiSupportId =
+                    // //    await connection.ExecuteScalarAsync("select id from antisupports where name = @antiSupport", new { antiSupport }) ??
+                    // //    await connection.ExecuteScalarAsync("insert into antisupports(name) values(@antiSupport) returning id", new { antiSupport });
+                    //
+                    // await connection.ExecuteAsync(
+                    //         "insert into card_to_antisupports values(@cardAntiSupportsId, @antiSupportId) on conflict on constraint cardantisupportsid_antisupportsid_pair_unique do nothing",
+                    //         new
+                    //         {
+                    //             cardAntiSupportsId,
+                    //             antiSupportId
+                    //         })
+                    //     .ConfigureAwait(false);
 
                 }
 
@@ -164,7 +221,7 @@ namespace YuGiOh.Common.Repositories
         public async Task InsertCardHashAsync(int id, string hash)
         {
 
-            using var connection = _config.GetYuGiOhDbConnection();
+            await using var connection = _config.GetYuGiOhDbConnection();
 
             await connection.OpenAsync().ConfigureAwait(false);
             await connection.ExecuteAsync("insert into card_hashes values(@id, @hash) on conflict on constraint card_hashes_pkey do update set hash = @hash", new { id, hash }).ConfigureAwait(false);
@@ -175,7 +232,7 @@ namespace YuGiOh.Common.Repositories
         public async Task InsertBoosterPack(BoosterPackEntity boosterPack)
         {
 
-            using var connection = _config.GetYuGiOhDbConnection();
+            await using var connection = _config.GetYuGiOhDbConnection();
 
             await connection.OpenAsync().ConfigureAwait(false);
 
@@ -186,18 +243,72 @@ namespace YuGiOh.Common.Repositories
             else
                 await connection.InsertAsync(boosterPack).ConfigureAwait(false);
 
-            using (var update = connection.CreateCommand())
+            var datesId = await connection.QuerySingleAsync<int>("select dates from boosterpacks where id = @id", new { id = boosterPack.Id }).ConfigureAwait(false);
+            var cardsId = await connection.QuerySingleAsync<int>("select cards from boosterpacks where id = @id", new { id = boosterPack.Id }).ConfigureAwait(false);
+
+            foreach (var date in boosterPack.Dates)
             {
 
-                update.CommandText = "update boosterpacks set dates = @dates, cards = @cards where id = @id";
+                date.BoosterPackDatesId = datesId;
 
-                update.Parameters.AddWithValue("id", boosterPack.Id);
-                update.Parameters.AddWithValue("dates", JsonConvert.SerializeObject(boosterPack.Dates));
-                update.Parameters.AddWithValue("cards", JsonConvert.SerializeObject(boosterPack.Cards));
-
-                await update.ExecuteNonQueryAsync().ConfigureAwait(false);
+                await connection.ExecuteAsync(
+                        "upsert_boosterpack_date",
+                        new
+                        {
+                            boosterpackdatesid = date.BoosterPackDatesId,
+                            name = date.Name,
+                            date = date.Date
+                        },
+                        commandType: CommandType.StoredProcedure)
+                    .ConfigureAwait(false);
 
             }
+
+            foreach (var card in boosterPack.Cards)
+            {
+
+                card.BoosterPackCardsId = cardsId;
+
+                card.Id = await connection.QuerySingleAsync<int>(
+                        "insert_or_get_boosterpack_card",
+                        new
+                        {
+                            _boosterpackcardsid = card.BoosterPackCardsId,
+                            _name = card.Name
+                        },
+                        commandType: CommandType.StoredProcedure)
+                    .ConfigureAwait(false);
+
+                var raritiesId = await connection.QuerySingleAsync<int>("select rarities from boosterpack_cards where id = @id", new { id = card.Id }).ConfigureAwait(false);
+
+                foreach (var rarity in card.Rarities)
+                {
+
+                    await connection.ExecuteAsync(
+                            "insert into boosterpack_rarities(boosterpackraritiesid, name) values(@boosterpackraritiesid, @name) on conflict on constraint boosterpack_rarities_boosterpackraritiesid_name_unique_pair do nothing",
+                            new
+                            {
+                                boosterpackraritiesid = raritiesId,
+                                name = rarity
+                            })
+                        .ConfigureAwait(false);
+
+                }
+
+            }
+
+            // await using (var update = connection.CreateCommand())
+            // {
+            //
+            //     update.CommandText = "update boosterpacks set dates = @dates, cards = @cards where id = @id";
+            //
+            //     update.Parameters.AddWithValue("id", boosterPack.Id);
+            //     update.Parameters.AddWithValue("dates", JsonConvert.SerializeObject(boosterPack.Dates));
+            //     update.Parameters.AddWithValue("cards", JsonConvert.SerializeObject(boosterPack.Cards));
+            //
+            //     await update.ExecuteNonQueryAsync().ConfigureAwait(false);
+            //
+            // }
 
             await connection.CloseAsync().ConfigureAwait(false);
 
@@ -206,13 +317,32 @@ namespace YuGiOh.Common.Repositories
         public async Task InsertErrorAsync(Error error)
         {
 
-            using var connection = _config.GetYuGiOhDbConnection();
+            await using var connection = _config.GetYuGiOhDbConnection();
 
             await connection.OpenAsync().ConfigureAwait(false);
             await connection.InsertAsync(error).ConfigureAwait(false);
             await connection.CloseAsync().ConfigureAwait(false);
 
         }
+
+        #endregion Insertions
+
+        public async Task<string> GetCardHashAsync(int id)
+        {
+
+            await using var connection = _config.GetYuGiOhDbConnection();
+
+            await connection.OpenAsync().ConfigureAwait(false);
+
+            var serverHash = await connection.QueryFirstOrDefaultAsync<string>("select hash from card_hashes where id = @id", new { id }).ConfigureAwait(false);
+
+            await connection.CloseAsync().ConfigureAwait(false);
+
+            return serverHash?.Trim();
+
+        }
+
+        #region CardEntity Queries
 
         public async Task<CardEntity> GetCardAsync(string input)
         {
@@ -242,28 +372,11 @@ namespace YuGiOh.Common.Repositories
         public async Task<IEnumerable<CardEntity>> SearchCardsAsync(string input)
         {
 
-            using var connection = _config.GetYuGiOhDbConnection();
+            await using var connection = _config.GetYuGiOhDbConnection();
 
             await connection.OpenAsync().ConfigureAwait(false);
 
-            //input = $"%{input}%";
-
-            var cards = await connection.QueryCardProcAsync("search_cards", new { input }).ConfigureAwait(false);
-
-            await connection.CloseAsync().ConfigureAwait(false);
-
-            return cards;
-
-        }
-
-        public async Task<IEnumerable<CardEntity>> GetCardsAutocomplete(string input)
-        {
-
-            using var connection = _config.GetYuGiOhDbConnection();
-
-            await connection.OpenAsync().ConfigureAwait(false);
-
-            var cards = await connection.QueryCardProcAsync("get_cards_autocomplete", new { input });
+            var cards = await connection.QueryCardsProcAsync("search_cards", new { input }).ConfigureAwait(false);
 
             await connection.CloseAsync().ConfigureAwait(false);
 
@@ -274,7 +387,7 @@ namespace YuGiOh.Common.Repositories
         public async Task<IEnumerable<CardEntity>> GetCardsContainsAllAsync(string input)
         {
 
-            using var connection = _config.GetYuGiOhDbConnection();
+            await using var connection = _config.GetYuGiOhDbConnection();
 
             await connection.OpenAsync().ConfigureAwait(false);
 
@@ -297,7 +410,7 @@ namespace YuGiOh.Common.Repositories
 
             }
 
-            var cards = await connection.QueryCardAsync(selector.RawSql, parameters).ConfigureAwait(false);
+            var cards = await connection.QueryCardsAsync(selector.RawSql, parameters).ConfigureAwait(false);
 
             //foreach (var card in cards)
             //    await FillCardEntity(connection, card).ConfigureAwait(false);
@@ -313,12 +426,11 @@ namespace YuGiOh.Common.Repositories
         public async Task<CardEntity> GetCardFuzzyAsync(string input)
         {
 
-            using var connection = _config.GetYuGiOhDbConnection();
+            await using var connection = _config.GetYuGiOhDbConnection();
 
             await connection.OpenAsync().ConfigureAwait(false);
 
-            var card = await connection.QuerySingleProcAsync<CardEntity>("get_card_fuzzy", new { input }).ConfigureAwait(false);
-            card = await FillCardEntity(connection, card).ConfigureAwait(false);
+            var card = await connection.QuerySingleCardProcAsync("get_card_fuzzy", new { input }).ConfigureAwait(false);
 
             await connection.CloseAsync().ConfigureAwait(false);
 
@@ -329,12 +441,11 @@ namespace YuGiOh.Common.Repositories
         public async Task<CardEntity> GetRandomCardAsync()
         {
 
-            using var connection = _config.GetYuGiOhDbConnection();
+            await using var connection = _config.GetYuGiOhDbConnection();
 
             await connection.OpenAsync().ConfigureAwait(false);
 
-            var card = await connection.QuerySingleProcAsync<CardEntity>("get_random_card").ConfigureAwait(false);
-            card = await FillCardEntity(connection, card).ConfigureAwait(false);
+            var card = await connection.QuerySingleCardProcAsync("get_random_card").ConfigureAwait(false);
 
             await connection.CloseAsync().ConfigureAwait(false);
 
@@ -342,29 +453,14 @@ namespace YuGiOh.Common.Repositories
 
         }
 
-        public async Task<string> GetCardHashAsync(int id)
-        {
-
-            using var connection = _config.GetYuGiOhDbConnection();
-
-            await connection.OpenAsync().ConfigureAwait(false);
-
-            var serverHash = await connection.QueryFirstOrDefaultAsync<string>("select hash from card_hashes where id = @id", new { id }).ConfigureAwait(false);
-
-            await connection.CloseAsync().ConfigureAwait(false);
-
-            return serverHash?.Trim();
-
-        }
-
         public async Task<IEnumerable<CardEntity>> GetCardsInArchetypeAsync(string input)
         {
 
-            using var connection = _config.GetYuGiOhDbConnection();
+            await using var connection = _config.GetYuGiOhDbConnection();
 
             await connection.OpenAsync().ConfigureAwait(false);
 
-            var cards = await connection.QueryCardProcAsync("get_cards_in_archetype", new { input }).ConfigureAwait(false);
+            var cards = await connection.QueryCardsProcAsync("get_cards_in_archetype", new { input }).ConfigureAwait(false);
 
             await connection.CloseAsync().ConfigureAwait(false);
 
@@ -372,10 +468,59 @@ namespace YuGiOh.Common.Repositories
 
         }
 
-        public async Task<IEnumerable<string>> GetArchetypesAutocomplete(string input)
+        public async Task<IEnumerable<CardEntity>> GetCardsInSupportAsync(string input)
         {
 
-            using var connection = _config.GetYuGiOhDbConnection();
+            await using var connection = _config.GetYuGiOhDbConnection();
+
+            await connection.OpenAsync().ConfigureAwait(false);
+
+            var cards = await connection.QueryCardsProcAsync("get_cards_in_support", new { input }).ConfigureAwait(false);
+
+            await connection.CloseAsync().ConfigureAwait(false);
+
+            return cards;
+
+        }
+
+        public async Task<IEnumerable<CardEntity>> GetCardsInAntisupportAsync(string input)
+        {
+
+            await using var connection = _config.GetYuGiOhDbConnection();
+
+            await connection.OpenAsync().ConfigureAwait(false);
+
+            var cards = await connection.QueryCardsProcAsync("get_cards_in_antisupport", new { input }).ConfigureAwait(false);
+
+            await connection.CloseAsync().ConfigureAwait(false);
+
+            return cards;
+
+        }
+
+        #endregion CardEntity Queries
+
+        #region Autocomplete Queries
+
+        public async Task<IEnumerable<string>> GetCardsAutocompleteAsync(string input)
+        {
+
+            await using var connection = _config.GetYuGiOhDbConnection();
+
+            await connection.OpenAsync().ConfigureAwait(false);
+
+            var cards = await connection.QueryProcAsync<string>("get_cards_autocomplete", new { input });
+
+            await connection.CloseAsync().ConfigureAwait(false);
+
+            return cards;
+
+        }
+
+        public async Task<IEnumerable<string>> GetArchetypesAutocompleteAsync(string input)
+        {
+
+            await using var connection = _config.GetYuGiOhDbConnection();
 
             await connection.OpenAsync().ConfigureAwait(false);
 
@@ -387,46 +532,42 @@ namespace YuGiOh.Common.Repositories
 
         }
 
-        public async Task<IEnumerable<CardEntity>> GetCardsInSupportAsync(string input)
+        public async Task<IEnumerable<string>> GetSupportsAutocompleteAsync(string input)
         {
 
-            using var connection = _config.GetYuGiOhDbConnection();
+            await using var connection = _config.GetYuGiOhDbConnection();
 
             await connection.OpenAsync().ConfigureAwait(false);
 
-            var cards = await connection.QueryProcAsync<CardEntity>("get_cards_in_support", new { input }).ConfigureAwait(false);
-
-            foreach (var card in cards)
-                await FillCardEntity(connection, card).ConfigureAwait(false);
+            var supports = await connection.QueryProcAsync<string>("get_supports_autocomplete", new { input }).ConfigureAwait(false);
 
             await connection.CloseAsync().ConfigureAwait(false);
 
-            return cards;
+            return supports;
 
         }
 
-        public async Task<IEnumerable<CardEntity>> GetCardsInAntisupportAsync(string input)
+        public async Task<IEnumerable<string>> GetAntisupportsAutocompleteAsync(string input)
         {
 
-            using var connection = _config.GetYuGiOhDbConnection();
+            await using var connection = _config.GetYuGiOhDbConnection();
 
             await connection.OpenAsync().ConfigureAwait(false);
 
-            var cards = await connection.QueryProcAsync<CardEntity>("get_cards_in_antisupport", new { input }).ConfigureAwait(false);
-
-            foreach (var card in cards)
-                await FillCardEntity(connection, card).ConfigureAwait(false);
+            var antisupports = await connection.QueryProcAsync<string>("get_antisupports_autocomplete", new { input }).ConfigureAwait(false);
 
             await connection.CloseAsync().ConfigureAwait(false);
 
-            return cards;
+            return antisupports;
 
         }
+
+        #endregion Autocomplete Queries
 
         public async Task<string> GetNameWithPasscodeAsync(string passcode)
         {
 
-            using var connection = _config.GetYuGiOhDbConnection();
+            await using var connection = _config.GetYuGiOhDbConnection();
 
             await connection.OpenAsync().ConfigureAwait(false);
 
@@ -441,7 +582,7 @@ namespace YuGiOh.Common.Repositories
         public async Task<string> GetImageLinkAsync(string input)
         {
 
-            using var connection = _config.GetYuGiOhDbConnection();
+            await using var connection = _config.GetYuGiOhDbConnection();
 
             await connection.OpenAsync().ConfigureAwait(false);
 
@@ -466,14 +607,16 @@ namespace YuGiOh.Common.Repositories
 
             };
 
-            using var connection = _config.GetYuGiOhDbConnection();
+            await using var connection = _config.GetYuGiOhDbConnection();
 
             await connection.OpenAsync().ConfigureAwait(false);
 
-            var banlist = new Banlist();
-            banlist.Forbidden = await connection.QueryAsync<string>($"select name from cards where {formatStr} ~~* 'forbidden' order by name asc").ConfigureAwait(false);
-            banlist.Limited = await connection.QueryAsync<string>($"select name from cards where {formatStr} ~~* 'limited' order by name asc").ConfigureAwait(false);
-            banlist.SemiLimited = await connection.QueryAsync<string>($"select name from cards where {formatStr} ~~* 'semi-limited' order by name asc").ConfigureAwait(false);
+            var banlist = new Banlist
+            {
+                Forbidden = await connection.QueryAsync<string>($"select name from cards where {formatStr} ilike 'forbidden' order by name asc").ConfigureAwait(false),
+                Limited = await connection.QueryAsync<string>($"select name from cards where {formatStr} ilike 'limited' order by name asc").ConfigureAwait(false),
+                SemiLimited = await connection.QueryAsync<string>($"select name from cards where {formatStr} ilike 'semi-limited' order by name asc").ConfigureAwait(false)
+            };
 
             await connection.CloseAsync().ConfigureAwait(false);
 
@@ -484,28 +627,69 @@ namespace YuGiOh.Common.Repositories
         public async Task<BoosterPackEntity> GetBoosterPackAsync(string input)
         {
 
-            using var connection = _config.GetYuGiOhDbConnection();
+            await using var connection = _config.GetYuGiOhDbConnection();
 
             await connection.OpenAsync().ConfigureAwait(false);
 
-            var entity = await connection.QueryFirstAsync<BoosterPackEntity>("select * from boosterpacks where name ~~* @input", new { input }).ConfigureAwait(false);
+            BoosterPackEntity entity = null;
+            var dateEntityDict = new Dictionary<string, BoosterPackDateEntity>();
+            var cardEntityDict = new Dictionary<string, BoosterPackCardEntity>();
+
+            await connection.QueryAsync<BoosterPackEntity, BoosterPackDateEntity, BoosterPackCardEntity, string, BoosterPackEntity>(
+                    "select * from joined_boosterpacks where name ilike @input",
+                    (
+                        boosterpackEntity,
+                        dateEntity,
+                        cardEntity,
+                        rarity
+                    ) =>
+                    {
+
+                        if (entity is null)
+                        {
+
+                            entity = boosterpackEntity;
+                            entity.Cards = new List<BoosterPackCardEntity>();
+                            entity.Dates = new List<BoosterPackDateEntity>();
+
+                        }
+
+                        if (!dateEntityDict.TryGetValue(dateEntity.Name, out var dateBpEntity))
+                        {
+
+                            dateBpEntity = dateEntity;
+
+                            dateEntityDict[dateEntity.Name] = dateBpEntity;
+
+                        }
+
+                        if (!cardEntityDict.TryGetValue(cardEntity.Name, out var cardBpEntity))
+                        {
+
+                            cardBpEntity = cardEntity;
+                            cardBpEntity.Rarities = new List<string>();
+                            cardEntityDict[cardBpEntity.Name] = cardBpEntity;
+
+                        }
+
+                        if (!entity.Dates.Contains(dateBpEntity))
+                            entity.Dates.Add(dateBpEntity);
+
+                        if (!entity.Cards.Contains(cardBpEntity))
+                            entity.Cards.Add(cardBpEntity);
+
+                        if (!cardBpEntity.Rarities.Contains(rarity))
+                            cardBpEntity.Rarities.Add(rarity);
+
+                        return entity;
+
+                    },
+                    new { input },
+                    splitOn: "boosterpackdatename,boosterpackcardname,boosterpackrarity"
+                )
+                .ConfigureAwait(false);
 
             await connection.CloseAsync().ConfigureAwait(false);
-
-            return entity;
-
-        }
-
-        private async Task<CardEntity> FillCardEntity(NpgsqlConnection connection, CardEntity entity)
-        {
-
-            var archetypes = await connection.QueryProcAsync<string>("get_card_archetypes", new { id = entity.ArchetypesId }).ConfigureAwait(false);
-            var supports = await connection.QueryProcAsync<string>("get_card_supports", new { id = entity.SupportsId }).ConfigureAwait(false);
-            var antisupports = await connection.QueryProcAsync<string>("get_card_antisupports", new { id = entity.AntiSupportsId }).ConfigureAwait(false);
-
-            entity.Archetypes = archetypes.ToList();
-            entity.Supports = supports.ToList();
-            entity.AntiSupports = antisupports.ToList();
 
             return entity;
 

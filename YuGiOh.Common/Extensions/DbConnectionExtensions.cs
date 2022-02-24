@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Dapper;
 using YuGiOh.Common.Models.YuGiOh;
@@ -13,7 +12,7 @@ namespace YuGiOh.Common.Extensions
     public static class DbConnectionExtensions
     {
 
-        private const string DefaultSplitOn = "archetypename,supportname,antisupportname";
+        private const string DefaultSplitOn = "archetypename,supportname,antisupportname,translationid";
 
         public static Task<IEnumerable<T>> QueryProcAsync<T>(this DbConnection connection, string proc, object @params = null)
             => connection.QueryAsync<T>(proc, @params, commandType: CommandType.StoredProcedure);
@@ -21,7 +20,7 @@ namespace YuGiOh.Common.Extensions
         public static Task<T> QuerySingleProcAsync<T>(this DbConnection connection, string proc, object @params = null)
             => connection.QuerySingleAsync<T>(proc, @params, commandType: CommandType.StoredProcedure);
 
-        public static Task<IEnumerable<CardEntity>> QueryCardAsync(
+        public static Task<IEnumerable<CardEntity>> QueryCardsAsync(
             this DbConnection connection,
             string sql,
             object @params = null,
@@ -38,11 +37,12 @@ namespace YuGiOh.Common.Extensions
 
         }
 
-        public static Task<IEnumerable<CardEntity>> QueryCardProcAsync(
+        public static Task<IEnumerable<CardEntity>> QueryCardsProcAsync(
             this DbConnection connection,
             string proc,
             object @params = null,
-            string splitOn = DefaultSplitOn)
+            string splitOn = DefaultSplitOn
+        )
         {
 
             return connection.QueryAsync(
@@ -59,7 +59,8 @@ namespace YuGiOh.Common.Extensions
             this DbConnection connection,
             string proc,
             object @params = null,
-            string splitOn = DefaultSplitOn)
+            string splitOn = DefaultSplitOn
+        )
         {
 
             return connection.QueryAsync(
@@ -68,20 +69,21 @@ namespace YuGiOh.Common.Extensions
                 param: @params,
                 splitOn: splitOn,
                 commandType: CommandType.StoredProcedure
-            ).ContinueWith(results => results.Result.Distinct().FirstOrDefault());
+            ).ContinueWith(results => results.Result.FirstOrDefault());
 
         }
 
-        private static Func<CardEntity, string, string, string, CardEntity> ProcessEntities()
+        private static Func<CardEntity, string, string, string, TranslationEntity, CardEntity> ProcessEntities()
         {
 
             var entities = new Dictionary<int, CardEntity>();
 
-            CardEntity processEntity(
+            CardEntity ProcessEntityFunction(
                 CardEntity entity,
                 string archetype,
                 string support,
-                string antisupport
+                string antisupport,
+                TranslationEntity translation
             )
             {
 
@@ -89,9 +91,10 @@ namespace YuGiOh.Common.Extensions
                 {
 
                     cardEntity = entity;
-                    cardEntity.Archetypes = new();
-                    cardEntity.Supports = new();
-                    cardEntity.AntiSupports = new();
+                    cardEntity.Archetypes = new List<string>();
+                    cardEntity.Supports = new List<string>();
+                    cardEntity.AntiSupports = new List<string>();
+                    cardEntity.Translations = new List<TranslationEntity>();
 
                     entities.Add(cardEntity.Id, cardEntity);
 
@@ -105,34 +108,38 @@ namespace YuGiOh.Common.Extensions
 
                 if (!cardEntity.AntiSupports.Contains(antisupport) && !string.IsNullOrEmpty(antisupport))
                     cardEntity.AntiSupports.Add(antisupport);
+                
+                cardEntity.Translations.Add(translation);
 
                 return cardEntity;
 
             }
 
-            return processEntity;
+            return ProcessEntityFunction;
 
         }
 
-        private static Func<CardEntity, string, string, string, CardEntity> ProcessEntity()
+        private static Func<CardEntity, string, string, string, TranslationEntity, CardEntity> ProcessEntity()
         {
 
             CardEntity cardEntity = null;
 
-            CardEntity processEntity(
+            CardEntity ProcessEntityFunction(
                 CardEntity entity,
                 string archetype,
                 string support,
-                string antisupport
+                string antisupport,
+                TranslationEntity translation
             )
             {
 
                 if (cardEntity == null)
                 {
                     cardEntity = entity;
-                    cardEntity.Archetypes = new();
-                    cardEntity.Supports = new();
-                    cardEntity.AntiSupports = new();
+                    cardEntity.Archetypes = new List<string>();
+                    cardEntity.Supports = new List<string>();
+                    cardEntity.AntiSupports = new List<string>();
+                    cardEntity.Translations = new List<TranslationEntity>();
                 }
 
                 if (!cardEntity.Archetypes.Contains(archetype) && !string.IsNullOrEmpty(archetype))
@@ -144,11 +151,13 @@ namespace YuGiOh.Common.Extensions
                 if (!cardEntity.AntiSupports.Contains(antisupport) && !string.IsNullOrEmpty(antisupport))
                     cardEntity.AntiSupports.Add(antisupport);
 
+                cardEntity.Translations.Add(translation);
+
                 return cardEntity;
 
             }
 
-            return processEntity;
+            return ProcessEntityFunction;
 
         }
 

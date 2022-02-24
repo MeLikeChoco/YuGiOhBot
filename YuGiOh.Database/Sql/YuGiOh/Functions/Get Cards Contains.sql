@@ -9,8 +9,8 @@ begin
 	return query
 		select * from joined_cards 
 		where 
-			name ~~* input or
-			realname ~~* input 
+			name ilike input or
+			realname ilike input 
 		order by name;
 
 end

@@ -17,6 +17,7 @@ namespace YuGiOh.Common.Models.YuGiOh
         public int Id { get; set; }
 
         public string Name { get; set; }
+
         public string RealName { get; set; }
 
         public string CardType { get; set; }
@@ -24,18 +25,27 @@ namespace YuGiOh.Common.Models.YuGiOh
         public string Types { get; set; }
         public string Attribute { get; set; }
         public string Materials { get; set; }
+
         public string Lore { get; set; }
 
         [Ignore]
+        public List<TranslationEntity> Translations { get; set; }
+
+        [Ignore]
         public List<string> Archetypes { get; set; }
+
         [Column("archetypes"), DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int ArchetypesId { get; set; }
+
         [Ignore]
         public List<string> Supports { get; set; }
+
         [Column("supports"), DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int SupportsId { get; set; }
+
         [Ignore]
         public List<string> AntiSupports { get; set; }
+
         [Column("antisupports"), DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int AntiSupportsId { get; set; }
 

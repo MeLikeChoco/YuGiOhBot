@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Dapper;
 using Dapper.FluentMap;
 using Dapper.FluentMap.Dommel;
@@ -45,13 +41,13 @@ namespace YuGiOh.Common.Repositories
         public async Task<GuildConfigEntity> GetGuildConfigAsync(string id)
         {
 
-            using var connection = _config.GetGuildConfigConnection();
+            await using var connection = _config.GetGuildConfigConnection();
 
-            await connection.OpenAsync();
+            await connection.OpenAsync().ConfigureAwait(false);
 
-            var guildConfig = await connection.QuerySingleAsync<GuildConfigEntity>("select * from configs where id = @id", new { id });
+            var guildConfig = await connection.QuerySingleAsync<GuildConfigEntity>("select * from configs where id = @id", new { id }).ConfigureAwait(false);
 
-            await connection.CloseAsync();
+            await connection.CloseAsync().ConfigureAwait(false);
 
             return guildConfig;
 
@@ -60,35 +56,35 @@ namespace YuGiOh.Common.Repositories
         public async Task InsertGuildConfigAsync(GuildConfigEntity guildConfig)
         {
 
-            using var connection = _config.GetGuildConfigConnection();
+            await using var connection = _config.GetGuildConfigConnection();
 
-            await connection.OpenAsync();
-            await connection.InsertAsync(guildConfig);
-            await connection.CloseAsync();
+            await connection.OpenAsync().ConfigureAwait(false);
+            await connection.InsertAsync(guildConfig).ConfigureAwait(false);
+            await connection.CloseAsync().ConfigureAwait(false);
 
         }
 
         public async Task UpdateGuildConfigAsync(GuildConfigEntity guildConfig)
         {
 
-            using var connection = _config.GetGuildConfigConnection();
+            await using var connection = _config.GetGuildConfigConnection();
 
-            await connection.OpenAsync();
-            await connection.UpdateAsync(guildConfig);
-            await connection.CloseAsync();
+            await connection.OpenAsync().ConfigureAwait(false);
+            await connection.UpdateAsync(guildConfig).ConfigureAwait(false);
+            await connection.CloseAsync().ConfigureAwait(false);
 
         }
 
         public async Task<bool> GuildConfigExistsAsync(string id)
         {
 
-            using var connection = _config.GetGuildConfigConnection();
+            await using var connection = _config.GetGuildConfigConnection();
 
-            await connection.OpenAsync();
+            await connection.OpenAsync().ConfigureAwait(false);
 
-            var doesExist = await connection.ExecuteScalarAsync<bool>("select 1 from configs where id = @id", new { id });
+            var doesExist = await connection.ExecuteScalarAsync<bool>("select 1 from configs where id = @id", new { id }).ConfigureAwait(false);
 
-            await connection.CloseAsync();
+            await connection.CloseAsync().ConfigureAwait(false);
 
             return doesExist;
 
