@@ -1,38 +1,25 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Dapper;
-using Discord;
-using Microsoft.Data.Sqlite;
-using Newtonsoft.Json.Linq;
-using YuGiOh.Bot.Extensions;
-using YuGiOh.Bot.Models;
-using YuGiOh.Bot.Models.BoosterPacks;
-using YuGiOh.Bot.Models.Cards;
+﻿using System.Collections.Concurrent;
 
 namespace YuGiOh.Bot.Services
 {
     public class Cache
     {
 
-        public List<Card> Cards { get; private set; }
-        public Dictionary<string, Card> NameToCard { get; private set; }
-        public Dictionary<string, BoosterPack> BoosterPacks { get; private set; }
+        // public List<Card> Cards { get; private set; }
+        // public Dictionary<string, Card> NameToCard { get; private set; }
+        // public Dictionary<string, BoosterPack> BoosterPacks { get; private set; }
         public ConcurrentDictionary<ulong, object> GuessInProgress { get; }
-        public ConcurrentDictionary<ulong, object> HangmanInProgress { get; }
-        //public Banlist Banlist { get; private set; }
-        public int FYeahYgoCardArtPosts { get; private set; }
-        public string TumblrKey { get; private set; }
-        public string BitlyKey { get; private set; }
 
-        private static readonly string DbString = Constants.DatabaseString;
-        private static readonly ParallelOptions POptions = new() { MaxDegreeOfParallelism = Environment.ProcessorCount };
-        private static readonly SqliteConnection Db = new(DbString);
-        private static readonly StringComparer IgnoreCase = StringComparer.OrdinalIgnoreCase;
+        public ConcurrentDictionary<ulong, object> HangmanInProgress { get; }
+
+        //public Banlist Banlist { get; private set; }
+        // public int FYeahYgoCardArtPosts { get; private set; }
+        // public string TumblrKey { get; private set; }
+
+        // private static readonly string DbString = Constants.DatabaseString;
+        // private static readonly ParallelOptions POptions = new() { MaxDegreeOfParallelism = Environment.ProcessorCount };
+        // private static readonly SqliteConnection Db = new(DbString);
+        // private static readonly StringComparer IgnoreCase = StringComparer.OrdinalIgnoreCase;
 
         public Cache()
         {
@@ -41,89 +28,77 @@ namespace YuGiOh.Bot.Services
 
             GuessInProgress = new ConcurrentDictionary<ulong, object>();
             HangmanInProgress = new ConcurrentDictionary<ulong, object>();
-
-            //made a seperate method so other classes may update the embeds when I want them to
-            Initialize();
+            // BitlyKey = File.ReadAllText("Files/OAuth/Bitly.txt");
 
             Log("Finished cache initialization...");
 
         }
 
-        public void Initialize()
-        {
+        #region Old Code
 
-            var cardParsers = AquireGoodies();
+        // public async Task GetAWESOMECARDART(Web web)
+        // {
+        //
+        //     Log("Getting photo posts on FYeahYgoCardArt tumblr...");
+        //
+        //     TumblrKey = await File.ReadAllTextAsync("Files/OAuth/Tumblr.txt");
+        //     var posts = await web.GetDeserializedContent<JObject>($"https://api.tumblr.com/v2/blog/fyeahygocardart/posts/photo?api_key={TumblrKey}&limit=1");
+        //     FYeahYgoCardArtPosts = int.Parse(posts["response"]["total_posts"].ToString());
+        //
+        //     Log($"Got {FYeahYgoCardArtPosts} photos.");
+        //
+        // }
+        //
+        // private void UnlockTheShock()
+        // {
+        //
+        //     BitlyKey = File.ReadAllText("Files/OAuth/Bitly.txt");
+        //
+        // }
 
-            AquireFancyMessages(cardParsers);
-            //AquireTheUntouchables();
-            UnlockTheShock();
-            AquireGoodiePacks();
-
-        }
-
-        public async Task GetAWESOMECARDART(Web web)
-        {
-
-            Log("Getting photo posts on FYeahYgoCardArt tumblr...");
-
-            TumblrKey = await File.ReadAllTextAsync("Files/OAuth/Tumblr.txt");
-            var posts = await web.GetDeserializedContent<JObject>($"https://api.tumblr.com/v2/blog/fyeahygocardart/posts/photo?api_key={TumblrKey}&limit=1");
-            FYeahYgoCardArtPosts = int.Parse(posts["response"]["total_posts"].ToString());
-
-            Log($"Got {FYeahYgoCardArtPosts} photos.");
-
-        }
-
-        private void UnlockTheShock()
-        {
-
-            BitlyKey = File.ReadAllText("Files/OAuth/Bitly.txt");
-
-        }
-
-        private void AquireFancyMessages(IEnumerable<CardParser> parsers)
-        {
-
-            var counter = 0;
-            var total = parsers.Count();
-            var tempObjects = new ConcurrentDictionary<string, Card>();
-            var tempDict = new ConcurrentDictionary<string, EmbedBuilder>();
-
-            Log("Generating them fancy embed messages...");
-
-            var monitor = new object();
-
-            Parallel.ForEach(parsers, POptions, parser =>
-            {
-
-                var name = parser.Name;
-                var card = parser.Parse();
-                var embed = card.GetEmbedBuilder();
-
-                tempObjects[name] = card;
-                tempDict[name] = embed;
-
-                var current = Interlocked.Increment(ref counter);
-
-                lock (monitor)
-                {
-
-                    if (current != total)
-                        InlineLog($"Progress: {current}/{total}");
-                    else
-                        Log($"Progress: {current}/{total}");
-
-                }
-
-            });
-
-            NameToCard = new Dictionary<string, Card>(tempObjects, IgnoreCase);
-            Cards = NameToCard.Select(kv => kv.Value).ToList();
-            //Embeds = new Dictionary<string, EmbedBuilder>(tempDict, IgnoreCase);
-
-            Log("Finished generating embeds.");
-
-        }
+        // private void AquireFancyMessages(IEnumerable<CardParser> parsers)
+        // {
+        //
+        //     var counter = 0;
+        //     var total = parsers.Count();
+        //     var tempObjects = new ConcurrentDictionary<string, Card>();
+        //     var tempDict = new ConcurrentDictionary<string, EmbedBuilder>();
+        //
+        //     Log("Generating them fancy embed messages...");
+        //
+        //     var monitor = new object();
+        //
+        //     Parallel.ForEach(parsers, POptions, parser =>
+        //     {
+        //
+        //         var name = parser.Name;
+        //         var card = parser.Parse();
+        //         var embed = card.GetEmbedBuilder();
+        //
+        //         tempObjects[name] = card;
+        //         tempDict[name] = embed;
+        //
+        //         var current = Interlocked.Increment(ref counter);
+        //
+        //         lock (monitor)
+        //         {
+        //
+        //             if (current != total)
+        //                 InlineLog($"Progress: {current}/{total}");
+        //             else
+        //                 Log($"Progress: {current}/{total}");
+        //
+        //         }
+        //
+        //     });
+        //
+        //     NameToCard = new Dictionary<string, Card>(tempObjects, IgnoreCase);
+        //     Cards = NameToCard.Select(kv => kv.Value).ToList();
+        //     //Embeds = new Dictionary<string, EmbedBuilder>(tempDict, IgnoreCase);
+        //
+        //     Log("Finished generating embeds.");
+        //
+        // }
 
         //private EmbedBuilder GenFancyMessage(Card card)
         //{
@@ -407,63 +382,65 @@ namespace YuGiOh.Bot.Services
 
         //}
 
-        private IEnumerable<CardParser> AquireGoodies()
-        {
+        // private IEnumerable<CardParser> AquireGoodies()
+        // {
+        //
+        //     Db.Open();
+        //
+        //     Log($"Retrieving all cards from \"{Db.ConnectionString}\"...");
+        //     //var parsers = _db.Query<CardParser>("select * from Cards where Types not like '%Pegasus%' or Types is null");
+        //     var parsers = Db.Query<CardParser>("select * from Cards");
+        //     parsers = parsers.Where(parser => (string.IsNullOrEmpty(parser.Types) || !parser.Types.Contains("Pegasus") || !parser.Types.Contains("Skill")) &&
+        //                                       (string.IsNullOrEmpty(parser.Types) || !(parser.Level == -1 && parser.Rank == -1 && parser.Link == 0 && string.IsNullOrEmpty(parser.Property))) &&
+        //                                       !parser.CardType.ContainsIgnoreCase("Counter") && !parser.CardType.ContainsIgnoreCase("Command") &&
+        //                                       (string.IsNullOrEmpty(parser.Attribute) || !parser.Attribute.ContainsIgnoreCase("LAUGH")));
+        //
+        //
+        //     //Log("Getting regular monsters...");
+        //     //var regulars = _db.Query<RegularMonster>("select * from Cards where Level not like -1 and PendulumScale like -1");
+        //     //Log("Getting xyz monsters...");
+        //     //var xyz = _db.Query<Xyz>("select * from Cards where Types like '%Xyz%'"); //includes xyz pendulums
+        //     //Log("Getting pendulum monsters...");
+        //     //var pendulums = _db.Query<RegularMonster>("select * from Cards where Types like '%Pendulum%' and Types not like '%Xyz%'"); //does not include xyz pendulums
+        //     //Log("Getting link monsters...");
+        //     //var links = _db.Query<LinkMonster>("select * from Cards where Types like '%Link%'");
+        //     //Log("Getting spell and traps...");
+        //     //var spelltraps = _db.Query<SpellTrap>("select * from Cards where CardType like '%Spell%' or CardType like '%Trap%'");
+        //
+        //     Db.Close();
+        //
+        //     Log($"Retrieved {parsers.Count()} cards from the database.");
+        //
+        //     return parsers;
+        //
+        // }
 
-            Db.Open();
+        // private void AquireGoodiePacks()
+        // {
+        //
+        //     Log($"Retrieving all booster packs from \"{Db.ConnectionString}\"...");
+        //
+        //     Db.Open();
+        //
+        //     var boosterPacks = Db.Query<BoosterPackParser>("select * from BoosterPacks");
+        //
+        //     Db.Close();
+        //
+        //     BoosterPacks = boosterPacks
+        //         .AsParallel() //probably don't need it, but whatever, it was cool to try using
+        //         .WithDegreeOfParallelism(Environment.ProcessorCount)
+        //         .ToDictionary(parser => parser.Name, parser => parser.Parse(), StringComparer.InvariantCultureIgnoreCase);
+        //
+        //     Log("Finished retrieving all booster packs from ygofandom.db");
+        //
+        // }
 
-            Log($"Retrieving all cards from \"{Db.ConnectionString}\"...");
-            //var parsers = _db.Query<CardParser>("select * from Cards where Types not like '%Pegasus%' or Types is null");
-            var parsers = Db.Query<CardParser>("select * from Cards");
-            parsers = parsers.Where(parser => (string.IsNullOrEmpty(parser.Types) || !parser.Types.Contains("Pegasus") || !parser.Types.Contains("Skill")) &&
-            (string.IsNullOrEmpty(parser.Types) || !(parser.Level == -1 && parser.Rank == -1 && parser.Link == 0 && string.IsNullOrEmpty(parser.Property))) &&
-            !parser.CardType.ContainsIgnoreCase("Counter") && !parser.CardType.ContainsIgnoreCase("Command") &&
-            (string.IsNullOrEmpty(parser.Attribute) || !parser.Attribute.ContainsIgnoreCase("LAUGH")));
+        #endregion Old Code
 
-
-            //Log("Getting regular monsters...");
-            //var regulars = _db.Query<RegularMonster>("select * from Cards where Level not like -1 and PendulumScale like -1");
-            //Log("Getting xyz monsters...");
-            //var xyz = _db.Query<Xyz>("select * from Cards where Types like '%Xyz%'"); //includes xyz pendulums
-            //Log("Getting pendulum monsters...");
-            //var pendulums = _db.Query<RegularMonster>("select * from Cards where Types like '%Pendulum%' and Types not like '%Xyz%'"); //does not include xyz pendulums
-            //Log("Getting link monsters...");
-            //var links = _db.Query<LinkMonster>("select * from Cards where Types like '%Link%'");
-            //Log("Getting spell and traps...");
-            //var spelltraps = _db.Query<SpellTrap>("select * from Cards where CardType like '%Spell%' or CardType like '%Trap%'");
-
-            Db.Close();
-
-            Log($"Retrieved {parsers.Count()} cards from the database.");
-
-            return parsers;
-
-        }
-
-        private void AquireGoodiePacks()
-        {
-
-            Log($"Retrieving all booster packs from \"{Db.ConnectionString}\"...");
-
-            Db.Open();
-
-            var boosterPacks = Db.Query<BoosterPackParser>("select * from BoosterPacks");
-
-            Db.Close();
-
-            BoosterPacks = boosterPacks
-                .AsParallel() //probably don't need it, but whatever, it was cool to try using
-                .WithDegreeOfParallelism(Environment.ProcessorCount)
-                .ToDictionary(parser => parser.Name, parser => parser.Parse(), StringComparer.InvariantCultureIgnoreCase);
-
-            Log("Finished retrieving all booster packs from ygofandom.db");
-
-        }
-
-        private void Log(string message)
+        private static void Log(string message)
             => AltConsole.Write("Info", "Cache", message);
 
-        private void InlineLog(string message)
+        private static void InlineLog(string message)
             => AltConsole.InlineWrite("Info", "Cache", message, false);
 
     }
