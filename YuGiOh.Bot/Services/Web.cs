@@ -17,8 +17,8 @@ namespace YuGiOh.Bot.Services
         public string FandomUrl = "https://yugioh.fandom.com/wiki/";
 
         //private HttpClient _http;
-        private IHttpClientFactory _httpClientFactory;
-        private HtmlParser _parser;
+        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly HtmlParser _parser;
 
         private const string PricesBaseUrl = "http://yugiohprices.com/api/get_card_prices/";
         private const string ImagesBaseUrl = "http://yugiohprices.com/api/card_image/";
@@ -46,7 +46,7 @@ namespace YuGiOh.Bot.Services
 
             var payload = new StringContent(content);
 
-            //if only httpclient had a way to easily set seperate authentication headers without doing this
+            //if only httpclient had a way to easily set separate authentication headers without doing this
             var message = new HttpRequestMessage(HttpMethod.Post, url)
             {
                 Content = payload
@@ -54,21 +54,14 @@ namespace YuGiOh.Bot.Services
 
             if (!string.IsNullOrEmpty(authorizationScheme))
                 message.Headers.Authorization = new AuthenticationHeaderValue(authorizationScheme, authorization);
-
-            if (!string.IsNullOrEmpty(authorization))
+            else if (!string.IsNullOrEmpty(authorization))
                 message.Headers.Authorization = new AuthenticationHeaderValue(authorization);
 
-            switch (contentType)
+            message.Content.Headers.ContentType = contentType switch
             {
-
-                case ContentType.Json:
-                    message.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-                    break;
-                default:
-                    message.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-                    break;
-
-            }
+                ContentType.Json => new MediaTypeHeaderValue("application/json"),
+                _ => new MediaTypeHeaderValue("application/json")
+            };
 
             return _httpClientFactory.CreateClient().SendAsync(message, HttpCompletionOption.ResponseHeadersRead);
 
@@ -96,18 +89,14 @@ namespace YuGiOh.Bot.Services
         public async Task<Stream> GetStream(string url)
         {
 
-            using (var response = await Check(url).ConfigureAwait(false))
-            using (var stream = await response.ReadAsStreamAsync().ConfigureAwait(false))
-            {
+            using var response = await Check(url).ConfigureAwait(false);
+            await using var stream = await response.ReadAsStreamAsync().ConfigureAwait(false);
+            var copy = new MemoryStream();
 
-                var copy = new MemoryStream();
+            await stream.CopyToAsync(copy).ConfigureAwait(false);
+            copy.Seek(0, SeekOrigin.Begin);
 
-                await stream.CopyToAsync(copy).ConfigureAwait(false);
-                copy.Seek(0, SeekOrigin.Begin);
-
-                return copy;
-
-            }
+            return copy;
 
         }
 
@@ -127,7 +116,7 @@ namespace YuGiOh.Bot.Services
             HttpResponseMessage response = null;
             //var counter = 0;
 
-            for (int i = 0; response?.IsSuccessStatusCode != true && i != 3; i++)
+            for (var i = 0; response?.IsSuccessStatusCode != true && i != 3; i++)
                 response = await GetResponseMessage(url);
 
             //do
@@ -138,7 +127,7 @@ namespace YuGiOh.Bot.Services
 
             //} while (!response.IsSuccessStatusCode && counter != 3);
 
-            if (response.StatusCode == HttpStatusCode.NotFound)
+            if (response?.StatusCode == HttpStatusCode.NotFound)
                 throw new NullReferenceException("Error 404");
 
             return response.Content;

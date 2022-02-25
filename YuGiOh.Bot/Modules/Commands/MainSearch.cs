@@ -32,10 +32,7 @@ namespace YuGiOh.Bot.Modules.Commands
 
                 lock (CardCmdLock)
                 {
-
-                    if (_cardCommand == null)
-                        _cardCommand = CommandService.Commands.First(cmd => cmd.Name == Constants.CardCommand);
-
+                    _cardCommand ??= CommandService.Commands.First(cmd => cmd.Name == Constants.CardCommand);
                 }
 
             });
@@ -64,7 +61,7 @@ namespace YuGiOh.Bot.Modules.Commands
         public async Task ArchetypeCommand([Remainder] string input)
         {
 
-            var cards = await YuGiOhDbService.GetCardsInArchetype(input);
+            var cards = await YuGiOhDbService.GetCardsInArchetypeAsync(input);
 
             if (cards.Any())
                 await ReceiveInput(cards.Count(), cards.Select(card => card.Name));
@@ -92,10 +89,10 @@ namespace YuGiOh.Bot.Modules.Commands
         public async Task AntiSupportsCommand([Remainder] string input)
         {
 
-            var cards = await YuGiOhDbService.GetCardsFromAntisupportAsync(input);
+            var cards = await YuGiOhDbService.GetCardsFromAntisupportAsync(input).ContinueWith(result => result.Result.ToArray());
 
             if (cards.Any())
-                await ReceiveInput(cards.Count(), cards.Select(card => card.Name));
+                await ReceiveInput(cards.Length, cards.Select(card => card.Name));
             else
                 await NoResultError("antisupports", input);
 
@@ -126,6 +123,7 @@ namespace YuGiOh.Bot.Modules.Commands
             var token = cts.Token;
 
             #region CheckMessage
+
             //cancel if pagination is deleted
             Task CheckMessage(Cacheable<IMessage, ulong> cache, Cacheable<IMessageChannel, ulong> _)
             {
@@ -138,6 +136,7 @@ namespace YuGiOh.Bot.Modules.Commands
                 return Task.CompletedTask;
 
             }
+
             #endregion CheckMessage
 
             Context.Client.MessageDeleted += CheckMessage;

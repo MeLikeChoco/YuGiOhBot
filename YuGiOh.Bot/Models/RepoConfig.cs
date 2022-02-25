@@ -20,7 +20,7 @@ namespace YuGiOh.Bot.Models
         public NpgsqlConnection GetGuildConfigConnection()
         {
 
-            var guildsDbConfig = _config.Databases.Guilds;
+            var guildsDbConfig = Constants.IsDebug ? _config.Databases.GuildsStaging : _config.Databases.GuildsProd;
 
             var connectionStr = new NpgsqlConnectionStringBuilder
             {
@@ -40,7 +40,7 @@ namespace YuGiOh.Bot.Models
         public NpgsqlConnection GetYuGiOhDbConnection()
         {
 
-            var yugiohDbConfig = _config.Databases.YuGiOh;
+            var yugiohDbConfig = Constants.IsDebug ? _config.Databases.YuGiOhStaging : _config.Databases.YuGiOhProd;
 
             var connectionStr = new NpgsqlConnectionStringBuilder
             {

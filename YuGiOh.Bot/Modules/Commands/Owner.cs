@@ -65,17 +65,6 @@ namespace YuGiOh.Bot.Modules.Commands
 
         }
 
-        [Command("reform")]
-        [Summary("Re-initialize the cache")]
-        public Task ReformCache()
-        {
-
-            Cache.Initialize();
-
-            return Task.CompletedTask;
-
-        }
-
         [Command("reload")]
         [Summary("Reload the config")]
         public Task ReloadCommand()

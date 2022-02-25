@@ -15,6 +15,7 @@ using Discord.WebSocket;
 using MoreLinq;
 using Newtonsoft.Json.Linq;
 using YuGiOh.Bot.Extensions;
+using YuGiOh.Bot.Models;
 using YuGiOh.Bot.Models.Attributes;
 using YuGiOh.Bot.Models.Criterion;
 using YuGiOh.Bot.Services;
@@ -374,36 +375,36 @@ namespace YuGiOh.Bot.Modules.Commands.Commands
         [Summary("Submits the decklist to massbuy on Tcgplayer!")]
         public async Task BuyCommand()
         {
-
+        
             var attachments = Context.Message.Attachments;
-
+        
             if (attachments.Count == 0)
                 return;
-
+        
             var file = attachments.FirstOrDefault(attachment => Path.GetExtension(attachment.Filename) == ".ydk");
-
+        
             if (file is null)
             {
-
+        
                 await ReplyAsync("Invalid file provided! Must be a ydk or text file!");
                 return;
-
+        
             }
-
+        
             var url = file.Url;
             string text;
 
-            using (var stream = await Web.GetStream(url))
+            await using (var stream = await Web.GetStream(url))
             {
-
+        
                 var buffer = new byte[stream.Length];
-
-                await stream.ReadAsync(buffer, 0, (int)stream.Length);
-
+        
+                await stream.ReadAsync(buffer.AsMemory(0, (int)stream.Length));
+        
                 text = Encoding.UTF8.GetString(buffer);
-
+        
             }
-
+        
             var cards = text.Replace("#main", "")
                     .Replace("#extra", "")
                     .Replace("#created by ...", "")
@@ -417,13 +418,13 @@ namespace YuGiOh.Bot.Modules.Commands.Commands
                     .GroupBy(name => name)
                     .Aggregate(new StringBuilder(), (builder, group) => builder.Append("||").Append(Uri.EscapeDataString($"{group.Count()} {group.First()}")))
                     .ToString();
-
+        
             url = $"http://store.tcgplayer.com/massentry?productline=YuGiOh&c={cards}";
-            var response = await Web.Post("https://api-ssl.bitly.com/v4/shorten", $"{{\"long_url\": \"{url}\"}}", "Bearer", Cache.BitlyKey, Web.ContentType.Json);
+            var response = await Web.Post("https://api-ssl.bitly.com/v4/shorten", $"{{\"long_url\": \"{url}\"}}", "Bearer", Config.Instance.Tokens.Bitly);
             url = JObject.Parse(await response.Content.ReadAsStringAsync())["link"].Value<string>();
-
+        
             await ReplyAsync(url);
-
+        
         }
 
         [Command("price"), Alias("prices", "p")]

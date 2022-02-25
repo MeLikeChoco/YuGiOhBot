@@ -205,8 +205,7 @@ namespace YuGiOh.Bot.Modules.Commands
 
                     }
 
-                    foreach (var datum in data)
-                        body.AddPrice(datum, true);
+                    body = data.Aggregate(body, (current, datum) => current.AddPrice(datum, true));
 
                     await SendEmbedAsync(body);
 

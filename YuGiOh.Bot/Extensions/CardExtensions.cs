@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using YuGiOh.Bot.Models.Cards;
 using YuGiOh.Common.Models.YuGiOh;
 
@@ -63,42 +60,44 @@ namespace YuGiOh.Bot.Extensions
 
             }
 
-            if (card is Monster monster)
+            switch (card)
             {
-
-                monster.Attribute = Enum.TryParse<MonsterAttribute>(entity.Attribute, true, out var attribute) ? attribute : MonsterAttribute.Unknown;
-                monster.Types = entity.Types.Split(" / ");
-
-                if (monster is IHasAtk hasAtk)
-                    hasAtk.Atk = entity.Atk;
-
-                if (monster is IHasDef hasDef)
-                    hasDef.Def = entity.Def;
-
-                if (monster is IHasLevel hasLevel)
-                    hasLevel.Level = entity.Level;
-
-                if (monster is IHasLink hasLink)
+                case Monster monster:
                 {
+                    monster.Attribute = Enum.TryParse<MonsterAttribute>(entity.Attribute, true, out var attribute) ? attribute : MonsterAttribute.Unknown;
+                    monster.Types = entity.Types.Split(" / ");
 
-                    hasLink.Link = entity.Link;
-                    hasLink.LinkArrows = entity.LinkArrows.Split(',');
+                    if (monster is IHasAtk hasAtk)
+                        hasAtk.Atk = entity.Atk;
 
+                    if (monster is IHasDef hasDef)
+                        hasDef.Def = entity.Def;
+
+                    if (monster is IHasLevel hasLevel)
+                        hasLevel.Level = entity.Level;
+
+                    if (monster is IHasLink hasLink)
+                    {
+
+                        hasLink.Link = entity.Link;
+                        hasLink.LinkArrows = entity.LinkArrows.Split(',');
+
+                    }
+
+                    if (monster is IHasMaterials hasMaterials)
+                        hasMaterials.Materials = entity.Materials;
+
+                    if (monster is IHasRank hasRank)
+                        hasRank.Rank = entity.Rank;
+
+                    if (monster is IHasScale hasScale)
+                        hasScale.PendulumScale = entity.PendulumScale;
+                    break;
                 }
-
-                if (monster is IHasMaterials hasMaterials)
-                    hasMaterials.Materials = entity.Materials;
-
-                if (monster is IHasRank hasRank)
-                    hasRank.Rank = entity.Rank;
-
-                if (monster is IHasScale hasScale)
-                    hasScale.PendulumScale = entity.PendulumScale;
-
+                case IHasProperty hasProperty:
+                    hasProperty.Property = entity.Property;
+                    break;
             }
-
-            if (card is IHasProperty hasProperty)
-                hasProperty.Property = entity.Property;
 
             return card;
 
@@ -119,10 +118,8 @@ namespace YuGiOh.Bot.Extensions
                 return CardStatus.Unlimited;  //unlimited and semi limited is checked first because they both contain "limited"
             if (status.Contains("semi", StringComparison.OrdinalIgnoreCase) && status.Contains("limited", StringComparison.OrdinalIgnoreCase))
                 return CardStatus.SemiLimited;
-            if (status.Contains("limited", StringComparison.OrdinalIgnoreCase))
-                return CardStatus.Limited;
-
-            return CardStatus.NA;
+            
+            return status.Contains("limited", StringComparison.OrdinalIgnoreCase) ? CardStatus.Limited : CardStatus.NA;
 
         }
 

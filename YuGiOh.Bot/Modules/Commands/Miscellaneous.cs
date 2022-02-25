@@ -19,7 +19,12 @@ namespace YuGiOh.Bot.Modules.Commands
 
         [Command("probability"), Alias("prob")]
         [Summary("Returns the chance of your hand occuring!")]
-        public Task ProbabilityCommand(int deckSize, int inDeck, int handSize, int inHand)
+        public Task ProbabilityCommand(
+            int deckSize,
+            int inDeck,
+            int handSize,
+            int inHand
+        )
         {
 
             if (inDeck > deckSize)
@@ -65,61 +70,59 @@ namespace YuGiOh.Bot.Modules.Commands
                 }
 
                 var display = $"{deckSize} cards in deck\n" +
-                    $"{inDeck} copies in deck\n" +
-                    $"{handSize} cards in hand\n" +
-                    $"{inHand} copies in hand\n" +
-                    $"Exactly {inHand} in hand: {exactly}%\n" +
-                    $"Less than {inHand} in hand: {less}%\n" +
-                    $"Less or equal to {inHand} in hand: {lessequal}%\n" +
-                    $"More than {inHand} in hand: {more}%\n" +
-                    $"More or equal to {inHand} in hand: {moreequal}%";
+                              $"{inDeck} copies in deck\n" +
+                              $"{handSize} cards in hand\n" +
+                              $"{inHand} copies in hand\n" +
+                              $"Exactly {inHand} in hand: {exactly}%\n" +
+                              $"Less than {inHand} in hand: {less}%\n" +
+                              $"Less or equal to {inHand} in hand: {lessequal}%\n" +
+                              $"More than {inHand} in hand: {more}%\n" +
+                              $"More or equal to {inHand} in hand: {moreequal}%";
 
-                if (inHand != 1)
-                {
+                if (inHand == 1) 
+                    return ReplyAsync($"```{display}```");
+                
+                double onetoInHand = 0;
 
-                    double onetoInHand = 0;
+                for (var i = inHand; i >= 1; i--)
+                    onetoInHand += Probability(deckSize, inDeck, handSize, i);
 
-                    for (int i = inHand; i >= 1; i--)
-                        onetoInHand += Probability(deckSize, inDeck, handSize, i);
-
-                    display += $"\n1-{inHand} copies in hand: {onetoInHand}%";
-
-                }
+                display += $"\n1-{inHand} copies in hand: {onetoInHand}%";
 
                 return ReplyAsync($"```{display}```");
 
             }
-            catch { return ReplyAsync("There was an error. Please check your values and try again!\nEx. `y!prob 40 7 5 2`"); };
-
+            catch
+            {
+                return ReplyAsync("There was an error. Please check your values and try again!\nEx. `y!prob 40 7 5 2`");
+            }
 
         }
 
         [Command("booster")]
         [Summary("Gets information on a booster pack!")]
-        public Task BoosterCommand([Remainder] string input)
+        public async Task BoosterCommand([Remainder] string input)
         {
 
-            if (!Cache.BoosterPacks.TryGetValue(input, out BoosterPack boosterPack))
-            {
-
-                var inputWords = input.Split(' ');
-                boosterPack = Cache.BoosterPacks.FirstOrDefault(kv => inputWords.All(word => kv.Key.Contains(word, StringComparison.OrdinalIgnoreCase))).Value;
-
-            }
+            var boosterPack = await YuGiOhDbService.GetBoosterPackAsync(input);
 
             if (boosterPack is not null)
             {
 
                 var descBuilder = new StringBuilder()
-                    .Append("**Amount:** ").Append(boosterPack.Cards.Length).AppendLine(" cards")
+                    .Append("**Amount:** ")
+                    .Append(boosterPack.Cards.Count)
+                    .AppendLine(" cards")
                     .AppendLine()
                     .AppendLine("**Release dates**");
 
-                descBuilder = boosterPack.ReleaseDates
-                    .Aggregate(descBuilder, (current, kv) =>
-                        current.Append("**").Append(kv.Key).Append(":** ")
-                        .AppendFormat("{0: MM/dd/yyyy}", kv.Value)
-                        .AppendLine()
+                descBuilder = boosterPack.Dates
+                    .Aggregate(descBuilder, (current, date) =>
+                        current.Append("**")
+                            .Append(date.Name)
+                            .Append(":** ")
+                            .AppendFormat("{0: MM/dd/yyyy}", date.Date)
+                            .AppendLine()
                     );
 
                 var options = PagedOptions;
@@ -137,11 +140,27 @@ namespace YuGiOh.Bot.Modules.Commands
 
                 var pages = new LinkedList<EmbedFieldBuilder>();
                 paginator.Pages = pages;
+                var rarityToCards = new Dictionary<string, List<string>>();
 
-                foreach (var kv in boosterPack.RarityToCards)
+                foreach (var card in boosterPack.Cards)
                 {
 
-                    var cards = kv.Value
+                    foreach (var rarity in card.Rarities)
+                    {
+
+                        if (!rarityToCards.ContainsKey(rarity))
+                            rarityToCards[rarity] = new List<string>();
+                        
+                        rarityToCards[rarity].Add(card.Name);
+
+                    }
+                    
+                }
+
+                foreach (var (rarity, card) in rarityToCards)
+                {
+
+                    var cards = card
                         .Aggregate(new StringBuilder(), (current, next) => current.AppendLine(next))
                         .ToString();
 
@@ -150,13 +169,13 @@ namespace YuGiOh.Bot.Modules.Commands
 
                         const int maxLength = 1000;
 
-                        var substring = cards.Substring(0, maxLength);
+                        var substring = cards[..maxLength];
                         var cutoff = substring.LastIndexOf('\n');
-                        substring = cards.Substring(0, cutoff);
+                        substring = cards[..cutoff];
                         var cardsField = $"```{substring}```";
 
                         pages.AddLast(new EmbedFieldBuilder()
-                            .WithName(kv.Key)
+                            .WithName(rarity)
                             .WithValue(cardsField));
 
                         if (cards.Length >= maxLength)
@@ -168,98 +187,103 @@ namespace YuGiOh.Bot.Modules.Commands
                     {
 
                         pages.AddLast(new EmbedFieldBuilder()
-                            .WithName(kv.Key)
+                            .WithName(rarity)
                             .WithValue($"```{cards}```"));
 
                     }
 
                 }
 
-                return PagedReplyAsync(paginator);
+                await PagedReplyAsync(paginator);
 
             }
             else
-                return NoResultError("booster packs", input);
+                await NoResultError("booster packs", input);
 
         }
 
-        [Command("open")]
-        [RequireChannel(410082506935894016)]
-        public async Task OpenCommand([Remainder] string input)
-        {
+        // [Command("open")]
+        // [RequireChannel(410082506935894016)]
+        // public async Task OpenCommand([Remainder] string input)
+        // {
+        //
+        //     try
+        //     {
+        //
+        //         if (!Cache.BoosterPacks.TryGetValue(input, out BoosterPack boosterPack))
+        //         {
+        //
+        //             var inputWords = input.Split(' ');
+        //             boosterPack = Cache.BoosterPacks
+        //                 .Where(kv => inputWords.All(word => kv.Key.Contains(word, StringComparison.OrdinalIgnoreCase)))
+        //                 .ToList()
+        //                 .PartialSortBy(1, kv => kv.Key)
+        //                 .FirstOrDefault()
+        //                 .Value;
+        //
+        //         }
+        //
+        //         if (boosterPack is not null)
+        //         {
+        //
+        //             var cards = new Dictionary<string, string>(9);
+        //             var randoms = new List<int>(9);
+        //             var commonCards = boosterPack.Commons.Length;
+        //             var builder = new StringBuilder("```fix\n");
+        //             int index;
+        //
+        //             for (int i = 0; i < 7; i++)
+        //             {
+        //
+        //                 do
+        //                     index = Rand.Next(commonCards);
+        //                 while (randoms.Contains(index));
+        //
+        //                 cards.Add(boosterPack.Commons[index], "Common");
+        //                 randoms.Add(index);
+        //
+        //             }
+        //
+        //             var superRare = boosterPack.Foils.RandomSubset(1, Rand).FirstOrDefault();
+        //
+        //             cards.Add(boosterPack.Rares.RandomSubset(1, Rand).FirstOrDefault(), "Rare");
+        //             cards.Add(superRare.Value.RandomSubset(1, Rand).FirstOrDefault(), superRare.Key);
+        //
+        //             foreach (var card in cards)
+        //             {
+        //
+        //                 builder.Append("Name: ").AppendLine(card.Key);
+        //                 builder.Append("Rarity: ").AppendLine(card.Value);
+        //                 builder.AppendLine();
+        //
+        //             }
+        //
+        //             builder.Append("```");
+        //
+        //             await ReplyAsync(builder.ToString());
+        //
+        //             return;
+        //
+        //         }
+        //         else
+        //             await NoResultError("booster packs", input);
+        //
+        //     }
+        //     catch
+        //     {
+        //         await ReplyAsync("There was an error opening the booster pack. This is most likely due to unknown ratios or the pack being unique (ex. gold rare only pack). This problem is temporary and will be fixed soon™.");
+        //
+        //         return;
+        //     }
+        //
+        // }
 
-            try
-            {
-
-                if (!Cache.BoosterPacks.TryGetValue(input, out BoosterPack boosterPack))
-                {
-
-                    var inputWords = input.Split(' ');
-                    boosterPack = Cache.BoosterPacks
-                        .Where(kv => inputWords.All(word => kv.Key.Contains(word, StringComparison.OrdinalIgnoreCase)))
-                        .ToList()
-                        .PartialSortBy(1, kv => kv.Key)
-                        .FirstOrDefault()
-                        .Value;
-
-                }
-
-                if (boosterPack is not null)
-                {
-
-                    var cards = new Dictionary<string, string>(9);
-                    var randoms = new List<int>(9);
-                    var commonCards = boosterPack.Commons.Length;
-                    var builder = new StringBuilder("```fix\n");
-                    int index;
-
-                    for (int i = 0; i < 7; i++)
-                    {
-
-                        do
-                            index = Rand.Next(commonCards);
-                        while (randoms.Contains(index));
-
-                        cards.Add(boosterPack.Commons[index], "Common");
-                        randoms.Add(index);
-
-                    }
-
-                    var superRare = boosterPack.Foils.RandomSubset(1, Rand).FirstOrDefault();
-
-                    cards.Add(boosterPack.Rares.RandomSubset(1, Rand).FirstOrDefault(), "Rare");
-                    cards.Add(superRare.Value.RandomSubset(1, Rand).FirstOrDefault(), superRare.Key);
-
-                    foreach (var card in cards)
-                    {
-
-                        builder.Append("Name: ").AppendLine(card.Key);
-                        builder.Append("Rarity: ").AppendLine(card.Value);
-                        builder.AppendLine();
-
-                    }
-
-                    builder.Append("```");
-
-                    await ReplyAsync(builder.ToString());
-
-                    return;
-
-                }
-                else
-                    await NoResultError("booster packs", input);
-
-            }
-            catch
-            {
-                await ReplyAsync("There was an error opening the booster pack. This is most likely due to unknown ratios or the pack being unique (ex. gold rare only pack). This problem is temporary and will be fixed soon™.");
-
-                return;
-            }
-
-        }
-
-        public double HyperGeometricProbability(int deckSize, int inDeck, int handSize, int inHand)
+        public double HyperGeometricProbability(
+            int deckSize,
+            int inDeck,
+            int handSize,
+            int inHand
+        )
         {
 
             var firstCombinational = Combinational(inDeck, inHand);
@@ -270,7 +294,12 @@ namespace YuGiOh.Bot.Modules.Commands
 
         }
 
-        public double Probability(int deckSize, int inDeck, int handSize, int inHand)
+        public double Probability(
+            int deckSize,
+            int inDeck,
+            int handSize,
+            int inHand
+        )
             => HyperGeometricProbability(deckSize, inDeck, handSize, inHand) * 100;
 
         public double Combinational(int n, int k)
@@ -278,7 +307,7 @@ namespace YuGiOh.Bot.Modules.Commands
 
             var numerator = Factorial(n);
             var denominator = Factorial(k) * Factorial(n - k);
-            return (double)(numerator / denominator);
+            return (double) (numerator / denominator);
 
         }
 
@@ -296,7 +325,7 @@ namespace YuGiOh.Bot.Modules.Commands
         public BigInteger Factorial(int n)
         {
 
-            var value = (BigInteger)1;
+            var value = (BigInteger) 1;
 
             for (uint i = 2; i <= n; i++)
                 value *= i;
