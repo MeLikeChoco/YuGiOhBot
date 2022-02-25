@@ -119,6 +119,7 @@ namespace YuGiOh.Bot.Models
 
         [JsonPropertyName("Bot List")]
         public BotList BotList { get; set; }
+        public string Bitly { get; set; }
 
     }
 
