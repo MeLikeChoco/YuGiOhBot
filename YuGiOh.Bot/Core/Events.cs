@@ -280,9 +280,9 @@ namespace YuGiOh.Bot.Core
 
             _commandService.AddTypeReader<string>(new StringInputTypeReader());
 
-            var textCmds = await _commandService.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
-            var appCmds = await _interactionService.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
-            var cmds = textCmds.Concat<object>(appCmds);
+            var textCmdModules = await _commandService.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
+            var appCmdModules = await _interactionService.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
+            var cmds = textCmdModules.SelectMany(module => module.Commands).Concat<object>(appCmdModules.SelectMany(module => module.SlashCommands));
 
             Log($"Registered {cmds.Count()} commands.");
 
