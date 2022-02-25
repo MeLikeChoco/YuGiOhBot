@@ -22,14 +22,16 @@ namespace YuGiOh.Bot.Models.Cards
 
         protected override List<string> GetDescription()
             => base.GetDescription()
-            .With($"**Links:** {Link}")
-            .With($"**Link Markers:** {LinkArrows.Join(", ")}");
+                .With($"**Links:** {Link}")
+                .With($"**Link Markers:** {LinkArrows.Join(", ")}");
 
         protected override EmbedBuilder AddAdditionalFields(EmbedBuilder body)
             => base.AddAdditionalFields(
                 body
-                .AddField("ATK", Atk)
-                );
+                    .AddField("ATK", Atk, true)
+                    .AddField("\u200b", "\u200b", true)
+                    .AddField("\u200b", "\u200b", true)
+            );
 
     }
 }

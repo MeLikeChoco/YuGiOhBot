@@ -26,9 +26,10 @@ namespace YuGiOh.Bot.Models.Cards
         protected override EmbedBuilder AddAdditionalFields(EmbedBuilder body)
             => base.AddAdditionalFields(
                 body
-                .AddField("ATK", string.IsNullOrEmpty(Atk) ? UnknownValue : Atk, true)
-                .AddField("DEF", string.IsNullOrEmpty(Def) ? UnknownValue : Def, true)
-                );
+                    .AddField("ATK", string.IsNullOrEmpty(Atk) ? UnknownValue : Atk, true)
+                    .AddField("DEF", string.IsNullOrEmpty(Def) ? UnknownValue : Def, true)
+                    .AddField("\u200b", "\u200b", true)
+            );
 
     }
 }

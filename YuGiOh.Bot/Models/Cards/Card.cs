@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Discord;
 using YuGiOh.Bot.Extensions;
 
@@ -12,11 +9,14 @@ namespace YuGiOh.Bot.Models.Cards
     {
 
         #region Icon Urls
+
         protected const string DefaultIconUrl = "http://3.bp.blogspot.com/-12VDHRVnjYk/VHdt3uHWbdI/AAAAAAAACyA/fOgzigv-9XU/s1600/Level.png"; //its a star, rofl
         private const string FooterIconUrl = "http://1.bp.blogspot.com/-a3KasYvDBaY/VCQXuTjmb2I/AAAAAAAACZM/oQ6Hw71kLQQ/s1600/Cursed%2BHexagram.png";
+
         #endregion Icon Urls
 
         #region Properties
+
         public string Name { get; set; }
         public string RealName { get; set; }
         public CardType CardType { get; set; }
@@ -38,6 +38,7 @@ namespace YuGiOh.Bot.Models.Cards
         public CardStatus TcgTrnStatus { get; set; }
 
         public abstract bool HasEffect { get; }
+
         #endregion Properties
 
         public virtual EmbedBuilder GetEmbedBuilder()
@@ -58,8 +59,8 @@ namespace YuGiOh.Bot.Models.Cards
                 .WithFooter(footer)
                 .WithDescription(GetDescription().Join("\n"));
 
-            try { body.ImageUrl = Img; }
-            catch { }
+            if (!string.IsNullOrWhiteSpace(Img))
+                body.ImageUrl = Img;
 
             return AddAdditionalFields(AddLore(body));
 
@@ -102,9 +103,13 @@ namespace YuGiOh.Bot.Models.Cards
         protected virtual EmbedBuilder AddAdditionalFields(EmbedBuilder body)
         {
 
-            body = Archetypes?.Any() == true ? body.AddField("Archetypes", Archetypes.Join(", ")) : body;
-            body = Supports?.Any() == true ? body.AddField("Supports", Supports.Join(", "), true) : body;
-            body = AntiSupports?.Any() == true ? body.AddField("Antisupports", AntiSupports.Join(", "), true) : body;
+            var hasArchetypes = Archetypes?.Any() == true;
+            var hasSupports = Supports?.Any() == true;
+            var hasAntisupports = AntiSupports?.Any() == true;
+
+            body = hasArchetypes ? body.AddField("Archetypes", Archetypes.Join(", "), true) : body;
+            body = hasSupports ? body.AddField("Supports", Supports.Join(", "), true) : body;
+            body = hasAntisupports ? body.AddField("Antisupports", AntiSupports.Join(", "), hasArchetypes ^ hasSupports) : body; //xor, when it only has one of either
 
             return body;
 
