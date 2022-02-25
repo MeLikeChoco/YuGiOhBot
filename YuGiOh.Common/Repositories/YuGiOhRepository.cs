@@ -155,7 +155,7 @@ namespace YuGiOh.Common.Repositories
                 foreach (var support in supportsToInsert)
                 {
 
-                    await connection.ExecuteAsync("call insert_support_relation(@cardname, @support)", new { cardnname = card.Name, support }).ConfigureAwait(false);
+                    await connection.ExecuteAsync("call insert_support_relation(@cardname, @support)", new { cardname = card.Name, support }).ConfigureAwait(false);
 
                     // var supportId = await connection.QuerySingleProcAsync<int>("insert_or_get_support", new { input = support }).ConfigureAwait(false);
                     //

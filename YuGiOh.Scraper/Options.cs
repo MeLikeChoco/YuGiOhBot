@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
 using CommandLine;
@@ -53,6 +54,24 @@ namespace YuGiOh.Scraper
 
         [Option("ignore_hash", Default = false)]
         public bool ShouldIgnoreHash { get; set; }
+
+        public bool IsDebug
+        {
+            get
+            {
+
+                var isDebug = false;
+
+                CheckDebug(ref isDebug);
+
+                return isDebug;
+
+            }
+        }
+
+        [Conditional("DEBUG")]
+        private static void CheckDebug(ref bool isDebug)
+            => isDebug = true;
 
     }
 }

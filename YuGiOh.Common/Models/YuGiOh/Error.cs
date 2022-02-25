@@ -5,6 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using NpgsqlTypes;
 
 namespace YuGiOh.Common.Models.YuGiOh
 {
@@ -19,12 +20,15 @@ namespace YuGiOh.Common.Models.YuGiOh
         public string StackTrace { get; set; }
         public string Url { get; set; }
         public Type Type { get; set; }
+        public DateTime Timestamp { get; set; }
 
     }
 
     public enum Type
     {
+        [PgName("Card")]
         Card,
+        [PgName("Boosterpack")]
         Booster
     }
 }

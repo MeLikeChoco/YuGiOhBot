@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using MoreLinq;
@@ -33,6 +33,7 @@ namespace YuGiOh.Scraper
         {
 
             Log($"Dev mode: {Options.IsDev}");
+            Log($"Debug mode: {Options.IsDebug}");
             Log($"Processing with {ParallelOptions.MaxDegreeOfParallelism} threads");
             Log("Getting TCG cards.");
 
@@ -68,7 +69,7 @@ namespace YuGiOh.Scraper
 
             var errors = cardProcResponse.Errors.Concat(boosterProcResponse.Errors).ToList();
 
-            ProcessErrors(errors);
+            await ProcessErrors(errors);
 
             Log($"Processed {errors.Count} errors.");
 
@@ -114,7 +115,7 @@ namespace YuGiOh.Scraper
             {
 
                 var retryCount = 0;
-                Exception check = null;
+                Exception check;
 
                 do
                 {
@@ -156,7 +157,8 @@ namespace YuGiOh.Scraper
                                 Message = ex.Message,
                                 StackTrace = ex.StackTrace,
                                 Url = string.Format(ConstantString.YugipediaUrl + ConstantString.MediaWikiIdUrl, link),
-                                Type = Type.Card
+                                Type = Type.Card,
+                                Timestamp = DateTime.UtcNow
                             });
 
                         }
@@ -169,7 +171,7 @@ namespace YuGiOh.Scraper
                 var __ = WriteProgress("Cards", ref count, size);
 
             });
-            
+
             ClearLine();
 
             return new CardProcessorResponse
@@ -238,7 +240,8 @@ namespace YuGiOh.Scraper
                                 Message = ex.Message,
                                 StackTrace = ex.StackTrace,
                                 Url = string.Format(ConstantString.YugipediaUrl + ConstantString.MediaWikiIdUrl, link),
-                                Type = Type.Card
+                                Type = Type.Booster,
+                                Timestamp = DateTime.UtcNow
                             });
 
                         }
@@ -252,7 +255,7 @@ namespace YuGiOh.Scraper
                 var __ = WriteProgress("Booster packs", ref count, size);
 
             });
-            
+
             ClearLine();
 
             return new BoosterProcessorResponse
@@ -265,79 +268,23 @@ namespace YuGiOh.Scraper
 
         }
 
-        private readonly object _countLock = new();
-
-        private Task WriteProgress(string what, ref int current, int size)
-        {
-
-            lock (_countLock)
-            {
-
-                var curr = Interlocked.Increment(ref current);
-                var display = $"{what} processed: {curr}/{size} ({(double) current / size * 100:0.00}%)";
-
-                if (curr % 1000 == 0 && Options.IsSubProc)
-                    Log(display);
-                else
-                    InlineLog(display);
-
-            }
-
-            return Task.CompletedTask;
-
-        }
-
-        public void ProcessErrors(IEnumerable<Error> errors)
+        public async Task ProcessErrors(IEnumerable<Error> errors)
         {
 
             var repo = new YuGiOhRepository(this);
-            var semaphore = new SemaphoreSlim(ConstantValue.ProcessorCount);
             var errorList = errors.ToList();
             var size = errorList.Count;
-            var tasks = new Task[size];
             var count = 0;
-            var countLock = new object();
 
-            for (var i = 0; i < size; i++)
+            await Parallel.ForEachAsync(errorList, ParallelOptions, async (error, _) =>
             {
 
-                var index = i;
-                tasks[index] = Task.Run(async () =>
-                {
+                await repo.InsertErrorAsync(error);
 
-                    await semaphore.WaitAsync();
+                var __ = WriteProgress("Errors", ref count, size);
 
-                    try
-                    {
+            });
 
-                        await repo.InsertErrorAsync(errorList[index]);
-
-                        lock (countLock)
-                        {
-
-                            var current = Interlocked.Increment(ref count);
-
-                            var display = $"Cards processed: {current}/{size} ({current / (double) size * 100:0.00}%)";
-
-                            if (current % 1000 == 0 && Options.IsSubProc)
-                                Log(display);
-                            else
-                                InlineLog(display);
-
-                        }
-
-                    }
-                    catch { }
-                    finally
-                    {
-                        semaphore.Release();
-                    }
-
-                });
-
-            }
-
-            Task.WaitAll(tasks);
             ClearLine();
 
         }
@@ -362,6 +309,22 @@ namespace YuGiOh.Scraper
             } while (!string.IsNullOrEmpty(cmcontinue));
 
             return links;
+
+        }
+
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        private static Task WriteProgress(string what, ref int current, int size)
+        {
+
+            var curr = Interlocked.Increment(ref current);
+            var display = $"{what} processed: {curr}/{size} ({(double) current / size * 100:0.00}%)";
+
+            if (curr % 1000 == 0 && Options.IsSubProc)
+                Log(display);
+            else
+                InlineLog(display);
+
+            return Task.CompletedTask;
 
         }
 
@@ -391,11 +354,7 @@ namespace YuGiOh.Scraper
         public NpgsqlConnection GetYuGiOhDbConnection()
         {
 
-            var isDebug = false;
-
-            GetIsDebug(ref isDebug);
-
-            var config = isDebug ? Options.Config.Databases.Staging : Options.Config.Databases.Production;
+            var config = Options.IsDebug ? Options.Config.Databases.Staging : Options.Config.Databases.Production;
 
             var connectionStr = new NpgsqlConnectionStringBuilder
             {
@@ -412,10 +371,6 @@ namespace YuGiOh.Scraper
             return new NpgsqlConnection(connectionStr);
 
         }
-
-        [Conditional("DEBUG")]
-        private static void GetIsDebug(ref bool isDebug)
-            => isDebug = true;
 
     }
 }
