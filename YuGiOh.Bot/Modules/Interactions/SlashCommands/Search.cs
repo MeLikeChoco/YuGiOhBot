@@ -10,41 +10,48 @@ using Discord.Interactions;
 using Discord.WebSocket;
 using MoreLinq;
 using YuGiOh.Bot.Extensions;
-using YuGiOh.Bot.Models.Autocompleters;
+using YuGiOh.Bot.Models.Autocompletes;
 using YuGiOh.Bot.Models.Cards;
 using YuGiOh.Bot.Models.Criterion;
+using YuGiOh.Bot.Services;
+using YuGiOh.Bot.Services.Interfaces;
 
 namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
 {
     public class Search : MainInteractionBase<SocketSlashCommand>
     {
 
-        public IServiceProvider Services { get; set; }
-        public Random Random { get; set; }
+        private Random _random;
 
         private static SlashCommandInfo _slashCmdInfo;
 
-        public Search(InteractionService interactionService)
+        public Search(
+            Cache cache,
+            IYuGiOhDbService yuGiOhDbService,
+            IGuildConfigDbService guildConfigDbService,
+            Web web,
+            InteractionService interactionService,
+            Random random
+        )
+            : base(cache, yuGiOhDbService, guildConfigDbService, web)
         {
-
-            if (_slashCmdInfo == null)
-                _slashCmdInfo = interactionService.SlashCommands.FirstOrDefault(cmd => cmd.Name == Constants.CardCommand);
+            
+            _slashCmdInfo ??= interactionService.SlashCommands.FirstOrDefault(cmd => cmd.Name == Constants.CardCommand);
+            _random = random;
 
         }
 
         [SlashCommand("search", "Gets cards based on your input! No proper capitalization needed!")]
-        public async Task SearchCommand(
-            [Autocomplete(typeof(CardAutocomplete))]
-            [Summary(description: "The input")]
-            string input
-        )
+        public async Task SearchCommand([Autocomplete(typeof(CardAutocomplete))] [Summary(description: "The input")] string input)
         {
 
-            var cards = await YuGiOhDbService.SearchCardsAsync(input);
-            var amount = cards.Count();
+            await DeferAsync();
+
+            var cards = (await YuGiOhDbService.SearchCardsAsync(input)).ToList();
+            var amount = cards.Count;
 
             if (amount == 1)
-                await SendCardEmbedAsync(cards.First().GetEmbedBuilder(), _guildConfig.Minimal);
+                await SendCardEmbedAsync(cards.First().GetEmbedBuilder(), GuildConfig.Minimal);
             else if (amount != 0)
                 await ReceiveInput(amount, cards);
             else
@@ -53,23 +60,19 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
         }
 
         [SlashCommand("archetype", "Gets cards in entered archetype! No proper capitalization needed!")]
-        public async Task ArchetypeCommand(
-            [Autocomplete(typeof(ArchetypeAutocomplete))]
-            [Summary(description: "The input")]
-            string input
-        )
+        public async Task ArchetypeCommand([Autocomplete(typeof(ArchetypeAutocomplete))] [Summary(description: "The input")] string input)
         {
 
-            var cards = await YuGiOhDbService.GetCardsInArchetype(input);
+            var cards = (await YuGiOhDbService.GetCardsInArchetypeAsync(input)).ToList();
 
             if (cards.Any())
-                await ReceiveInput(cards.Count(), cards);
+                await ReceiveInput(cards.Count, cards);
             else
                 await NoResultError("archetypes", input);
 
         }
 
-        private async Task ReceiveInput(int amount, IEnumerable<Card> cards)
+        private async Task ReceiveInput(int amount, IList<Card> cards)
         {
 
             var author = new EmbedAuthorBuilder()
@@ -80,7 +83,7 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
             {
 
                 Author = author,
-                Color = Random.NextColor(),
+                Color = _random.NextColor(),
                 Pages = GenDescriptions(cards.Select(card => card.Name)),
                 Options = PagedOptions
 
@@ -94,6 +97,7 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
             var token = cts.Token;
 
             #region CheckMessage
+
             //cancel if pagination is deleted
             Task CheckMessage(Cacheable<IMessage, ulong> cache, Cacheable<IMessageChannel, ulong> _)
             {
@@ -106,6 +110,7 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
                 return Task.CompletedTask;
 
             }
+
             #endregion CheckMessage
 
             Context.Client.MessageDeleted += CheckMessage;
@@ -123,11 +128,11 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
                 return;
             }
 
-            await SendCardEmbedAsync(cards.ElementAt(selection - 1).GetEmbedBuilder(), _guildConfig.Minimal);
+            await SendCardEmbedAsync(cards[selection - 1].GetEmbedBuilder(), GuildConfig.Minimal);
 
         }
 
-        private IEnumerable<string> GenDescriptions(IEnumerable<string> cards)
+        private static IEnumerable<string> GenDescriptions(IEnumerable<string> cards)
         {
 
             var groups = cards.Batch(30);

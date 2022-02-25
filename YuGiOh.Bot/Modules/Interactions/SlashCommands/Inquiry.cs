@@ -1,30 +1,31 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Discord.Interactions;
 using Discord.WebSocket;
-using YuGiOh.Bot.Models.Autocompleters;
-using YuGiOh.Bot.Models.Cards;
+using YuGiOh.Bot.Models.Autocompletes;
+using YuGiOh.Bot.Services;
+using YuGiOh.Bot.Services.Interfaces;
 
 namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
 {
     public class Inquiry : MainInteractionBase<SocketSlashCommand>
     {
 
+        public Inquiry(
+            Cache cache,
+            IYuGiOhDbService yuGiOhDbService,
+            IGuildConfigDbService guildConfigDbService,
+            Web web
+        ) : base(cache, yuGiOhDbService, guildConfigDbService, web) { }
+
         [SlashCommand(Constants.CardCommand, "Gets a card! No proper capitalization needed!")]
-        public async Task CardCommand(
-            [Autocomplete(typeof(CardAutocomplete))]
-            [Summary(description: "The card")]
-            string input
-        )
+        public async Task CardCommand([Autocomplete(typeof(CardAutocomplete))] [Summary(description: "The card")] string input)
         {
 
             var card = await YuGiOhDbService.GetCardAsync(input);
 
             if (card is not null)
-                await SendCardEmbedAsync(card.GetEmbedBuilder(), _guildConfig.Minimal);
+                await SendCardEmbedAsync(card.GetEmbedBuilder(), GuildConfig.Minimal);
             else
                 await NoResultError(input);
 
@@ -36,16 +37,12 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
 
             var card = await YuGiOhDbService.GetRandomCardAsync();
 
-            await SendCardEmbedAsync(card.GetEmbedBuilder(), _guildConfig.Minimal);
+            await SendCardEmbedAsync(card.GetEmbedBuilder(), GuildConfig.Minimal);
 
         }
 
         [SlashCommand("image", "Gets the image of the card based input! No proper capitalization needed!")]
-        public async Task ImageCommand(
-            [Autocomplete(typeof(CardAutocomplete))]
-            [Summary(description: "The card")]
-            string input
-        )
+        public async Task ImageCommand([Autocomplete(typeof(CardAutocomplete))] [Summary(description: "The card")] string input)
         {
 
             var card = await YuGiOhDbService.GetCardAsync(input);
@@ -68,11 +65,7 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
         }
 
         [SlashCommand("art", "Gets the art of a card based on input! No proper capitalization needed!")]
-        public async Task ArtCommand(
-            [Autocomplete(typeof(CardAutocomplete))]
-            [Summary(description: "The card")]
-            string input
-        )
+        public async Task ArtCommand([Autocomplete(typeof(CardAutocomplete))] [Summary(description: "The card")] string input)
         {
 
             var card = await YuGiOhDbService.GetCardAsync(input);

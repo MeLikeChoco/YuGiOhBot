@@ -16,12 +16,12 @@ namespace YuGiOh.Bot.Modules
         where TInteraction : SocketInteraction
     {
 
-        public Cache Cache { get; set; }
-        public IYuGiOhDbService YuGiOhDbService { get; set; }
-        public IGuildConfigDbService GuildConfigDbService { get; set; }
-        public Web Web { get; set; }
+        protected Cache Cache { get; }
+        protected IYuGiOhDbService YuGiOhDbService { get; }
+        protected IGuildConfigDbService GuildConfigDbService { get; }
+        protected Web Web { get; }
 
-        protected GuildConfig _guildConfig;
+        protected GuildConfig GuildConfig;
 
         protected static PaginatedAppearanceOptions PagedOptions => new()
         {
@@ -32,11 +32,27 @@ namespace YuGiOh.Bot.Modules
 
         };
 
+        protected MainInteractionBase(
+            Cache cache,
+            IYuGiOhDbService yuGiOhDbService,
+            IGuildConfigDbService guildConfigDbService,
+            Web web
+        )
+        {
+
+            Cache = cache;
+            YuGiOhDbService = yuGiOhDbService;
+            GuildConfigDbService = guildConfigDbService;
+            Web = web;
+
+        }
+
         public override async Task BeforeExecuteAsync(ICommandInfo command)
         {
 
-            _guildConfig = Context.Channel is not SocketDMChannel ?
-                await GuildConfigDbService.GetGuildConfigAsync(Context.Guild.Id) : await GuildConfigDbService.GetGuildConfigAsync(0);
+            GuildConfig = Context.Channel is not SocketDMChannel ?
+                await GuildConfigDbService.GetGuildConfigAsync(Context.Guild.Id) :
+                await GuildConfigDbService.GetGuildConfigAsync(0);
 
         }
 
@@ -73,10 +89,14 @@ namespace YuGiOh.Bot.Modules
         protected async Task SendCardEmbedAsync(EmbedBuilder embed, bool minimal, Web web = null)
         {
 
-            if (Context.Interaction.HasResponded)
-                await ReplyAsync(embed: (await embed.WithCardPrices(minimal, web ?? Web)).Build());
+            embed = await embed.WithCardPrices(minimal, web ?? Web);
+
+            if (IsDeferred)
+                await FollowupAsync(embed: embed.Build());
+            else if (Context.Interaction.HasResponded)
+                await ReplyAsync(embed: embed.Build());
             else
-                await RespondAsync(embed: (await embed.WithCardPrices(minimal, web ?? Web)).Build());
+                await RespondAsync(embed: embed.Build());
 
         }
 

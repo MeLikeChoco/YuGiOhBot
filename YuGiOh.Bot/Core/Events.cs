@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -18,6 +17,8 @@ using YuGiOh.Bot.Services.Interfaces;
 using YuGiOh.Common.Interfaces;
 using YuGiOh.Common.Repositories;
 using YuGiOh.Common.Repositories.Interfaces;
+using IResult = Discord.Interactions.IResult;
+using RunMode = Discord.Commands.RunMode;
 
 namespace YuGiOh.Bot.Core
 {
@@ -26,22 +27,19 @@ namespace YuGiOh.Bot.Core
 
         private DiscordShardedClient _client;
         private CommandService _commandService;
+
         private InteractionService _interactionService;
-        private Cache _cache;
-        //private ServiceObserver _serviceObserver;
+
         private IServiceProvider _services;
         private int _recommendedShards, _currentShards;
         private bool _isInitialized;
-        private ConcurrentDictionary<DiscordSocketClient, Timer> _reconnectTimers;
-        //private readonly List<Reconnector<DiscordSocketClient>> _reconnectors;
 
         private static readonly DiscordSocketConfig ClientConfig = new()
         {
 
-            //AlwaysDownloadUsers = true,
-            ConnectionTimeout = (int)TimeSpan.FromMinutes(1).TotalMilliseconds, //had to include this as my bot got bigger and there were more guilds to connect to per shard
+            ConnectionTimeout = (int) TimeSpan.FromMinutes(1).TotalMilliseconds, //had to include this as my bot got bigger and there were more guilds to connect to per shard
             LogLevel = LogSeverity.Verbose,
-            MessageCacheSize = 30,
+            MessageCacheSize = 20,
             TotalShards = 1
 
         };
@@ -49,7 +47,7 @@ namespace YuGiOh.Bot.Core
         private static readonly CommandServiceConfig CommandConfig = new()
         {
 
-            DefaultRunMode = Discord.Commands.RunMode.Async,
+            DefaultRunMode = RunMode.Async,
             LogLevel = LogSeverity.Verbose
 
         };
@@ -93,11 +91,6 @@ namespace YuGiOh.Bot.Core
             _client = new DiscordShardedClient(ClientConfig);
             _commandService = new CommandService(CommandConfig);
             _interactionService = new InteractionService(_client, InteractionConfig);
-            //_web = new Web();
-            _cache = new Cache();
-            _reconnectTimers = new ConcurrentDictionary<DiscordSocketClient, Timer>();
-            //_reconnectors = new List<Reconnector<DiscordSocketClient>>();
-            //_serviceObserver = new ServiceObserver();
 
             RegisterLogging();
 
@@ -147,49 +140,9 @@ namespace YuGiOh.Bot.Core
                 _client.ShardDisconnected -= Whoopsies;
                 _currentShards = 0;
 
-                //foreach (var client in _client.Shards)
-                //    _reconnectors.Add(new Reconnector<DiscordSocketClient>(client));
-
                 await youAintDoneYet;
 
             }
-
-        }
-
-        private Task GetBackToWork(Exception exception, DiscordSocketClient shard)
-        {
-
-            Log($"Shard {shard.ShardId} disconnected. Started reconnection timer.");
-
-            shard.Ready += () => Task.Run(() =>
-            {
-
-                _reconnectTimers.Remove(shard, out var reconnectTimer);
-
-                reconnectTimer.Change(Timeout.Infinite, Timeout.Infinite);
-                reconnectTimer.Dispose();
-
-                Log($"Shard {shard.ShardId} reconnected. Reconnection timer disposed.");
-
-            });
-
-            _reconnectTimers.TryAdd(shard, new Timer(async (state) =>
-            {
-
-                var shard = state as DiscordSocketClient;
-
-                if (_reconnectTimers.ContainsKey(shard) && (shard.ConnectionState == ConnectionState.Disconnected || shard.ConnectionState == ConnectionState.Disconnecting))
-                {
-
-                    Log($"Shard {shard.ShardId} failed to reconnect. Reconnecting forcefully...");
-
-                    await shard.StartAsync();
-
-                }
-
-            }, shard, TimeSpan.FromSeconds(90), TimeSpan.FromSeconds(90)));
-
-            return Task.CompletedTask;
 
         }
 
@@ -226,41 +179,45 @@ namespace YuGiOh.Bot.Core
 
         }
 
-        private async Task YouAintDoneYet()
+        private Task YouAintDoneYet()
         {
 
-            //LoadStats();
-            BuildServices();
-            AddFreshBlood();
-            await RegisterCommands();
-            await _client.SetGameAsync($"Support guild/server: {Config.Instance.GuildInvite}");
+            _ = _client.SetGameAsync($"Support guild/server: {Config.Instance.GuildInvite}")
+                .ContinueWith(_ => BuildServices())
+                .ContinueWith(_ => AddFreshBlood())
+                .ContinueWith(_ => RegisterCommands())
+                .ContinueWith(_ => _isInitialized = true);
 
-            _isInitialized = true;
+            return Task.CompletedTask;
 
         }
 
-        public void AddFreshBlood()
+        public async Task AddFreshBlood()
         {
 
             Log("Processing guilds that were added when the bot was down...");
 
             var guildConfigService = _services.GetService<IGuildConfigDbService>();
+            var count = 0;
 
-            //i await(get it?) the day ForEachAsync becomes official
-            Parallel.ForEach(
+            await Parallel.ForEachAsync(
                 _client.Guilds,
                 new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount },
-                guild =>
+                async (guild, _) =>
                 {
 
-                    var doesExist = guildConfigService.GuildConfigDoesExistAsync(guild.Id).Result;
+                    var doesExist = await guildConfigService.GuildConfigDoesExistAsync(guild.Id);
 
                     if (!doesExist)
-                        guildConfigService.InsertGuildConfigAsync(new GuildConfig { Id = guild.Id }).GetAwaiter().GetResult();
+                    {
+                        await guildConfigService.InsertGuildConfigAsync(new GuildConfig { Id = guild.Id });
+                        Interlocked.Increment(ref count);
+                    }
 
-                });
+                }
+            );
 
-            Log("Processed guilds that were added when the bot was down.");
+            Log($"Processed guilds that were added when the bot was down. There were {count} guilds that were added.");
 
             _client.JoinedGuild += guild =>
             {
@@ -277,7 +234,9 @@ namespace YuGiOh.Bot.Core
         private void BuildServices()
         {
 
-            _services = new ServiceCollection()
+            Log("Building services...");
+
+            var serviceCollection = new ServiceCollection()
                 .AddSingleton(Config.Instance)
                 .AddTransient<IYuGiOhRepositoryConfiguration, RepoConfig>()
                 .AddTransient<IGuildConfigConfiguration, RepoConfig>()
@@ -296,13 +255,16 @@ namespace YuGiOh.Bot.Core
                 .AddSingleton(_client)
                 .AddSingleton(_commandService)
                 .AddSingleton(_interactionService)
-                .AddSingleton(_cache)
+                .AddSingleton<Cache>()
                 .AddSingleton<Stats>()
-                .AddSingleton<Random>()
-                .BuildServiceProvider();
+                .AddSingleton<Random>();
+
+            _services = serviceCollection.BuildServiceProvider();
 
             //initialize the stats gathering timer
             _services.GetService<Stats>();
+
+            Log($"Built {serviceCollection.Count} services.");
 
         }
 
@@ -311,62 +273,51 @@ namespace YuGiOh.Bot.Core
 
             Log("Registering commands...");
 
-            //_chat = new ChatHandler(
-            //    _cache,
-            //    _services.GetService<Web>(),
-            //    _services.GetService<IYuGiOhDbService>(),
-            //    _services.GetService<IGuildConfigDbService>()
-            // );
-
-            //_client.MessageReceived += HandleCommand;
-            //_client.MessageReceived += somethingsomethingchat
-
             //i will have to monitor these changes in case of performance issues
             _client.MessageReceived += (message) => ActivatorUtilities.CreateInstance<CommandHandler>(_services).HandleCommand(message);
             _client.MessageReceived += (message) => ActivatorUtilities.CreateInstance<ChatHandler>(_services).HandlePotentialInlineSearch(message);
             _client.InteractionCreated += (interaction) => ActivatorUtilities.CreateInstance<InteractionHandler>(_services).HandleInteraction(interaction);
 
             _commandService.AddTypeReader<string>(new StringInputTypeReader());
-            await _commandService.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
 
-            var appCmdModules = await _interactionService.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
+            var textCmds = await _commandService.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
+            var appCmds = await _interactionService.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
+            var cmds = textCmds.Concat<object>(appCmds);
 
-//#if !DEBUG
-//            Log("Registering slash commands...");
-//            await _interactionService.AddModulesGloballyAsync(true, appCmdModules.ToArray());
-//            Log("Finished registering slash commands.");
-//#endif
-
-            Log("Commands registered.");
+            Log($"Registered {cmds.Count()} commands.");
 
         }
 
         private void RegisterLogging()
         {
 
-            _client.Log += (message)
+            _client.Log += message
                 => Task.Run(()
-                => AltConsole.Write(message.Severity.ToString(), message.Source, message.Message, message.Exception));
-            _commandService.Log += (message)
+                    => AltConsole.Write(message.Severity.ToString(), message.Source, message.Message, message.Exception)
+                );
+
+            _commandService.Log += message
                 => Task.Run(()
-                => AltConsole.Write(message.Severity.ToString(), message.Source, message.Message, message.Exception));
-            _interactionService.Log += (message)
+                    => AltConsole.Write(message.Severity.ToString(), message.Source, message.Message, message.Exception)
+                );
+
+            _interactionService.Log += message
                 => Task.Run(()
-                => AltConsole.Write(message.Severity.ToString(), message.Source, message.Message, message.Exception));
+                    => AltConsole.Write(message.Severity.ToString(), message.Source, message.Message, message.Exception)
+                );
 
-            _interactionService.SlashCommandExecuted += (cmdInfo, context, result)
-                => Task.Run(() => LogInteractionExecuted(cmdInfo, context, result));
+            _interactionService.SlashCommandExecuted += (_, _, result)
+                => Task.Run(() => LogInteractionExecuted(result));
 
-            _interactionService.AutocompleteCommandExecuted += (cmdInfo, context, result)
-                => Task.Run(() => LogInteractionExecuted(cmdInfo, context, result));
+            _interactionService.AutocompleteCommandExecuted += (_, _, result)
+                => Task.Run(() => LogInteractionExecuted(result));
 
-            _interactionService.ComponentCommandExecuted += (cmdInfo, context, result)
-                => Task.Run(() => LogInteractionExecuted(cmdInfo, context, result));
+            _interactionService.ComponentCommandExecuted += (_, _, result)
+                => Task.Run(() => LogInteractionExecuted(result));
 
         }
 
-        private Task LogInteractionExecuted<T>(T cmdInfo, IInteractionContext context, Discord.Interactions.IResult result)
-            where T : ICommandInfo
+        private static Task LogInteractionExecuted(IResult result)
         {
 
             if (!result.IsSuccess)
@@ -376,7 +327,7 @@ namespace YuGiOh.Bot.Core
 
         }
 
-        private void Log(string message)
+        private static void Log(string message)
             => AltConsole.Write("Info", "Events", message);
 
     }
