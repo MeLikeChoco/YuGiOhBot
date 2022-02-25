@@ -38,14 +38,14 @@ namespace YuGiOh.Common.Repositories
             _config = config;
         }
 
-        public async Task<GuildConfigEntity> GetGuildConfigAsync(string id)
+        public async Task<GuildConfigEntity> GetGuildConfigAsync(ulong id)
         {
 
             await using var connection = _config.GetGuildConfigConnection();
 
             await connection.OpenAsync().ConfigureAwait(false);
 
-            var guildConfig = await connection.QuerySingleAsync<GuildConfigEntity>("select * from configs where id = @id", new { id }).ConfigureAwait(false);
+            var guildConfig = await connection.QuerySingleAsync<GuildConfigEntity>("select * from configs where id = @id", new { id = (decimal)id }).ConfigureAwait(false);
 
             await connection.CloseAsync().ConfigureAwait(false);
 
@@ -75,14 +75,14 @@ namespace YuGiOh.Common.Repositories
 
         }
 
-        public async Task<bool> GuildConfigExistsAsync(string id)
+        public async Task<bool> GuildConfigExistsAsync(ulong id)
         {
 
             await using var connection = _config.GetGuildConfigConnection();
 
             await connection.OpenAsync().ConfigureAwait(false);
 
-            var doesExist = await connection.ExecuteScalarAsync<bool>("select 1 from configs where id = @id", new { id }).ConfigureAwait(false);
+            var doesExist = await connection.ExecuteScalarAsync<bool>("select 1 from configs where id = @id", new { id = (decimal)id }).ConfigureAwait(false);
 
             await connection.CloseAsync().ConfigureAwait(false);
 

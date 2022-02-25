@@ -13,7 +13,7 @@ namespace YuGiOh.Common.Models
     {
 
         [Key, DatabaseGenerated(DatabaseGeneratedOption.None)]
-        public string Id { get; set; }
+        public decimal Id { get; set; }
         public string Prefix { get; set; } = "y!";
         public bool Minimal { get; set; } = true;
         public int GuessTime { get; set; } = 60;

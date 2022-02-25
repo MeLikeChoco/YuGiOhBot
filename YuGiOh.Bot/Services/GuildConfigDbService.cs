@@ -20,13 +20,12 @@ namespace YuGiOh.Bot.Services
         public async Task<GuildConfig> GetGuildConfigAsync(ulong id)
         {
 
-            if (!Cache.TryGetValue(id, out var guildConfig))
-            {
+            if (Cache.TryGetValue(id, out var guildConfig))
+                return guildConfig;
 
-                var entity = await _repo.GetGuildConfigAsync(id.ToString());
-                guildConfig = entity.ToModel();
-
-            }
+            var entity = await _repo.GetGuildConfigAsync(id);
+            guildConfig = entity.ToModel();
+            Cache[id] = guildConfig;
 
             return guildConfig;
 
@@ -39,7 +38,7 @@ namespace YuGiOh.Bot.Services
             => _repo.UpdateGuildConfigAsync(guildConfig.ToEntity());
 
         public Task<bool> GuildConfigDoesExistAsync(ulong id)
-            => _repo.GuildConfigExistsAsync(id.ToString());
+            => _repo.GuildConfigExistsAsync(id);
 
     }
 }

@@ -17,7 +17,7 @@ namespace YuGiOh.Bot.Extensions
             return new GuildConfig
             {
 
-                Id = ulong.Parse(entity.Id),
+                Id = (ulong)entity.Id,
                 AutoDelete = entity.AutoDelete,
                 GuessTime = entity.GuessTime,
                 HangmanTime = entity.HangmanTime,
@@ -36,7 +36,7 @@ namespace YuGiOh.Bot.Extensions
             return new GuildConfigEntity
             {
 
-                Id = guildConfig.Id.ToString(),
+                Id = guildConfig.Id,
                 AutoDelete = guildConfig.AutoDelete,
                 GuessTime = guildConfig.GuessTime,
                 HangmanTime = guildConfig.HangmanTime,

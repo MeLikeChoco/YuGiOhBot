@@ -12,8 +12,8 @@ namespace YuGiOh.Common.Repositories.Interfaces
 
         Task InsertGuildConfigAsync(GuildConfigEntity guildConfig);
         Task UpdateGuildConfigAsync(GuildConfigEntity guildConfig);
-        Task<GuildConfigEntity> GetGuildConfigAsync(string id);
-        Task<bool> GuildConfigExistsAsync(string id);
+        Task<GuildConfigEntity> GetGuildConfigAsync(ulong id);
+        Task<bool> GuildConfigExistsAsync(ulong id);
 
     }
 }
