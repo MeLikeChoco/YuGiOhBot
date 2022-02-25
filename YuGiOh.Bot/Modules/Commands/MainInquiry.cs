@@ -6,10 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
-using MoreLinq;
 using YuGiOh.Bot.Extensions;
-using YuGiOh.Bot.Models.Cards;
-using YuGiOh.Bot.Services;
 using YuGiOh.Common.Models.YuGiOh;
 
 namespace YuGiOh.Bot.Modules.Commands

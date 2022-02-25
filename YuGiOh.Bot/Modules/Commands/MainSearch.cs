@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Addons.Interactive;
 using Discord.Commands;
-using MoreLinq;
 using YuGiOh.Bot.Extensions;
 using YuGiOh.Bot.Models.Criterion;
 
@@ -151,7 +150,7 @@ namespace YuGiOh.Bot.Modules.Commands
         public IEnumerable<string> GenDescriptions(IEnumerable<string> cards)
         {
 
-            var groups = cards.Batch(30);
+            var groups = cards.Chunk(30);
             var descriptions = new List<string>(3);
             var counter = 1;
 

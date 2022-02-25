@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Discord.WebSocket;
-using MoreLinq;
 using YuGiOh.Bot.Extensions;
 using YuGiOh.Bot.Services;
 using YuGiOh.Bot.Services.Interfaces;

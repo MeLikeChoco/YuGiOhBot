@@ -7,7 +7,6 @@ using Discord.Addons.Interactive;
 using Discord.Commands;
 using Discord.Interactions;
 using Discord.WebSocket;
-using MoreLinq;
 using YuGiOh.Bot.Extensions;
 using YuGiOh.Bot.Models;
 using YuGiOh.Bot.Models.Autocompletes;
@@ -46,11 +45,11 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
             Random random
         ) : base(cache, yuGiOhDbService, guildConfigDbService, web)
         {
-            
+
             _cmdHelpService = cmdHelpService;
             _config = config;
             _random = random;
-            
+
         }
 
         [SlashCommand("help", "The defacto help command")]
@@ -69,17 +68,14 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
                 return NoResultError("commands", input);
 
             var cmdStrings = cmds
-                .Select(cmd =>
-                {
-
-                    if (cmd is CommandInfo cmdInfo)
-                        return $"{GuildConfig.Prefix}{cmdInfo.Name} {cmdInfo.Parameters.Select(param => $"<{param.Name}>").Join(' ')}\n{cmdInfo.Summary}";
-                    else if (cmd is SlashCommandInfo slashCmdInfo)
-                        return $"/{slashCmdInfo.Name} {slashCmdInfo.Parameters.Select(param => param.IsRequired ? $"<{param.Name}>" : $"<optional: {param.Name}>").Join(' ')}\n{slashCmdInfo.Description}";
-                    else
-                        return "";
-
-                })
+                .Select(cmd
+                    => cmd switch
+                    {
+                        CommandInfo cmdInfo => $"{GuildConfig.Prefix}{cmdInfo.Name} {cmdInfo.Parameters.Select(param => $"<{param.Name}>").Join(' ')}\n{cmdInfo.Summary}",
+                        SlashCommandInfo slashCmdInfo => $"/{slashCmdInfo.Name} {slashCmdInfo.Parameters.Select(param => param.IsRequired ? $"<{param.Name}>" : $"<optional: {param.Name}>").Join(' ')}\n{slashCmdInfo.Description}",
+                        _ => ""
+                    }
+                )
                 .Distinct()
                 .OrderBy(str => str);
 
@@ -147,7 +143,7 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
                     })
                     .Distinct()
                     .OrderBy(str => str)
-                    .Batch(5)
+                    .Chunk(5)
                     .Select(group => @group.Join("\n\n"))
             };
 

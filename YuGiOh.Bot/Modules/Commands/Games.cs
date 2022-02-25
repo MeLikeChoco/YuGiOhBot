@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -7,12 +6,9 @@ using System.Threading.Tasks;
 using Discord.Addons.Interactive;
 using Discord.Commands;
 using Discord.WebSocket;
-using MoreLinq;
-using Newtonsoft.Json.Linq;
 using YuGiOh.Bot.Extensions;
 using YuGiOh.Bot.Models.Cards;
 using YuGiOh.Bot.Models.Criterion;
-using YuGiOh.Bot.Models.Deserializers;
 using YuGiOh.Bot.Services;
 
 namespace YuGiOh.Bot.Modules.Commands

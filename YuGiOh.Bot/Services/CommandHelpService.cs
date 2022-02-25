@@ -10,6 +10,7 @@ using Discord.Rest;
 using Discord.WebSocket;
 using MoreLinq;
 using YuGiOh.Bot.Extensions;
+using ModuleInfo = Discord.Interactions.ModuleInfo;
 
 namespace YuGiOh.Bot.Services
 {
@@ -26,19 +27,22 @@ namespace YuGiOh.Bot.Services
         public CommandHelpService(
             DiscordShardedClient client,
             CommandService cmdService,
-            InteractionService interactService)
+            InteractionService interactService
+        )
             : this(client as IDiscordClient, cmdService, interactService) { }
 
         public CommandHelpService(
             DiscordSocketClient client,
             CommandService cmdService,
-            InteractionService interactService)
+            InteractionService interactService
+        )
             : this(client as IDiscordClient, cmdService, interactService) { }
 
         protected CommandHelpService(
             IDiscordClient client,
             CommandService cmdService,
-            InteractionService interactService)
+            InteractionService interactService
+        )
         {
 
             _client = client;
@@ -47,12 +51,12 @@ namespace YuGiOh.Bot.Services
             _ownerIdTask = client.GetApplicationInfoAsync().ContinueWith(task => task.Result.Owner.Id);
             _commandsTask = Task.FromResult(
                 _cmdService.Commands
-                .SortedMerge(
-                    OrderByDirection.Ascending, this,
-                    _interactService.SlashCommands,
-                    _interactService.ContextCommands,
-                    _interactService.ComponentCommands
-                )
+                    .SortedMerge(
+                        OrderByDirection.Ascending, this,
+                        _interactService.SlashCommands,
+                        _interactService.ContextCommands,
+                        _interactService.ComponentCommands
+                    )
             );
 
         }
@@ -64,17 +68,14 @@ namespace YuGiOh.Bot.Services
         {
 
             return GetCmdsInValidModules(user)
-                .Where(cmd =>
-                {
-
-                    if (cmd is CommandInfo regCmdInfo)
-                        return regCmdInfo.Name.EqualsIgnoreCase(input) || regCmdInfo.Aliases.Contains(input, StringComparer.OrdinalIgnoreCase);
-                    else if (cmd is ICommandInfo appCmdInfo)
-                        return appCmdInfo.Name.EqualsIgnoreCase(input);
-
-                    return false;
-
-                });
+                .Where(cmd
+                    => cmd switch
+                    {
+                        CommandInfo regCmdInfo => regCmdInfo.Name.EqualsIgnoreCase(input) || regCmdInfo.Aliases.Contains(input, StringComparer.OrdinalIgnoreCase),
+                        ICommandInfo appCmdInfo => appCmdInfo.Name.EqualsIgnoreCase(input),
+                        _ => false
+                    }
+                );
 
         }
 
@@ -82,17 +83,14 @@ namespace YuGiOh.Bot.Services
         {
 
             return GetCmdsInValidModules(user)
-                .Where(cmd =>
-                {
-
-                    if (cmd is CommandInfo regCmdInfo)
-                        return regCmdInfo.Name.StartsWith(input, comparer);
-                    else if (cmd is ICommandInfo appCmdInfo)
-                        return appCmdInfo.Name.StartsWith(input, comparer);
-
-                    return false;
-
-                });
+                .Where(cmd
+                    => cmd switch
+                    {
+                        CommandInfo regCmdInfo => regCmdInfo.Name.StartsWith(input, comparer),
+                        ICommandInfo appCmdInfo => appCmdInfo.Name.StartsWith(input, comparer),
+                        _ => false
+                    }
+                );
 
         }
 
@@ -101,32 +99,33 @@ namespace YuGiOh.Bot.Services
 
             var isOwner = user.Id == _ownerIdTask.Result;
 
-            bool isValid(object info)
+            bool IsValid(object info)
                 => !DoesHaveReqOwner(info) || (DoesHaveReqOwner(info) && isOwner);
 
             return _cmdService.Modules
-                .Where(isValid)
+                .Where(IsValid)
                 .SelectMany(module => module.Commands)
                 .SortedMerge(OrderByDirection.Ascending, this,
                     _interactService.Modules
-                        .Where(isValid)
+                        .Where(IsValid)
                         .SelectMany(module => module.SlashCommands.Concat<object>(module.ContextCommands).Concat(module.ComponentCommands))
-                 )
-                .Where(isValid);
+                )
+                .Where(IsValid);
 
         }
 
         private bool DoesHaveReqOwner(object info)
         {
 
-            if (info is CommandInfo)
-                return (info as CommandInfo).Preconditions.Any(preconditions => preconditions.GetType() == typeof(Discord.Commands.RequireOwnerAttribute));
-            else if (info is ICommandInfo)
-                return (info as ICommandInfo).Preconditions.Any(precondition => precondition.GetType() == typeof(Discord.Interactions.RequireOwnerAttribute));
-            else if (info is Discord.Commands.ModuleInfo regModInfo)
-                return regModInfo.Preconditions.Any(precondition => precondition.GetType() == typeof(Discord.Commands.RequireOwnerAttribute));
-            else
-                return (info as Discord.Interactions.ModuleInfo).Preconditions.Any(precondition => precondition.GetType() == typeof(Discord.Interactions.RequireOwnerAttribute));
+            return info switch
+            {
+
+                CommandInfo cmdInfo => cmdInfo.Preconditions.Any(preconditions => preconditions.GetType() == typeof(Discord.Commands.RequireOwnerAttribute)),
+                ICommandInfo appCmdInfo => appCmdInfo.Preconditions.Any(precondition => precondition.GetType() == typeof(Discord.Interactions.RequireOwnerAttribute)),
+                Discord.Commands.ModuleInfo regModInfo => regModInfo.Preconditions.Any(precondition => precondition.GetType() == typeof(Discord.Commands.RequireOwnerAttribute)),
+                _ => ((ModuleInfo) info).Preconditions.Any(precondition => precondition.GetType() == typeof(Discord.Interactions.RequireOwnerAttribute))
+
+            };
 
         }
 

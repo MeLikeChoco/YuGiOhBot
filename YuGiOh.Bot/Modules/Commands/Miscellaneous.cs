@@ -1,16 +1,12 @@
-﻿using Discord;
-using Discord.Addons.Interactive;
-using Discord.Commands;
-using MoreLinq;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
+using Discord;
+using Discord.Addons.Interactive;
+using Discord.Commands;
 using YuGiOh.Bot.Extensions;
-using YuGiOh.Bot.Models.Attributes;
-using YuGiOh.Bot.Models.BoosterPacks;
 
 namespace YuGiOh.Bot.Modules.Commands
 {

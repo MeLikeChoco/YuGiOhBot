@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Addons.Interactive;
 using Discord.Commands;
-using MoreLinq;
 using YuGiOh.Bot.Extensions;
 using YuGiOh.Bot.Models;
 
@@ -80,7 +79,7 @@ namespace YuGiOh.Bot.Modules.Commands
             paginatedMessage.Pages = _commands
                 .Select(cmdInfo => $"**Command:** {cmdInfo.Name} {cmdInfo.Parameters.Select(param => $"<{param.Name}>").Join(' ')}\n{cmdInfo.Summary}")
                 .Distinct()
-                .Batch(5)
+                .Chunk(5)
                 .Select(group => group.Join("\n\n"));
 
             return PagedReplyAsync(paginatedMessage);
