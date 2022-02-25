@@ -16,6 +16,7 @@ namespace YuGiOh.Bot.Handlers
         private readonly Cache _cache;
         private readonly Web _web;
         private readonly IYuGiOhDbService _yuGiOhDbService;
+
         private readonly IGuildConfigDbService _guildConfigDbService;
         //private readonly IgnoreCaseComparer _ignoreCaseComparer;
 
@@ -26,7 +27,8 @@ namespace YuGiOh.Bot.Handlers
             Cache cache,
             Web web,
             IYuGiOhDbService yuGiOhDbService,
-            IGuildConfigDbService guildConfigDbService)
+            IGuildConfigDbService guildConfigDbService
+        )
         {
 
             _cache = cache;
@@ -60,7 +62,7 @@ namespace YuGiOh.Bot.Handlers
                 var matches = Regex.Matches(message.Content, Pattern);
                 var watch = new Stopwatch();
                 var channel = message.Channel;
-                bool minimal = false;
+                var minimal = false;
 
                 if (matches.Count > 0 && matches.Count < 4)
                 {
@@ -82,16 +84,16 @@ namespace YuGiOh.Bot.Handlers
 
                         watch.Start();
 
-                        string cardName = match.ToString().ConvertTypesetterToTypewriter().Trim();
+                        var cardName = match.ToString().ConvertTypesetterToTypewriter().Trim();
 
                         if (string.IsNullOrEmpty(cardName) || string.IsNullOrWhiteSpace(cardName)) //continue if there is no input
                             continue;
 
-                        var input = cardName.Split(' ');
+                        // var input = cardName.Split(' ');
                         var closestCard = await _yuGiOhDbService.GetCardAsync(cardName) ??
-                            (await _yuGiOhDbService.SearchCardsAsync(cardName)).FirstOrDefault() ??
-                            (await _yuGiOhDbService.GetCardsContainsAllAsync(cardName)).FirstOrDefault() ??
-                            await _yuGiOhDbService.GetClosestCardAsync(cardName);
+                                          (await _yuGiOhDbService.SearchCardsAsync(cardName)).FirstOrDefault() ??
+                                          (await _yuGiOhDbService.GetCardsContainsAllAsync(cardName)).FirstOrDefault() ??
+                                          await _yuGiOhDbService.GetClosestCardAsync(cardName);
 
                         //for easier debugging
                         //var closestCard = await _yuGiOhDbService.GetCardAsync(cardName);
@@ -115,18 +117,22 @@ namespace YuGiOh.Bot.Handlers
 
                         watch.Stop();
 
-                        var time = watch.Elapsed;
+                        var elapsed = watch.Elapsed;
+                        var time = elapsed.TotalSeconds;
 
-                        AltConsole.Write("Info", "Inline", $"{cardName} took {time.TotalSeconds} seconds to complete.");
+                        AltConsole.Write("Info", "Inline", $"{cardName} took {(time > 1 ? time : time * 1000)} {(time > 1 ? "seconds" : "milliseconds")} to fetch.");
 
                         try
                         {
 
                             var embed = closestCard.GetEmbedBuilder();
-                            await channel.SendMessageAsync(embed: (await embed.WithCardPrices(minimal, _web, time)).Build());
+                            await channel.SendMessageAsync(embed: (await embed.WithCardPrices(minimal, _web, elapsed)).Build());
 
                         }
-                        catch (Exception ex) { AltConsole.Write("Service", "Chat", $"{ex}"); }
+                        catch (Exception ex)
+                        {
+                            AltConsole.Write("Service", "Chat", $"{ex}");
+                        }
 
                     }
 
@@ -139,7 +145,9 @@ namespace YuGiOh.Bot.Handlers
         }
 
         //dont even ask me what the fuck im doing
+
         #region Levenshtein Distance
+
         private unsafe int YetiLevenshtein(string s1, string s2)
         {
             fixed (char* p1 = s1)
@@ -174,7 +182,13 @@ namespace YuGiOh.Bot.Handlers
         /// <param name="l2"></param>
         /// <param name="xcost"></param>
         /// <returns></returns>
-        private unsafe int YetiLevenshtein(char* s1, int l1, char* s2, int l2, int xcost)
+        private unsafe int YetiLevenshtein(
+            char* s1,
+            int l1,
+            char* s2,
+            int l2,
+            int xcost
+        )
         {
             int i;
             //int *row;  /* we only need to keep one row of costs */
@@ -235,7 +249,7 @@ namespace YuGiOh.Bot.Handlers
             int* row = stackalloc int[l2];
             if (l2 < 0)
                 //if (!row)
-                return (int)(-1);
+                return (int) (-1);
             end = row + l2 - 1;
             for (i = 0; i < l2 - (xcost > 0 ? 0 : half); i++)
                 row[i] = i;
@@ -302,6 +316,7 @@ namespace YuGiOh.Bot.Handlers
                         char2p = s2;
                         D = x = i;
                     }
+
                     /* skip the lower triangle */
                     if (i <= half + 1)
                         end = row + l2 + i - half - 2;
@@ -318,6 +333,7 @@ namespace YuGiOh.Bot.Handlers
                             x = D;
                         *(p++) = x;
                     }
+
                     /* lower triangle sentinel */
                     if (i <= half)
                     {
@@ -343,8 +359,10 @@ namespace YuGiOh.Bot.Handlers
                 if (*p == c)
                     return 1;
             }
+
             return 0;
         }
+
         #endregion Levenshtein Distance
 
     }

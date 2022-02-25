@@ -27,10 +27,10 @@ namespace YuGiOh.Bot.Extensions
             if (searchTime is not null)
             {
 
-                var time = searchTime.Value;
-                var rounded = Math.Round(time.TotalSeconds, 5, MidpointRounding.ToEven).ToString("0.00000");
+                var time = searchTime.Value.TotalSeconds;
+                var rounded = Math.Round(time > 1 ? time : time * 1000, 5, MidpointRounding.ToEven).ToString("0.00000");
 
-                embed.Footer.WithText($"Search time: {rounded} seconds");
+                embed.Footer.WithText($"Search time: {rounded} {(time > 1 ? "seconds" : "milliseconds")}");
 
             }
 
