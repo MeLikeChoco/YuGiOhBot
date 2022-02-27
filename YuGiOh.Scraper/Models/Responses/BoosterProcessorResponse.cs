@@ -6,13 +6,12 @@ using System.Text;
 using System.Threading.Tasks;
 using YuGiOh.Common.Models.YuGiOh;
 
-namespace YuGiOh.Scraper.Models.Responses
+namespace YuGiOh.Scraper.Models.Responses;
+
+public class BoosterProcessorResponse
 {
-    public class BoosterProcessorResponse
-    {
 
-        public int Count { get; set; }
-        public ConcurrentBag<Error> Errors { get; set; }
+    public int Count { get; set; }
+    public ConcurrentBag<Error> Errors { get; set; }
 
-    }
 }

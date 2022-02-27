@@ -7,13 +7,12 @@ using System.Text;
 using System.Threading.Tasks;
 using YuGiOh.Common.Models.YuGiOh;
 
-namespace YuGiOh.Scraper.Models.Responses
+namespace YuGiOh.Scraper.Models.Responses;
+
+public class CardProcessorResponse
 {
-    public class CardProcessorResponse
-    {
 
-        public int Count { get; set; }
-        public ConcurrentBag<Error> Errors { get; set; }
+    public int Count { get; set; }
+    public ConcurrentBag<Error> Errors { get; set; }
 
-    }
 }
