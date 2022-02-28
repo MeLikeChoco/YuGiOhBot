@@ -243,8 +243,9 @@ namespace YuGiOh.Common.Repositories
             else
                 await connection.InsertAsync(boosterPack).ConfigureAwait(false);
 
-            var datesId = await connection.QuerySingleAsync<int>("select dates from boosterpacks where id = @id", new { id = boosterPack.Id }).ConfigureAwait(false);
-            var cardsId = await connection.QuerySingleAsync<int>("select cards from boosterpacks where id = @id", new { id = boosterPack.Id }).ConfigureAwait(false);
+            var (datesId, cardsId) = await connection.QuerySingleAsync<(int, int)>("select dates, cards from boosterpacks where id = @id", new { id = boosterPack.Id }).ConfigureAwait(false);
+            // var datesId = await connection.QuerySingleAsync<int>("select dates from boosterpacks where id = @id", new { id = boosterPack.Id }).ConfigureAwait(false);
+            // var cardsId = await connection.QuerySingleAsync<int>("select cards from boosterpacks where id = @id", new { id = boosterPack.Id }).ConfigureAwait(false);
 
             foreach (var date in boosterPack.Dates)
             {
