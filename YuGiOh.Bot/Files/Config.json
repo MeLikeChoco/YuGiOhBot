@@ -1,4 +1,9 @@
 ﻿{
+  "Logging Templates": {
+    "Console": "",
+    "File": ""
+  },
+  "Logs Directory": "",
   "Guild Invite": "",
   "Bot Invite": "",
   "Feedback Channel": 0,
@@ -41,7 +46,7 @@
     },
     "Bot List": {
       "BotsOnDiscordXyz": "",
-      "TopGG":  "",
+      "TopGG": "",
       "DiscordBotsGG": ""
     },
     "Bitly": ""
