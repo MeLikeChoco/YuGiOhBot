@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Diagnostics;
 
 namespace YuGiOh.Bot
 {
@@ -41,6 +36,7 @@ namespace YuGiOh.Bot
         }
 
         [Conditional("DEBUG")]
+        // ReSharper disable once RedundantAssignment
         private static void GetIsDebug(ref bool isDebug)
             => isDebug = true;
 
