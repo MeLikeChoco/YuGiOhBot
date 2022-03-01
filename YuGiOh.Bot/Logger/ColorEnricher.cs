@@ -22,8 +22,8 @@ public class ColorEnricher : ILogEventEnricher
     private const string Turqoise = "\x1b[38;5;31m";
     private const string Color1 = "\x1b[38;2;115;18;54m";
     private const string Color2 = "\x1b[38;2;122;2;141m";
-    private const string Color3 = "\x1b[38;2;65;63;151m";
-    private const string Color4 = "\x1b[38;2;241;242;240m";
+    private const string Color3 = "\x1b[38;2;86;84;166m";
+    private const string Color4 = "\x1b[38;2;190;190;190m";
 
     #endregion Colors
 
