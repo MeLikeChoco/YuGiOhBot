@@ -14,7 +14,6 @@ using YuGiOh.Bot.Handlers;
 using YuGiOh.Bot.Models;
 using YuGiOh.Bot.Services;
 using YuGiOh.Bot.Services.Interfaces;
-using IResult = Discord.Interactions.IResult;
 
 namespace YuGiOh.Bot.Core
 {
@@ -22,7 +21,6 @@ namespace YuGiOh.Bot.Core
     {
 
         private readonly IServiceProvider _services;
-        private readonly ILoggerFactory _loggerFactory;
         private readonly ILogger _logger;
         private readonly DiscordShardedClient _client;
         private readonly CommandService _commandService;
@@ -34,22 +32,21 @@ namespace YuGiOh.Bot.Core
         {
 
             _services = new ServiceCollection().BuildServices();
-            _loggerFactory = _services.GetService<ILoggerFactory>() ?? throw new NullReferenceException(nameof(_logger));
-            _logger = _loggerFactory.CreateLogger("YuGiOh Bot");
+            _logger = _services.GetService<ILoggerFactory>()!.CreateLogger("YuGiOh Bot");
 
             _logger.Info($"Welcome to {Assembly.GetExecutingAssembly().GetName()}");
             _logger.Info($"Using Discord.NET v{DiscordConfig.Version}");
             _logger.Info("Initializing events...");
 
-            _client = _services.GetService<DiscordShardedClient>() ?? throw new NullReferenceException(nameof(_client));
-            _commandService = _services.GetService<CommandService>() ?? throw new NullReferenceException(nameof(_commandService));
-            _interactionService = _services.GetService<InteractionService>() ?? throw new NullReferenceException(nameof(_interactionService));
+            _client = _services.GetService<DiscordShardedClient>();
+            _commandService = _services.GetService<CommandService>();
+            _interactionService = _services.GetService<InteractionService>();
 
             _logger.Info("Finished initializing events.");
 
         }
 
-        public async Task Initialize()
+        public async Task RunAsync()
         {
 
             RegisterLogging();
@@ -195,38 +192,17 @@ namespace YuGiOh.Bot.Core
         private void RegisterLogging()
         {
 
-            _client.Log += message
-                => Task.Run(() => _loggerFactory.CreateLogger(message.Source).Log(message));
+            _client.Log += ActivatorUtilities.CreateInstance<LogHandler>(_services).HandleLogMessage;
+            _commandService.Log += ActivatorUtilities.CreateInstance<LogHandler>(_services).HandleLogMessage;
+            _interactionService.Log += ActivatorUtilities.CreateInstance<LogHandler>(_services).HandleLogMessage;
 
-            _commandService.Log += message
-                => Task.Run(() => _loggerFactory.CreateLogger(message.Source).Log(message));
-
-            _interactionService.Log += message
-                => Task.Run(() => _loggerFactory.CreateLogger(message.Source).Log(message));
-
-            _interactionService.SlashCommandExecuted += (_, _, result)
-                => Task.Run(() => LogInteractionExecuted(result));
-
-            _interactionService.AutocompleteCommandExecuted += (_, _, result)
-                => Task.Run(() => LogInteractionExecuted(result));
-
-            _interactionService.ComponentCommandExecuted += (_, _, result)
-                => Task.Run(() => LogInteractionExecuted(result));
-
-        }
-
-        private Task LogInteractionExecuted(IResult result)
-        {
-
-            if (!result.IsSuccess)
-                _loggerFactory.CreateLogger("Error").Error(result.ErrorReason);
-
-            return Task.CompletedTask;
+            _interactionService.SlashCommandExecuted += ActivatorUtilities.CreateInstance<LogHandler>(_services).HandleInteractionExecuted;
+            _interactionService.AutocompleteCommandExecuted += ActivatorUtilities.CreateInstance<LogHandler>(_services).HandleInteractionExecuted;
+            _interactionService.ComponentCommandExecuted += ActivatorUtilities.CreateInstance<LogHandler>(_services).HandleInteractionExecuted;
 
         }
 
         private void Log(string message)
-            // => AltConsole.Write("Info", "Events", message);
             => _logger.Info(message);
 
     }

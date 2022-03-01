@@ -17,7 +17,7 @@ namespace YuGiOh.Bot.Core
 
                 var events = new Events();
 
-                await events.Initialize();
+                await events.RunAsync();
 
             }
             catch (Exception e)
