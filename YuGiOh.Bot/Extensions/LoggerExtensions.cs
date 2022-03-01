@@ -16,63 +16,63 @@ namespace YuGiOh.Bot.Extensions
     public static class LoggerExtensions
     {
 
-        private static Serilog.ILogger? _logger;
+        private static Serilog.ILogger _logger;
 
         #region Info Logging
 
-        public static void Info(this ILogger logger, string? message, params object?[] args)
+        public static void Info(this ILogger logger, string message, params object[] args)
             => logger.LogInformation(message, args);
 
         public static void Info(
             this ILogger logger,
             EventId eventId,
-            string? message,
-            params object?[] args
+            string message,
+            params object[] args
         )
             => logger.LogInformation(eventId, message, args);
 
         public static void Info(
             this ILogger logger,
-            Exception? exception,
-            string? message,
-            params object?[] args
+            Exception exception,
+            string message,
+            params object[] args
         )
             => logger.LogInformation(exception, message, args);
 
         public static void Info(
             this ILogger logger,
             EventId eventId,
-            Exception? exception,
-            string? message,
-            params object?[] args
+            Exception exception,
+            string message,
+            params object[] args
         )
             => logger.LogInformation(eventId, exception, message, args);
 
-        public static void Info<T>(this ILogger<T> logger, string? message, params object?[] args)
+        public static void Info<T>(this ILogger<T> logger, string message, params object[] args)
             => logger.LogInformation(message, args);
 
         public static void Info<T>(
             this ILogger<T> logger,
             EventId eventId,
-            string? message,
-            params object?[] args
+            string message,
+            params object[] args
         )
             => logger.LogInformation(eventId, message, args);
 
         public static void Info<T>(
             this ILogger<T> logger,
-            Exception? exception,
-            string? message,
-            params object?[] args
+            Exception exception,
+            string message,
+            params object[] args
         )
             => logger.LogInformation(exception, message, args);
 
         public static void Info<T>(
             this ILogger<T> logger,
             EventId eventId,
-            Exception? exception,
-            string? message,
-            params object?[] args
+            Exception exception,
+            string message,
+            params object[] args
         )
             => logger.LogInformation(eventId, exception, message, args);
 
@@ -80,59 +80,59 @@ namespace YuGiOh.Bot.Extensions
 
         #region Error Logging
 
-        public static void Error(this ILogger logger, string? message, params object?[] args)
+        public static void Error(this ILogger logger, string message, params object[] args)
             => logger.LogError(message, args);
 
         public static void Error(
             this ILogger logger,
             EventId eventId,
-            string? message,
-            params object?[] args
+            string message,
+            params object[] args
         )
             => logger.LogError(eventId, message, args);
 
         public static void Error(
             this ILogger logger,
-            Exception? exception,
-            string? message,
-            params object?[] args
+            Exception exception,
+            string message,
+            params object[] args
         )
             => logger.LogError(exception, message, args);
 
         public static void Error(
             this ILogger logger,
             EventId eventId,
-            Exception? exception,
-            string? message,
-            params object?[] args
+            Exception exception,
+            string message,
+            params object[] args
         )
             => logger.LogError(eventId, exception, message, args);
 
-        public static void Error<T>(this ILogger<T> logger, string? message, params object?[] args)
+        public static void Error<T>(this ILogger<T> logger, string message, params object[] args)
             => logger.LogError(message, args);
 
         public static void Error<T>(
             this ILogger<T> logger,
             EventId eventId,
-            string? message,
-            params object?[] args
+            string message,
+            params object[] args
         )
             => logger.LogError(eventId, message, args);
 
         public static void Error<T>(
             this ILogger<T> logger,
-            Exception? exception,
-            string? message,
-            params object?[] args
+            Exception exception,
+            string message,
+            params object[] args
         )
             => logger.LogError(exception, message, args);
 
         public static void Error<T>(
             this ILogger<T> logger,
             EventId eventId,
-            Exception? exception,
-            string? message,
-            params object?[] args
+            Exception exception,
+            string message,
+            params object[] args
         )
             => logger.LogError(eventId, exception, message, args);
 
@@ -140,59 +140,59 @@ namespace YuGiOh.Bot.Extensions
 
         #region Verbose Logging
 
-        public static void Verbose(this ILogger logger, string? message, params object?[] args)
+        public static void Verbose(this ILogger logger, string message, params object[] args)
             => logger.LogTrace(message, args);
 
         public static void Verbose(
             this ILogger logger,
             EventId eventId,
-            string? message,
-            params object?[] args
+            string message,
+            params object[] args
         )
             => logger.LogTrace(eventId, message, args);
 
         public static void Verbose(
             this ILogger logger,
-            Exception? exception,
-            string? message,
-            params object?[] args
+            Exception exception,
+            string message,
+            params object[] args
         )
             => logger.LogTrace(exception, message, args);
 
         public static void Verbose(
             this ILogger logger,
             EventId eventId,
-            Exception? exception,
-            string? message,
-            params object?[] args
+            Exception exception,
+            string message,
+            params object[] args
         )
             => logger.LogTrace(eventId, exception, message, args);
 
-        public static void Verbose<T>(this ILogger<T> logger, string? message, params object?[] args)
+        public static void Verbose<T>(this ILogger<T> logger, string message, params object[] args)
             => logger.LogTrace(message, args);
 
         public static void Verbose<T>(
             this ILogger<T> logger,
             EventId eventId,
-            string? message,
-            params object?[] args
+            string message,
+            params object[] args
         )
             => logger.LogTrace(eventId, message, args);
 
         public static void Verbose<T>(
             this ILogger<T> logger,
-            Exception? exception,
-            string? message,
-            params object?[] args
+            Exception exception,
+            string message,
+            params object[] args
         )
             => logger.LogTrace(exception, message, args);
 
         public static void Verbose<T>(
             this ILogger<T> logger,
             EventId eventId,
-            Exception? exception,
-            string? message,
-            params object?[] args
+            Exception exception,
+            string message,
+            params object[] args
         )
             => logger.LogTrace(eventId, exception, message, args);
 

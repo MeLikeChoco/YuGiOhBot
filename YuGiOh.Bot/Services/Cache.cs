@@ -12,9 +12,9 @@ namespace YuGiOh.Bot.Services
         // public List<Card> Cards { get; private set; }
         // public Dictionary<string, Card> NameToCard { get; private set; }
         // public Dictionary<string, BoosterPack> BoosterPacks { get; private set; }
-        public ConcurrentDictionary<ulong, object?> GuessInProgress { get; }
+        public ConcurrentDictionary<ulong, object> GuessInProgress { get; }
 
-        public ConcurrentDictionary<ulong, object?> HangmanInProgress { get; }
+        public ConcurrentDictionary<ulong, object> HangmanInProgress { get; }
 
         //public Banlist Banlist { get; private set; }
         // public int FYeahYgoCardArtPosts { get; private set; }
@@ -32,8 +32,8 @@ namespace YuGiOh.Bot.Services
 
             _logger.Info("Beginning cache initialization...");
 
-            GuessInProgress = new ConcurrentDictionary<ulong, object?>();
-            HangmanInProgress = new ConcurrentDictionary<ulong, object?>();
+            GuessInProgress = new ConcurrentDictionary<ulong, object>();
+            HangmanInProgress = new ConcurrentDictionary<ulong, object>();
             // BitlyKey = File.ReadAllText("Files/OAuth/Bitly.txt");
 
             _logger.Info("Finished cache initialization...");
@@ -48,7 +48,7 @@ namespace YuGiOh.Bot.Services
         //     Log("Getting photo posts on FYeahYgoCardArt tumblr...");
         //
         //     TumblrKey = await File.ReadAllTextAsync("Files/OAuth/Tumblr.txt");
-        //     var posts = await web.GetDeserializedContent<JObject>($"https://api.tumblr.com/v2/blog/fyeahygocardart/posts/photo?api_key={TumblrKey}&limit=1");
+        //     var posts = await web.GetDeserializedContent<JObject>($"https://api.tumblr.com/v2/blog/fyeahygocardart/posts/photoapi_key={TumblrKey}&limit=1");
         //     FYeahYgoCardArtPosts = int.Parse(posts["response"]["total_posts"].ToString());
         //
         //     Log($"Got {FYeahYgoCardArtPosts} photos.");
@@ -164,20 +164,20 @@ namespace YuGiOh.Bot.Services
         //        else
         //            body.AddField("Not released yet", "\u200B");
 
-        //        const string unknownValue = "???";
+        //        const string unknownValue = "";
 
         //        if (monster is IHasAtk hasAtk)
-        //            body.AddField("ATK", string.IsNullOrEmpty(hasAtk.Atk) ? unknownValue : hasAtk.Atk, true);
+        //            body.AddField("ATK", string.IsNullOrEmpty(hasAtk.Atk)  unknownValue : hasAtk.Atk, true);
 
         //        if (monster is IHasDef hasDef)
-        //            body.AddField("DEF", string.IsNullOrEmpty(hasDef.Def) ? unknownValue : hasDef.Def, true);
+        //            body.AddField("DEF", string.IsNullOrEmpty(hasDef.Def)  unknownValue : hasDef.Def, true);
 
         //    }
         //    else
-        //        body.AddField("Effect", card.Lore?.Replace(@"\n", "\n") ?? "Not yet released.");
+        //        body.AddField("Effect", card.Lore.Replace(@"\n", "\n")  "Not yet released.");
 
         //    if (card.Archetypes is not null)
-        //        body.AddField(card.Archetypes.Length > 1 ? "Archetypes" : "Archetype", card.Archetypes.Join(", "));
+        //        body.AddField(card.Archetypes.Length > 1  "Archetypes" : "Archetype", card.Archetypes.Join(", "));
 
         //    return body;
 
@@ -197,7 +197,7 @@ namespace YuGiOh.Bot.Services
         //        desc += "TCG";
 
         //    if (card.OcgExists)
-        //        desc += card.TcgExists ? "/OCG" : "OCG";
+        //        desc += card.TcgExists  "/OCG" : "OCG";
 
         //    desc += "\n";
         //    desc += $"**Card Type:** {card.CardType}\n";

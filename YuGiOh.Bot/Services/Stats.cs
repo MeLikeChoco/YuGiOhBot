@@ -17,7 +17,7 @@ namespace YuGiOh.Bot.Services
     {
 
         public int UniqueUserCount { get; private set; }
-        public string? MaxGuild { get; private set; }
+        public string MaxGuild { get; private set; }
         public int MaxGuildCount { get; private set; }
         public int GuildCount { get; private set; }
         public bool IsReady { get; private set; }

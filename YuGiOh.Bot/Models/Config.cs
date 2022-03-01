@@ -7,9 +7,6 @@ using CommandLine;
 using Serilog;
 using LoggerExtensions = YuGiOh.Bot.Extensions.LoggerExtensions;
 
-// ReSharper disable ClassNeverInstantiated.Global
-#pragma warning disable CS8618
-
 namespace YuGiOh.Bot.Models
 {
     public class Config
@@ -55,7 +52,7 @@ namespace YuGiOh.Bot.Models
         [JsonInclude]
         public Tokens Tokens { get; private set; }
 
-        private static Config? _instance;
+        private static Config _instance;
 
         [JsonIgnore]
         public static Config Instance

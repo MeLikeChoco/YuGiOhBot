@@ -59,7 +59,7 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
                 Cache.GuessInProgress.TryAdd(Context.Channel.Id, null);
 
                 Card card = null!;
-                Exception? e;
+                Exception e;
 
                 do
                 {

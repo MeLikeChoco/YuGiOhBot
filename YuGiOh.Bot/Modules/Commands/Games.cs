@@ -59,7 +59,7 @@ namespace YuGiOh.Bot.Modules.Commands
                 Cache.GuessInProgress.TryAdd(Context.Channel.Id, null);
 
                 Card card = null!;
-                Exception? e;
+                Exception e;
 
                 do
                 {
@@ -173,7 +173,7 @@ namespace YuGiOh.Bot.Modules.Commands
                                  hangmanService.GetCurrentDisplay());
 
                 var _ = new Timer((cancelTokenSrc) => (cancelTokenSrc as CancellationTokenSource)!.Cancel(), cts, TimeSpan.FromSeconds(GuildConfig.HangmanTime), Timeout.InfiniteTimeSpan);
-                SocketUser? user = null;
+                SocketUser user = null;
 
                 do
                 {
@@ -215,7 +215,7 @@ namespace YuGiOh.Bot.Modules.Commands
                     {
 
                         case CompletionStatus.Complete:
-                            await ReplyAsync($":trophy: The winner is **{(user as SocketGuildUser)!.Nickname ?? user.Username}**!");
+                            await ReplyAsync($":trophy: The winner is **{(user as SocketGuildUser)!.Nickname ?? user!.Username}**!");
                             break;
                         case CompletionStatus.Hanged:
                             await ReplyAsync($"You have been hanged! The card was `{hangmanService.Word}`.");

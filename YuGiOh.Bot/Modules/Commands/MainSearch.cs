@@ -21,7 +21,7 @@ namespace YuGiOh.Bot.Modules.Commands
         private readonly CommandService _commandService;
         private readonly IServiceProvider _services;
 
-        private static CommandInfo? _cardCommand;
+        private static CommandInfo _cardCommand;
         private static readonly object CardCmdLock = new();
 
         public MainSearch(
