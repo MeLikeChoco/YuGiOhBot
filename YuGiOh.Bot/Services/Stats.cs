@@ -1,42 +1,46 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 using DiscordBotsList.Api;
-using Newtonsoft.Json;
+using Microsoft.Extensions.Logging;
+using YuGiOh.Bot.Extensions;
 using YuGiOh.Bot.Models;
-using JsonSerializer = System.Text.Json.JsonSerializer;
+using System.Text.Json;
 
 namespace YuGiOh.Bot.Services
 {
     public class Stats
     {
 
-        public int UniqueUserCount { get; set; }
-        public string MaxGuild { get; set; }
-        public int MaxGuildCount { get; set; }
-        public int GuildCount { get; set; }
-        public bool IsReady { get; set; }
+        public int UniqueUserCount { get; private set; }
+        public string? MaxGuild { get; private set; }
+        public int MaxGuildCount { get; private set; }
+        public int GuildCount { get; private set; }
+        public bool IsReady { get; private set; }
 
+        private readonly ILogger _logger;
         private readonly Timer _calculateStats;
         private readonly ulong _id;
-        private Web _web;
+        private readonly Web _web;
         private readonly AuthDiscordBotListApi _topGG;
 
-        public Stats(DiscordShardedClient client, Web web)
+        public Stats(ILoggerFactory loggerFactory, DiscordShardedClient client, Web web)
         {
 
+            _logger = loggerFactory.CreateLogger(nameof(Stats));
             _web = web;
             IsReady = false;
             _id = client.CurrentUser.Id;
             _topGG = new AuthDiscordBotListApi(_id, Config.Instance.Tokens.BotList.TopGG);
-            _calculateStats = new Timer(CalculateStats, client, TimeSpan.FromSeconds(300), TimeSpan.FromHours(1));
+            _calculateStats = new Timer(CalculateStats!, client, TimeSpan.FromSeconds(60), TimeSpan.FromHours(1));
 
         }
 
-        private void CalculateStats(object state)
+        private async void CalculateStats(object state)
         {
 
             try
@@ -45,16 +49,21 @@ namespace YuGiOh.Bot.Services
                 if (state is not DiscordShardedClient client || client.Shards.Any(socket => socket.ConnectionState != ConnectionState.Connected))
                     return;
 
-                Log("Calculating stats...");
+                _logger.Info("Calculating stats...");
 
                 var guilds = client.Guilds;
-                var maxGuild = guilds.Where(guild => !guild.Name.Contains("Bot")).MaxBy(guild => guild.MemberCount);
+                var maxGuild = guilds.Where(guild => !guild.Name.Contains("Bot")).MaxBy(guild => guild.MemberCount)!;
+                var uniqueUsers = new HashSet<ulong>();
                 MaxGuild = maxGuild.Name;
                 MaxGuildCount = maxGuild.MemberCount;
-                UniqueUserCount = guilds.Sum(guild => guild.MemberCount);
                 GuildCount = guilds.Count;
 
-                Log("Finished calculating stats.");
+                foreach (var guild in guilds)
+                    await guild.GetUsersAsync().ForEachAsync(users => uniqueUsers.UnionWith(users.Select(user => user.Id)));
+
+                UniqueUserCount = uniqueUsers.Count;
+
+                _logger.Info("Finished calculating stats.");
 
                 IsReady = true;
 
@@ -69,7 +78,7 @@ namespace YuGiOh.Bot.Services
             catch (NullReferenceException)
             {
 
-                AltConsole.Write("Stats", "Error", "Error calculating stats. Rerunning in 300 seconds.");
+                _logger.Info("Error calculating stats. Rerunning in 300 seconds.");
                 _calculateStats.Change(TimeSpan.FromSeconds(300), TimeSpan.FromHours(1));
 
             }
@@ -100,7 +109,7 @@ namespace YuGiOh.Bot.Services
             }
             catch
             {
-                Log("Error sending stats to bots.ondiscord.xyz.");
+                _logger.Info("Error sending stats to bots.ondiscord.xyz.");
             }
 
             return Task.CompletedTask;
@@ -117,14 +126,14 @@ namespace YuGiOh.Bot.Services
                 var payload = JsonSerializer.Serialize(new { guildCount = client.Guilds.Count });
                 // var payload = JsonConvert.SerializeObject(new { guildCount = client.Guilds.Count });
 
-                Log("Sending stats to discord.bots.gg...");
+                _logger.Info("Sending stats to discord.bots.gg...");
                 var response = await _web.Post(string.Format(Constants.DiscordBotsGG, _id), payload, authorization: Config.Instance.Tokens.BotList.DiscordBotsGG);
-                Log($"Status: ({response.StatusCode}) Sent stats to discord.bots.gg.");
+                _logger.Info($"Status: ({response.StatusCode}) Sent stats to discord.bots.gg.");
 
             }
             catch
             {
-                Log("Error sending stats to discord.bots.gg.");
+                _logger.Info("Error sending stats to discord.bots.gg.");
             }
 
         }
@@ -138,21 +147,17 @@ namespace YuGiOh.Bot.Services
 
                 var bot = await _topGG.GetMeAsync();
 
-                Log("Sending stats to top.gg...");
+                _logger.Info("Sending stats to top.gg...");
                 await bot.UpdateStatsAsync(client.Guilds.Count);
-                Log("Status: Sent stats to top.gg.");
+                _logger.Info("Status: Sent stats to top.gg.");
 
             }
             catch
             {
-                Log("Error sending stats to top.gg.");
+                _logger.Info("Error sending stats to top.gg.");
             }
 
         }
-
-
-        private static void Log(string message)
-            => AltConsole.Write("Info", "Stats", message);
 
     }
 }

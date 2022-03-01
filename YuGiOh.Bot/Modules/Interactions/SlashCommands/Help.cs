@@ -7,6 +7,7 @@ using Discord.Addons.Interactive;
 using Discord.Commands;
 using Discord.Interactions;
 using Discord.WebSocket;
+using Microsoft.Extensions.Logging;
 using YuGiOh.Bot.Extensions;
 using YuGiOh.Bot.Models;
 using YuGiOh.Bot.Models.Autocompletes;
@@ -34,16 +35,15 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
         };
 
         public Help(
+            ILoggerFactory loggerFactory,
             Cache cache,
             IYuGiOhDbService yuGiOhDbService,
             IGuildConfigDbService guildConfigDbService,
             Web web,
-            CommandService cmdService,
-            InteractionService interactionService,
             CommandHelpService cmdHelpService,
             Config config,
             Random random
-        ) : base(cache, yuGiOhDbService, guildConfigDbService, web)
+        ) : base(loggerFactory, cache, yuGiOhDbService, guildConfigDbService, web)
         {
 
             _cmdHelpService = cmdHelpService;

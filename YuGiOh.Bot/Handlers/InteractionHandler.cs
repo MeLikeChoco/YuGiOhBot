@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Discord.Interactions;
 using Discord.WebSocket;
+using Microsoft.Extensions.Logging;
 using YuGiOh.Bot.Extensions;
 
 namespace YuGiOh.Bot.Handlers
@@ -9,25 +10,30 @@ namespace YuGiOh.Bot.Handlers
     public class InteractionHandler
     {
 
+        private readonly ILogger _logger;
         private readonly DiscordShardedClient _client;
         private readonly InteractionService _interactionService;
         private readonly InteractionServiceConfig _interactionConfig;
         private readonly IServiceProvider _serviceProvider;
 
         public InteractionHandler(
+            ILoggerFactory loggerFactory,
             DiscordShardedClient client,
             InteractionService interactionService,
             InteractionServiceConfig interactionConfig,
             IServiceProvider serviceProvider
         )
         {
+
+            _logger = loggerFactory.CreateLogger("Interaction Command");
             _client = client;
             _interactionService = interactionService;
             _interactionConfig = interactionConfig;
             _serviceProvider = serviceProvider;
+
         }
 
-        public async Task HandleInteraction(SocketInteraction interaction)
+        public async Task HandleInteractionAsync(SocketInteraction interaction)
         {
 
             switch (interaction)
@@ -55,20 +61,24 @@ namespace YuGiOh.Bot.Handlers
             switch (interaction.Channel)
             {
                 case SocketDMChannel:
-                    AltConsole.Write("Info", "Command", $"{user.Username}#{user.Discriminator} in DM's");
+                    _logger.Info($"{user.Username}#{user.Discriminator} in DM's");
+                    // AltConsole.Write("Info", "Command", $"{user.Username}#{user.Discriminator} in DM's");
                     break;
                 case SocketTextChannel txtChannel:
-                    AltConsole.Write("Info", "Command", $"{user.Username}#{user.Discriminator} from {txtChannel.Guild.Name}/{txtChannel.Name}");
+                    _logger.Info($"{user.Username}#{user.Discriminator} from {txtChannel.Guild.Name}/{txtChannel.Name}");
+                    // AltConsole.Write("Info", "Command", $"{user.Username}#{user.Discriminator} from {txtChannel.Guild.Name}/{txtChannel.Name}");
                     break;
             }
 
-            AltConsole.Write("Info", "Interaction Command", interaction.GetCmdString());
+            _logger.Info(interaction.GetCmdString());
+            // AltConsole.Write("Info", "Interaction Command", interaction.GetCmdString());
 
             var context = new ShardedInteractionContext<SocketSlashCommand>(_client, interaction);
             var result = await _interactionService.ExecuteCommandAsync(context, _serviceProvider);
 
             if (_interactionConfig.DefaultRunMode != RunMode.Async && !result.IsSuccess)
-                AltConsole.Write("Error", "Error", result.ErrorReason);
+                _logger.Error(result.ErrorReason);
+            // AltConsole.Write("Error", "Error", result.ErrorReason);
 
         }
 
@@ -83,10 +93,12 @@ namespace YuGiOh.Bot.Handlers
             switch (interaction.Channel)
             {
                 case SocketDMChannel:
-                    AltConsole.Write("Info", "Command", $"{user.Username}#{user.Discriminator} in DM's");
+                    _logger.Info($"{user.Username}#{user.Discriminator} in DM's");
+                    // AltConsole.Write("Info", "Command", $"{user.Username}#{user.Discriminator} in DM's");
                     break;
                 case SocketTextChannel txtChannel:
-                    AltConsole.Write("Info", "Command", $"{user.Username}#{user.Discriminator} from {txtChannel.Guild.Name}/{txtChannel.Name}");
+                    _logger.Info($"{user.Username}#{user.Discriminator} from {txtChannel.Guild.Name}/{txtChannel.Name}");
+                    // AltConsole.Write("Info", "Command", $"{user.Username}#{user.Discriminator} from {txtChannel.Guild.Name}/{txtChannel.Name}");
                     break;
             }
 
@@ -94,7 +106,8 @@ namespace YuGiOh.Bot.Handlers
             var result = await _interactionService.ExecuteCommandAsync(context, _serviceProvider);
 
             if (!result.IsSuccess)
-                AltConsole.Write("Error", "Error", result.ErrorReason);
+                _logger.Error(result.ErrorReason);
+            // AltConsole.Write("Error", "Error", result.ErrorReason);
 
         }
 

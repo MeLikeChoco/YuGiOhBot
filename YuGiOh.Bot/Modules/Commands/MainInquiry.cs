@@ -6,13 +6,25 @@ using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using Microsoft.Extensions.Logging;
 using YuGiOh.Bot.Extensions;
+using YuGiOh.Bot.Services;
+using YuGiOh.Bot.Services.Interfaces;
 using YuGiOh.Common.Models.YuGiOh;
 
 namespace YuGiOh.Bot.Modules.Commands
 {
     public class MainInquiry : MainBase
     {
+
+        public MainInquiry(
+            ILoggerFactory loggerFactory,
+            Cache cache,
+            IYuGiOhDbService yuGiOhDbService,
+            IGuildConfigDbService guildConfigDbService,
+            Web web,
+            Random rand
+        ) : base(loggerFactory, cache, yuGiOhDbService, guildConfigDbService, web, rand) { }
 
         //[Command("booster")]
         //[Summary("Gets information on a booster pack!")]
@@ -52,7 +64,7 @@ namespace YuGiOh.Bot.Modules.Commands
             var card = await YuGiOhDbService.GetCardAsync(input);
 
             if (card is not null)
-                await SendCardEmbedAsync(card.GetEmbedBuilder(), _guildConfig.Minimal, Web);
+                await SendCardEmbedAsync(card.GetEmbedBuilder(), GuildConfig.Minimal, Web);
             else
                 await NoResultError(input);
 
@@ -70,7 +82,7 @@ namespace YuGiOh.Bot.Modules.Commands
 
             var card = await YuGiOhDbService.GetRandomCardAsync();
 
-            await SendCardEmbedAsync(card.GetEmbedBuilder(), _guildConfig.Minimal, Web);
+            await SendCardEmbedAsync(card.GetEmbedBuilder(), GuildConfig.Minimal, Web);
 
         }
 

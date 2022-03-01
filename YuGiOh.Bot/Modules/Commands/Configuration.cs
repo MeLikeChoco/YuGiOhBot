@@ -1,19 +1,26 @@
-﻿using Discord;
-using Discord.Commands;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System;
 using System.Threading.Tasks;
+using Discord;
+using Discord.Commands;
+using Microsoft.Extensions.Logging;
 using YuGiOh.Bot.Extensions;
-using YuGiOh.Bot.Models;
 using YuGiOh.Bot.Services;
+using YuGiOh.Bot.Services.Interfaces;
 
 namespace YuGiOh.Bot.Modules.Commands
 {
     [RequireContext(ContextType.Guild)]
     public class Configuration : MainBase
     {
+
+        public Configuration(
+            ILoggerFactory loggerFactory,
+            Cache cache,
+            IYuGiOhDbService yuGiOhDbService,
+            IGuildConfigDbService guildConfigDbService,
+            Web web,
+            Random rand
+        ) : base(loggerFactory, cache, yuGiOhDbService, guildConfigDbService, web, rand) { }
 
         [Command("autodelete")]
         [RequireUserPermission(GuildPermission.Administrator)]
@@ -24,22 +31,10 @@ namespace YuGiOh.Bot.Modules.Commands
             if (bool.TryParse(input, out var delete))
             {
 
-                try
-                {
+                GuildConfig.AutoDelete = delete;
 
-                    _guildConfig.AutoDelete = delete;
-
-                    await GuildConfigDbService.UpdateGuildConfigAsync(_guildConfig);
-                    await ReplyAsync($"Auto deletion of embeds has been set to: `{_guildConfig.AutoDelete}`");
-
-                }
-                catch (Exception e)
-                {
-
-                    AltConsole.Write("Error", "Configuration", "BAH GAWD SOMETHING WRONG WITH AUTODELETE", e);
-                    await ReplyAsync("There was an error in setting autodelete. Please report error with `y!feedback <message>`");
-
-                }
+                await GuildConfigDbService.UpdateGuildConfigAsync(GuildConfig);
+                await ReplyAsync($"Auto deletion of embeds has been set to: `{GuildConfig.AutoDelete}`");
 
             }
             else
@@ -56,7 +51,7 @@ namespace YuGiOh.Bot.Modules.Commands
         [Command("autodelete")]
         [Summary("Gets the auto delete setting")]
         public Task GetAutoDeleteCommand()
-            => DisplaySetting("Auto Delete Embeds", _guildConfig.AutoDelete);
+            => DisplaySetting("Auto Delete Embeds", GuildConfig.AutoDelete);
 
         [Command("guesstime")]
         [RequireUserPermission(GuildPermission.Administrator)]
@@ -64,9 +59,9 @@ namespace YuGiOh.Bot.Modules.Commands
         public async Task SetGuessTimeCommand(int seconds)
         {
 
-            _guildConfig.GuessTime = seconds;
+            GuildConfig.GuessTime = seconds;
 
-            await GuildConfigDbService.UpdateGuildConfigAsync(_guildConfig);
+            await GuildConfigDbService.UpdateGuildConfigAsync(GuildConfig);
             await ReplyAsync($"The time for guess game has been set to `{seconds}` seconds!");
 
         }
@@ -80,7 +75,7 @@ namespace YuGiOh.Bot.Modules.Commands
         [Command("guesstime")]
         [Summary("Get the amount of seconds for the guessing game!")]
         public Task GetGuessTimeCommand()
-            => DisplaySetting("Guess Time", TimeSpan.FromSeconds(_guildConfig.GuessTime).ToPrettyString());
+            => DisplaySetting("Guess Time", TimeSpan.FromSeconds(GuildConfig.GuessTime).ToPrettyString());
 
         [Command("hangmantime")]
         [RequireUserPermission(GuildPermission.Administrator)]
@@ -88,9 +83,9 @@ namespace YuGiOh.Bot.Modules.Commands
         public async Task SetHangmanTimeCommand(int seconds)
         {
 
-            _guildConfig.HangmanTime = seconds;
+            GuildConfig.HangmanTime = seconds;
 
-            await GuildConfigDbService.UpdateGuildConfigAsync(_guildConfig);
+            await GuildConfigDbService.UpdateGuildConfigAsync(GuildConfig);
             await ReplyAsync($"The time for hangman has been set to `{seconds}` seconds!");
 
         }
@@ -104,7 +99,7 @@ namespace YuGiOh.Bot.Modules.Commands
         [Command("hangmantime")]
         [Summary("Get the amount of time for hangman game!")]
         public Task GetHangmanTimeCommand()
-            => DisplaySetting("Hangman Time", TimeSpan.FromSeconds(_guildConfig.HangmanTime).ToPrettyString());
+            => DisplaySetting("Hangman Time", TimeSpan.FromSeconds(GuildConfig.HangmanTime).ToPrettyString());
 
         [Command("prefix")]
         [RequireUserPermission(GuildPermission.Administrator)]
@@ -112,22 +107,10 @@ namespace YuGiOh.Bot.Modules.Commands
         public async Task SetPrefixCommand([Remainder] string prefix)
         {
 
-            try
-            {
+            GuildConfig.Prefix = prefix;
 
-                _guildConfig.Prefix = prefix;
-
-                await GuildConfigDbService.UpdateGuildConfigAsync(_guildConfig);
-                await ReplyAsync($"Prefix has been set to `{prefix}`");
-
-            }
-            catch (Exception e)
-            {
-
-                AltConsole.Write("Error", "Configuration", "BAH GAWD SOMETHING WRONG WITH SETTING PREFIX", e);
-                await ReplyAsync("There was an error in setting the prefix. Please report error with `y!feedback <message>`");
-
-            }
+            await GuildConfigDbService.UpdateGuildConfigAsync(GuildConfig);
+            await ReplyAsync($"Prefix has been set to `{prefix}`");
 
         }
 
@@ -140,7 +123,7 @@ namespace YuGiOh.Bot.Modules.Commands
         [Command("prefix")]
         [Summary("See the prefix the guild is using! Kinda useless tbh...")]
         public Task PrefixCommand()
-            => DisplaySetting("Prefix", _guildConfig.Prefix);
+            => DisplaySetting("Prefix", GuildConfig.Prefix);
 
         [Command("minimal")]
         [RequireUserPermission(GuildPermission.Administrator)]
@@ -151,22 +134,10 @@ namespace YuGiOh.Bot.Modules.Commands
             if (bool.TryParse(input, out var minimal))
             {
 
-                try
-                {
+                GuildConfig.Minimal = minimal;
 
-                    _guildConfig.Minimal = minimal;
-
-                    await GuildConfigDbService.UpdateGuildConfigAsync(_guildConfig);
-                    await ReplyAsync($"Minimal has been set to `{minimal}`");
-
-                }
-                catch (Exception e)
-                {
-
-                    AltConsole.Write("Error", "Configuration", "BAH GAWD SOMETHING WRONG WITH SETTING MINIMAL", e);
-                    await ReplyAsync("There was an error in setting the minimal setting. Please report error with `y!feedback <message>`");
-
-                }
+                await GuildConfigDbService.UpdateGuildConfigAsync(GuildConfig);
+                await ReplyAsync($"Minimal has been set to `{minimal}`");
 
             }
             else
@@ -183,7 +154,7 @@ namespace YuGiOh.Bot.Modules.Commands
         [Command("minimal")]
         [Summary("Check how much card info is shown!")]
         public Task MinimalCommand()
-            => DisplaySetting("Minimal", _guildConfig.Minimal);
+            => DisplaySetting("Minimal", GuildConfig.Minimal);
 
         [Command("inline")]
         [RequireUserPermission(GuildPermission.Administrator)]
@@ -191,25 +162,13 @@ namespace YuGiOh.Bot.Modules.Commands
         public async Task InlineCommand(bool input)
         {
 
-            if (_guildConfig.Inline != input)
+            if (GuildConfig.Inline != input)
             {
 
-                try
-                {
+                GuildConfig.Inline = input;
 
-                    _guildConfig.Inline = input;
-
-                    await GuildConfigDbService.UpdateGuildConfigAsync(_guildConfig);
-                    await ReplyAsync($"Inline has been set to `{input}`");
-
-                }
-                catch (Exception e)
-                {
-
-                    AltConsole.Write("Error", "Configuration", "BAH GAWD SOMETHING WRONG WITH SETTING INLINE", e);
-                    await ReplyAsync("There was an error in setting the minimal setting. Please report error with `y!feedback <message>`");
-
-                }
+                await GuildConfigDbService.UpdateGuildConfigAsync(GuildConfig);
+                await ReplyAsync($"Inline has been set to `{input}`");
 
             }
 
@@ -224,7 +183,7 @@ namespace YuGiOh.Bot.Modules.Commands
         [Command("inline")]
         [Summary("Check if inline search is disabled!")]
         public Task InlineCommandOwner()
-            => ReplyAsync($"Inline search enabled: **{_guildConfig.Inline}**");
+            => ReplyAsync($"Inline search enabled: **{GuildConfig.Inline}**");
 
         [Command("hangmanallowwords")]
         [RequireUserPermission(GuildPermission.Administrator)]
@@ -232,10 +191,10 @@ namespace YuGiOh.Bot.Modules.Commands
         public async Task HangmanWordsCommand(bool input)
         {
 
-            _guildConfig.HangmanAllowWords = input;
+            GuildConfig.HangmanAllowWords = input;
 
-            await GuildConfigDbService.UpdateGuildConfigAsync(_guildConfig);
-            await ReplyAsync($"The ability for multi-character input has been {(_guildConfig.HangmanAllowWords ? "enabled" : "disabled")}");
+            await GuildConfigDbService.UpdateGuildConfigAsync(GuildConfig);
+            await ReplyAsync($"The ability for multi-character input has been {(GuildConfig.HangmanAllowWords ? "enabled" : "disabled")}");
 
         }
 
@@ -248,7 +207,7 @@ namespace YuGiOh.Bot.Modules.Commands
         [Command("hangmanallowwords")]
         [Summary("Check if multi-character input is allowed for hangman")]
         public Task HangmanWordsCommand()
-            => DisplaySetting("Hangman Words", _guildConfig.HangmanAllowWords);
+            => DisplaySetting("Hangman Words", GuildConfig.HangmanAllowWords);
 
         private Task DisplaySetting(string setting, object value)
             => ReplyAsync($"**{setting}:** {value}");

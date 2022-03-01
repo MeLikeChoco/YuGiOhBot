@@ -8,6 +8,7 @@ using Discord;
 using Discord.Addons.Interactive;
 using Discord.Interactions;
 using Discord.WebSocket;
+using Microsoft.Extensions.Logging;
 using YuGiOh.Bot.Extensions;
 using YuGiOh.Bot.Models.Autocompletes;
 using YuGiOh.Bot.Models.Cards;
@@ -20,22 +21,19 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
     public class Search : MainInteractionBase<SocketSlashCommand>
     {
 
-        private Random _random;
-
-        private static SlashCommandInfo _slashCmdInfo;
+        private readonly Random _random;
 
         public Search(
+            ILoggerFactory loggerFactory,
             Cache cache,
             IYuGiOhDbService yuGiOhDbService,
             IGuildConfigDbService guildConfigDbService,
             Web web,
-            InteractionService interactionService,
             Random random
         )
-            : base(cache, yuGiOhDbService, guildConfigDbService, web)
+            : base(loggerFactory, cache, yuGiOhDbService, guildConfigDbService, web)
         {
-            
-            _slashCmdInfo ??= interactionService.SlashCommands.FirstOrDefault(cmd => cmd.Name == Constants.CardCommand);
+
             _random = random;
 
         }

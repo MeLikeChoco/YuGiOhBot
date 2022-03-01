@@ -1,16 +1,20 @@
 ﻿using System.Collections.Concurrent;
+using Microsoft.Extensions.Logging;
+using YuGiOh.Bot.Extensions;
 
 namespace YuGiOh.Bot.Services
 {
     public class Cache
     {
 
+        private readonly ILogger _logger;
+
         // public List<Card> Cards { get; private set; }
         // public Dictionary<string, Card> NameToCard { get; private set; }
         // public Dictionary<string, BoosterPack> BoosterPacks { get; private set; }
-        public ConcurrentDictionary<ulong, object> GuessInProgress { get; }
+        public ConcurrentDictionary<ulong, object?> GuessInProgress { get; }
 
-        public ConcurrentDictionary<ulong, object> HangmanInProgress { get; }
+        public ConcurrentDictionary<ulong, object?> HangmanInProgress { get; }
 
         //public Banlist Banlist { get; private set; }
         // public int FYeahYgoCardArtPosts { get; private set; }
@@ -21,16 +25,18 @@ namespace YuGiOh.Bot.Services
         // private static readonly SqliteConnection Db = new(DbString);
         // private static readonly StringComparer IgnoreCase = StringComparer.OrdinalIgnoreCase;
 
-        public Cache()
+        public Cache(ILoggerFactory loggerFactory)
         {
 
-            Log("Beginning cache initialization...");
+            _logger = loggerFactory.CreateLogger(nameof(Cache));
 
-            GuessInProgress = new ConcurrentDictionary<ulong, object>();
-            HangmanInProgress = new ConcurrentDictionary<ulong, object>();
+            _logger.Info("Beginning cache initialization...");
+
+            GuessInProgress = new ConcurrentDictionary<ulong, object?>();
+            HangmanInProgress = new ConcurrentDictionary<ulong, object?>();
             // BitlyKey = File.ReadAllText("Files/OAuth/Bitly.txt");
 
-            Log("Finished cache initialization...");
+            _logger.Info("Finished cache initialization...");
 
         }
 
@@ -436,12 +442,6 @@ namespace YuGiOh.Bot.Services
         // }
 
         #endregion Old Code
-
-        private static void Log(string message)
-            => AltConsole.Write("Info", "Cache", message);
-
-        private static void InlineLog(string message)
-            => AltConsole.InlineWrite("Info", "Cache", message, false);
 
     }
 

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Discord.WebSocket;
+using Microsoft.Extensions.Logging;
 using YuGiOh.Bot.Extensions;
 using YuGiOh.Bot.Services;
 using YuGiOh.Bot.Services.Interfaces;
@@ -13,17 +14,19 @@ namespace YuGiOh.Bot.Handlers
     public class ChatHandler
     {
 
+        private readonly ILoggerFactory _loggerFactory;
         private readonly Cache _cache;
         private readonly Web _web;
         private readonly IYuGiOhDbService _yuGiOhDbService;
-
         private readonly IGuildConfigDbService _guildConfigDbService;
+
         //private readonly IgnoreCaseComparer _ignoreCaseComparer;
 
         //private const string Pattern = @"(\[{2}[^\[\]].+?[^\[\]]\]{2})";
         private const string Pattern = @"(?<=\[{2}).+?(?=\]{2})";
 
         public ChatHandler(
+            ILoggerFactory loggerFactory,
             Cache cache,
             Web web,
             IYuGiOhDbService yuGiOhDbService,
@@ -31,6 +34,7 @@ namespace YuGiOh.Bot.Handlers
         )
         {
 
+            _loggerFactory = loggerFactory;
             _cache = cache;
             _web = web;
             _yuGiOhDbService = yuGiOhDbService;
@@ -39,12 +43,14 @@ namespace YuGiOh.Bot.Handlers
 
         }
 
-        public Task HandlePotentialInlineSearch(SocketMessage message)
+        public Task HandlePotentialInlineSearchAsync(SocketMessage message)
         {
 
             Task.Run(async () =>
             {
 
+                var logger = _loggerFactory.CreateLogger("Inline");
+                
                 if (message.Author.IsBot || string.IsNullOrEmpty(message.Content))
                     return;
 
@@ -70,14 +76,14 @@ namespace YuGiOh.Bot.Handlers
                     if (channel is SocketTextChannel)
                     {
 
-                        AltConsole.Write("Info", "Command", $"{message.Author.Username} from {(channel as SocketTextChannel).Guild.Name}");
+                        logger.Info($"{message.Author.Username} from {(channel as SocketTextChannel).Guild.Name}");
                         var id = (channel as SocketTextChannel).Guild.Id;
                         var guildConfig = await _guildConfigDbService.GetGuildConfigAsync(id);
                         minimal = guildConfig.Minimal;
 
                     }
 
-                    AltConsole.Write("Info", "Inline", $"{message.Content}");
+                    logger.Info($"{message.Content}");
 
                     foreach (var match in matches)
                     {
@@ -120,7 +126,7 @@ namespace YuGiOh.Bot.Handlers
                         var elapsed = watch.Elapsed;
                         var time = elapsed.TotalSeconds;
 
-                        AltConsole.Write("Info", "Inline", $"{cardName} took {(time > 1 ? time : time * 1000)} {(time > 1 ? "seconds" : "milliseconds")} to fetch.");
+                        logger.Info($"{cardName} took {(time > 1 ? time : time * 1000)} {(time > 1 ? "seconds" : "milliseconds")} to fetch.");
 
                         try
                         {
@@ -131,7 +137,7 @@ namespace YuGiOh.Bot.Handlers
                         }
                         catch (Exception ex)
                         {
-                            AltConsole.Write("Service", "Chat", $"{ex}");
+                            logger.Error(ex, string.Empty);
                         }
 
                     }

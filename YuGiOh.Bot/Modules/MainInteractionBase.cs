@@ -5,6 +5,7 @@ using Discord.Addons.Interactive;
 using Discord.Interactions;
 using Discord.Rest;
 using Discord.WebSocket;
+using Microsoft.Extensions.Logging;
 using YuGiOh.Bot.Extensions;
 using YuGiOh.Bot.Models;
 using YuGiOh.Bot.Services;
@@ -16,6 +17,7 @@ namespace YuGiOh.Bot.Modules
         where TInteraction : SocketInteraction
     {
 
+        protected ILogger Logger { get; }
         protected Cache Cache { get; }
         protected IYuGiOhDbService YuGiOhDbService { get; }
         protected IGuildConfigDbService GuildConfigDbService { get; }
@@ -33,6 +35,7 @@ namespace YuGiOh.Bot.Modules
         };
 
         protected MainInteractionBase(
+            ILoggerFactory loggerFactory,
             Cache cache,
             IYuGiOhDbService yuGiOhDbService,
             IGuildConfigDbService guildConfigDbService,
@@ -40,6 +43,7 @@ namespace YuGiOh.Bot.Modules
         )
         {
 
+            Logger = loggerFactory.CreateLogger(GetType().Name);
             Cache = cache;
             YuGiOhDbService = yuGiOhDbService;
             GuildConfigDbService = guildConfigDbService;
@@ -103,23 +107,20 @@ namespace YuGiOh.Bot.Modules
         protected Task SendEmbedAsync(EmbedBuilder embed)
             => RespondAsync(embed: embed.Build());
 
-        protected Task NoResultError(string input = null)
+        protected Task NoResultError(string input)
             => NoResultError("cards", input);
 
-        protected Task NoResultError(string objects, string input = null)
+        protected Task NoResultError(string objects, string input)
         {
 
             var str = $"No {objects} were found with the given input";
 
-            if (!string.IsNullOrEmpty(input))
+            if (!string.IsNullOrWhiteSpace(input))
                 str += $" ({input})";
 
             str += "!";
 
-            if (Context.Interaction.HasResponded)
-                return ReplyAsync(str);
-            else
-                return RespondAsync(str);
+            return Context.Interaction.HasResponded ? ReplyAsync(str) : RespondAsync(str);
 
         }
 
@@ -127,7 +128,8 @@ namespace YuGiOh.Bot.Modules
             => RespondAsync("Too many results were returned, please refine your search!");
 
         protected void Log(string msg, string currentCaller = null)
-            => AltConsole.Write("Info", currentCaller ?? GetType().Name, msg);
+            // => AltConsole.Write("Info", currentCaller ?? GetType().Name, msg);
+            => Logger.Info(msg);
 
     }
 }

@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Discord.Interactions;
 using Discord.WebSocket;
+using Microsoft.Extensions.Logging;
 using YuGiOh.Bot.Models.Autocompletes;
 using YuGiOh.Bot.Services;
 using YuGiOh.Bot.Services.Interfaces;
@@ -12,11 +13,12 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
     {
 
         public Inquiry(
+            ILoggerFactory loggerFactory,
             Cache cache,
             IYuGiOhDbService yuGiOhDbService,
             IGuildConfigDbService guildConfigDbService,
             Web web
-        ) : base(cache, yuGiOhDbService, guildConfigDbService, web) { }
+        ) : base(loggerFactory, cache, yuGiOhDbService, guildConfigDbService, web) { }
 
         [SlashCommand(Constants.CardCommand, "Gets a card! No proper capitalization needed!")]
         public async Task CardCommand([Autocomplete(typeof(CardAutocomplete))] [Summary(description: "The card")] string input)

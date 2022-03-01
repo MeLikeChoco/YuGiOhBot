@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Text;
@@ -6,12 +7,24 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Addons.Interactive;
 using Discord.Commands;
+using Microsoft.Extensions.Logging;
 using YuGiOh.Bot.Extensions;
+using YuGiOh.Bot.Services;
+using YuGiOh.Bot.Services.Interfaces;
 
 namespace YuGiOh.Bot.Modules.Commands
 {
     public class Miscellaneous : MainBase
     {
+
+        public Miscellaneous(
+            ILoggerFactory loggerFactory,
+            Cache cache,
+            IYuGiOhDbService yuGiOhDbService,
+            IGuildConfigDbService guildConfigDbService,
+            Web web,
+            Random rand
+        ) : base(loggerFactory, cache, yuGiOhDbService, guildConfigDbService, web, rand) { }
 
         [Command("probability"), Alias("prob")]
         [Summary("Returns the chance of your hand occuring!")]
@@ -75,9 +88,9 @@ namespace YuGiOh.Bot.Modules.Commands
                               $"More than {inHand} in hand: {more}%\n" +
                               $"More or equal to {inHand} in hand: {moreequal}%";
 
-                if (inHand == 1) 
+                if (inHand == 1)
                     return ReplyAsync($"```{display}```");
-                
+
                 double onetoInHand = 0;
 
                 for (var i = inHand; i >= 1; i--)
@@ -146,11 +159,11 @@ namespace YuGiOh.Bot.Modules.Commands
 
                         if (!rarityToCards.ContainsKey(rarity))
                             rarityToCards[rarity] = new List<string>();
-                        
+
                         rarityToCards[rarity].Add(card.Name);
 
                     }
-                    
+
                 }
 
                 foreach (var (rarity, card) in rarityToCards)

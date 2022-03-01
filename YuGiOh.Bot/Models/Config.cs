@@ -1,52 +1,61 @@
 ﻿using System;
+using System.Configuration;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using CommandLine;
+using Serilog;
+using LoggerExtensions = YuGiOh.Bot.Extensions.LoggerExtensions;
+
+// ReSharper disable ClassNeverInstantiated.Global
+#pragma warning disable CS8618
 
 namespace YuGiOh.Bot.Models
 {
     public class Config
     {
 
+        private static readonly ILogger Logger = LoggerExtensions.CreateStaticLogger(nameof(Config));
+
         [JsonIgnore]
         [Option('s', "is_sub_proc", Default = false)]
-        public bool IsSubProc { get; set; }
+        public bool IsSubProc { get; private set; }
 
+        [JsonInclude]
+        [JsonPropertyName("Logging Templates")]
+        public LoggingTemplates LoggingTemplates { get; private set; }
+
+        [JsonInclude]
+        [JsonPropertyName("Log File Path")]
+        public string LogFilePath { get; private set; }
+
+        [JsonInclude]
         [JsonPropertyName("Guild Invite")]
-        public string GuildInvite { get; set; }
+        public string GuildInvite { get; private set; }
 
+        [JsonInclude]
         [JsonPropertyName("Bot Invite")]
-        public string BotInvite { get; set; }
+        public string BotInvite { get; private set; }
 
+        [JsonInclude]
         [JsonPropertyName("Feedback Channel")]
-        public ulong FeedbackChannel { get; set; }
+        public ulong FeedbackChannel { get; private set; }
 
+        [JsonInclude]
         [JsonPropertyName("Owner Id")]
-        public ulong OwnerId { get; set; }
+        public ulong OwnerId { get; private set; }
 
+        [JsonInclude]
         [JsonPropertyName("Is Test")]
-        public bool IsTest { get; set; }
+        public bool IsTest { get; private set; }
 
-        public Databases Databases { get; set; }
-        public Tokens Tokens { get; set; }
+        [JsonInclude]
+        public Databases Databases { get; private set; }
 
-        [JsonIgnore]
-        public DateTime LastDatabaseUpdate
-        {
+        [JsonInclude]
+        public Tokens Tokens { get; private set; }
 
-            get
-            {
-
-                var dateStr = File.ReadAllText("Databases/LastScrape.txt");
-
-                return DateTime.Parse(dateStr);
-
-            }
-
-            set => File.WriteAllText("Databases/LastScrape.txt", value.ToUniversalTime().ToString());
-
-        }
+        private static Config? _instance;
 
         [JsonIgnore]
         public static Config Instance
@@ -57,8 +66,7 @@ namespace YuGiOh.Bot.Models
                 if (_instance is not null)
                     return _instance;
 
-                _instance = JsonSerializer.Deserialize<Config>(File.ReadAllText("Files/Config.json"));
-                // _instance = JsonConvert.DeserializeObject<Config>(File.ReadAllText("Files/Config.json"));
+                _instance = JsonSerializer.Deserialize<Config>(File.ReadAllText("Files/Config.json")) ?? throw new ConfigurationErrorsException();
 
                 Parser.Default
                     .ParseArguments<Config>(Environment.GetCommandLineArgs())
@@ -69,74 +77,107 @@ namespace YuGiOh.Bot.Models
             }
         }
 
-        [JsonIgnore]
-        private static Config _instance;
-
         public static void Reload()
         {
-            
+
             _instance = JsonSerializer.Deserialize<Config>(File.ReadAllText("Files/Config.json"));
             // _instance = JsonConvert.DeserializeObject<Config>(File.ReadAllText("Files/Config.json"));
 
-            AltConsole.Write("Config", "Reload", "Config reloaded.");
+            Logger.Information("Config reloaded.");
 
         }
+
+    }
+
+    public class LoggingTemplates
+    {
+
+        [JsonInclude]
+        public string Console { get; private set; }
+
+        [JsonInclude]
+        public string File { get; private set; }
 
     }
 
     public class Databases
     {
 
+        [JsonInclude]
         [JsonPropertyName("YuGiOh Staging")]
-        public DatabaseConnectionConfig YuGiOhStaging { get; set; }
+        public DatabaseConnectionConfig YuGiOhStaging { get; private set; }
 
+        [JsonInclude]
         [JsonPropertyName("Guilds Staging")]
-        public DatabaseConnectionConfig GuildsStaging { get; set; }
+        public DatabaseConnectionConfig GuildsStaging { get; private set; }
 
+        [JsonInclude]
         [JsonPropertyName("YuGiOh Prod")]
-        public DatabaseConnectionConfig YuGiOhProd { get; set; }
+        public DatabaseConnectionConfig YuGiOhProd { get; private set; }
 
+        [JsonInclude]
         [JsonPropertyName("Guilds Prod")]
-        public DatabaseConnectionConfig GuildsProd { get; set; }
+        public DatabaseConnectionConfig GuildsProd { get; private set; }
 
     }
 
     public class DatabaseConnectionConfig
     {
 
-        public string Host { get; set; }
-        public int Port { get; set; }
-        public string Username { get; set; }
-        public string Password { get; set; }
-        public string Database { get; set; }
+        [JsonInclude]
+        public string Host { get; private set; }
+
+        [JsonInclude]
+        public int Port { get; private set; }
+
+        [JsonInclude]
+        public string Username { get; private set; }
+
+        [JsonInclude]
+        public string Password { get; private set; }
+
+        [JsonInclude]
+        public string Database { get; private set; }
 
     }
 
     public class Tokens
     {
 
-        public DiscordTokenConfig Discord { get; set; }
+        [JsonInclude]
+        public DiscordTokenConfig Discord { get; private set; }
 
+        [JsonInclude]
         [JsonPropertyName("Bot List")]
-        public BotList BotList { get; set; }
-        public string Bitly { get; set; }
+        public BotList BotList { get; private set; }
+
+        [JsonInclude]
+        public string Bitly { get; private set; }
 
     }
 
     public class DiscordTokenConfig
     {
 
-        public string Legit { get; set; }
-        public string Test { get; set; }
+        [JsonInclude]
+        public string Legit { get; private set; }
+
+        [JsonInclude]
+        public string Test { get; private set; }
 
     }
 
     public class BotList
     {
 
-        public string BotsOnDiscordXyz { get; set; }
-        public string TopGG { get; set; }
-        public string DiscordBotsGG { get; set; }
+        [JsonInclude]
+        public string BotsOnDiscordXyz { get; private set; }
+
+        [JsonInclude]
+        public string TopGG { get; private set; }
+
+        [JsonInclude]
+        public string DiscordBotsGG { get; private set; }
 
     }
 }

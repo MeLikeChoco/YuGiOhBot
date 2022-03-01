@@ -1,43 +1,59 @@
-﻿using Discord.Addons.Interactive;
+﻿using System;
+using Discord.Addons.Interactive;
 using Discord.Commands;
 using Discord.WebSocket;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using YuGiOh.Bot.Models;
 using YuGiOh.Bot.Services;
 using YuGiOh.Bot.Services.Interfaces;
 
 namespace YuGiOh.Bot.Modules
 {
-    public class MainBase : CustomBase
+    public abstract class MainBase : CustomBase
     {
 
-        public Cache Cache { get; set; }
-        public IYuGiOhDbService YuGiOhDbService { get; set; }
-        public IGuildConfigDbService GuildConfigDbService { get; set; }
-        public Web Web { get; set; }
-        public Random Rand { get; set; }
+        protected ILogger Logger { get; }
+        protected Cache Cache { get; }
+        protected IYuGiOhDbService YuGiOhDbService { get; }
+        protected IGuildConfigDbService GuildConfigDbService { get; }
+        protected Web Web { get; }
+        protected Random Rand { get; }
 
-        protected GuildConfig _guildConfig;
+        protected GuildConfig GuildConfig { get; set; }
 
         protected PaginatedAppearanceOptions PagedOptions => new()
         {
 
             DisplayInformationIcon = false,
             JumpDisplayOptions = JumpDisplayOptions.Never,
-            FooterFormat = _guildConfig.AutoDelete ? "Enter a number to see that result! Expires in 60 seconds! | Page {0}/{1}" : "This embed will not be deleted! | Page {0}/{1}",
-            Timeout = _guildConfig.AutoDelete ? TimeSpan.FromSeconds(60) : TimeSpan.FromMilliseconds(-1)
+            FooterFormat = GuildConfig.AutoDelete ? "Enter a number to see that result! Expires in 60 seconds! | Page {0}/{1}" : "This embed will not be deleted! | Page {0}/{1}",
+            Timeout = GuildConfig.AutoDelete ? TimeSpan.FromSeconds(60) : TimeSpan.FromMilliseconds(-1)
 
         };
+
+        protected MainBase(
+            ILoggerFactory loggerFactory,
+            Cache cache,
+            IYuGiOhDbService yuGiOhDbService,
+            IGuildConfigDbService guildConfigDbService,
+            Web web,
+            Random rand
+        )
+        {
+
+            Logger = loggerFactory.CreateLogger(GetType().Name);
+            Cache = cache;
+            YuGiOhDbService = yuGiOhDbService;
+            GuildConfigDbService = guildConfigDbService;
+            Web = web;
+            Rand = rand;
+
+        }
 
         protected override void BeforeExecute(CommandInfo command)
         {
 
-            _guildConfig = Context.Channel is not SocketDMChannel ? GuildConfigDbService.GetGuildConfigAsync(Context.Guild.Id).GetAwaiter().GetResult() : GuildConfigDbService.GetGuildConfigAsync(0).GetAwaiter().GetResult();
+            GuildConfig = Context.Channel is not SocketDMChannel ? GuildConfigDbService.GetGuildConfigAsync(Context.Guild.Id).GetAwaiter().GetResult() : GuildConfigDbService.GetGuildConfigAsync(0).GetAwaiter().GetResult();
 
         }
 

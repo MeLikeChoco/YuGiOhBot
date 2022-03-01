@@ -7,19 +7,37 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Addons.Interactive;
 using Discord.Commands;
+using Microsoft.Extensions.Logging;
 using YuGiOh.Bot.Extensions;
 using YuGiOh.Bot.Models.Criterion;
+using YuGiOh.Bot.Services;
+using YuGiOh.Bot.Services.Interfaces;
 
 namespace YuGiOh.Bot.Modules.Commands
 {
     public class MainSearch : MainBase
     {
 
-        public CommandService CommandService { get; set; }
-        public IServiceProvider Services { get; set; }
+        private readonly CommandService _commandService;
+        private readonly IServiceProvider _services;
 
-        private static CommandInfo _cardCommand;
+        private static CommandInfo? _cardCommand;
         private static readonly object CardCmdLock = new();
+
+        public MainSearch(
+            ILoggerFactory loggerFactory,
+            Cache cache,
+            IYuGiOhDbService yuGiOhDbService,
+            IGuildConfigDbService guildConfigDbService,
+            Web web,
+            Random rand,
+            CommandService commandService,
+            IServiceProvider services
+        ) : base(loggerFactory, cache, yuGiOhDbService, guildConfigDbService, web, rand)
+        {
+            _commandService = commandService;
+            _services = services;
+        }
 
         protected override void BeforeExecute(CommandInfo command)
         {
@@ -31,7 +49,7 @@ namespace YuGiOh.Bot.Modules.Commands
 
                 lock (CardCmdLock)
                 {
-                    _cardCommand ??= CommandService.Commands.First(cmd => cmd.Name == Constants.CardCommand);
+                    _cardCommand ??= _commandService.Commands.First(cmd => cmd.Name == Constants.CardCommand);
                 }
 
             });
@@ -147,7 +165,7 @@ namespace YuGiOh.Bot.Modules.Commands
 
         }
 
-        public IEnumerable<string> GenDescriptions(IEnumerable<string> cards)
+        private static IEnumerable<string> GenDescriptions(IEnumerable<string> cards)
         {
 
             var groups = cards.Chunk(30);
@@ -178,9 +196,9 @@ namespace YuGiOh.Bot.Modules.Commands
         private Task ExecuteCardCommand(string card)
         {
 
-            AltConsole.Write("Info", "Command", "Executing card command from search module...");
+            Logger.Info("Executing card command from search module...");
 
-            return _cardCommand.ExecuteAsync(Context, new List<object>(1) { card }, null, Services);
+            return _cardCommand!.ExecuteAsync(Context, new List<object>(1) { card }, null, _services);
 
         }
 

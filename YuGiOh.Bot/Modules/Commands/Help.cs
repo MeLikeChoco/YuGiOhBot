@@ -6,33 +6,51 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Addons.Interactive;
 using Discord.Commands;
+using Microsoft.Extensions.Logging;
 using YuGiOh.Bot.Extensions;
 using YuGiOh.Bot.Models;
+using YuGiOh.Bot.Services;
+using YuGiOh.Bot.Services.Interfaces;
 
 namespace YuGiOh.Bot.Modules.Commands
 {
     public class Help : MainBase
     {
 
-        public CommandService CommandService { get; set; }
-        public Config Config { get; set; }
+        private readonly CommandService _commandService;
+        private readonly Config _config;
 
         private IEnumerable<CommandInfo> _commands;
 
-        private PaginatedAppearanceOptions _aOptions => new()
+        private PaginatedAppearanceOptions AOptions => new()
         {
 
             JumpDisplayOptions = JumpDisplayOptions.Never,
             DisplayInformationIcon = false,
-            FooterFormat = _guildConfig.AutoDelete ? "This message will be deleted in 3 minutes! | Page {0}/{1}" : "This message will not be deleted! | Page {0}/{1}",
-            Timeout = _guildConfig.AutoDelete ? TimeSpan.FromMinutes(3) : TimeSpan.FromMilliseconds(-1)
+            FooterFormat = GuildConfig.AutoDelete ? "This message will be deleted in 3 minutes! | Page {0}/{1}" : "This message will not be deleted! | Page {0}/{1}",
+            Timeout = GuildConfig.AutoDelete ? TimeSpan.FromMinutes(3) : TimeSpan.FromMilliseconds(-1)
 
         };
+
+        public Help(
+            ILoggerFactory loggerFactory,
+            Cache cache,
+            IYuGiOhDbService yuGiOhDbService,
+            IGuildConfigDbService guildConfigDbService,
+            Web web,
+            Random rand,
+            CommandService commandService,
+            Config config
+        ) : base(loggerFactory, cache, yuGiOhDbService, guildConfigDbService, web, rand)
+        {
+            _commandService = commandService;
+            _config = config;
+        }
 
         protected override void BeforeExecute(CommandInfo command)
         {
             base.BeforeExecute(command);
-            _commands = CommandService.Commands.Where(CheckPrecond);
+            _commands = _commandService.Commands.Where(CheckPrecond);
         }
 
         [Command("help")]
@@ -65,14 +83,14 @@ namespace YuGiOh.Bot.Modules.Commands
             var author = new EmbedAuthorBuilder()
                 .WithIconUrl(Context.Client.CurrentUser.GetAvatarUrl())
                 .WithName("Click for support guild/server!")
-                .WithUrl(Config.GuildInvite);
+                .WithUrl(_config.GuildInvite);
 
             var paginatedMessage = new PaginatedMessage()
             {
 
                 Author = author,
                 Color = Rand.NextColor(),
-                Options = _aOptions
+                Options = AOptions
 
             };
 

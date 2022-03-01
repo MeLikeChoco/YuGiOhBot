@@ -1,35 +1,42 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
-using Discord;
-using Discord.Addons.Interactive;
 using Discord.Commands;
-using Discord.WebSocket;
+using Discord.Interactions;
+using Microsoft.Extensions.Logging;
 using MoreLinq;
 using Newtonsoft.Json.Linq;
 using YuGiOh.Bot.Extensions;
 using YuGiOh.Bot.Models;
 using YuGiOh.Bot.Models.Attributes;
-using YuGiOh.Bot.Models.Criterion;
 using YuGiOh.Bot.Services;
-using Point = System.Drawing.Point;
-using Rectangle = System.Drawing.Rectangle;
+using YuGiOh.Bot.Services.Interfaces;
+using ContextType = Discord.Commands.ContextType;
 
-namespace YuGiOh.Bot.Modules.Commands.Commands
+namespace YuGiOh.Bot.Modules.Commands
 {
-    [RequireContext(ContextType.Guild)]
+    [Discord.Commands.RequireContext(ContextType.Guild)]
     [RequireChannel(541938684438511616)]
     public class Dev : MainBase
     {
 
-        public Discord.Interactions.InteractionService InteractionService { get; set; }
+        private readonly InteractionService _interactionService;
+
+        public Dev(
+            ILoggerFactory loggerFactory,
+            Cache cache,
+            IYuGiOhDbService yuGiOhDbService,
+            IGuildConfigDbService guildConfigDbService,
+            Web web,
+            Random rand,
+            InteractionService interactionService
+        ) : base(loggerFactory, cache, yuGiOhDbService, guildConfigDbService, web, rand)
+        {
+            _interactionService = interactionService;
+        }
 
         private static readonly DateTime _cutOffDate = new DateTime(2016, 1, 14);
 
@@ -62,7 +69,7 @@ namespace YuGiOh.Bot.Modules.Commands.Commands
 
             //};
 
-            var cmds = InteractionService.Modules.ToArray();
+            var cmds = _interactionService.Modules.ToArray();
 
             try
             {
@@ -71,15 +78,15 @@ namespace YuGiOh.Bot.Modules.Commands.Commands
 
                 if (isGlobal)
                     //await Context.Client.Rest.CreateOrOverwriteBulkGlobalApplicationCommands(cmds);
-                    await InteractionService.AddModulesGloballyAsync(true, cmds);
+                    await _interactionService.AddModulesGloballyAsync(true, cmds);
                 else
                     //await Context.Guild.CreateOrOverwriteApplicationCommands(cmds);
-                    await InteractionService.AddModulesToGuildAsync(Context.Guild, true, cmds);
+                    await _interactionService.AddModulesToGuildAsync(Context.Guild, true, cmds);
 
             }
             catch (Exception ex)
             {
-                AltConsole.Write("Test", "Test", "", ex);
+                Logger.Error(ex, string.Empty);
             }
 
         }
@@ -372,63 +379,63 @@ namespace YuGiOh.Bot.Modules.Commands.Commands
         //}
 
         [Command("buy"), Alias("b")]
-        [Summary("Submits the decklist to massbuy on Tcgplayer!")]
+        [Discord.Commands.Summary("Submits the decklist to massbuy on Tcgplayer!")]
         public async Task BuyCommand()
         {
-        
+
             var attachments = Context.Message.Attachments;
-        
+
             if (attachments.Count == 0)
                 return;
-        
+
             var file = attachments.FirstOrDefault(attachment => Path.GetExtension(attachment.Filename) == ".ydk");
-        
+
             if (file is null)
             {
-        
+
                 await ReplyAsync("Invalid file provided! Must be a ydk or text file!");
                 return;
-        
+
             }
-        
+
             var url = file.Url;
             string text;
 
             await using (var stream = await Web.GetStream(url))
             {
-        
+
                 var buffer = new byte[stream.Length];
-        
-                await stream.ReadAsync(buffer.AsMemory(0, (int)stream.Length));
-        
+
+                await stream.ReadAsync(buffer.AsMemory(0, (int) stream.Length));
+
                 text = Encoding.UTF8.GetString(buffer);
-        
+
             }
-        
+
             var cards = text.Replace("#main", "")
-                    .Replace("#extra", "")
-                    .Replace("#created by ...", "")
-                    .Replace("!side", "")
-                    .Split('\n')
-                    .Select(passcode => passcode.Trim())
-                    .Where(passcode => !string.IsNullOrEmpty(passcode))
-                    .Select(async passcode => await YuGiOhDbService.GetNameWithPasscodeAsync(passcode))
-                    .Select(task => task.Result)
-                    .Where(name => !string.IsNullOrEmpty(name))
-                    .GroupBy(name => name)
-                    .Aggregate(new StringBuilder(), (builder, group) => builder.Append("||").Append(Uri.EscapeDataString($"{group.Count()} {group.First()}")))
-                    .ToString();
-        
+                .Replace("#extra", "")
+                .Replace("#created by ...", "")
+                .Replace("!side", "")
+                .Split('\n')
+                .Select(passcode => passcode.Trim())
+                .Where(passcode => !string.IsNullOrEmpty(passcode))
+                .Select(async passcode => await YuGiOhDbService.GetNameWithPasscodeAsync(passcode))
+                .Select(task => task.Result)
+                .Where(name => !string.IsNullOrEmpty(name))
+                .GroupBy(name => name)
+                .Aggregate(new StringBuilder(), (builder, group) => builder.Append("||").Append(Uri.EscapeDataString($"{group.Count()} {group.First()}")))
+                .ToString();
+
             url = $"http://store.tcgplayer.com/massentry?productline=YuGiOh&c={cards}";
             var response = await Web.Post("https://api-ssl.bitly.com/v4/shorten", $"{{\"long_url\": \"{url}\"}}", "Bearer", Config.Instance.Tokens.Bitly);
             url = JObject.Parse(await response.Content.ReadAsStringAsync())["link"].Value<string>();
-        
+
             await ReplyAsync(url);
-        
+
         }
 
         [Command("price"), Alias("prices", "p")]
-        [Summary("Returns the prices based on your deck list from ygopro! No proper capitalization needed!")]
+        [Discord.Commands.Summary("Returns the prices based on your deck list from ygopro! No proper capitalization needed!")]
         public async Task DeckPriceCommand()
         {
 
@@ -446,7 +453,7 @@ namespace YuGiOh.Bot.Modules.Commands.Commands
 
                     var buffer = new byte[stream.Length];
 
-                    await stream.ReadAsync(buffer, 0, (int)stream.Length);
+                    await stream.ReadAsync(buffer, 0, (int) stream.Length);
 
                     text = Encoding.UTF8.GetString(buffer);
 

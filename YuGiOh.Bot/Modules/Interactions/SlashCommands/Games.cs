@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using Discord.Addons.Interactive;
 using Discord.Interactions;
 using Discord.WebSocket;
+using Microsoft.Extensions.Logging;
+using YuGiOh.Bot.Extensions;
 using YuGiOh.Bot.Models.Cards;
 using YuGiOh.Bot.Models.Criterion;
 using YuGiOh.Bot.Services;
@@ -15,6 +17,7 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
     public class Games : MainInteractionBase<SocketSlashCommand>
     {
 
+        private readonly ILoggerFactory _loggerFactory;
         private readonly Random _random;
 
         private static Criteria<SocketMessage> BaseCriteria
@@ -23,13 +26,15 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
                 .AddCriterion(new NotBotCriteria());
 
         public Games(
+            ILoggerFactory loggerFactory,
             Cache cache,
             IYuGiOhDbService yuGiOhDbService,
             IGuildConfigDbService guildConfigDbService,
             Web web,
             Random random
-        ) : base(cache, yuGiOhDbService, guildConfigDbService, web)
+        ) : base(loggerFactory, cache, yuGiOhDbService, guildConfigDbService, web)
         {
+            _loggerFactory = loggerFactory;
             _random = random;
         }
 
@@ -46,13 +51,15 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
 
             }
 
+            var logger = _loggerFactory.CreateLogger("Guess");
+
             try
             {
 
                 Cache.GuessInProgress.TryAdd(Context.Channel.Id, null);
 
-                Card card = null;
-                Exception e;
+                Card card = null!;
+                Exception? e;
 
                 do
                 {
@@ -67,14 +74,13 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
 
                         //https://storage.googleapis.com/ygoprodeck.com/pics_artgame/{passcode}.jpg
                         var url = $"{Constants.ArtBaseUrl}{card.Passcode}.{Constants.ArtFileType}";
-                        var consoleOutput = $"{card.Name}";
+                        var name = $"{card.Name}";
 
                         if (!string.IsNullOrEmpty(card.RealName))
-                            consoleOutput += $" / {card.RealName}";
+                            name += $" / {card.RealName}";
 
-                        consoleOutput += $"\n{Constants.ArtBaseUrl}{card.Passcode}.{Constants.ArtFileType}";
-
-                        Log(consoleOutput);
+                        logger.Info(name);
+                        logger.Info($"{Constants.ArtBaseUrl}{card.Passcode}.{Constants.ArtFileType}");
 
                         await using (var stream = await Web.GetStream(url))
                             await UploadAsync(stream, $"{GetConfusingString()}.{Constants.ArtFileType}", $":stopwatch: You have **{GuildConfig.GuessTime}** seconds to guess what card this art belongs to! Case insensitive (used to be case sensitive)!");
@@ -113,7 +119,7 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
             }
             catch (Exception ex)
             {
-                AltConsole.Write("Command", "Guess", "There was a problem with guess!", exception: ex);
+                logger.Error("There was a problem with guess!", ex);
             }
             finally
             {

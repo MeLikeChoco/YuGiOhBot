@@ -6,10 +6,12 @@ using System.Threading.Tasks;
 using Discord.Addons.Interactive;
 using Discord.Commands;
 using Discord.WebSocket;
+using Microsoft.Extensions.Logging;
 using YuGiOh.Bot.Extensions;
 using YuGiOh.Bot.Models.Cards;
 using YuGiOh.Bot.Models.Criterion;
 using YuGiOh.Bot.Services;
+using YuGiOh.Bot.Services.Interfaces;
 
 namespace YuGiOh.Bot.Modules.Commands
 {
@@ -17,9 +19,23 @@ namespace YuGiOh.Bot.Modules.Commands
     public class Games : MainBase
     {
 
-        private Criteria<SocketMessage> BaseCriteria => new Criteria<SocketMessage>()
-                .AddCriterion(new EnsureSourceChannelCriterion())
-                .AddCriterion(new NotBotCriteria());
+        private static Criteria<SocketMessage> BaseCriteria => new Criteria<SocketMessage>()
+            .AddCriterion(new EnsureSourceChannelCriterion())
+            .AddCriterion(new NotBotCriteria());
+
+        private readonly ILoggerFactory _loggerFactory;
+
+        public Games(
+            ILoggerFactory loggerFactory,
+            Cache cache,
+            IYuGiOhDbService yuGiOhDbService,
+            IGuildConfigDbService guildConfigDbService,
+            Web web,
+            Random rand
+        ) : base(loggerFactory, cache, yuGiOhDbService, guildConfigDbService, web, rand)
+        {
+            _loggerFactory = loggerFactory;
+        }
 
         [Command("guess")]
         [Summary("Starts an image/card guessing game!")]
@@ -35,13 +51,15 @@ namespace YuGiOh.Bot.Modules.Commands
 
             }
 
+            var logger = _loggerFactory.CreateLogger("Guess");
+
             try
             {
 
                 Cache.GuessInProgress.TryAdd(Context.Channel.Id, null);
 
-                Card card = null;
-                Exception e;
+                Card card = null!;
+                Exception? e;
 
                 do
                 {
@@ -63,20 +81,23 @@ namespace YuGiOh.Bot.Modules.Commands
 
                         consoleOutput += $"\n{Constants.ArtBaseUrl}{card.Passcode}.{Constants.ArtFileType}";
 
-                        Console.WriteLine(consoleOutput);
+                        logger.Info(consoleOutput);
 
-                        using (var stream = await Web.GetStream(url))
-                            await UploadAsync(stream, $"{GenObufscatedString()}.{Constants.ArtFileType}", $":stopwatch: You have **{_guildConfig.GuessTime}** seconds to guess what card this art belongs to! Case insensitive (used to be case sensitive)!");
+                        await using (var stream = await Web.GetStream(url))
+                            await UploadAsync(stream, $"{GenObufscatedString()}.{Constants.ArtFileType}", $":stopwatch: You have **{GuildConfig.GuessTime}** seconds to guess what card this art belongs to! Case insensitive (used to be case sensitive)!");
 
                         e = null;
 
                     }
-                    catch (NullReferenceException nullref) { e = nullref; }
+                    catch (NullReferenceException nullref)
+                    {
+                        e = nullref;
+                    }
 
                 } while (e is not null);
 
                 var criteria = new GuessCriteria(card.Name, card.RealName);
-                var answer = await NextMessageAsync(BaseCriteria.AddCriterion(criteria), TimeSpan.FromSeconds(_guildConfig.GuessTime));
+                var answer = await NextMessageAsync(BaseCriteria.AddCriterion(criteria), TimeSpan.FromSeconds(GuildConfig.GuessTime));
 
                 if (answer is not null)
                 {
@@ -99,7 +120,7 @@ namespace YuGiOh.Bot.Modules.Commands
             }
             catch (Exception ex)
             {
-                AltConsole.Write("Command", "Guess", "There was a problem with guess!", exception: ex);
+                logger.Error(ex, "There was a problem with guess!");
             }
             finally
             {
@@ -123,34 +144,36 @@ namespace YuGiOh.Bot.Modules.Commands
 
             }
 
+            var logger = _loggerFactory.CreateLogger("Hangman");
+
             Cache.HangmanInProgress[Context.Channel.Id] = null;
 
             try
             {
                 var card = await YuGiOhDbService.GetRandomCardAsync();
 
-                AltConsole.Write("Command", "Hangman", card.Name);
+                logger.Info(card.Name);
 
                 var cts = new CancellationTokenSource();
                 var hangmanService = new HangmanService(card.Name);
 
                 var criteria = BaseCriteria
-                    .AddCriterion(new NotCommandCriteria(_guildConfig))
+                    .AddCriterion(new NotCommandCriteria(GuildConfig))
                     .AddCriterion(new NotInlineSearchCriteria());
 
-                if (!_guildConfig.HangmanAllowWords)
+                if (!GuildConfig.HangmanAllowWords)
                     criteria.AddCriterion(new CharacterOnlyCriteria());
 
-                var time = TimeSpan.FromSeconds(_guildConfig.HangmanTime);
+                var time = TimeSpan.FromSeconds(GuildConfig.HangmanTime);
 
                 await ReplyAsync("You can now type more than a letter for hangman!\n" +
-                    $"As well as change the hangman time ({_guildConfig.Prefix}hangmantime <seconds>)! Ask an admin about it!\n" +
-                    $"You may also disable the ability to input more than one letter! ({_guildConfig.Prefix}hangmanwords <true/false>)\n" +
-                    $"You have **{time.ToPrettyString()}**!\n" +
-                    hangmanService.GetCurrentDisplay());
+                                 $"As well as change the hangman time ({GuildConfig.Prefix}hangmantime <seconds>)! Ask an admin about it!\n" +
+                                 $"You may also disable the ability to input more than one letter! ({GuildConfig.Prefix}hangmanwords <true/false>)\n" +
+                                 $"You have **{time.ToPrettyString()}**!\n" +
+                                 hangmanService.GetCurrentDisplay());
 
-                var _ = new Timer((cts) => (cts as CancellationTokenSource)?.Cancel(), cts, TimeSpan.FromSeconds(_guildConfig.HangmanTime), Timeout.InfiniteTimeSpan);
-                SocketUser user = null;
+                var _ = new Timer((cancelTokenSrc) => (cancelTokenSrc as CancellationTokenSource)!.Cancel(), cts, TimeSpan.FromSeconds(GuildConfig.HangmanTime), Timeout.InfiniteTimeSpan);
+                SocketUser? user = null;
 
                 do
                 {
@@ -167,11 +190,11 @@ namespace YuGiOh.Bot.Modules.Commands
 
                         case GuessStatus.Duplicate:
                             await ReplyAsync($"You already guessed `{input}`!\n" +
-                                hangmanService.GetCurrentDisplay());
+                                             hangmanService.GetCurrentDisplay());
                             break;
                         case GuessStatus.Nonexistent:
                             await ReplyAsync($"```fix\n{hangmanService.GetHangman()}```\n" +
-                                hangmanService.GetCurrentDisplay());
+                                             hangmanService.GetCurrentDisplay());
                             break;
                         case GuessStatus.Accepted:
                             await ReplyAsync(hangmanService.GetCurrentDisplay());
@@ -192,7 +215,7 @@ namespace YuGiOh.Bot.Modules.Commands
                     {
 
                         case CompletionStatus.Complete:
-                            await ReplyAsync($":trophy: The winner is **{(user as SocketGuildUser)?.Nickname ?? user.Username}**!");
+                            await ReplyAsync($":trophy: The winner is **{(user as SocketGuildUser)!.Nickname ?? user.Username}**!");
                             break;
                         case CompletionStatus.Hanged:
                             await ReplyAsync($"You have been hanged! The card was `{hangmanService.Word}`.");
@@ -204,7 +227,7 @@ namespace YuGiOh.Bot.Modules.Commands
             }
             catch (Exception ex)
             {
-                AltConsole.Write("Command", "Hangman", "There was a problem with hangman!", exception: ex);
+                logger.Error(ex, "There was a problem with hangman!");
             }
             finally
             {
@@ -218,11 +241,11 @@ namespace YuGiOh.Bot.Modules.Commands
 
             var str = "";
 
-            for (int i = 0; i < Rand.Next(10, 20); i++)
+            for (var i = 0; i < Rand.Next(10, 20); i++)
             {
 
                 var displacement = Rand.Next(0, 26);
-                str += (char)('a' + displacement);
+                str += (char) ('a' + displacement);
 
             }
 
