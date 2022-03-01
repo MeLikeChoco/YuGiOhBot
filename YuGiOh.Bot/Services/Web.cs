@@ -20,8 +20,8 @@ namespace YuGiOh.Bot.Services
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly HtmlParser _parser;
 
-        private const string PricesBaseUrl = "http://yugiohprices.com/api/get_card_prices/";
-        private const string ImagesBaseUrl = "http://yugiohprices.com/api/card_image/";
+        private const string PricesBaseUrl = "https://yugiohprices.com/api/get_card_prices/";
+        // private const string ImagesBaseUrl = "https://yugiohprices.com/api/card_image/";
 
         public Web(IHttpClientFactory httpClientFactory)
         {
@@ -100,7 +100,7 @@ namespace YuGiOh.Bot.Services
 
         }
 
-        public async Task<T> GetDeserializedContent<T>(string url)
+        private async Task<T> GetDeserializedContent<T>(string url)
         {
 
             var response = await Check(url).ConfigureAwait(false);
@@ -130,7 +130,7 @@ namespace YuGiOh.Bot.Services
             if (response?.StatusCode == HttpStatusCode.NotFound)
                 throw new NullReferenceException("Error 404");
 
-            return response.Content;
+            return response?.Content;
 
         }
 

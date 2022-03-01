@@ -1,16 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.Interactions;
-using Discord.Rest;
 using Discord.WebSocket;
 using MoreLinq;
 using YuGiOh.Bot.Extensions;
-using ModuleInfo = Discord.Interactions.ModuleInfo;
+using ModuleInfo = Discord.Commands.ModuleInfo;
+using RequireOwnerAttribute = Discord.Commands.RequireOwnerAttribute;
 
 namespace YuGiOh.Bot.Services
 {
@@ -114,16 +113,16 @@ namespace YuGiOh.Bot.Services
 
         }
 
-        private bool DoesHaveReqOwner(object info)
+        private static bool DoesHaveReqOwner(object info)
         {
 
             return info switch
             {
 
-                CommandInfo cmdInfo => cmdInfo.Preconditions.Any(preconditions => preconditions.GetType() == typeof(Discord.Commands.RequireOwnerAttribute)),
+                CommandInfo cmdInfo => cmdInfo.Preconditions.Any(preconditions => preconditions.GetType() == typeof(RequireOwnerAttribute)),
                 ICommandInfo appCmdInfo => appCmdInfo.Preconditions.Any(precondition => precondition.GetType() == typeof(Discord.Interactions.RequireOwnerAttribute)),
-                Discord.Commands.ModuleInfo regModInfo => regModInfo.Preconditions.Any(precondition => precondition.GetType() == typeof(Discord.Commands.RequireOwnerAttribute)),
-                _ => ((ModuleInfo) info).Preconditions.Any(precondition => precondition.GetType() == typeof(Discord.Interactions.RequireOwnerAttribute))
+                ModuleInfo regModInfo => regModInfo.Preconditions.Any(precondition => precondition.GetType() == typeof(RequireOwnerAttribute)),
+                _ => ((Discord.Interactions.ModuleInfo) info).Preconditions.Any(precondition => precondition.GetType() == typeof(Discord.Interactions.RequireOwnerAttribute))
 
             };
 
@@ -132,10 +131,10 @@ namespace YuGiOh.Bot.Services
         public int Compare(object x, object y)
         {
 
-            var xCmd = x is CommandInfo xCmdInfo ? xCmdInfo.Name : (x as ICommandInfo)?.Name;
-            var yCmd = y is CommandInfo yCmdInfo ? yCmdInfo.Name : (y as ICommandInfo)?.Name;
+            var xCmd = x is CommandInfo xCmdInfo ? xCmdInfo.Name : (x as ICommandInfo)!.Name;
+            var yCmd = y is CommandInfo yCmdInfo ? yCmdInfo.Name : (y as ICommandInfo)!.Name;
 
-            return xCmd.CompareTo(yCmd);
+            return string.Compare(xCmd, yCmd, StringComparison.Ordinal);
 
         }
 

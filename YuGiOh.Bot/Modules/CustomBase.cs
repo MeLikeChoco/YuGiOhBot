@@ -11,28 +11,28 @@ namespace YuGiOh.Bot.Modules
     public class CustomBase : InteractiveBase<ShardedCommandContext>
     {
 
-        public Task DirectMessageAsync(Embed embed)
+        protected Task DirectMessageAsync(Embed embed)
             => Context.User.SendMessageAsync(embed: embed);
 
-        public Task DirectMessageAsync(EmbedBuilder embedBuilder)
+        protected Task DirectMessageAsync(EmbedBuilder embedBuilder)
             => DirectMessageAsync(embedBuilder.Build());
 
-        public Task DirectMessageAsync(string message, Embed embed)
+        protected Task DirectMessageAsync(string message, Embed embed)
             => Context.User.SendMessageAsync(message, embed: embed);
 
-        public Task UploadAsync(Stream stream, string filename, string text = null)
+        protected Task UploadAsync(Stream stream, string filename, string text = null)
             => Context.Channel.SendFileAsync(stream, filename, text);
 
-        public async Task SendCardEmbedAsync(EmbedBuilder embed, bool minimal, Web web)
+        protected async Task SendCardEmbedAsync(EmbedBuilder embed, bool minimal, Web web)
             => await ReplyAsync(embed: (await embed.WithCardPrices(minimal, web)).Build());
 
-        public Task SendEmbedAsync(EmbedBuilder embed)
+        protected Task SendEmbedAsync(EmbedBuilder embed)
             => ReplyAsync(embed: embed.Build());
 
-        public Task NoResultError(string input = null)
+        protected Task NoResultError(string input)
             => NoResultError("cards", input);
 
-        public Task NoResultError(string objects, string input = null)
+        protected Task NoResultError(string objects, string input)
         {
 
             var str = $"No {objects} were found with the given input";
@@ -46,7 +46,7 @@ namespace YuGiOh.Bot.Modules
 
         }
 
-        public Task TooManyError()
+        protected Task TooManyError()
             => ReplyAsync("Too many results were returned, please refine your search!");
 
     }
