@@ -1,12 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
-using Discord;
 
 namespace YuGiOh.Bot.Core
 {
@@ -17,9 +11,6 @@ namespace YuGiOh.Bot.Core
 
         public static async Task Main()
         {
-
-            AltConsole.Write("Info", "Entry Point", $"Welcome to {Assembly.GetExecutingAssembly().GetName()}");
-            AltConsole.Write("Info", "Entry Point", $"Using Discord.NET v{DiscordConfig.Version}");
 
             try
             {
@@ -37,6 +28,7 @@ namespace YuGiOh.Bot.Core
             }
 
             await Task.Delay(-1);
+            Console.ReadKey();
 
         }
 
