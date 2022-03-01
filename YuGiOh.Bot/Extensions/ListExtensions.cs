@@ -1,29 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace YuGiOh.Bot.Extensions
 {
     public static class ListExtensions
     {
 
-        public static Random random = new Random();
+        private static readonly Random Random = new();
 
         public static List<T> Shuffle<T>(this List<T> list)
         {
 
             var count = list.Count;
 
-            for (int i = 0; i < count; i++)
+            for (var i = 0; i < count; i++)
             {
 
-                var newPos = random.Next(0, count);
-                var temp = list[i];
-
-                list[i] = list[newPos];
-                list[newPos] = temp;
+                var newPos = Random.Next(0, count);
+                (list[i], list[newPos]) = (list[newPos], list[i]);
 
             }
 
