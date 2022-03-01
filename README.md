@@ -34,6 +34,4 @@ I also have inline declaration of cards. For example, "I like [[blue-eyes]]" wil
 
 Support guild/server: <https://discord.gg/cVhvrEa>
 
-<a href="https://discordbots.org/bot/293526797600030720">
-  <img src="https://discordbots.org/api/widget/293526797600030720.png" alt="Discord Bots" />
-</a>
+Only guild ids are stored to save bot specific configuration regarding the bot. As well as aggregating unique user count for temporary statistics calculations.
