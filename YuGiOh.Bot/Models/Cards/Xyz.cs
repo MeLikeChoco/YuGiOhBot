@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using Discord;
 using YuGiOh.Bot.Extensions;
 
@@ -11,7 +7,8 @@ namespace YuGiOh.Bot.Models.Cards
     public class Xyz : Monster, IHasRank, IHasMaterials, IHasAtk, IHasDef
     {
 
-        private static readonly Color XyzColor = new Color(0, 0, 1);
+        private const string UnknownValue = "???";
+        private static readonly Color XyzColor = new(0, 0, 1);
 
         public int Rank { get; set; }
         public string Materials { get; set; }
@@ -23,6 +20,14 @@ namespace YuGiOh.Bot.Models.Cards
 
         protected override List<string> GetDescription()
             => base.GetDescription().With($"**Rank:** {Rank}");
+
+        protected override EmbedBuilder AddAdditionalFields(EmbedBuilder body)
+            => base.AddAdditionalFields(
+                body
+                    .AddField("ATK", string.IsNullOrWhiteSpace(Atk) ? UnknownValue : Atk, true)
+                    .AddField("DEF", string.IsNullOrWhiteSpace(Def) ? UnknownValue : Def, true)
+                    .AddField("\u200b", "\u200b", true)
+            );
 
     }
 }

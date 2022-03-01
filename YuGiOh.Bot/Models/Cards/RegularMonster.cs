@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using Discord;
 using YuGiOh.Bot.Extensions;
 
@@ -26,8 +22,8 @@ namespace YuGiOh.Bot.Models.Cards
         protected override EmbedBuilder AddAdditionalFields(EmbedBuilder body)
             => base.AddAdditionalFields(
                 body
-                    .AddField("ATK", string.IsNullOrEmpty(Atk) ? UnknownValue : Atk, true)
-                    .AddField("DEF", string.IsNullOrEmpty(Def) ? UnknownValue : Def, true)
+                    .AddField("ATK", string.IsNullOrWhiteSpace(Atk) ? UnknownValue : Atk, true)
+                    .AddField("DEF", string.IsNullOrWhiteSpace(Def) ? UnknownValue : Def, true)
                     .AddField("\u200b", "\u200b", true)
             );
 
