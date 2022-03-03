@@ -7,11 +7,18 @@ using Dapper;
 using Dapper.FluentMap;
 using Dapper.FluentMap.Dommel;
 using Dommel;
+using Npgsql;
 using YuGiOh.Common.DatabaseMappers;
 using YuGiOh.Common.Extensions;
 using YuGiOh.Common.Interfaces;
 using YuGiOh.Common.Models.YuGiOh;
 using YuGiOh.Common.Repositories.Interfaces;
+
+// Although Dapper auto-opens/closes connections that call it when it wasn't opened when called upon, I rather open it myself for consistency
+// Not using CloseAsync() because Dispose() automatically calls it
+// Theoretically.....
+// Hopefully........
+// Please close it..... don't make me look stupid
 
 namespace YuGiOh.Common.Repositories
 {
@@ -41,6 +48,7 @@ namespace YuGiOh.Common.Repositories
                 var resolver = new LowerCaseConvention();
 
                 DommelMapper.SetColumnNameResolver(resolver);
+                DommelMapper.AddSqlBuilder(typeof(NpgsqlConnection), new PostgresSqlBuilder());
 
             });
 
@@ -60,10 +68,6 @@ namespace YuGiOh.Common.Repositories
 
             await connection.OpenAsync().ConfigureAwait(false);
 
-            //instead of insert on conflict update
-            //this is done for readability and laziness
-            //easier to let dapper handle the insertion than write out all the column names
-            //and have them not clash with parameter names (if using function)
             var doesExistBit = await connection.ExecuteScalarAsync<int>("select count(1) from cards where id = @Id", new { card.Id }).ConfigureAwait(false);
 
             if (doesExistBit == 1)
@@ -71,9 +75,7 @@ namespace YuGiOh.Common.Repositories
             else
                 await connection.InsertAsync(card).ConfigureAwait(false);
 
-            // var cardArchetypesId = await connection.ExecuteScalarAsync<int>("select archetypes from cards where id = @Id", new { card.Id }).ConfigureAwait(false);
-            // var cardSupportsId = await connection.ExecuteScalarAsync<int>("select supports from cards where id = @Id", new { card.Id }).ConfigureAwait(false);
-            // var cardAntiSupportsId = await connection.ExecuteScalarAsync<int>("select antisupports from cards where id = @Id", new { card.Id }).ConfigureAwait(false);
+            // var (cardArchetypesId, cardSupportsId, cardAntiSupportsId) = await connection.ExecuteScalarAsync<(int, int, int)>("select archetypes, supports, antisupports from cards where id = @id", new { id = card.Id });
 
             if (card.Translations is not null && card.Translations.Any())
             {
@@ -115,26 +117,7 @@ namespace YuGiOh.Common.Repositories
                     await connection.ExecuteAsync("call delete_archetype_relation(@cardname, @archetype)", new { cardname = card.Name, archetype }).ConfigureAwait(false);
 
                 foreach (var archetype in archetypesToInsert)
-                {
-
                     await connection.ExecuteAsync("call insert_archetype_relation(@cardname, @archetype)", new { cardname = card.Name, archetype }).ConfigureAwait(false);
-
-                    // var archetypeId = await connection.QuerySingleProcAsync<int>("insert_or_get_archetype", new { input = archetype }).ConfigureAwait(false);
-                    //
-                    // //var archetypeId =
-                    // //    await connection.ExecuteScalarAsync("select id from archetypes where name = @archetype", new { archetype }) ??
-                    // //    await connection.ExecuteScalarAsync("insert into archetypes(name) values(@archetype) returning id", new { archetype });
-                    //
-                    // await connection.ExecuteAsync(
-                    //         "insert into card_to_archetypes values(@cardArchetypesId, @archetypeId) on conflict on constraint cardarchetypesid_archetypesid_pair_unique do nothing",
-                    //         new
-                    //         {
-                    //             cardArchetypesId,
-                    //             archetypeId
-                    //         })
-                    //     .ConfigureAwait(false);
-
-                }
 
             }
 
@@ -153,26 +136,7 @@ namespace YuGiOh.Common.Repositories
                     await connection.ExecuteAsync("call delete_support_relation(@cardname, @support)", new { cardname = card.Name, support }).ConfigureAwait(false);
 
                 foreach (var support in supportsToInsert)
-                {
-
                     await connection.ExecuteAsync("call insert_support_relation(@cardname, @support)", new { cardname = card.Name, support }).ConfigureAwait(false);
-
-                    // var supportId = await connection.QuerySingleProcAsync<int>("insert_or_get_support", new { input = support }).ConfigureAwait(false);
-                    //
-                    // //object supportId =
-                    // //    await connection.ExecuteScalarAsync("select id from supports where name = @support", new { support }) ??
-                    // //    await connection.ExecuteScalarAsync("insert into supports(name) values(@support) returning id", new { support });
-                    //
-                    // await connection.ExecuteAsync(
-                    //         "insert into card_to_supports values(@cardSupportsId, @supportId) on conflict on constraint cardsupportsid_supportsid_pair_unique do nothing",
-                    //         new
-                    //         {
-                    //             cardSupportsId,
-                    //             supportId
-                    //         })
-                    //     .ConfigureAwait(false);
-
-                }
 
             }
 
@@ -184,37 +148,16 @@ namespace YuGiOh.Common.Repositories
                     .QueryAsync<string>("select distinct antisupportname from joined_cards where id = @id", new { id = card.Id })
                     .ContinueWith(result => result.Result.ToArray())
                     .ConfigureAwait(false);
-                var antisupportsToDelete = antisupportsInDb.Where(antisupport => !antisupport.Contains(antisupport));
+                var antisupportsToDelete = antisupportsInDb.Where(antisupport => !antisupports.Contains(antisupport));
                 var antisupportsToInsert = antisupports.Where(antisupport => !antisupportsInDb.Contains(antisupport));
 
                 foreach (var antisupport in antisupportsToDelete)
                     await connection.ExecuteAsync("call delete_antisupport_relation(@cardname, @antisupport)", new { cardname = card.Name, antisupport }).ConfigureAwait(false);
 
                 foreach (var antisupport in antisupportsToInsert)
-                {
-
                     await connection.ExecuteAsync("call insert_antisupport_relation(@cardname, @antisupport)", new { cardname = card.Name, antisupport }).ConfigureAwait(false);
 
-                    // var antiSupportId = await connection.QuerySingleAsync<int>("insert_or_get_antisupport", new { input = antiSupport }, commandType: CommandType.StoredProcedure).ConfigureAwait(false);
-                    //
-                    // //object antiSupportId =
-                    // //    await connection.ExecuteScalarAsync("select id from antisupports where name = @antiSupport", new { antiSupport }) ??
-                    // //    await connection.ExecuteScalarAsync("insert into antisupports(name) values(@antiSupport) returning id", new { antiSupport });
-                    //
-                    // await connection.ExecuteAsync(
-                    //         "insert into card_to_antisupports values(@cardAntiSupportsId, @antiSupportId) on conflict on constraint cardantisupportsid_antisupportsid_pair_unique do nothing",
-                    //         new
-                    //         {
-                    //             cardAntiSupportsId,
-                    //             antiSupportId
-                    //         })
-                    //     .ConfigureAwait(false);
-
-                }
-
             }
-
-            await connection.CloseAsync().ConfigureAwait(false);
 
         }
 
@@ -225,7 +168,6 @@ namespace YuGiOh.Common.Repositories
 
             await connection.OpenAsync().ConfigureAwait(false);
             await connection.ExecuteAsync("insert into card_hashes values(@id, @hash) on conflict on constraint card_hashes_pkey do update set hash = @hash", new { id, hash }).ConfigureAwait(false);
-            await connection.CloseAsync().ConfigureAwait(false);
 
         }
 
@@ -298,21 +240,6 @@ namespace YuGiOh.Common.Repositories
 
             }
 
-            // await using (var update = connection.CreateCommand())
-            // {
-            //
-            //     update.CommandText = "update boosterpacks set dates = @dates, cards = @cards where id = @id";
-            //
-            //     update.Parameters.AddWithValue("id", boosterPack.Id);
-            //     update.Parameters.AddWithValue("dates", JsonConvert.SerializeObject(boosterPack.Dates));
-            //     update.Parameters.AddWithValue("cards", JsonConvert.SerializeObject(boosterPack.Cards));
-            //
-            //     await update.ExecuteNonQueryAsync().ConfigureAwait(false);
-            //
-            // }
-
-            await connection.CloseAsync().ConfigureAwait(false);
-
         }
 
         public async Task InsertErrorAsync(Error error)
@@ -322,7 +249,6 @@ namespace YuGiOh.Common.Repositories
 
             await connection.OpenAsync().ConfigureAwait(false);
             await connection.InsertAsync(error).ConfigureAwait(false);
-            await connection.CloseAsync().ConfigureAwait(false);
 
         }
 
@@ -337,8 +263,6 @@ namespace YuGiOh.Common.Repositories
 
             var serverHash = await connection.QueryFirstOrDefaultAsync<string>("select hash from card_hashes where id = @id", new { id }).ConfigureAwait(false);
 
-            await connection.CloseAsync().ConfigureAwait(false);
-
             return serverHash?.Trim();
 
         }
@@ -348,23 +272,11 @@ namespace YuGiOh.Common.Repositories
         public async Task<CardEntity> GetCardAsync(string input)
         {
 
-            var connection = _config.GetYuGiOhDbConnection();
-            CardEntity card;
+            await using var connection = _config.GetYuGiOhDbConnection();
 
             await connection.OpenAsync().ConfigureAwait(false);
 
-            try
-            {
-                card = await connection.QuerySingleCardProcAsync("get_card_exact", new { input }).ConfigureAwait(false);
-            }
-            catch (Exception)
-            {
-                card = null;
-            }
-            finally
-            {
-                await connection.CloseAsync().ConfigureAwait(false);
-            }
+            var card = await connection.QuerySingleCardProcAsync("get_card_exact", new { input }).ConfigureAwait(false);
 
             return card;
 
@@ -378,8 +290,6 @@ namespace YuGiOh.Common.Repositories
             await connection.OpenAsync().ConfigureAwait(false);
 
             var cards = await connection.QueryCardsProcAsync("search_cards", new { input }).ConfigureAwait(false);
-
-            await connection.CloseAsync().ConfigureAwait(false);
 
             return cards;
 
@@ -413,13 +323,6 @@ namespace YuGiOh.Common.Repositories
 
             var cards = await connection.QueryCardsAsync(selector.RawSql, parameters).ConfigureAwait(false);
 
-            //foreach (var card in cards)
-            //    await FillCardEntity(connection, card).ConfigureAwait(false);
-
-            await connection.CloseAsync().ConfigureAwait(false);
-
-            //cards = results.Select(card => card.Name);
-
             return cards;
 
         }
@@ -432,8 +335,6 @@ namespace YuGiOh.Common.Repositories
             await connection.OpenAsync().ConfigureAwait(false);
 
             var card = await connection.QuerySingleCardProcAsync("get_card_fuzzy", new { input }).ConfigureAwait(false);
-
-            await connection.CloseAsync().ConfigureAwait(false);
 
             return card;
 
@@ -448,8 +349,6 @@ namespace YuGiOh.Common.Repositories
 
             var card = await connection.QuerySingleCardProcAsync("get_random_card").ConfigureAwait(false);
 
-            await connection.CloseAsync().ConfigureAwait(false);
-
             return card;
 
         }
@@ -462,8 +361,6 @@ namespace YuGiOh.Common.Repositories
             await connection.OpenAsync().ConfigureAwait(false);
 
             var cards = await connection.QueryCardsProcAsync("get_cards_in_archetype", new { input }).ConfigureAwait(false);
-
-            await connection.CloseAsync().ConfigureAwait(false);
 
             return cards;
 
@@ -478,8 +375,6 @@ namespace YuGiOh.Common.Repositories
 
             var cards = await connection.QueryCardsProcAsync("get_cards_in_support", new { input }).ConfigureAwait(false);
 
-            await connection.CloseAsync().ConfigureAwait(false);
-
             return cards;
 
         }
@@ -492,8 +387,6 @@ namespace YuGiOh.Common.Repositories
             await connection.OpenAsync().ConfigureAwait(false);
 
             var cards = await connection.QueryCardsProcAsync("get_cards_in_antisupport", new { input }).ConfigureAwait(false);
-
-            await connection.CloseAsync().ConfigureAwait(false);
 
             return cards;
 
@@ -512,8 +405,6 @@ namespace YuGiOh.Common.Repositories
 
             var cards = await connection.QueryProcAsync<string>("get_cards_autocomplete", new { input });
 
-            await connection.CloseAsync().ConfigureAwait(false);
-
             return cards;
 
         }
@@ -526,8 +417,6 @@ namespace YuGiOh.Common.Repositories
             await connection.OpenAsync().ConfigureAwait(false);
 
             var archetypes = await connection.QueryProcAsync<string>("get_archetypes_autocomplete", new { input }).ConfigureAwait(false);
-
-            await connection.CloseAsync().ConfigureAwait(false);
 
             return archetypes;
 
@@ -542,8 +431,6 @@ namespace YuGiOh.Common.Repositories
 
             var supports = await connection.QueryProcAsync<string>("get_supports_autocomplete", new { input }).ConfigureAwait(false);
 
-            await connection.CloseAsync().ConfigureAwait(false);
-
             return supports;
 
         }
@@ -556,8 +443,6 @@ namespace YuGiOh.Common.Repositories
             await connection.OpenAsync().ConfigureAwait(false);
 
             var antisupports = await connection.QueryProcAsync<string>("get_antisupports_autocomplete", new { input }).ConfigureAwait(false);
-
-            await connection.CloseAsync().ConfigureAwait(false);
 
             return antisupports;
 
@@ -574,8 +459,6 @@ namespace YuGiOh.Common.Repositories
 
             var name = await connection.ExecuteScalarAsync<string>("select name from cards where passcode = @passcode", new { passcode }).ConfigureAwait(false);
 
-            await connection.CloseAsync().ConfigureAwait(false);
-
             return name;
 
         }
@@ -588,8 +471,6 @@ namespace YuGiOh.Common.Repositories
             await connection.OpenAsync().ConfigureAwait(false);
 
             var imgLink = await connection.QuerySingleAsync<string>("select img from cards where name ~~* @input", new { input }).ConfigureAwait(false);
-
-            await connection.CloseAsync().ConfigureAwait(false);
 
             return imgLink;
 
@@ -618,8 +499,6 @@ namespace YuGiOh.Common.Repositories
                 Limited = await connection.QueryAsync<string>($"select name from cards where {formatStr} ilike 'limited' order by name asc").ConfigureAwait(false),
                 SemiLimited = await connection.QueryAsync<string>($"select name from cards where {formatStr} ilike 'semi-limited' order by name asc").ConfigureAwait(false)
             };
-
-            await connection.CloseAsync().ConfigureAwait(false);
 
             return banlist;
 
@@ -689,8 +568,6 @@ namespace YuGiOh.Common.Repositories
                     splitOn: "boosterpackdatename,boosterpackcardname,boosterpackrarity"
                 )
                 .ConfigureAwait(false);
-
-            await connection.CloseAsync().ConfigureAwait(false);
 
             return entity;
 

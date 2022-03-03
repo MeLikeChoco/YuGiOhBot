@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Dommel;
 using YuGiOh.Common.Interfaces;
@@ -11,7 +9,7 @@ namespace YuGiOh.Common.Repositories
     public class BackupsRepository
     {
 
-        private IBackupsRepositoryConfiguration _config;
+        private readonly IBackupsRepositoryConfiguration _config;
 
         public BackupsRepository(IBackupsRepositoryConfiguration config)
         {
@@ -21,22 +19,20 @@ namespace YuGiOh.Common.Repositories
         public async Task InsertYuGiOhBackupAsync(Guid guid)
         {
 
-            using var connection = _config.GetBackupsDbConnection();
+            await using var connection = _config.GetBackupsDbConnection();
 
             await connection.OpenAsync();
             await connection.InsertAsync(new Backup { Guid = guid });
-            await connection.CloseAsync();
 
         }
 
         public async Task InsertGuildsBackupAsync(Guid guid)
         {
 
-            using var connection = _config.GetBackupsDbConnection();
+            await using var connection = _config.GetBackupsDbConnection();
 
             await connection.OpenAsync();
             await connection.InsertAsync(new Backup { Guid = guid });
-            await connection.CloseAsync();
 
         }
 

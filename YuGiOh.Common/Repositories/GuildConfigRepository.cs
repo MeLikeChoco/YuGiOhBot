@@ -3,6 +3,7 @@ using Dapper;
 using Dapper.FluentMap;
 using Dapper.FluentMap.Dommel;
 using Dommel;
+using Npgsql;
 using YuGiOh.Common.DatabaseMappers;
 using YuGiOh.Common.Interfaces;
 using YuGiOh.Common.Models;
@@ -28,6 +29,7 @@ namespace YuGiOh.Common.Repositories
                 config.ForDommel();
 
                 DommelMapper.SetColumnNameResolver(new LowerCaseConvention());
+                DommelMapper.AddSqlBuilder(typeof(NpgsqlConnection), new PostgresSqlBuilder());
 
             });
 
@@ -47,8 +49,6 @@ namespace YuGiOh.Common.Repositories
 
             var guildConfig = await connection.QuerySingleAsync<GuildConfigEntity>("select * from configs where id = @id", new { id = (decimal)id }).ConfigureAwait(false);
 
-            await connection.CloseAsync().ConfigureAwait(false);
-
             return guildConfig;
 
         }
@@ -60,7 +60,6 @@ namespace YuGiOh.Common.Repositories
 
             await connection.OpenAsync().ConfigureAwait(false);
             await connection.InsertAsync(guildConfig).ConfigureAwait(false);
-            await connection.CloseAsync().ConfigureAwait(false);
 
         }
 
@@ -71,7 +70,6 @@ namespace YuGiOh.Common.Repositories
 
             await connection.OpenAsync().ConfigureAwait(false);
             await connection.UpdateAsync(guildConfig).ConfigureAwait(false);
-            await connection.CloseAsync().ConfigureAwait(false);
 
         }
 
@@ -83,8 +81,6 @@ namespace YuGiOh.Common.Repositories
             await connection.OpenAsync().ConfigureAwait(false);
 
             var doesExist = await connection.ExecuteScalarAsync<bool>("select 1 from configs where id = @id", new { id = (decimal)id }).ConfigureAwait(false);
-
-            await connection.CloseAsync().ConfigureAwait(false);
 
             return doesExist;
 
