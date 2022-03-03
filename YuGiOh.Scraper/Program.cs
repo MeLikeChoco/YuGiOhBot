@@ -75,7 +75,7 @@ public class Program : IYuGiOhRepositoryConfiguration
 
     }
 
-    public async Task<IDictionary<string, string>> FilterCardLinks(
+    private async Task<IDictionary<string, string>> FilterCardLinks(
         IDictionary<string, string> tcgLinks,
         IDictionary<string, string> ocgLinks
     )
@@ -94,7 +94,7 @@ public class Program : IYuGiOhRepositoryConfiguration
 
     }
 
-    public async Task<CardProcessorResponse> ProcessCards(
+    private async Task<CardProcessorResponse> ProcessCards(
         IDictionary<string, string> tcgLinks,
         IDictionary<string, string> ocgLinks,
         IDictionary<string, string> links
@@ -184,7 +184,7 @@ public class Program : IYuGiOhRepositoryConfiguration
 
     }
 
-    public async Task<BoosterProcessorResponse> ProcessBoosters(IDictionary<string, string> tcgLinks, IDictionary<string, string> ocgLinks)
+    private async Task<BoosterProcessorResponse> ProcessBoosters(IDictionary<string, string> tcgLinks, IDictionary<string, string> ocgLinks)
     {
 
         var nameToLinks = tcgLinks.Union(ocgLinks).ToList();
@@ -268,7 +268,7 @@ public class Program : IYuGiOhRepositoryConfiguration
 
     }
 
-    public async Task ProcessErrors(IEnumerable<Error> errors)
+    private async Task ProcessErrors(IEnumerable<Error> errors)
     {
 
         var repo = new YuGiOhRepository(this);
@@ -289,7 +289,7 @@ public class Program : IYuGiOhRepositoryConfiguration
 
     }
 
-    public async Task<IDictionary<string, string>> GetLinks(string baseUrl)
+    private static async Task<IDictionary<string, string>> GetLinks(string baseUrl)
     {
 
         var cmcontinue = "";
@@ -303,8 +303,8 @@ public class Program : IYuGiOhRepositoryConfiguration
             var responseJObject = JObject.Parse(response);
             cmcontinue = responseJObject["continue"]?.Value<string>("cmcontinue");
 
-            foreach (var item in responseJObject["query"].Value<JArray>("categorymembers"))
-                links[item.Value<string>("title")] = item.Value<string>("pageid");
+            foreach (var item in responseJObject["query"]!.Value<JArray>("categorymembers")!)
+                links[item.Value<string>("title")!] = item.Value<string>("pageid");
 
         } while (!string.IsNullOrEmpty(cmcontinue));
 
@@ -328,7 +328,7 @@ public class Program : IYuGiOhRepositoryConfiguration
 
     }
 
-    public static void Log(string message)
+    private static void Log(string message)
     {
 
         if (Options.IsSubProc)
@@ -338,7 +338,7 @@ public class Program : IYuGiOhRepositoryConfiguration
 
     }
 
-    public static void InlineLog(string message)
+    private static void InlineLog(string message)
     {
 
         if (Options.IsSubProc)
@@ -348,25 +348,15 @@ public class Program : IYuGiOhRepositoryConfiguration
 
     }
 
-    public static void ClearLine()
+    private static void ClearLine()
         => Console.Write("\r" + new string(' ', Console.BufferWidth - 1) + "\r");
 
     public NpgsqlConnection GetYuGiOhDbConnection()
     {
 
-        var config = Options.IsDebug ? Options.Config.Databases.Staging : Options.Config.Databases.Production;
+        var connectionStr = Options.IsDebug ? Options.Config.Databases.Staging : Options.Config.Databases.Production;
 
-        var connectionStr = new NpgsqlConnectionStringBuilder
-        {
-
-            Host = config.Host,
-            Port = config.Port,
-            Database = "yugioh",
-            Username = config.Username,
-            Password = config.Password
-
-
-        }.ToString();
+        connectionStr += $"Pooling=true;Minimum Pool Size={Environment.ProcessorCount};Maximum Pool Size={Environment.ProcessorCount};";
 
         return new NpgsqlConnection(connectionStr);
 

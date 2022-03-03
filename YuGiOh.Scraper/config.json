@@ -1,20 +1,7 @@
 {
   "Databases": {
-
-    "Staging": {
-      "Host": "",
-      "Port": 0,
-      "Username": "",
-      "Password": ""
-    },
-
-    "Production": {
-      "Host": "",
-      "Port": 0,
-      "Username": "",
-      "Password": ""
-    }
-
+    "Staging": "",
+    "Production": ""
   },
   "Retry Delay": "00:00:30",
   "Max Retry": 3,

@@ -24,18 +24,7 @@ public class Config
 public class Databases
 {
 
-    public DatabaseInfo Staging { get; set; }
-    public DatabaseInfo Production { get; set; }
-
-}
-
-public class DatabaseInfo
-{
-
-    public string Host { get; set; }
-    public int Port { get; set; }
-    public string Username { get; set; }
-    public string Password { get; set; }
-
+    public string Staging { get; set; }
+    public string Production { get; set; }
 
 }
