@@ -214,7 +214,10 @@ namespace YuGiOh.Bot.Extensions
 
             };
 
-            logger.Log(logLevel, message.Message);
+            if (message.Exception is not null)
+                logger.Error(message.Exception, message.Message);
+            else
+                logger.Log(logLevel, message.Message);
 
         }
 
@@ -229,6 +232,8 @@ namespace YuGiOh.Bot.Extensions
 
             if (_logger is not null)
                 return _logger;
+
+            Console.OutputEncoding = Encoding.UTF8;
 
             _logger = new LoggerConfiguration()
                 .MinimumLevel.Verbose()
