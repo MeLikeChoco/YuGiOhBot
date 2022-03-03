@@ -10,34 +10,10 @@
   "Owner Id": 0,
   "Is Test": false,
   "Databases": {
-    "YuGiOh Prod": {
-      "Host": "",
-      "Port": 0,
-      "Username": "",
-      "Password": "",
-      "Database": ""
-    },
-    "YuGiOh Staging": {
-      "Host": "",
-      "Port": 0,
-      "Username": "",
-      "Password": "",
-      "Database": ""
-    },
-    "Guilds Prod": {
-      "Host": "",
-      "Port": 0,
-      "Username": "",
-      "Password": "",
-      "Database": ""
-    },
-    "Guilds Staging": {
-      "Host": "",
-      "Port": 0,
-      "Username": "",
-      "Password": "",
-      "Database": ""
-    }
+    "YuGiOh Prod": "",
+    "YuGiOh Staging": "",
+    "Guilds Prod": "",
+    "Guilds Staging": ""
   },
   "Tokens": {
     "Discord": {

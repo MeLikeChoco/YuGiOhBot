@@ -102,39 +102,19 @@ namespace YuGiOh.Bot.Models
 
         [JsonInclude]
         [JsonPropertyName("YuGiOh Staging")]
-        public DatabaseConnectionConfig YuGiOhStaging { get; private set; }
+        public string YuGiOhStaging { get; private set; }
 
         [JsonInclude]
         [JsonPropertyName("Guilds Staging")]
-        public DatabaseConnectionConfig GuildsStaging { get; private set; }
+        public string GuildsStaging { get; private set; }
 
         [JsonInclude]
         [JsonPropertyName("YuGiOh Prod")]
-        public DatabaseConnectionConfig YuGiOhProd { get; private set; }
+        public string YuGiOhProd { get; private set; }
 
         [JsonInclude]
         [JsonPropertyName("Guilds Prod")]
-        public DatabaseConnectionConfig GuildsProd { get; private set; }
-
-    }
-
-    public class DatabaseConnectionConfig
-    {
-
-        [JsonInclude]
-        public string Host { get; private set; }
-
-        [JsonInclude]
-        public int Port { get; private set; }
-
-        [JsonInclude]
-        public string Username { get; private set; }
-
-        [JsonInclude]
-        public string Password { get; private set; }
-
-        [JsonInclude]
-        public string Database { get; private set; }
+        public string GuildsProd { get; private set; }
 
     }
 

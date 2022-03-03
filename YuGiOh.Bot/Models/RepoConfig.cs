@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Npgsql;
+﻿using Npgsql;
 using YuGiOh.Common.Interfaces;
-using YuGiOh.Bot.Models;
 
 namespace YuGiOh.Bot.Models
 {
@@ -20,18 +14,7 @@ namespace YuGiOh.Bot.Models
         public NpgsqlConnection GetGuildConfigConnection()
         {
 
-            var guildsDbConfig = Constants.IsDebug ? _config.Databases.GuildsStaging : _config.Databases.GuildsProd;
-
-            var connectionStr = new NpgsqlConnectionStringBuilder
-            {
-
-                Host = guildsDbConfig.Host,
-                Port = guildsDbConfig.Port,
-                Username = guildsDbConfig.Username,
-                Password = guildsDbConfig.Password,
-                Database = guildsDbConfig.Database
-
-            }.ToString();
+            var connectionStr = Constants.IsDebug ? _config.Databases.GuildsStaging : _config.Databases.GuildsProd;
 
             return new NpgsqlConnection(connectionStr);
 
@@ -40,18 +23,7 @@ namespace YuGiOh.Bot.Models
         public NpgsqlConnection GetYuGiOhDbConnection()
         {
 
-            var yugiohDbConfig = Constants.IsDebug ? _config.Databases.YuGiOhStaging : _config.Databases.YuGiOhProd;
-
-            var connectionStr = new NpgsqlConnectionStringBuilder
-            {
-
-                Host = yugiohDbConfig.Host,
-                Port = yugiohDbConfig.Port,
-                Username = yugiohDbConfig.Username,
-                Password = yugiohDbConfig.Password,
-                Database = yugiohDbConfig.Database
-
-            }.ToString();
+            var connectionStr = Constants.IsDebug ? _config.Databases.YuGiOhStaging : _config.Databases.YuGiOhProd;
 
             return new NpgsqlConnection(connectionStr);
 
