@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace YuGiOh.Common.Models.YuGiOh
 {
@@ -13,11 +8,17 @@ namespace YuGiOh.Common.Models.YuGiOh
 
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity), Column("translationid")]
         public int Id { get; set; }
+
+        [Column("translationcardid")]
         public int CardId { get; set; }
+
+        [Column("translatedlanguage")]
         public string Language { get; set; }
-        [Column("translationname")]
+
+        [Column("translatedname")]
         public string Name { get; set; }
-        [Column("translationlore")]
+
+        [Column("translatedlore")]
         public string Lore { get; set; }
 
     }
