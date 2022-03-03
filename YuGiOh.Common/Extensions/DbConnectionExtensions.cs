@@ -29,29 +29,12 @@ namespace YuGiOh.Common.Extensions
         {
 
             return connection.QueryAsync(
-                sql,
-                ProcessEntities(),
-                param: @params,
-                splitOn: splitOn
-            ).ContinueWith(results => results.Result.Distinct());
-
-        }
-
-        public static Task<IEnumerable<CardEntity>> QueryCardsProcAsync(
-            this DbConnection connection,
-            string proc,
-            object @params = null,
-            string splitOn = DefaultSplitOn
-        )
-        {
-
-            return connection.QueryAsync(
-                proc,
-                ProcessEntities(),
-                param: @params,
-                splitOn: splitOn,
-                commandType: CommandType.StoredProcedure
-            ).ContinueWith(results => results.Result.Distinct());
+                    sql,
+                    ProcessEntities(),
+                    param: @params,
+                    splitOn: splitOn
+                )
+                .ContinueWith(results => results.Result.Distinct());
 
         }
 
@@ -64,12 +47,79 @@ namespace YuGiOh.Common.Extensions
         {
 
             return connection.QueryAsync(
-                proc,
-                ProcessEntity(),
-                param: @params,
-                splitOn: splitOn,
-                commandType: CommandType.StoredProcedure
-            ).ContinueWith(results => results.Result.FirstOrDefault());
+                    proc,
+                    ProcessEntity(),
+                    param: @params,
+                    splitOn: splitOn,
+                    commandType: CommandType.StoredProcedure
+                )
+                .ContinueWith(results => results.Result.FirstOrDefault());
+
+        }
+
+        public static Task<IEnumerable<CardEntity>> QueryCardsProcAsync(
+            this DbConnection connection,
+            string proc,
+            object @params = null,
+            string splitOn = DefaultSplitOn
+        )
+        {
+
+            return connection.QueryAsync(
+                    proc,
+                    ProcessEntities(),
+                    param: @params,
+                    splitOn: splitOn,
+                    commandType: CommandType.StoredProcedure
+                )
+                .ContinueWith(results => results.Result.Distinct());
+
+        }
+
+        private static Func<CardEntity, string, string, string, TranslationEntity, CardEntity> ProcessEntity()
+        {
+
+            CardEntity cardEntity = null;
+            var translations = new HashSet<int>();
+
+            CardEntity ProcessEntityFunction(
+                CardEntity entity,
+                string archetype,
+                string support,
+                string antisupport,
+                TranslationEntity translation
+            )
+            {
+
+                if (cardEntity == null)
+                {
+                    cardEntity = entity;
+                    cardEntity.Archetypes = new List<string>();
+                    cardEntity.Supports = new List<string>();
+                    cardEntity.AntiSupports = new List<string>();
+                    cardEntity.Translations = new List<TranslationEntity>();
+                }
+
+                if (!cardEntity.Archetypes.Contains(archetype) && !string.IsNullOrEmpty(archetype))
+                    cardEntity.Archetypes.Add(archetype);
+
+                if (!cardEntity.Supports.Contains(support) && !string.IsNullOrEmpty(support))
+                    cardEntity.Supports.Add(support);
+
+                if (!cardEntity.AntiSupports.Contains(antisupport) && !string.IsNullOrEmpty(antisupport))
+                    cardEntity.AntiSupports.Add(antisupport);
+
+                if (translations.Contains(translation.Id))
+                    return cardEntity;
+
+                cardEntity.Translations.Add(translation);
+                translations.Add(translation.Id);
+
+                return cardEntity;
+
+            }
+
+            return ProcessEntityFunction;
 
         }
 
@@ -77,6 +127,7 @@ namespace YuGiOh.Common.Extensions
         {
 
             var entities = new Dictionary<int, CardEntity>();
+            var entityToTranslations = new Dictionary<int, HashSet<int>>();
 
             CardEntity ProcessEntityFunction(
                 CardEntity entity,
@@ -108,50 +159,18 @@ namespace YuGiOh.Common.Extensions
 
                 if (!cardEntity.AntiSupports.Contains(antisupport) && !string.IsNullOrEmpty(antisupport))
                     cardEntity.AntiSupports.Add(antisupport);
-                
-                cardEntity.Translations.Add(translation);
 
-                return cardEntity;
-
-            }
-
-            return ProcessEntityFunction;
-
-        }
-
-        private static Func<CardEntity, string, string, string, TranslationEntity, CardEntity> ProcessEntity()
-        {
-
-            CardEntity cardEntity = null;
-
-            CardEntity ProcessEntityFunction(
-                CardEntity entity,
-                string archetype,
-                string support,
-                string antisupport,
-                TranslationEntity translation
-            )
-            {
-
-                if (cardEntity == null)
+                if (!entityToTranslations.TryGetValue(entity.Id, out var translations))
                 {
-                    cardEntity = entity;
-                    cardEntity.Archetypes = new List<string>();
-                    cardEntity.Supports = new List<string>();
-                    cardEntity.AntiSupports = new List<string>();
-                    cardEntity.Translations = new List<TranslationEntity>();
+                    translations = new HashSet<int>();
+                    entityToTranslations[entity.Id] = translations;
                 }
 
-                if (!cardEntity.Archetypes.Contains(archetype) && !string.IsNullOrEmpty(archetype))
-                    cardEntity.Archetypes.Add(archetype);
-
-                if (!cardEntity.Supports.Contains(support) && !string.IsNullOrEmpty(support))
-                    cardEntity.Supports.Add(support);
-
-                if (!cardEntity.AntiSupports.Contains(antisupport) && !string.IsNullOrEmpty(antisupport))
-                    cardEntity.AntiSupports.Add(antisupport);
+                if (translations.Contains(translation.Id))
+                    return cardEntity;
 
                 cardEntity.Translations.Add(translation);
+                translations.Add(translation.Id);
 
                 return cardEntity;
 
