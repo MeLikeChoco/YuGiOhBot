@@ -20,7 +20,7 @@ namespace YuGiOh.Common.Extensions
         public static Task<T> QuerySingleProcAsync<T>(this DbConnection connection, string proc, object @params = null)
             => connection.QuerySingleAsync<T>(proc, @params, commandType: CommandType.StoredProcedure);
 
-        public static Task<IEnumerable<CardEntity>> QueryCardsAsync(
+        public static async Task<IEnumerable<CardEntity>> QueryCardsAsync(
             this DbConnection connection,
             string sql,
             object @params = null,
@@ -28,17 +28,18 @@ namespace YuGiOh.Common.Extensions
         )
         {
 
-            return connection.QueryAsync(
-                    sql,
-                    ProcessEntities(),
-                    param: @params,
-                    splitOn: splitOn
-                )
-                .ContinueWith(results => results.Result.Distinct());
+            var results = await connection.QueryAsync(
+                sql,
+                ProcessEntities(),
+                @params,
+                splitOn: splitOn
+            );
+
+            return results.Distinct();
 
         }
 
-        public static Task<CardEntity> QuerySingleCardProcAsync(
+        public static async Task<CardEntity> QuerySingleCardProcAsync(
             this DbConnection connection,
             string proc,
             object @params = null,
@@ -46,18 +47,20 @@ namespace YuGiOh.Common.Extensions
         )
         {
 
-            return connection.QueryAsync(
-                    proc,
-                    ProcessEntity(),
-                    param: @params,
-                    splitOn: splitOn,
-                    commandType: CommandType.StoredProcedure
-                )
-                .ContinueWith(results => results.Result.FirstOrDefault());
+            var result = await connection.QueryAsync(
+                proc,
+                ProcessEntity(),
+                @params,
+                splitOn: splitOn,
+                commandType: CommandType.StoredProcedure
+            );
+
+            return result.FirstOrDefault();
+
 
         }
 
-        public static Task<IEnumerable<CardEntity>> QueryCardsProcAsync(
+        public static async Task<IEnumerable<CardEntity>> QueryCardsProcAsync(
             this DbConnection connection,
             string proc,
             object @params = null,
@@ -65,14 +68,15 @@ namespace YuGiOh.Common.Extensions
         )
         {
 
-            return connection.QueryAsync(
-                    proc,
-                    ProcessEntities(),
-                    param: @params,
-                    splitOn: splitOn,
-                    commandType: CommandType.StoredProcedure
-                )
-                .ContinueWith(results => results.Result.Distinct());
+            var result = await connection.QueryAsync(
+                proc,
+                ProcessEntities(),
+                @params,
+                splitOn: splitOn,
+                commandType: CommandType.StoredProcedure
+            );
+
+            return result.Distinct();
 
         }
 
@@ -109,7 +113,7 @@ namespace YuGiOh.Common.Extensions
                 if (!cardEntity.AntiSupports.Contains(antisupport) && !string.IsNullOrEmpty(antisupport))
                     cardEntity.AntiSupports.Add(antisupport);
 
-                if (translations.Contains(translation.Id))
+                if (translation is null || translations.Contains(translation.Id))
                     return cardEntity;
 
                 cardEntity.Translations.Add(translation);
@@ -166,7 +170,7 @@ namespace YuGiOh.Common.Extensions
                     entityToTranslations[entity.Id] = translations;
                 }
 
-                if (translations.Contains(translation.Id))
+                if (translation is null || translations.Contains(translation.Id))
                     return cardEntity;
 
                 cardEntity.Translations.Add(translation);
