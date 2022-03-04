@@ -14,16 +14,15 @@ namespace YuGiOh.Bot.Handlers
     public class ChatHandler
     {
 
+        //private const string Pattern = @"(\[{2}[^\[\]].+?[^\[\]]\]{2})";
+        private const string Pattern = @"(?<=\[{2}).+?(?=\]{2})";
+        private static readonly Regex InlineRegex = new(Pattern, RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
         private readonly ILoggerFactory _loggerFactory;
         private readonly Cache _cache;
         private readonly Web _web;
         private readonly IYuGiOhDbService _yuGiOhDbService;
         private readonly IGuildConfigDbService _guildConfigDbService;
-
-        //private readonly IgnoreCaseComparer _ignoreCaseComparer;
-
-        //private const string Pattern = @"(\[{2}[^\[\]].+?[^\[\]]\]{2})";
-        private const string Pattern = @"(?<=\[{2}).+?(?=\]{2})";
 
         public ChatHandler(
             ILoggerFactory loggerFactory,
@@ -50,7 +49,7 @@ namespace YuGiOh.Bot.Handlers
             {
 
                 var logger = _loggerFactory.CreateLogger("Inline");
-                
+
                 if (message.Author.IsBot || string.IsNullOrEmpty(message.Content))
                     return;
 
@@ -65,19 +64,19 @@ namespace YuGiOh.Bot.Handlers
 
                 }
 
-                var matches = Regex.Matches(message.Content, Pattern);
+                var matches = InlineRegex.Matches(message.Content);
                 var watch = new Stopwatch();
                 var channel = message.Channel;
                 var minimal = false;
 
-                if (matches.Count > 0 && matches.Count < 4)
+                if (matches.Count is > 0 and < 4)
                 {
 
-                    if (channel is SocketTextChannel)
+                    if (channel is SocketTextChannel textChannel)
                     {
 
-                        logger.Info($"{message.Author.Username} from {(channel as SocketTextChannel).Guild.Name}");
-                        var id = (channel as SocketTextChannel).Guild.Id;
+                        logger.Info($"{message.Author.Username} from {textChannel.Guild.Name}");
+                        var id = textChannel.Guild.Id;
                         var guildConfig = await _guildConfigDbService.GetGuildConfigAsync(id);
                         minimal = guildConfig.Minimal;
 
