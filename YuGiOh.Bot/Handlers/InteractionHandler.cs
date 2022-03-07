@@ -76,7 +76,7 @@ namespace YuGiOh.Bot.Handlers
             var context = new ShardedInteractionContext<SocketSlashCommand>(_client, interaction);
             var result = await _interactionService.ExecuteCommandAsync(context, _serviceProvider);
 
-            if (_interactionConfig.DefaultRunMode != RunMode.Async && !result.IsSuccess)
+            if (!result.IsSuccess)
                 _logger.Error(result.ErrorReason);
             // AltConsole.Write("Error", "Error", result.ErrorReason);
 

@@ -87,12 +87,12 @@ namespace YuGiOh.Bot.Modules.Commands
 
         }
 
-        [Command("supports")]
+        [Command("support")]
         [Summary("Returns cards that support your input! No proper capitalization needed!")]
         public async Task SupportsCommand([Remainder] string input)
         {
 
-            var cards = await YuGiOhDbService.GetCardsFromSupportAsync(input);
+            var cards = await YuGiOhDbService.GetCardsInSupportAsync(input);
 
             if (cards.Any())
                 await ReceiveInput(cards.Count(), cards.Select(card => card.Name));
@@ -101,12 +101,12 @@ namespace YuGiOh.Bot.Modules.Commands
 
         }
 
-        [Command("antisupports")]
+        [Command("antisupport")]
         [Summary("Returns cards that support your input! No proper capitalization needed!")]
         public async Task AntiSupportsCommand([Remainder] string input)
         {
 
-            var cards = await YuGiOhDbService.GetCardsFromAntisupportAsync(input).ContinueWith(result => result.Result.ToArray());
+            var cards = await YuGiOhDbService.GetCardsInAntisupportAsync(input).ContinueWith(result => result.Result.ToArray());
 
             if (cards.Any())
                 await ReceiveInput(cards.Length, cards.Select(card => card.Name));

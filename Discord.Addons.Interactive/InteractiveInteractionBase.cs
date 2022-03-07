@@ -47,17 +47,30 @@ namespace Discord.Addons.Interactive
 
             return IsDeferred ?
                 FollowupAsync(text, embeds, isTTS, ephemeral, allowedMentions, options, components, embed) :
-                base.RespondAsync(text, embeds, isTTS, ephemeral, allowedMentions, options, components, embed);
+                Context.Interaction.HasResponded ?
+                    base.RespondAsync(text, embeds, isTTS, ephemeral, allowedMentions, options, components, embed) :
+                    ReplyAsync(text, isTTS, embed, options, allowedMentions, components: components);
 
         }
 
         public Task<SocketMessage> NextMessageAsync(ICriterion<SocketMessage> criterion, TimeSpan? timeout = null, CancellationToken token = default)
             => Interactive.NextMessageAsync(Context, criterion, timeout, token);
 
-        public Task<SocketMessage> NextMessageAsync(bool fromSourceUser = true, bool inSourceChannel = true, TimeSpan? timeout = null, CancellationToken token = default)
+        public Task<SocketMessage> NextMessageAsync(
+            bool fromSourceUser = true,
+            bool inSourceChannel = true,
+            TimeSpan? timeout = null,
+            CancellationToken token = default
+        )
             => Interactive.NextMessageAsync(Context, fromSourceUser, inSourceChannel, timeout, token);
 
-        public Task<IUserMessage> ReplyAndDeleteAsync(string content, bool isTTS = false, Embed embed = null, TimeSpan? timeout = null, RequestOptions options = null)
+        public Task<IUserMessage> ReplyAndDeleteAsync(
+            string content,
+            bool isTTS = false,
+            Embed embed = null,
+            TimeSpan? timeout = null,
+            RequestOptions options = null
+        )
             => Interactive.ReplyAndDeleteAsync(Context, content, isTTS, embed, timeout, options, IsDeferred);
 
         public Task<IUserMessage> PagedReplyAsync(IEnumerable<object> pages, bool fromSourceUser = true)

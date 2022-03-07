@@ -398,7 +398,7 @@ namespace Discord.Addons.Interactive
         protected override Task HandleMessageDeleteAsync(Cacheable<IMessage, ulong> message, Cacheable<IMessageChannel, ulong> channel)
         {
 
-            RemoveInteractionCallback(message.Id);
+            RemoveReactionCallback(message.Id);
             RemoveInteractionCallback(message.Id);
 
             return Task.CompletedTask;

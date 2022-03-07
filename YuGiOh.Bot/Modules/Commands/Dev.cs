@@ -3,6 +3,8 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Text.Encodings.Web;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Discord.Commands;
 using Discord.Interactions;
@@ -14,6 +16,7 @@ using YuGiOh.Bot.Models;
 using YuGiOh.Bot.Models.Attributes;
 using YuGiOh.Bot.Services;
 using YuGiOh.Bot.Services.Interfaces;
+using YuGiOh.Common.Repositories.Interfaces;
 using ContextType = Discord.Commands.ContextType;
 
 namespace YuGiOh.Bot.Modules.Commands
@@ -24,6 +27,7 @@ namespace YuGiOh.Bot.Modules.Commands
     {
 
         private readonly InteractionService _interactionService;
+        private readonly IYuGiOhRepository _yugiohRepo;
 
         public Dev(
             ILoggerFactory loggerFactory,
@@ -32,13 +36,28 @@ namespace YuGiOh.Bot.Modules.Commands
             IGuildConfigDbService guildConfigDbService,
             Web web,
             Random rand,
-            InteractionService interactionService
+            InteractionService interactionService,
+            IYuGiOhRepository yugiohRepo
         ) : base(loggerFactory, cache, yuGiOhDbService, guildConfigDbService, web, rand)
         {
             _interactionService = interactionService;
+            _yugiohRepo = yugiohRepo;
         }
 
         private static readonly DateTime _cutOffDate = new DateTime(2016, 1, 14);
+
+        [Command("json")]
+        public async Task JsonCommand([Remainder] string input)
+        {
+
+            var entity = await _yugiohRepo.GetCardAsync(input);
+            var json = JsonSerializer.Serialize(entity, new JsonSerializerOptions { WriteIndented = true, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
+
+            Logger.Info(json);
+
+            await ReplyAsync("Json printed to console");
+
+        }
 
         [Command("test")]
         public async Task TestCommand(bool isGlobal = false)

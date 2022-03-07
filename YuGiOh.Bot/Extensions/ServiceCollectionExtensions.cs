@@ -92,6 +92,7 @@ public static class ServiceCollectionExtensions
             .AddSingleton<InteractiveService>()
             .AddSingleton(InteractiveServiceConfig)
             .AddSingleton<InteractiveService<SocketInteractionContext<SocketSlashCommand>>>()
+            .AddSingleton<InteractiveService<ShardedInteractionContext<SocketSlashCommand>>>()
             .BuildServiceProvider();
 
     }

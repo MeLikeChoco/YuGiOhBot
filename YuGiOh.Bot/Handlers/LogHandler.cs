@@ -28,7 +28,11 @@ namespace YuGiOh.Bot.Handlers
         public Task HandleInteractionExecuted(ICommandInfo _, IInteractionContext __, IResult result)
         {
 
-            Task.Run(() => _loggerFactory.CreateLogger("Interaction").Error(result.ErrorReason));
+            Task.Run(() =>
+            {
+                if (!result.IsSuccess)
+                    _loggerFactory.CreateLogger("Interaction").Error(result.ErrorReason);
+            });
 
             return Task.CompletedTask;
 

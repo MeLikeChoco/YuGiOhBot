@@ -13,7 +13,7 @@ using YuGiOh.Bot.Services.Interfaces;
 
 namespace YuGiOh.Bot.Modules
 {
-    public abstract class MainInteractionBase<TInteraction> : InteractiveInteractionBase<SocketInteractionContext<TInteraction>>
+    public abstract class MainInteractionBase<TInteraction> : InteractiveInteractionBase<ShardedInteractionContext<TInteraction>>
         where TInteraction : SocketInteraction
     {
 
@@ -120,7 +120,7 @@ namespace YuGiOh.Bot.Modules
 
             str += "!";
 
-            return Context.Interaction.HasResponded ? ReplyAsync(str) : RespondAsync(str);
+            return RespondAsync(str);
 
         }
 

@@ -154,10 +154,7 @@ namespace YuGiOh.Bot.Modules.Commands
             }
             catch
             {
-
                 await ReplyAsync("There was a problem while uploading the image, please try again later.");
-                return;
-
             }
 
         }
