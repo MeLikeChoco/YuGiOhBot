@@ -21,8 +21,8 @@ namespace YuGiOh.Bot.Services.Interfaces
         Task<Card> GetClosestCardAsync(string input);
 
         Task<IEnumerable<Card>> GetCardsInArchetypeAsync(string input);
-        Task<IEnumerable<Card>> GetCardsFromSupportAsync(string input);
-        Task<IEnumerable<Card>> GetCardsFromAntisupportAsync(string input);
+        Task<IEnumerable<Card>> GetCardsInSupportAsync(string input);
+        Task<IEnumerable<Card>> GetCardsInAntisupportAsync(string input);
         
         Task<IEnumerable<string>> GetCardsAutocompleteAsync(string input);
         Task<IEnumerable<string>> GetArchetypesAutocompleteAsync(string input);
@@ -35,6 +35,7 @@ namespace YuGiOh.Bot.Services.Interfaces
         Task<Banlist> GetBanlistAsync(BanlistFormats format);
 
         Task<BoosterPack> GetBoosterPackAsync(string input);
+        Task<IEnumerable<string>> GetBoosterPacksAutocompleteAsync(string input);
 
     }
 }

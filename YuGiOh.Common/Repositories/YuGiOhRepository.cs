@@ -573,5 +573,18 @@ namespace YuGiOh.Common.Repositories
 
         }
 
+        public async Task<IEnumerable<string>> GetBoosterPacksAutocompleteAsync(string input)
+        {
+
+            await using var connection = _config.GetYuGiOhDbConnection();
+
+            await connection.OpenAsync();
+
+            var boosterpacks = await connection.QueryAsync<string>("get_boosterpacks_autocomplete", new { input }, commandType: CommandType.StoredProcedure);
+
+            return boosterpacks;
+
+        }
+
     }
 }

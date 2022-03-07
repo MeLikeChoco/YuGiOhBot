@@ -1,20 +1,20 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Interactions;
 using YuGiOh.Bot.Services.Interfaces;
 
-namespace YuGiOh.Bot.Models.Autocompletes
+namespace YuGiOh.Bot.Modules.Interactions.Autocompletes
 {
-    public class ArchetypeAutocomplete : AutocompleteHandler
+    public class SupportAutocomplete : AutocompleteHandler
     {
 
-        private readonly IYuGiOhDbService _yugiohDbService;
+        private readonly IYuGiOhDbService _yuGiOhDbService;
 
-        public ArchetypeAutocomplete(IYuGiOhDbService yugiohDbService)
+        public SupportAutocomplete(IYuGiOhDbService yuGiOhDbService)
         {
-            _yugiohDbService = yugiohDbService;
+            _yuGiOhDbService = yuGiOhDbService;
         }
 
         public override async Task<AutocompletionResult> GenerateSuggestionsAsync(
@@ -30,9 +30,9 @@ namespace YuGiOh.Bot.Models.Autocompletes
             if (string.IsNullOrEmpty(input))
                 return AutocompletionResult.FromSuccess();
 
-            var archetypes = await _yugiohDbService.GetArchetypesAutocompleteAsync(input);
+            var supports = await _yuGiOhDbService.GetSupportsAutocompleteAsync(input);
 
-            return AutocompletionResult.FromSuccess(archetypes.Select(archetype => new AutocompleteResult(archetype, archetype)));
+            return AutocompletionResult.FromSuccess(supports.Select(support => new AutocompleteResult(support, support)));
 
         }
 

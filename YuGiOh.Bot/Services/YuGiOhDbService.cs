@@ -72,7 +72,7 @@ namespace YuGiOh.Bot.Services
 
         }
 
-        public async Task<IEnumerable<Card>> GetCardsFromSupportAsync(string input)
+        public async Task<IEnumerable<Card>> GetCardsInSupportAsync(string input)
         {
 
             var entities = await _repo.GetCardsInSupportAsync(input);
@@ -81,7 +81,7 @@ namespace YuGiOh.Bot.Services
 
         }
 
-        public async Task<IEnumerable<Card>> GetCardsFromAntisupportAsync(string input)
+        public async Task<IEnumerable<Card>> GetCardsInAntisupportAsync(string input)
         {
 
             var entities = await _repo.GetCardsInAntisupportAsync(input);
@@ -128,6 +128,9 @@ namespace YuGiOh.Bot.Services
             return entity.ToModel();
 
         }
+
+        public Task<IEnumerable<string>> GetBoosterPacksAutocompleteAsync(string input)
+            => _repo.GetBoosterPacksAutocompleteAsync(input);
 
     }
 }

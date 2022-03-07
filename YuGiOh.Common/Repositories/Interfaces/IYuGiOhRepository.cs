@@ -34,8 +34,9 @@ namespace YuGiOh.Common.Repositories.Interfaces
         Task<string> GetNameWithPasscodeAsync(string passcode);
         Task<string> GetImageLinkAsync(string input);
         Task<Banlist> GetBanlistAsync(BanlistFormats format);
-        
+
         Task<BoosterPackEntity> GetBoosterPackAsync(string input);
+        Task<IEnumerable<string>> GetBoosterPacksAutocompleteAsync(string input);
 
     }
 }

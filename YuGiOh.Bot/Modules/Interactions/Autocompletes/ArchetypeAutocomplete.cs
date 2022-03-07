@@ -5,16 +5,16 @@ using Discord;
 using Discord.Interactions;
 using YuGiOh.Bot.Services.Interfaces;
 
-namespace YuGiOh.Bot.Models.Autocompletes
+namespace YuGiOh.Bot.Modules.Interactions.Autocompletes
 {
-    public class CardAutocomplete : AutocompleteHandler
+    public class ArchetypeAutocomplete : AutocompleteHandler
     {
 
-        private readonly IYuGiOhDbService _yuGiOhDbService;
+        private readonly IYuGiOhDbService _yugiohDbService;
 
-        public CardAutocomplete(IYuGiOhDbService yugiohDbService)
+        public ArchetypeAutocomplete(IYuGiOhDbService yugiohDbService)
         {
-            _yuGiOhDbService = yugiohDbService;
+            _yugiohDbService = yugiohDbService;
         }
 
         public override async Task<AutocompletionResult> GenerateSuggestionsAsync(
@@ -30,9 +30,9 @@ namespace YuGiOh.Bot.Models.Autocompletes
             if (string.IsNullOrEmpty(input))
                 return AutocompletionResult.FromSuccess();
 
-            var cards = await _yuGiOhDbService.GetCardsAutocompleteAsync(input);
+            var archetypes = await _yugiohDbService.GetArchetypesAutocompleteAsync(input);
 
-            return AutocompletionResult.FromSuccess(cards.Select(card => new AutocompleteResult(card, card)));
+            return AutocompletionResult.FromSuccess(archetypes.Select(archetype => new AutocompleteResult(archetype, archetype)));
 
         }
 

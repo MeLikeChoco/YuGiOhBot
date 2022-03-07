@@ -1,20 +1,20 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Interactions;
 using YuGiOh.Bot.Services.Interfaces;
 
-namespace YuGiOh.Bot.Models.Autocompletes
+namespace YuGiOh.Bot.Modules.Interactions.Autocompletes
 {
-    public class AntisupportAutocomplete : AutocompleteHandler
+    public class CardAutocomplete : AutocompleteHandler
     {
 
         private readonly IYuGiOhDbService _yuGiOhDbService;
 
-        public AntisupportAutocomplete(IYuGiOhDbService yuGiOhDbService)
+        public CardAutocomplete(IYuGiOhDbService yugiohDbService)
         {
-            _yuGiOhDbService = yuGiOhDbService;
+            _yuGiOhDbService = yugiohDbService;
         }
 
         public override async Task<AutocompletionResult> GenerateSuggestionsAsync(
@@ -30,9 +30,9 @@ namespace YuGiOh.Bot.Models.Autocompletes
             if (string.IsNullOrEmpty(input))
                 return AutocompletionResult.FromSuccess();
 
-            var antisupports = await _yuGiOhDbService.GetSupportsAutocompleteAsync(input);
+            var cards = await _yuGiOhDbService.GetCardsAutocompleteAsync(input);
 
-            return AutocompletionResult.FromSuccess(antisupports.Select(support => new AutocompleteResult(support, support)));
+            return AutocompletionResult.FromSuccess(cards.Select(card => new AutocompleteResult(card, card)));
 
         }
 

@@ -5,14 +5,14 @@ using Discord;
 using Discord.Interactions;
 using YuGiOh.Bot.Services.Interfaces;
 
-namespace YuGiOh.Bot.Models.Autocompletes
+namespace YuGiOh.Bot.Modules.Interactions.Autocompletes
 {
-    public class SupportAutocomplete : AutocompleteHandler
+    public class AntisupportAutocomplete : AutocompleteHandler
     {
 
         private readonly IYuGiOhDbService _yuGiOhDbService;
 
-        public SupportAutocomplete(IYuGiOhDbService yuGiOhDbService)
+        public AntisupportAutocomplete(IYuGiOhDbService yuGiOhDbService)
         {
             _yuGiOhDbService = yuGiOhDbService;
         }
@@ -30,9 +30,9 @@ namespace YuGiOh.Bot.Models.Autocompletes
             if (string.IsNullOrEmpty(input))
                 return AutocompletionResult.FromSuccess();
 
-            var supports = await _yuGiOhDbService.GetSupportsAutocompleteAsync(input);
+            var antisupports = await _yuGiOhDbService.GetAntisupportsAutocompleteAsync(input);
 
-            return AutocompletionResult.FromSuccess(supports.Select(support => new AutocompleteResult(support, support)));
+            return AutocompletionResult.FromSuccess(antisupports.Select(support => new AutocompleteResult(support, support)));
 
         }
 

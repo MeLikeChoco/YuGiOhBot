@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -10,9 +11,9 @@ using Discord.Interactions;
 using Discord.WebSocket;
 using Microsoft.Extensions.Logging;
 using YuGiOh.Bot.Extensions;
-using YuGiOh.Bot.Models.Autocompletes;
 using YuGiOh.Bot.Models.Cards;
 using YuGiOh.Bot.Models.Criterion;
+using YuGiOh.Bot.Modules.Interactions.Autocompletes;
 using YuGiOh.Bot.Services;
 using YuGiOh.Bot.Services.Interfaces;
 
@@ -38,13 +39,58 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
 
         }
 
-        [SlashCommand("search", "Gets cards based on your input! No proper capitalization needed!")]
-        public async Task SearchCommand([Autocomplete(typeof(CardAutocomplete))] [Summary(description: "The input")] string input)
+        public override async Task BeforeExecuteAsync(ICommandInfo command)
         {
+
+            await base.BeforeExecuteAsync(command);
 
             await DeferAsync();
 
-            var cards = (await YuGiOhDbService.SearchCardsAsync(input)).ToList();
+        }
+
+        [SlashCommand("search", "Gets cards based on your input")]
+        public async Task SearchCommand([Autocomplete(typeof(CardAutocomplete)), Summary(description: "The input")] string input)
+        {
+
+            var cards = (await YuGiOhDbService.SearchCardsAsync(input)).ToImmutableArray();
+
+            await DisplaySearch(cards, input);
+
+        }
+
+        [SlashCommand("archetype", "Gets cards in entered archetype")]
+        public async Task ArchetypeCommand([Autocomplete(typeof(ArchetypeAutocomplete)), Summary(description: "The input")] string input)
+        {
+
+            var cards = (await YuGiOhDbService.GetCardsInArchetypeAsync(input)).ToImmutableArray();
+
+            await DisplaySearch(cards, input, "archetypes");
+
+        }
+
+        [SlashCommand("support", "Gets cards in entered support")]
+        public async Task SupportCommand([Autocomplete(typeof(SupportAutocomplete)), Summary(description: "The input")] string input)
+        {
+
+            var cards = (await YuGiOhDbService.GetCardsInSupportAsync(input)).ToImmutableArray();
+
+            await DisplaySearch(cards, input, "supports");
+
+        }
+
+        [SlashCommand("antisupport", "Gets cards in entered antisupport")]
+        public async Task AntisupportCommand([Autocomplete(typeof(AntisupportAutocomplete)), Summary(description: "The input")] string input)
+        {
+
+            var cards = (await YuGiOhDbService.GetCardsInAntisupportAsync(input)).ToImmutableArray();
+
+            await DisplaySearch(cards, input, "antisupports");
+
+        }
+
+        private async Task DisplaySearch(IList<Card> cards, string input, string objects = null)
+        {
+
             var amount = cards.Count;
 
             if (amount == 1)
@@ -52,20 +98,7 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
             else if (amount != 0)
                 await ReceiveInput(amount, cards);
             else
-                await NoResultError(input);
-
-        }
-
-        [SlashCommand("archetype", "Gets cards in entered archetype! No proper capitalization needed!")]
-        public async Task ArchetypeCommand([Autocomplete(typeof(ArchetypeAutocomplete))] [Summary(description: "The input")] string input)
-        {
-
-            var cards = (await YuGiOhDbService.GetCardsInArchetypeAsync(input)).ToList();
-
-            if (cards.Any())
-                await ReceiveInput(cards.Count, cards);
-            else
-                await NoResultError("archetypes", input);
+                await NoResultError(objects, input);
 
         }
 

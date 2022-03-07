@@ -10,7 +10,7 @@ using Discord.WebSocket;
 using Microsoft.Extensions.Logging;
 using YuGiOh.Bot.Extensions;
 using YuGiOh.Bot.Models;
-using YuGiOh.Bot.Models.Autocompletes;
+using YuGiOh.Bot.Modules.Interactions.Autocompletes;
 using YuGiOh.Bot.Services;
 using YuGiOh.Bot.Services.Interfaces;
 
@@ -53,7 +53,7 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
         }
 
         [SlashCommand("help", "The defacto help command")]
-        public Task GenericHelpCommand([Autocomplete(typeof(CommandAutocomplete))] string input = null)
+        public Task GenericHelpCommand([Autocomplete(typeof(CommandAutocomplete)), Discord.Interactions.Summary(description: "The command")] string input = null)
             => string.IsNullOrEmpty(input) ? HelpCommand() : HelpCommand(input);
 
         private Task HelpCommand(string input)
@@ -62,9 +62,9 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
             //IEnumerable<object> cmds = CmdService.Commands.Where(cmdInfo => cmdInfo.Name == input || cmdInfo.Aliases.Contains(input));
             //cmds = cmds.Concat(InteractionService.SlashCommands.Where(cmdInfo => cmdInfo.Name == input));
 
-            var cmds = _cmdHelpService.GetCmds(Context.User, input);
+            var cmds = _cmdHelpService.GetCmds(Context.User, input).ToArray();
 
-            if (!cmds.Any())
+            if (cmds.Length == 0)
                 return NoResultError("commands", input);
 
             var cmdStrings = cmds

@@ -7,7 +7,7 @@ using Discord.Interactions;
 using MoreLinq;
 using YuGiOh.Bot.Services;
 
-namespace YuGiOh.Bot.Models.Autocompletes
+namespace YuGiOh.Bot.Modules.Interactions.Autocompletes
 {
     public class CommandAutocomplete : AutocompleteHandler
     {
@@ -23,7 +23,8 @@ namespace YuGiOh.Bot.Models.Autocompletes
             IInteractionContext context,
             IAutocompleteInteraction autocompleteInteraction,
             IParameterInfo parameter,
-            IServiceProvider services)
+            IServiceProvider services
+        )
         {
 
             var input = autocompleteInteraction.Data.Current.Value as string;
