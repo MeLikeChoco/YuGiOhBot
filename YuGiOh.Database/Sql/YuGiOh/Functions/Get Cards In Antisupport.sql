@@ -1,15 +1,15 @@
-﻿create or replace function get_cards_in_antisupport(input varchar)
-returns setof cards
-as $$
+﻿create function get_cards_in_antisupport(input character varying)
+    returns SETOF joined_cards
+    language plpgsql
+as
+$$
 begin
-	
-	return query
-		select c.* from cards c
-		inner join card_to_antisupports ca on ca.cardantisupportsid = c.antisupports
-		inner join antisupports a on a.id = ca.antisupportsid
-		where a.name ~~* input
-		order by c.name asc;
+
+    return query
+        select *
+        from joined_cards
+        where antisupportname ilike input
+        order by name;
 
 end;
-$$
-language plpgsql;
+$$;

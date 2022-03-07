@@ -1,15 +1,14 @@
-﻿create or replace function get_cards_in_support(input varchar)
-returns setof cards
-as $$
+﻿create function get_cards_in_support(input character varying) returns SETOF joined_cards
+    language plpgsql
+as
+$$
 begin
-	
-	return query
-		select c.* from cards c
-		inner join card_to_supports cs on cs.cardsupportsid = c.supports
-		inner join supports s on s.id = cs.supportsid
-		where s.name ~~* input
-		order by c.name asc;
+
+    return query
+        select *
+        from joined_cards
+        where supportname ilike input
+        order by name;
 
 end;
-$$
-language plpgsql;
+$$;

@@ -1,15 +1,15 @@
-﻿create or replace function get_cards_in_archetype(input varchar)
-returns setof cards
-as $$
-begin
-	
-	return query
-		select c.* from cards c
-		inner join card_to_archetypes ca on ca.cardarchetypesid = c.archetypes
-		inner join archetypes a on a.id = ca.archetypesid
-		where a.name ~~* input
-		order by c.name asc;
-
-end;
+﻿create function get_cards_in_archetype(input character varying)
+    returns SETOF joined_cards
+    language plpgsql
+as
 $$
-language plpgsql;
+begin
+
+    return query
+        select *
+        from joined_cards
+        where archetypename ilike input
+        order by name;
+
+end
+$$;
