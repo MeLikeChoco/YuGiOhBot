@@ -115,12 +115,7 @@ namespace YuGiOh.Bot.Modules
 
             embed = await embed.WithCardPrices(minimal, web ?? Web);
 
-            if (IsDeferred)
-                await FollowupAsync(embed: embed.Build());
-            else if (Context.Interaction.HasResponded)
-                await ReplyAsync(embed: embed.Build());
-            else
-                await RespondAsync(embed: embed.Build());
+            await RespondAsync(embed: embed.Build());
 
         }
 
