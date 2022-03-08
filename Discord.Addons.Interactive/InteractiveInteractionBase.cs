@@ -33,26 +33,6 @@ namespace Discord.Addons.Interactive
 
         }
 
-        protected override Task RespondAsync(
-            string text = null,
-            Embed[] embeds = null,
-            bool isTTS = false,
-            bool ephemeral = false,
-            AllowedMentions allowedMentions = null,
-            RequestOptions options = null,
-            MessageComponent components = null,
-            Embed embed = null
-        )
-        {
-
-            return IsDeferred ?
-                FollowupAsync(text, embeds, isTTS, ephemeral, allowedMentions, options, components, embed) :
-                Context.Interaction.HasResponded ?
-                    base.RespondAsync(text, embeds, isTTS, ephemeral, allowedMentions, options, components, embed) :
-                    ReplyAsync(text, isTTS, embed, options, allowedMentions, components: components);
-
-        }
-
         public Task<SocketMessage> NextMessageAsync(ICriterion<SocketMessage> criterion, TimeSpan? timeout = null, CancellationToken token = default)
             => Interactive.NextMessageAsync(Context, criterion, timeout, token);
 

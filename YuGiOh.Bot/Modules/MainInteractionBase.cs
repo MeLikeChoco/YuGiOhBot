@@ -69,6 +69,26 @@ namespace YuGiOh.Bot.Modules
 
         }
 
+        protected override Task RespondAsync(
+            string text = null,
+            Embed[] embeds = null,
+            bool isTTS = false,
+            bool ephemeral = false,
+            AllowedMentions allowedMentions = null,
+            RequestOptions options = null,
+            MessageComponent components = null,
+            Embed embed = null
+        )
+        {
+
+            return IsDeferred ?
+                FollowupAsync(text, embeds, isTTS, ephemeral, allowedMentions, options, components, embed) :
+                !Context.Interaction.HasResponded ?
+                    base.RespondAsync(text, embeds, isTTS, ephemeral, allowedMentions, options, components, embed) :
+                    ReplyAsync(text, isTTS, embed, options, allowedMentions, components: components);
+
+        }
+
         protected Task DirectMessageAsync(Embed embed)
             => Context.User.SendMessageAsync(embed: embed);
 
