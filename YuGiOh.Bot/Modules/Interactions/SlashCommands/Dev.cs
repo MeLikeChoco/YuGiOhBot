@@ -1,3 +1,4 @@
+using System.IO;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -39,8 +40,8 @@ public class Dev : MainInteractionBase<SocketSlashCommand>
         var json = JsonSerializer.Serialize(entity, new JsonSerializerOptions { WriteIndented = true, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
 
         Logger.Info(json);
-
-        await RespondAsync("Json printed to console");
+        await File.WriteAllTextAsync("json.json", json);
+        await RespondAsync("Json printed to console and written to file.");
 
     }
 
