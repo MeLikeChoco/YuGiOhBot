@@ -403,7 +403,7 @@ namespace YuGiOh.Common.Repositories
 
             await connection.OpenAsync().ConfigureAwait(false);
 
-            var cards = await connection.QueryProcAsync<string>("get_cards_autocomplete", new { input });
+            var cards = await connection.QueryProcAsync<string>("get_cards_autocomplete", new { input }).ConfigureAwait(false);
 
             return cards;
 
