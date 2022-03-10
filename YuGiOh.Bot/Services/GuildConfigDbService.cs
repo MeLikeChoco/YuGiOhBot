@@ -18,6 +18,9 @@ namespace YuGiOh.Bot.Services
             => _repo = repo;
 
         public async Task<GuildConfig> GetGuildConfigAsync(ulong id)
+            => await GetGuildConfigValueTaskAsync(id);
+
+        private async ValueTask<GuildConfig> GetGuildConfigValueTaskAsync(ulong id)
         {
 
             if (Cache.TryGetValue(id, out var guildConfig))
