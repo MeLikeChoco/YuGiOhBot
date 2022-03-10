@@ -1,0 +1,280 @@
+[
+  {
+    "Id": 18991,
+    "Name": "Neo-Parshath, the Sky Paladin",
+    "RealName": null,
+    "CardType": "Monster",
+    "Property": null,
+    "Types": "Fairy / Effect",
+    "Attribute": "LIGHT",
+    "Materials": null,
+    "Lore": "You can Special Summon this card (from your hand) by Tributing 1 \"Airknight Parshath\". If this card attacks a Defense Position monster, inflict piercing battle damage. If this card inflicts battle damage to your opponent: Draw 1 card. While \"The Sanctuary in the Sky\" is on the field and your LP is higher than your opponent's, this card gains ATK/DEF equal to the difference in LP.",
+    "Translations": [
+      {
+        "Id": 77991,
+        "CardId": 18991,
+        "Language": "French",
+        "Name": "Néo-Parshath, le Paladin du Ciel",
+        "Lore": "Vous pouvez Invoquer Spécialement cette carte (depuis votre main) en Sacrifiant 1 \"Parshath le Chevalier du Ciel\". Si cette carte attaque un monstre en Position de Défense, infligez des dommages de combat perçants. Si cette carte inflige des dommages de combat à votre adversaire\u00A0: piochez 1 carte. Tant que \"Le Sanctuaire Céleste\" est sur le Terrain et que vos LP sont supérieurs à ceux de votre adversaire, cette carte gagne une ATK/DEF égales à la différence en LP"
+      },
+      {
+        "Id": 77995,
+        "CardId": 18991,
+        "Language": "Italian",
+        "Name": "Neo-Parshath, Paladino del Cielo",
+        "Lore": "Puoi Evocare Specialmente questa carta (dalla tua mano) offrendo come Tributo 1 \"Parshath Cavaliere Volante\". Se questa carta attacca un mostro in Posizione di Difesa, infliggi danno da combattimento perforante. Se questa carta infligge danno da combattimento al tuo avversario: pesca 1 carta. Mentre \"Il Santuario nel Cielo\" è sul Terreno e i tuoi LP sono superiori a quelli del tuo avversario, questa carta guadagna ATK/DEF pari alla differenza dei LP."
+      },
+      {
+        "Id": 77997,
+        "CardId": 18991,
+        "Language": "Spanish",
+        "Name": "Neo-Parsath, el Paladín del Cielo",
+        "Lore": "Puedes Invocar esta carta de Modo Especial (desde tu mano), Sacrificando 1 \"Caballero del Aire Parsath\". Si esta carta ataca un monstruo en Posición de Defensa, inflige daño de batalla de penetración. Si esta carta inflige daño de batalla a tu adversario: roba 1 carta. Mientras \"El Santuario en el Cielo\" esté en el Campo y tus LP sean mayores a los de tu adversario, esta carta gana ATK/DEF igual a la diferencia entre los LP."
+      },
+      {
+        "Id": 77998,
+        "CardId": 18991,
+        "Language": "Japanese",
+        "Name": "天空勇士エンジェルブレイブネオパーシアス",
+        "Lore": "①：このカードは自分フィールドの「天空騎士パーシアス」１体をリリースして手札から特殊召喚できる。②：フィールドに「天空の聖域」が存在し、自分のＬＰが相手より多い場合、このカードの攻撃力・守備力はその差の数値分アップする。③：このカードが守備表示モンスターを攻撃した場合、その守備力を攻撃力が超えた分だけ戦闘ダメージを与える。④：このカードが相手に戦闘ダメージを与えた場合に発動する。自分はデッキから１枚ドローする。"
+      },
+      {
+        "Id": 77999,
+        "CardId": 18991,
+        "Language": "Korean",
+        "Name": "천공용사 네오파샤스",
+        "Lore": "①\u00A0: 이 카드는 자신 필드의 \"천공기사 파샤스\" 1장을 릴리스하고 패에서 특수 소환할 수 있다. ②\u00A0: 필드에 \"천공의 성역\"이 존재하고, 자신의 LP가 상대보다 많을 경우, 이 카드의 공격력 / 수비력은 그 차의 수치만큼 올린다. ③\u00A0: 이 카드가 수비 표시 몬스터를 공격했을 경우, 그 수비력을 공격력이 넘은 만큼만 전투 데미지를 준다. ④\u00A0: 이 카드가 상대에게 전투 데미지를 주었을 경우에 발동한다. 자신은 덱에서 1장 드로우한다."
+      },
+      {
+        "Id": 77993,
+        "CardId": 18991,
+        "Language": "German",
+        "Name": "Neo-Parshath, der Himmelspaladin",
+        "Lore": "Du kannst diese Karte als Spezialbeschwörung (von deiner Hand) beschwören, indem du 1 „Parshath, der Luftritter“ als Tribut anbietest. Falls diese Karte ein Monster in Verteidigungsposition angreift, füge durchschlagenden Kampfschaden zu. Falls diese Karte deinem Gegner Kampfschaden zufügt: Ziehe 1 Karte. Solange „Die Zuflucht im Himmel“ auf dem Spielfeld liegt und du mehr LP hast als dein Gegner, erhält diese Karte ATK/DEF in Höhe der Differenz der LP."
+      },
+      {
+        "Id": 77996,
+        "CardId": 18991,
+        "Language": "Portuguese",
+        "Name": "Neo-Parshath, o Paladino dos Céus",
+        "Lore": "Você pode Invocar este card por Invocação-Especial (da sua mão) ao oferecer como Tributo 1 \"Cavaleiro Celeste Parshath\". Se este card atacar um monstro em Posição de Defesa, cause dano de batalha perfurante. Se este card causar dano de batalha ao seu oponente: compre 1 card. Enquanto \"O Santuário no Céu\" estiver no campo e seus PV forem maiores que os do seu oponente, este card ganha ATK/DEF igual à diferença de PV."
+      }
+    ],
+    "Archetypes": [
+      "Parshath"
+    ],
+    "ArchetypesId": 41800,
+    "Supports": [
+      "Airknight Parshath",
+      "The Sanctuary in the Sky"
+    ],
+    "SupportsId": 41800,
+    "AntiSupports": [],
+    "AntiSupportsId": 41800,
+    "Link": 0,
+    "LinkArrows": null,
+    "Atk": "2300",
+    "Def": "2000",
+    "Level": 7,
+    "PendulumScale": -1,
+    "Rank": -1,
+    "TcgExists": true,
+    "OcgExists": true,
+    "Img": "https://ms.yugipedia.com//5/53/NeoParshaththeSkyPaladin-SR05-EN-C-1E.png",
+    "Url": "https://yugipedia.com/?curid=18991",
+    "Passcode": "12510878",
+    "OcgStatus": "Unlimited",
+    "TcgAdvStatus": "Unlimited",
+    "TcgTrnStatus": "N/A",
+    "CardTrivia": null
+  },
+  {
+    "Id": 561092,
+    "Name": "Photon Hand (card)",
+    "RealName": "Photon Hand",
+    "CardType": "Spell",
+    "Property": "Normal",
+    "Types": null,
+    "Attribute": null,
+    "Materials": null,
+    "Lore": "If you control a \"Photon\" or \"Galaxy\" monster: Pay 1000 LP, then target 1 monster your opponent controls; take control of it. If you do not control \"Galaxy-Eyes Photon Dragon\" at activation, you can only target an Xyz Monster. You can only activate 1 \"Photon Hand\" per turn.",
+    "Translations": [
+      {
+        "Id": 83407,
+        "CardId": 561092,
+        "Language": "Portuguese",
+        "Name": "Mão de Fóton",
+        "Lore": "Se você controlar um monstro \"Fóton\" ou \"Galáxia\": pague 1000 PV e, depois, escolha 1 monstro que seu oponente controla; tome o controle dele. Se você não controlar \"Dragão de Fóton de Olhos das Galáxias\" na ativação, você só pode escolher um Monstro Xyz. Você só pode ativar 1 \"Mão de Fóton\" por turno."
+      },
+      {
+        "Id": 83401,
+        "CardId": 561092,
+        "Language": "French",
+        "Name": "Main Photon",
+        "Lore": "Si vous contrôlez un monstre \"Photon\" ou \"Galactique\"\u00A0: payez 1000 LP, puis ciblez 1 monstre contrôlé par votre adversaire\u00A0; prenez-en le contrôle. Si vous ne contrôlez pas \"Dragon Photon aux Yeux Galactiques\" à l'activation, vous pouvez uniquement cibler un Monstre Xyz. Vous ne pouvez activer qu'1 \"Main Photon\" par tour."
+      },
+      {
+        "Id": 83403,
+        "CardId": 561092,
+        "Language": "German",
+        "Name": "Photonen-Hand",
+        "Lore": "Falls du ein „Photon“- oder „Galaxie“-Monster kontrollierst: Zahle 1000 LP und wähle dann 1 Monster, das dein Gegner kontrolliert; übernimm die Kontrolle darüber. Falls du bei der Aktivierung keinen „Galaxieaugen-Photonendrache“ kontrollierst, kannst du nur ein Xyz-Monster als Ziel wählen. Du kannst nur 1 „Photonen-Hand“ pro Spielzug aktivieren."
+      },
+      {
+        "Id": 83405,
+        "CardId": 561092,
+        "Language": "Italian",
+        "Name": "Mano Fotonica",
+        "Lore": "Se controlli un mostro \"Fotonico\" o \"Galattico\": paga 1000 LP, poi scegli come bersaglio 1 mostro controllato dal tuo avversario; prendine il controllo. Se non controlli \"Drago Fotonico Occhi Galattici\" all'attivazione, puoi scegliere come bersaglio solo un Mostro Xyz. Puoi attivare solo 1 \"Mano Fotonica\" per turno."
+      },
+      {
+        "Id": 83409,
+        "CardId": 561092,
+        "Language": "Spanish",
+        "Name": "Mano Fotónica",
+        "Lore": "Si controlas un monstruo \"Fotónico/a\", \"Galaxia\" o \"Galáctico/a\": paga 1000 LP, y después selecciona 1 monstruo que controle tu adversario; toma su control. Si no controlas \"Dragón Fotónico de Ojos Galácticos\" en la activación, sólo puedes seleccionar un Monstruo Xyz. Sólo puedes activar 1 \"Mano Fotónica\" por turno."
+      },
+      {
+        "Id": 83411,
+        "CardId": 561092,
+        "Language": "Japanese",
+        "Name": "フォトン・ハンド",
+        "Lore": "このカード名のカードは１ターンに１枚しか発動できない。①：自分フィールドに「フォトン」モンスターまたは「ギャラクシー」モンスターが存在する場合、１０００ＬＰを払い、相手フィールドのモンスター１体を対象として発動できる。そのモンスターのコントロールを得る。発動時に自分フィールドに「銀河眼の光子竜」が存在しない場合には、Ｘモンスターしか対象にできない。"
+      },
+      {
+        "Id": 83413,
+        "CardId": 561092,
+        "Language": "Korean",
+        "Name": "포톤 핸드",
+        "Lore": "이 카드명의 카드는 1턴에 1장밖에 발동할 수 없다. ①: 자신 필드에 \"포톤\" 몬스터 또는 \"갤럭시\" 몬스터가 존재할 경우, 1000 LP를 지불하고, 상대 필드의 몬스터 1장을 대상으로 하여 발동할 수 있다. 그 몬스터의 컨트롤을 얻는다. 발동시에 자신 필드에 \"갤럭시아이즈 포톤 드래곤\"이 존재하지 않을 경우에는, 엑시즈 몬스터밖에 대상으로 할 수 없다."
+      },
+      {
+        "Id": 83414,
+        "CardId": 561092,
+        "Language": "Simplified Chinese",
+        "Name": "光子之手",
+        "Lore": "此卡名的卡1回合仅可发动1张。①：自己场上有“光子”怪兽或“银河”怪兽存在的情况下，可支付1000LP，以对手场上的1只怪兽为对象发动。获得该怪兽的控制权。发动时自己场上没有“银河眼光子龙”存在的情况下，仅可以超量怪兽为对象。"
+      }
+    ],
+    "Archetypes": [
+      "Photon"
+    ],
+    "ArchetypesId": 42556,
+    "Supports": [
+      "Galaxy-Eyes Photon Dragon"
+    ],
+    "SupportsId": 42556,
+    "AntiSupports": [
+      "Xyz Monster"
+    ],
+    "AntiSupportsId": 42556,
+    "Link": 0,
+    "LinkArrows": null,
+    "Atk": null,
+    "Def": null,
+    "Level": -1,
+    "PendulumScale": -1,
+    "Rank": -1,
+    "TcgExists": true,
+    "OcgExists": true,
+    "Img": "https://ms.yugipedia.com//thumb/d/d1/PhotonHand-LDS2-EN-C-1E.png/600px-PhotonHand-LDS2-EN-C-1E.png",
+    "Url": "https://yugipedia.com/?curid=561092",
+    "Passcode": "15520842",
+    "OcgStatus": "Unlimited",
+    "TcgAdvStatus": "Unlimited",
+    "TcgTrnStatus": "N/A",
+    "CardTrivia": null
+  },
+  {
+    "Id": 663825,
+    "Name": "A.I. Love Fusion",
+    "RealName": null,
+    "CardType": "Spell",
+    "Property": "Normal",
+    "Types": null,
+    "Attribute": null,
+    "Materials": null,
+    "Lore": "Fusion Summon 1 Cyberse Fusion Monster from your Extra Deck, using monsters from your hand or field as Fusion Material. If you use your \"@Ignister\" monster as Fusion Material, you can also use 1 Link Monster your opponent controls as material. You can only activate 1 \"A.I. Love Fusion\" per turn.",
+    "Translations": [
+      {
+        "Id": 164,
+        "CardId": 663825,
+        "Language": "Portuguese",
+        "Name": "Fusão Amorosa I.A.",
+        "Lore": "Invoque por Invocação-Fusão 1 Monstro de Fusão Ciberso do seu Deck Adicional, usando monstros da sua mão ou do campo como Matéria de Fusão. Se você usar um monstro \"@Ignister\" seu como Matéria de Fusão, você também pode usar 1 Monstro Link que seu oponente controla como matéria. Você só podeativar 1 \"Fusão Amorosa I.A.\" por turno."
+      },
+      {
+        "Id": 175,
+        "CardId": 663825,
+        "Language": "Korean",
+        "Name": "Ai（아이）러브 융합",
+        "Lore": "이 카드명의 카드는 1턴에 1장밖에 발동할 수 없다. ①: 자신의 패 / 필드에서, 사이버스족 융합 몬스터 카드에 기재된 융합 소재 몬스터를 묘지로 보내고, 그 융합 몬스터 1장을 엑스트라 덱에서 융합 소환한다. 자신의 \"＠(앳)이그니스터\" 몬스터를 융합 소재로 할 경우, 상대 필드의 링크 몬스터도 1장까지 융합소재로 할 수 있다."
+      },
+      {
+        "Id": 158,
+        "CardId": 663825,
+        "Language": "German",
+        "Name": "A.I.-Liebesfusion",
+        "Lore": "Beschwöre 1 Cyberse-Fusionsmonster als Fusionsbeschwörung von deinem Extra Deck und verwende dafür Monster von deiner Hand oder Spielfeldseite als Fusionsmaterial. Falls du dein „@Ignister“-Monster als Fusionsmaterial verwendest, kannst du auch 1 Linkmonster, das dein Gegner kontrolliert, alsMaterial verwenden. Du kannst nur 1 „A.I.-Liebesfusion“ pro Spielzug aktivieren."
+      },
+      {
+        "Id": 168,
+        "CardId": 663825,
+        "Language": "Spanish",
+        "Name": "Fusión de A.I. Amor",
+        "Lore": "Invoca por Fusión 1 Monstruo de Fusión Ciberso desde tu Deck Extra, usando monstruos en tu mano o Campo como Material de Fusión. Si usas tu monstruo \"@Ignister\" como Material de Fusión, también puedes usar 1 Monstruo de Enlace que controle tu adversario como material. Sólo puedes activar 1 \"Fusión de A.I. Amor\" por turno."
+      },
+      {
+        "Id": 171,
+        "CardId": 663825,
+        "Language": "Japanese",
+        "Name": "Ａｉアイラブ融ゆう合ごう",
+        "Lore": "このカード名のカードは１ターンに１枚しか発動できない。①：自分の手札・フィールドから、サイバース族の融合モンスターカードによって決められた融合素材モンスターを墓地へ送り、その融合モンスター１体をＥＸデッキから融合召喚する。自分の「＠イグニスター」モンスターを融合素材とする場合、相手フィールドのリンクモンスターも１体まで融合素材とする事ができる。"
+      },
+      {
+        "Id": 161,
+        "CardId": 663825,
+        "Language": "Italian",
+        "Name": "Fusione Amore A.I.",
+        "Lore": "Evoca tramite Fusione 1 Mostro Fusione Cyberso dal tuo Extra Deck, utilizzando mostri dalla tua mano o Terreno come Materiale da Fusione. Se usi un tuo mostro \"@Ignister\" come Materiale da Fusione, puoi anche utilizzare 1 Mostro Link controllato dal tuo avversario come materiale. Puoi attivare solo 1 \"Fusione Amore A.I.\" per turno."
+      },
+      {
+        "Id": 153,
+        "CardId": 663825,
+        "Language": "French",
+        "Name": "Fusion d'Amour A.I.",
+        "Lore": "Invoquez par Fusion 1 Monstre Fusion Cyberse depuis votre Extra Deck, en utilisant des monstres depuis votre main ou Terrain comme Matériel Fusion. Si vous utilisez votre monstre \"@Ignister\" comme Matériel Fusion, vous pouvez aussi utiliser 1 Monstre Lien contrôlé par votre adversaire commeMatériel. Vous ne pouvez activer qu'1 \"Fusion d'Amour A.I.\" par tour."
+      }
+    ],
+    "Archetypes": [
+      "A.I.",
+      "Polymerization"
+    ],
+    "ArchetypesId": 34982,
+    "Supports": [
+      "Cyberse",
+      "Fusion Monster"
+    ],
+    "SupportsId": 34982,
+    "AntiSupports": [
+      "Link Monster"
+    ],
+    "AntiSupportsId": 34982,
+    "Link": 0,
+    "LinkArrows": null,
+    "Atk": null,
+    "Def": null,
+    "Level": -1,
+    "PendulumScale": -1,
+    "Rank": -1,
+    "TcgExists": true,
+    "OcgExists": true,
+    "Img": "https://ms.yugipedia.com//f/fb/AILoveFusion-MP21-EN-C-1E.png",
+    "Url": "https://yugipedia.com/?curid=663825",
+    "Passcode": "59332125",
+    "OcgStatus": "Unlimited",
+    "TcgAdvStatus": "Unlimited",
+    "TcgTrnStatus": "N/A",
+    "CardTrivia": null
+  }
+]

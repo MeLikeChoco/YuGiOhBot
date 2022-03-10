@@ -1,0 +1,277 @@
+[
+  {
+    "Input": "Endymion, the Mighty Master of Magic",
+    "Card": {
+      "Id": 589315,
+      "Name": "Endymion, the Mighty Master of Magic",
+      "RealName": null,
+      "CardType": "Monster",
+      "Property": null,
+      "Types": "Spellcaster / Pendulum / Effect",
+      "Attribute": "DARK",
+      "Materials": null,
+      "Lore": "Pendulum EffectYou can remove 6 Spell Counters from your field; Special Summon this card from the Pendulum Zone, then count the number of cards you control that can have a Spell Counter, destroy up to that many cards on the field, and if you do, place Spell Counters on this card equal to the number of cards destroyed. You can only use this effect of \"Endymion, the Mighty Master of Magic\" once per turn.Monster EffectOnce per turn, when a Spell/Trap Card or effect is activated (Quick Effect): You can return 1 card you control with a Spell Counter to the hand, and if you do, negate the activation, and if you do that, destroy it. Then, you can place the same number of Spell Counters on this card that the returned card had. While this card has a Spell Counter, your opponent cannot target it with card effects, also it cannot be destroyed by your opponent's card effects. When this card with a Spell Counter is destroyed by battle: You can add 1 Normal Spell from your Deck to your hand.",
+      "Translations": [
+        {
+          "Id": 22594,
+          "CardId": 589315,
+          "Language": "Korean",
+          "Name": "창성마도왕 엔디미온",
+          "Lore": "펜듈럼 효과\n이 카드명의 펜듈럼 효과는 1턴에 1번밖에 사용할 수 없다. ①: 자신 필드의 마력 카운터를 6개 제거하고 발동할 수 있다. 펜듈럼 존의 이 카드를 특수 소환한다. 그 후, 자신 필드의 마력 카운터를 놓을 수 있는 카드의 수까지, 필드의 카드를 골라 파괴하고, 파괴한 수만큼 이 카드에 마력 카운터를 놓는다.\n몬스터의 효과\n①: 1턴에 1번, 마법 / 함정 카드의 효과가 발동했을 때에 발동할 수 있다. 자신 필드의 마력 카운터가 놓여 있는 카드 1장을 골라 주인의 패로 되돌리고, 그 발동을 무효로 하여 파괴한다. 그 후, 패로 되돌린 그 카드에 놓여 있던 수만큼 마력 카운터를 이 카드에 놓을 수 있다. ②: 마력 카운터가 놓여 있는 이 카드는 상대 효과의 대상이 되지 않으며, 상대 효과로는 파괴되지 않는다. ③: 마력 카운터가 놓여진 이 카드가 전투로 파괴되었을 때에 발동할 수 있다. 덱에서 일반 마법 카드 1장을 패에 넣는다."
+        },
+        {
+          "Id": 22584,
+          "CardId": 589315,
+          "Language": "French",
+          "Name": "Endymion, le Puissant Maître de Magie",
+          "Lore": "Effet Pendule\nVous pouvez retirer 6 Compteurs Magie depuis votre Terrain\u00A0; Invoquez Spécialement cette carte depuis la Zone Pendule, puis comptez le nombre de cartes que vous contrôlez qui peuvent avoir un Compteur Magie, détruisez max. autant de cartes sur le Terrain, et si vous le faites, placez un nombre de Compteurs Magie sur cette carte égal au nombre de cartes détruites. Vous ne pouvez utiliser cet effet de \"Endymion, le Puissant Maître de Magie\" qu'une fois par tour.\nEffet de Monstre\nUne fois par tour, lorsqu'une Carte Magie/Piège ou effet de Magie/Piège est activé (Effet Rapide)\u00A0: vous pouvez renvoyer 1 carte que vous contrôlez avec un Compteur Magie à la main, et si vous le faites, annulez l'activation, et si vous faites ça, détruisez-la. Puis, vous pouvez placer le même nombre de Compteurs Magie que la carte renvoyée avait sur cette carte. Tant que cette carte a un Compteur Magie, votre adversaire ne peut pas la cibler avec des effets de carte, et aussi, elle ne peut pas être détruite par des effets de carte de votre adversaire. Lorsque cette carte avec un Compteur Magie est détruite au combat\u00A0: vous pouvez ajouter 1 Magie Normale depuis votre Deck à votre main."
+        },
+        {
+          "Id": 22586,
+          "CardId": 589315,
+          "Language": "German",
+          "Name": "Endymion, der mächtige Meister der Magie",
+          "Lore": "Pendeleffekt\nDu kannst 6 Zauberzählmarken von deiner Spielfeldseite entfernen; beschwöre diese Karte als Spezialbeschwörung von der Pendelzone, dann zähle die Anzahl der Karten, die du kontrollierst und die eine Zauberzählmarke haben können, zerstöre bis zu so viele Karten auf dem Spielfeld und falls du dies tust, lege Zauberzählmarken in Höhe der Anzahl der zerstörten Karten auf diese Karte. Du kannst diesen Effekt von „Endymion, der mächtige Meister der Magie“ nur einmal pro Spielzug verwenden.\nMonstereffekt\nEinmal pro Spielzug, wenn eine Zauber-/Fallenkarte oder ein Zauber-/Falleneffekt aktiviert wird (Schnelleffekt): Du kannst 1 Karte mit einer Zauberzählmarke, die du kontrollierst, auf die Hand zurückgeben und falls du dies tust, annulliere die Aktivierung und falls du dies tust, zerstöre sie. Dann kannst du dieselbe Anzahl Zauberzählmarken, die auf der zurückgegebenen Karte lagen, auf diese Karte legen. Solange auf dieser Karte eine Zauberzählmarke liegt, kann dein Gegner sie nicht als Ziel für Karteneffekte wählen, zusätzlich kann sie nicht durch Karteneffekte deines Gegners zerstört werden. Wenn diese Karte mit einer Zauberzählmarke durch Kampf zerstört wird: Du kannst deiner Hand 1 Normalen Zauber von deinem Deck hinzufügen."
+        },
+        {
+          "Id": 22588,
+          "CardId": 589315,
+          "Language": "Italian",
+          "Name": "Endymion, il Magnifico Maestro della Magia",
+          "Lore": "Effetto Pendulum\nPuoi rimuovere 6 Segnalini Magia dal tuo Terreno; Evoca Specialmente questa carta dalla Zona Pendulum, poi conta il numero di carte che controlli che possono avere un Segnalino Magia, distruggi fino a quel numero di carte sul Terreno e, se lo fai, metti su questa carta Segnalini Magia pari al numero di carte distrutte. Puoi utilizzare questo effetto di \"Endymion, il Magnifico Maestro della Magia\" una sola volta per turno.\nEffetto Mostro\nUna volta per turno, quando viene attivata una Carta Magia/Trappola o un suo effetto (Effetto Rapido): puoi far ritornare nella mano 1 carta che controlli con un Segnalino Magia e, se lo fai, annulla l'attivazione e, se fai quello, distruggila. Poi, puoi mettere su questa carta lo stesso numero di Segnalini Magia che aveva la carta fatta ritornare. Mentre questa carta ha un Segnalino Magia, il tuo avversario non può sceglierla come bersaglio con gli effetti delle carte, inoltre essa non può essere distrutta dagli effetti delle carte del tuo avversario. Quando questa carta con un Segnalino Magia viene distrutta in battaglia: puoi aggiungere 1 Magia Normale dal tuo Deck alla tua mano."
+        },
+        {
+          "Id": 22589,
+          "CardId": 589315,
+          "Language": "Portuguese",
+          "Name": "Endymion, o Poderoso Mestre da Magia",
+          "Lore": "Efeito de Pêndulo\nVocê pode remover 6 Marcadores de Magia do seu campo; Invoque este card por Invocação-Especial da Zona de Pêndulo e, depois, conte o número de cards que você controla que podem ter Marcadores de Magia, destrua até esse número de cards no campo e, se isso acontecer, coloque Marcadores de Magia neste card igual ao número de cards destruídos. Você só pode usar este efeito de \"Endymion, o Poderoso Mestre da Magia\" uma vez por turno.\nEfeito de Monstro\nUma vez por turno, quando um Card ou efeito de Magia/Armadilha for ativado (Efeito Rápido): você pode devolver para a mão 1 card que você controla com um Marcador de Magia e, se isso acontecer, negue a ativação e, se isso acontecer, destrua-o. Depois, você pode colocar neste card o mesmo número de Marcadores de Magia que o card devolvido tinha. Enquanto este card tiver um Marcador de Magia, seu oponente não pode escolher este card como alvo de efeitos de card e, além disso, ele não pode ser destruído pelos efeitos de card do seu oponente. Quando este card com um Marcador de Magia for destruído em batalha: você pode adicionar 1 Magia Normal do seu Deck à sua mão."
+        },
+        {
+          "Id": 22590,
+          "CardId": 589315,
+          "Language": "Spanish",
+          "Name": "Endimión, el Poderoso Maestro de Magia",
+          "Lore": "Efecto de Péndulo\nPuedes retirar 6 Contadores Mágicos en tu Campo; Invoca esta carta de Modo Especial desde la Zona de Péndulo, y después cuenta el número de cartas que controlas que puedan tener un Contador Mágico, destruye hasta esa cantidad de cartas en el Campo, y, si lo haces, pon en esta carta tantos Contadores Mágicos como cartas destruidas. Sólo puedes usar este efecto de \"Endimión, el Poderoso Maestro de Magia\" una vez por turno.\nEfecto de Monstruo\nUna vez por turno, cuando una Carta Mágica/de Trampa o efecto es activado (Efecto Rápido): puedes devolver a la mano 1 carta que controles con un Contador Mágico y, si lo haces, niega la activación, y, si haces eso, destrúyela. Después, puedes poner en esta carta la misma cantidad de Contadores Mágicos que tenía la carta devuelta. Mientras esta carta tenga un Contador Mágico, tu adversario no puede seleccionarla con efectos de cartas, y además no puede ser destruida por los efectos de cartas de tu adversario. Cuando esta carta con un Contador Mágico es destruida en batalla: puedes añadir a tu mano 1 Mágica Normal en tu Deck."
+        },
+        {
+          "Id": 22592,
+          "CardId": 589315,
+          "Language": "Japanese",
+          "Name": "創そう聖せい魔ま導どう王おう エンディミオン",
+          "Lore": "Ｐ（ペンデュラム）効（こう）果（か）\nこのカード名のＰ効果は１ターンに１度しか使用できない。①：自分フィールドの魔力カウンターを６つ取り除いて発動できる。Ｐゾーンのこのカードを特殊召喚する。その後、自分フィールドの魔力カウンターを置く事ができるカードの数まで、フィールドのカードを選んで破壊し、破壊した数だけこのカードに魔力カウンターを置く。\nモンスターの効（こう）果（か）\n①：１ターンに１度、魔法・罠カードの効果が発動した時に発動できる。自分フィールドの魔力カウンターが置かれているカード１枚を選んで持ち主の手札に戻し、その発動を無効にし破壊する。その後、手札に戻したそのカードに置かれていた数だけ魔力カウンターをこのカードに置く事ができる。②：魔力カウンターが置かれているこのカードは相手の効果の対象にならず、相手の効果では破壊されない。③：魔力カウンターが置かれたこのカードが戦闘で破壊された時に発動できる。デッキから通常魔法カード１枚を手札に加える。"
+        }
+      ],
+      "Archetypes": [
+        "Endymion",
+        "Prophecy"
+      ],
+      "ArchetypesId": 38157,
+      "Supports": [
+        "Normal Spell Card"
+      ],
+      "SupportsId": 38157,
+      "AntiSupports": [],
+      "AntiSupportsId": 38157,
+      "Link": 0,
+      "LinkArrows": null,
+      "Atk": "2800",
+      "Def": "1700",
+      "Level": 7,
+      "PendulumScale": 8,
+      "Rank": -1,
+      "TcgExists": true,
+      "OcgExists": true,
+      "Img": "https://ms.yugipedia.com//thumb/4/40/EndymiontheMightyMasterofMagic-SR08-EN-UR-1E.png/600px-EndymiontheMightyMasterofMagic-SR08-EN-UR-1E.png",
+      "Url": "https://yugipedia.com/?curid=589315",
+      "Passcode": "3611830",
+      "OcgStatus": "Unlimited",
+      "TcgAdvStatus": "Unlimited",
+      "TcgTrnStatus": "N/A",
+      "CardTrivia": null
+    }
+  },
+  {
+    "Input": "D/D/D Deviser King Deus Machinex",
+    "Card": {
+      "Id": 834812,
+      "Name": "D/D/D Deviser King Deus Machinex",
+      "RealName": null,
+      "CardType": "Monster",
+      "Property": null,
+      "Types": "Fiend / Xyz / Pendulum / Effect",
+      "Attribute": "DARK",
+      "Materials": null,
+      "Lore": "Pendulum Effect\nWhile you have a card in your other Pendulum Zone: You can target 1 Pendulum Monster you control or in your GY; Special Summon the card in your other Pendulum Zone, and if you do, place that targeted Pendulum Monster in your Pendulum Zone. You can only use this effect of \"D/D/D Deviser King Deus Machinex\" once per turn.\nMonster Effect\n2 Level 10 Fiend monsters\\nYou can also Xyz Summon this card by using a \"D/D/D\" monster you control as material. (Transfer its materials to this card.) You can only control 1 \"D/D/D Deviser King Deus Machinex\" in your Monster Zone. Once per Chain, when a Monster Card your opponent controls activates its effect (Quick Effect): You can either detach 2 materials from this card, or destroy 1 \"Dark Contract\" card you control, and if you do, attach that opponent's card to this card as material. Once per turn, during your Standby Phase: You can place this card in your Pendulum Zone.",
+      "Translations": [
+        {
+          "Id": 14786,
+          "CardId": 834812,
+          "Language": "Italian",
+          "Name": "D/D/D Deus Machinex Re dell'Ideazione",
+          "Lore": "Effetto Pendulum\nMentre hai una carta nella tua altra Zona Pendulum: puoi scegliere come bersaglio 1 Mostro Pendulum che controlli o nel tuo Cimitero; Evoca Specialmente la carta nella tua altra Zona Pendulum e, se lo fai, metti quel Mostro Pendulum scelto come bersaglio nella tua Zona Pendulum. Puoi utilizzare questo effetto di \"D/D/D Deus Machinex Re dell'Ideazione\" una sola volta per turno.\nEffetto Mostro\n2 mostri Demone di Livello 10Puoi anche Evocare Xyz questa carta utilizzando un mostro \"D/D/D\" che controlli come materiale. (Trasferisci i suoi materiali su questa carta.) Puoi controllare solo 1 \"D/D/D Deus Machinex Re dell'Ideazione\" nella tua Zona Mostri. Una volta per Catena, quando una Carta Mostro controllata dal tuo avversario attiva il suo effetto (Effetto Rapido): puoi staccare 2 materiali da questa carta, oppure distruggere 1 carta \"Contratto Oscuro\" che controlli, e, se lo fai, attacca quella carta dell'avversario a questa carta come materiale. Una volta per turno, durante la tua Standby Phase: puoi mettere questa carta nella tua Zona Pendulum."
+        },
+        {
+          "Id": 14787,
+          "CardId": 834812,
+          "Language": "Portuguese",
+          "Name": "D/D/D Deus Machinex, o Rei Inventor",
+          "Lore": "Efeito de Pêndulo\nEnquanto você tiver um card na sua outra Zona de Pêndulo: você pode escolher 1 Monstro Pêndulo que você controla ou no seu Cemitério; Invoque por Invocação-Especial o card na sua outra Zona de Pêndulo e, se isso acontecer, coloque esse Monstro Pêndulo alvo na sua Zona de Pêndulo. Você só pode usar este efeito de \"D/D/D Deus Machinex, o Rei Inventor\" uma vez por turno.\nEfeito de Monstro\n2 monstros Demônio de Nível 10Você também pode Invocar este card por Invocação-Xyz usando um monstro \"D/D/D\" que você controla como matéria. (Transfira as matérias dele para este card.) Você só pode controlar 1 \"D/D/D Deus Machinex, o Rei Inventor\" na sua Zona de Monstros. Uma vez por Corrente, quando um Card de Monstro que seu oponente controla ativar seu efeito (Efeito Rápido): você pode desassociar 2 matérias deste card, ou destruir 1 card \"Pacto Obscuro\" que você controla e, se isso acontecer, associe esse card do oponente a este card como matéria. Uma vez por turno, durante sua Fase de Apoio: você pode colocar este card na sua Zona de Pêndulo."
+        },
+        {
+          "Id": 14785,
+          "CardId": 834812,
+          "Language": "German",
+          "Name": "D/D/D-Erfinderkönig Deus Machinex",
+          "Lore": "Pendeleffekt\nSolange du eine Karte in deiner anderen Pendelzone hast: Du kannst 1 Pendelmonster wählen, das du kontrollierst oder das sich in deinem Friedhof befindet; beschwöre die Karte in deiner anderen Pendelzone als Spezialbeschwörung und falls du dies tust, lege das als Ziel gewählte Pendelmonster in deine Pendelzone. Du kannst diesen Effekt von „D/D/D-Erfinderkönig Deus Machinex“ nur einmal pro Spielzug verwenden.\nMonstereffekt\n2 Unterweltler-Monster der Stufe 10Du kannst diese Karte auch als Xyz-Beschwörung beschwören, indem du ein „D/D/D“-Monster, das du kontrollierst, als das Material verwendest. (Transferiere sein Material an diese Karte.) Du kannst nur 1 „D/D/D-Erfinderkönig Deus Machinex“ in deiner Monsterzone kontrollieren. Einmal pro Kette, wenn der Effekt einer Monsterkarte, die dein Gegner kontrolliert, aktiviert wird (Schnelleffekt): Du kannst entweder 2 Material von dieser Karte abhängen oder 1 „Dunkler Vertrag“-Karte, die du kontrollierst, zerstören und falls du dies tust, hänge die Karte des Gegners als Material an diese Karte an. Einmal pro Spielzug, während deiner Standby Phase: Du kannst diese Karte in deine Pendelzone legen."
+        },
+        {
+          "Id": 14789,
+          "CardId": 834812,
+          "Language": "Japanese",
+          "Name": "ＤディーＤディーＤディー赦しゃ俿ち王おうデス・マキナ",
+          "Lore": "Ｐ（ペンデュラム）効（こう）果（か）\nこのカード名のＰ効果は１ターンに１度しか使用できない。①：もう片方の自分のＰゾーンにカードが存在する場合、自分のフィールド・墓地のＰモンスター１体を対象として発動できる。もう片方の自分のＰゾーンのカードを特殊召喚し、対象のＰモンスターを自分のＰゾーンに置く。\nモンスターの効（こう）果（か）\n悪魔族レベル１０モンスター×２このカードは自分フィールドの「ＤＤＤ」モンスターの上に重ねてＸ召喚する事もできる。①：「ＤＤＤ赦俿王デス・マキナ」は自分のモンスターゾーンに１体しか表側表示で存在できない。②：相手フィールドのモンスターカードが効果を発動した時に発動できる（同一チェーン上では１度まで）。このカードのＸ素材を２つ取り除くか自分フィールドの「契約書」カード１枚を破壊し、その相手のカードをこのカードのＸ素材とする。③：自分スタンバイフェイズに発動できる。このカードを自分のＰゾーンに置く。"
+        },
+        {
+          "Id": 14790,
+          "CardId": 834812,
+          "Language": "Korean",
+          "Name": "DDD 사치왕 데스 마키나",
+          "Lore": "펜듈럼 효과\n이 카드명의 펜듈럼 효과는 1턴에 1번밖에 사용할 수 없다. ①: 다른 한쪽 자신의 펜듈럼 존에 카드가 존재할 경우, 자신의 필드 / 묘지의 펜듈럼 몬스터 1장을 대상으로 하고 발동할 수 있다. 다른 한쪽 자신의 펜듈럼 존의 카드를 특수 소환하고, 대상의 펜듈럼 몬스터를 자신의 펜듈럼 존에 놓는다.\n몬스터의 효과\n악마족 레벨 10 몬스터 × 2이 카드는 자신 필드의 \"DDD(디디디)\" 몬스터 위에 겹쳐 엑시즈 소환할 수도 있다. ①: \"DDD(디디디) 사치왕 데스 마키나\"는 자신 몬스터 존에 1장밖에 앞면 표시로 존재할 수 없다. ②: 상대 필드의 몬스터 카드가 효과를 발동했을 때에 발동할 수 있다(동일한 체인 위에서는 1번까지). 이 카드의 엑시즈 소재를 2개 제거하거나 자신 필드의 \"계약서\" 카드 1장을 파괴하고, 그 상대의 카드를 이 카드의 엑시즈 소재로 한다. ③: 자신 스탠바이 페이즈에 발동할 수 있다. 이 카드를 자신의 펜듈럼 존에 놓는다."
+        },
+        {
+          "Id": 14784,
+          "CardId": 834812,
+          "Language": "French",
+          "Name": "D/D/D Roi Planificateur Deus Machinex",
+          "Lore": "Effet Pendule\nTant que vous avez une carte dans votre autre Zone Pendule\u00A0: vous pouvez cibler 1 Monstre Pendule que vous contrôlez ou dans votre Cimetière\u00A0; Invoquez Spécialement la carte dans votre autre Zone Pendule, et si vous le faites, placez le Monstre Pendule ciblé dans votre Zone Pendule. Vous ne pouvez utiliser cet effet de \"D/D/D Roi Planificateur Deus Machinex\" qu'une fois par tour.\nEffet de Monstre\n2 monstres Démon de Niveau 10Vous pouvez aussi Invoquer par Xyz cette carte en utilisant un monstre \"D/D/D\" que vous contrôlez comme Matériel. (Transférez ses Matériels à cette carte.) Vous ne pouvez contrôler qu'1 \"D/D/D Roi Planificateur Deus Machinex\" dans votre Zone Monstre. Une fois par Chaîne, lorsqu'une Carte Monstre contrôlée par votre adversaire active son effet (Effet Rapide)\u00A0: vous pouvez soit détacher 2 Matériels de cette carte soit détruire 1 carte \"Contrat des Ténèbres\" que vous contrôlez, et si vous le faites, attachez la carte de l'adversaire à cette carte comme Matériel. Une fois par tour, durant votre Standby Phase\u00A0: vous pouvez placer cette carte dans votre Zone Pendule."
+        },
+        {
+          "Id": 14788,
+          "CardId": 834812,
+          "Language": "Spanish",
+          "Name": "D/D/D Deus Machinex, Rey Inventor",
+          "Lore": "Efecto de Péndulo\nMientras tengas una carta en tu otra Zona de Péndulo: puedes seleccionar 1 Monstruo de Péndulo que controles o en tu Cementerio; Invoca de Modo Especial la carta en tu otra Zona de Péndulo y, si lo haces, pon ese Monstruo de Péndulo seleccionado en tu Zona de Péndulo. Sólo puedes usar este efecto de \"D/D/D Deus Machinex, Rey Inventor\" una vez por turno.\nEfecto de Monstruo\n2 monstruos Demonio de Nivel 10También puedes Invocar Xyz esta carta usando un monstruo \"D/D/D\" que controles como material. (Transfiere sus materiales a esta carta). Sólo puedes controlar 1 \"D/D/D Deus Machinex, Rey Inventor\" en tu Zona de Monstruos. Una vez por Cadena, cuando una Carta de Monstruo que controle tu adversario active su efecto (Efecto Rápido): puedes desacoplar 2 materiales de esta carta, o destruir 1 carta \"Contrato Oscuro\" que controles y, si lo haces, acopla esa carta del adversario a esta carta como material. Una vez por turno, durante tu Standby Phase: puedes poner esta carta en tu Zona de Péndulo."
+        }
+      ],
+      "Archetypes": [
+        "D/D",
+        "D/D/D"
+      ],
+      "ArchetypesId": 37053,
+      "Supports": [
+        "Pendulum Monster",
+        "Fiend"
+      ],
+      "SupportsId": 37053,
+      "AntiSupports": [],
+      "AntiSupportsId": 37053,
+      "Link": 0,
+      "LinkArrows": null,
+      "Atk": "3000",
+      "Def": "3000",
+      "Level": -1,
+      "PendulumScale": 10,
+      "Rank": 10,
+      "TcgExists": true,
+      "OcgExists": true,
+      "Img": "https://ms.yugipedia.com//7/75/DDDDeviserKingDeusMachinex-BACH-EN-UR-1E.png",
+      "Url": "https://yugipedia.com/?curid=834812",
+      "Passcode": "46593546",
+      "OcgStatus": "Unlimited",
+      "TcgAdvStatus": "Unlimited",
+      "TcgTrnStatus": "N/A",
+      "CardTrivia": null
+    }
+  },
+  {
+    "Input": "Astrograph Sorcerer",
+    "Card": {
+      "Id": 404020,
+      "Name": "Astrograph Sorcerer",
+      "RealName": null,
+      "CardType": "Monster",
+      "Property": null,
+      "Types": "Spellcaster / Pendulum / Effect",
+      "Attribute": "DARK",
+      "Materials": null,
+      "Lore": "Pendulum EffectDuring your Main Phase: You can destroy this card, and if you do, take 1 \"Stargazer Magician\" from your hand or Deck, and either place it in your Pendulum Zone or Special Summon it. You can only use this effect of \"Astrograph Sorcerer\" once per turn.Monster EffectIf a card(s) you control is destroyed by battle or card effect: You can Special Summon this card from your hand, then you can choose 1 monster in the Graveyard, Extra Deck, or that is banished, and that was destroyed this turn, and add 1 monster with the same name from your Deck to your hand. You can banish this card you control, plus 4 monsters from your hand, field, and/or Graveyard (1 each with \"Pendulum Dragon\", \"Xyz Dragon\", \"Synchro Dragon\", and \"Fusion Dragon\" in their names); Special Summon 1 \"Supreme King Z-ARC\" from your Extra Deck. (This is treated as a Fusion Summon.)",
+      "Translations": [
+        {
+          "Id": 4341,
+          "CardId": 404020,
+          "Language": "French",
+          "Name": "Sorcier Astrographe",
+          "Lore": "Effet Pendule\nDurant votre Main Phase\u00A0: vous pouvez détruire cette carte, et si vous le faites, prenez 1 \"Magicien Observateur des Étoiles\" depuis votre main ou Deck, et soit placez-le dans votre Zone Pendule soit Invoquez-le Spécialement. Vous ne pouvez utiliser cet effet de \"Sorcier Astrographe\" qu'une fois par tour.\nEffet de Monstre\nSi une ou plusieurs cartes que vous contrôlez sont détruites au combat ou par un effet de carte\u00A0: vous pouvez Invoquer Spécialement cette carte depuis votre main, puis vous pouvez choisir 1 monstre dans le Cimetière, Extra Deck ou qui est banni, et qui a été détruit ce tour, et ajoutez 1 monstre du même nom depuis votre Deck à votre main. Vous pouvez bannir cette carte que vous contrôlez, plus 1 monstre \"Dragon Pendule\", 1 monstre \"Dragon Xyz\", 1 monstre \"Dragon Synchro\" et 1 monstre \"Dragon Fusion\" depuis votre main, Terrain et/ou Cimetière\u00A0; Invoquez Spécialement 1 \"Z-ARC, Roi Suprême\" depuis votre Extra Deck. (Ceci est traité comme une Invocation Fusion.)"
+        },
+        {
+          "Id": 4342,
+          "CardId": 404020,
+          "Language": "German",
+          "Name": "Astrografzauberer",
+          "Lore": "Pendeleffekt\nWährend deiner Main Phase: Du kannst diese Karte zerstören und falls du dies tust, nimm 1 „Sterndeutender Magier“ von deiner Hand oder deinem Deck und lege ihn entweder in deine Pendelzone oder beschwöre ihn als Spezialbeschwörung. Du kannst diesen Effekt von „Astrografzauberer“ nur einmal pro Spielzug verwenden.\nMonstereffekt\nFalls eine oder mehr Karten, die du kontrollierst, durch Kampf oder einen Karteneffekt zerstört werden: Du kannst diese Karte als Spezialbeschwörung von deiner Hand beschwören, dann kannst du 1 Monster im Friedhof, im Extra Deck oder das verbannt ist, und das in diesem Spielzug zerstört wurde, bestimmen und deiner Hand 1 Monster mit demselben Namen von deinem Deck hinzufügen. Du kannst diese Karte, die du kontrollierst, plus 4 Monster von deiner Hand, deiner Spielfeldseite und/oder deinem Friedhof (jeweils 1 mit „Pendeldrache“, „Xyz-Drache“, „Synchrodrache“ und „Fusionsdrache“ in ihren Namen) verbannen; beschwöre 1 „Oberster König Z-ARC“ als Spezialbeschwörung von deinem Extra Deck. (Dies wird als Fusionsbeschwörung behandelt.)"
+        },
+        {
+          "Id": 4344,
+          "CardId": 404020,
+          "Language": "Portuguese",
+          "Name": "Feiticeiro Astrógrafo",
+          "Lore": "Efeito de Pêndulo\nDurante sua Fase Principal: você pode destruir este card e, se isso acontecer, pegue 1 \"Mago Observador das Estrelas\" da sua mão ou do Deck e coloque-o na sua Zona de Pêndulo ou Invoque-o por Invocação-Especial. Você só pode usar este efeito de \"Feiticeiro Astrógrafo\" uma vez por turno.\nEfeito de Monstro\nSe um ou mais cards que você controla forem destruídos em batalha ou por um efeito de card: você pode Invocar este card por Invocação-Especial da sua mão e, depois, você pode selecionar 1 monstro no Cemitério, Deck Adicional ou que estiver banido, que tenha sido destruído neste turno e adicionar 1 monstro com o mesmo nome do seu Deck à sua mão. Você pode banir este card que você controla, mais 4 monstros da sua mão, do campo e/ou do Cemitério (1 de cada com \"Dragão Pêndulo\", \"Dragão Xyz\", \"Dragão Sincro\" e \"Dragão Fusão\" em seus nomes); Invoque por Invocação-Especial 1 \"Rei Supremo Z-ARC\" do seu Deck Adicional. (Esta é considerado uma Invocação-Fusão.)"
+        },
+        {
+          "Id": 4343,
+          "CardId": 404020,
+          "Language": "Italian",
+          "Name": "Stregone Astrografo",
+          "Lore": "Effetto Pendulum\nDurante la tua Main Phase: puoi distruggere questa carta e, se lo fai, prendi 1 \"Mago Mirastelle\" dalla tua mano o Deck e mettilo nella tua Zona Pendulum oppure Evocalo Specialmente. Puoi utilizzare questo effetto di \"Stregone Astrografo\" una sola volta per turno.\nEffetto Mostro\nSe una o più carte che controlli vengono distrutte in battaglia o dall'effetto di una carta: puoi Evocare Specialmente questa carta dalla tua mano, poi puoi selezionare 1 mostro nel Cimitero, Extra Deck o che è bandito e che è stato distrutto in questo turno, e aggiungere 1 mostro con lo stesso nome dal tuo Deck alla tua mano. Puoi bandire questa carta che controlli, più 4 mostri dalla tua mano, Terreno e/o Cimitero (1 ciascuno con \"Drago Pendulum\", \"Drago Xyz\", \"Drago Synchro\" e \"Drago Fusione\" nei loro nomi); Evoca Specialmente 1 \"Re Supremo Z-ARC\" dal tuo Extra Deck. (Questa viene considerata come un'Evocazione tramite Fusione.)"
+        },
+        {
+          "Id": 4345,
+          "CardId": 404020,
+          "Language": "Spanish",
+          "Name": "Hechicero del Astrógrafo",
+          "Lore": "Efecto de Péndulo\nDurante tu Main Phase: puedes destruir esta carta y, si lo haces, toma 1 \"Mago Contemplaestrellas\" en tu mano o Deck, y ponlo ya sea en tu Zona de Péndulo o Invócalo de Modo Especial. Sólo puedes usar este efecto de \"Hechicero del Astrógrafo\" una vez por turno.\nEfecto de Monstruo\nSi una o más cartas que controlas son destruidas en batalla o por efecto de una carta: puedes Invocar esta carta de Modo Especial desde tu mano, y después puedes elegir 1 monstruo en el Cementerio, Deck Extra o que esté desterrado, y que haya sido destruido este turno, y añadir a tu mano 1 monstruo con el mismo nombre en tu Deck. Puedes desterrar esta carta que controlas, más 4 monstruos en tu mano, Campo y/o Cementerio (1 de cada \"Dragón de Péndulo\", \"Dragón Xyz\", \"Dragón Sincro\" y \"Dragón de Fusión\" en sus nombres); Invoca de Modo Especial 1 \"Rey Supremo Z-ARC\" en tu Deck Extra. (Ésta es tratada como una Invocación por Fusión)."
+        },
+        {
+          "Id": 4346,
+          "CardId": 404020,
+          "Language": "Japanese",
+          "Name": "アストログラフ・マジシャン",
+          "Lore": "Ｐ（ペンデュラム）効（こう）果（か）\nこのカード名のＰ効果は１ターンに１度しか使用できない。①：自分メインフェイズに発動できる。このカードを破壊し、手札・デッキから「星読みの魔術師」１体を選び、自分のＰゾーンに置くか特殊召喚する。\nモンスターの効（こう）果（か）\n①：自分フィールドのカードが戦闘・効果で破壊された場合に発動できる。このカードを手札から特殊召喚する。その後、このターンに破壊された自分または相手のモンスター１体を選び、その同名モンスター１体をデッキから手札に加える事ができる。②：自分の手札・フィールド・墓地の、「ペンデュラム・ドラゴン」「エクシーズ・ドラゴン」「シンクロ・ドラゴン」「フュージョン・ドラゴン」モンスター１体ずつと、フィールドのこのカードを除外して発動できる。「覇王龍ズァーク」１体を融合召喚扱いとしてＥＸデッキから特殊召喚する。"
+        },
+        {
+          "Id": 4347,
+          "CardId": 404020,
+          "Language": "Korean",
+          "Name": "아스트로그래프 매지션",
+          "Lore": "펜듈럼 효과\n이 카드명의 펜듈럼 효과는 1턴에 1번밖에 사용할 수 없다. ①: 자신 메인 페이즈에 발동할 수 있다. 이 카드를 파괴하고, 패 / 덱에서 \"별을 읽는 마술사\" 1장을 골라, 자신의 펜듈럼 존에 놓거나 특수 소환한다.\n몬스터의 효과\n①: 자신 필드의 카드가 전투 / 효과로 파괴되었을 경우에 발동할 수 있다. 이 카드를 패에서 특수 소환한다. 그 후, 이 턴에 파괴된 자신 또는 상대의 몬스터 1장을 고르고, 그와 같은 이름의 몬스터 1장을 덱에서 패에 넣을 수 있다. ②: 자신의 패 / 필드 / 묘지의, \"펜듈럼 드래곤\" \"엑시즈 드래곤\" \"싱크로 드래곤\" \"퓨전 드래곤\" 몬스터 1장씩과, 필드의 이 카드를 제외하고 발동할 수 있다. \"패왕룡 즈아크\" 1장을 융합 소환으로 취급하고 엑스트라 덱에서 특수 소환한다."
+        }
+      ],
+      "Archetypes": [],
+      "ArchetypesId": 35586,
+      "Supports": [
+        "Stargazer Magician",
+        "Supreme King Z-ARC"
+      ],
+      "SupportsId": 35586,
+      "AntiSupports": [],
+      "AntiSupportsId": 35586,
+      "Link": 0,
+      "LinkArrows": null,
+      "Atk": "2500",
+      "Def": "2000",
+      "Level": 7,
+      "PendulumScale": 1,
+      "Rank": -1,
+      "TcgExists": true,
+      "OcgExists": true,
+      "Img": "https://ms.yugipedia.com//8/87/AstrographSorcerer-PEVO-EN-UR-1E.png",
+      "Url": "https://yugipedia.com/?curid=404020",
+      "Passcode": "76794549",
+      "OcgStatus": "Limited",
+      "TcgAdvStatus": "Limited",
+      "TcgTrnStatus": "N/A",
+      "CardTrivia": null
+    }
+  }
+]

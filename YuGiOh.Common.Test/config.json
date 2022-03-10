@@ -1,0 +1,6 @@
+{
+  "Db Connection Strings": {
+    "YuGiOh": "Server=db;Port=5432;Database=yugioh;User Id=postgres;Password=testing",
+    "Guilds": "Server=db;Port=5432;Database=guilds;User Id=postgres;Password=testing"
+  }
+}

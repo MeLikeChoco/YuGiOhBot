@@ -1,0 +1,31 @@
+services:
+  db:
+    container_name: YuGiOhBot_postgres
+    image: postgres:14-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_PASSWORD=testing
+      - PGDATA=pgdata
+      #locale doesn't matter for alpine, it's a pain to override
+    #      - LANG=en_US.utf-8
+    restart: always
+    volumes:
+      - ./yugioh.sql:/docker-entrypoint-initdb.d/yugioh.sql
+      - ./guilds.sql:/docker-entrypoint-initdb.d/guilds.sql
+  dotnet:
+    container_name: YuGiOhBot_dotnet
+    image: mcr.microsoft.com/dotnet/sdk:6.0.200-alpine3.14-amd64
+    depends_on:
+      - db
+    volumes:
+      - .:/src
+    working_dir: /src
+#        command: sh -c "dotnet test"
+#    entrypoint: "dotnet test --verbosity normal --no-build" #build disabled until Rider recognizes artifacts/changes built in Docker
+    entrypoint: "dotnet test --verbosity normal"
+#volumes:
+#  postgres-data:
+networks:
+  default:
+    driver: bridge
