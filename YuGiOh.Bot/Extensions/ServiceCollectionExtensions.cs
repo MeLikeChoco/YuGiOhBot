@@ -29,6 +29,7 @@ public static class ServiceCollectionExtensions
 
         ConnectionTimeout = (int) TimeSpan.FromMinutes(1).TotalMilliseconds, //had to include this as my bot got bigger and there were more guilds to connect to per shard
         LogLevel = LogSeverity.Verbose,
+        SuppressUnknownDispatchWarnings = true,
         MessageCacheSize = 20,
         TotalShards = 1
 
