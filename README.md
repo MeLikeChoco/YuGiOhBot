@@ -1,8 +1,6 @@
-# YuGiOhBot
+# YuGiOhBot &nbsp;&nbsp;[![CI](https://github.com/MeLikeChoco/YuGiOhBot/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/MeLikeChoco/YuGiOhBot/actions/workflows/ci.yml)
 
 Discord Bot using Discord.NET library. Deals with YuGiOh material.
-
-[![CI](https://github.com/MeLikeChoco/YuGiOhBot/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/MeLikeChoco/YuGiOhBot/actions/workflows/ci.yml)
 
 ## Usage
 
