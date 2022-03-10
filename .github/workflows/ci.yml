@@ -9,6 +9,8 @@ on:
     branches: [ master ]
     paths:
       - '**.cs'
+      - '**.csproj'
+      - '**.sln'
 #   pull_request:
 #     branches: [ master ]
 
