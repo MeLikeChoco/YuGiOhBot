@@ -108,54 +108,49 @@ public class Utility : MainInteractionBase<SocketSlashCommand>
     public async Task InfoCommand()
     {
 
-        using (Context.Channel.EnterTypingState())
-        {
+        var getAppInfoTask = Context.Client.GetApplicationInfoAsync();
+        var getOsInfoTask = _perfMetrics.GetOperatingSystem();
+        var calcCpuUsageTask = _perfMetrics.GetCpuUsage();
+        var calcMemUsageTask = _perfMetrics.GetMemUsage();
 
-            var getAppInfoTask = Context.Client.GetApplicationInfoAsync();
-            var getOsInfoTask = _perfMetrics.GetOperatingSystem();
-            var calcCpuUsageTask = _perfMetrics.GetCpuUsage();
-            var calcMemUsageTask = _perfMetrics.GetMemUsage();
+        var strBuilder = new StringBuilder()
+            .Append("**Discord API Version:** ")
+            .Append(DiscordConfig.APIVersion)
+            .AppendLine()
+            .Append("**Discord.NET Version:** ")
+            .AppendLine(DiscordConfig.Version);
 
-            var strBuilder = new StringBuilder()
-                .Append("**Discord API Version:** ")
-                .Append(DiscordConfig.APIVersion)
-                .AppendLine()
-                .Append("**Discord.NET Version:** ")
-                .AppendLine(DiscordConfig.Version);
+        var appInfo = await getAppInfoTask;
 
-            var appInfo = await getAppInfoTask;
+        strBuilder
+            .Append("**Owner/Developer:** ")
+            .AppendLine(appInfo.Owner.ToString())
+            .Append("**Shards:** ")
+            .Append(Context.Client.Shards.Count)
+            .AppendLine();
 
-            strBuilder
-                .Append("**Owner/Developer:** ")
-                .AppendLine(appInfo.Owner.ToString())
-                .Append("**Shards:** ")
-                .Append(Context.Client.Shards.Count)
-                .AppendLine();
+        var osInfo = await getOsInfoTask;
 
-            var osInfo = await getOsInfoTask;
+        strBuilder
+            .Append("**Operating System:** ")
+            .AppendLine(osInfo)
+            .Append("**Processor Count:** ")
+            .Append(Environment.ProcessorCount)
+            .AppendLine();
 
-            strBuilder
-                .Append("**Operating System:** ")
-                .AppendLine(osInfo)
-                .Append("**Processor Count:** ")
-                .Append(Environment.ProcessorCount)
-                .AppendLine();
+        var cpuUsage = await calcCpuUsageTask;
+        var memUsage = await calcMemUsageTask;
+        var usedMem = Math.Round(memUsage.UsedMem, 2);
+        var totalMem = Math.Round(memUsage.TotalMem, 2);
 
-            var cpuUsage = await calcCpuUsageTask;
-            var memUsage = await calcMemUsageTask;
-            var usedMem = Math.Round(memUsage.UsedMem, 2);
-            var totalMem = Math.Round(memUsage.TotalMem, 2);
+        strBuilder.Append("**Cpu Usage:** ").Append(cpuUsage.ToString("0.##")).AppendLine("%");
+        strBuilder.Append("**Memory Usage:** ").Append(usedMem.ToString("0.##")).Append(" GB / ").Append(totalMem.ToString("0.##")).AppendLine(" GB");
 
-            strBuilder.Append("**Cpu Usage:** ").Append(cpuUsage.ToString("0.##")).AppendLine("%");
-            strBuilder.Append("**Memory Usage:** ").Append(usedMem.ToString("0.##")).Append(" GB / ").Append(totalMem.ToString("0.##")).AppendLine(" GB");
+        var body = new EmbedBuilder()
+            .WithRandomColor()
+            .WithDescription(strBuilder.ToString());
 
-            var body = new EmbedBuilder()
-                .WithRandomColor()
-                .WithDescription(strBuilder.ToString());
-
-            await SendEmbedAsync(body);
-
-        }
+        await SendEmbedAsync(body);
 
     }
 

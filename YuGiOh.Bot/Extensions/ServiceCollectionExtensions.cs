@@ -77,7 +77,7 @@ public static class ServiceCollectionExtensions
             .AddTransient<IGuildConfigRepository, GuildConfigRepository>()
             .AddTransient<IYuGiOhDbService, YuGiOhDbService>()
             .AddTransient<IGuildConfigDbService, GuildConfigDbService>()
-            .AddTransient<IPerformanceMetrics, PerformanceMetrics>()
+            .AddTransient<IPerformanceMetrics>(_ => RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? new LinuxPerformanceMetrics() : new WindowsPerformanceMetrics())
             .AddTransient<Web>()
             .AddHttpClient()
             .AddSingleton<CommandHelpService>()
