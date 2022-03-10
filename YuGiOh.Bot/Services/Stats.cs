@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Discord;
@@ -9,7 +10,6 @@ using DiscordBotsList.Api;
 using Microsoft.Extensions.Logging;
 using YuGiOh.Bot.Extensions;
 using YuGiOh.Bot.Models;
-using System.Text.Json;
 
 namespace YuGiOh.Bot.Services
 {

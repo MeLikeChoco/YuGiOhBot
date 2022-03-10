@@ -7,7 +7,7 @@ using Serilog.Events;
 using Serilog.Sinks.SystemConsole.Themes;
 using YuGiOh.Bot.Logger;
 using YuGiOh.Bot.Models;
-using ILogger = Microsoft.Extensions.Logging.ILogger;
+using ILogger = Serilog.ILogger;
 
 #pragma warning disable CA2254
 
@@ -16,15 +16,15 @@ namespace YuGiOh.Bot.Extensions
     public static class LoggerExtensions
     {
 
-        private static Serilog.ILogger _logger;
+        private static ILogger _logger;
 
         #region Info Logging
 
-        public static void Info(this ILogger logger, string message, params object[] args)
+        public static void Info(this Microsoft.Extensions.Logging.ILogger logger, string message, params object[] args)
             => logger.LogInformation(message, args);
 
         public static void Info(
-            this ILogger logger,
+            this Microsoft.Extensions.Logging.ILogger logger,
             EventId eventId,
             string message,
             params object[] args
@@ -32,7 +32,7 @@ namespace YuGiOh.Bot.Extensions
             => logger.LogInformation(eventId, message, args);
 
         public static void Info(
-            this ILogger logger,
+            this Microsoft.Extensions.Logging.ILogger logger,
             Exception exception,
             string message,
             params object[] args
@@ -40,7 +40,7 @@ namespace YuGiOh.Bot.Extensions
             => logger.LogInformation(exception, message, args);
 
         public static void Info(
-            this ILogger logger,
+            this Microsoft.Extensions.Logging.ILogger logger,
             EventId eventId,
             Exception exception,
             string message,
@@ -80,11 +80,11 @@ namespace YuGiOh.Bot.Extensions
 
         #region Error Logging
 
-        public static void Error(this ILogger logger, string message, params object[] args)
+        public static void Error(this Microsoft.Extensions.Logging.ILogger logger, string message, params object[] args)
             => logger.LogError(message, args);
 
         public static void Error(
-            this ILogger logger,
+            this Microsoft.Extensions.Logging.ILogger logger,
             EventId eventId,
             string message,
             params object[] args
@@ -92,7 +92,7 @@ namespace YuGiOh.Bot.Extensions
             => logger.LogError(eventId, message, args);
 
         public static void Error(
-            this ILogger logger,
+            this Microsoft.Extensions.Logging.ILogger logger,
             Exception exception,
             string message,
             params object[] args
@@ -100,7 +100,7 @@ namespace YuGiOh.Bot.Extensions
             => logger.LogError(exception, message, args);
 
         public static void Error(
-            this ILogger logger,
+            this Microsoft.Extensions.Logging.ILogger logger,
             EventId eventId,
             Exception exception,
             string message,
@@ -140,11 +140,11 @@ namespace YuGiOh.Bot.Extensions
 
         #region Verbose Logging
 
-        public static void Verbose(this ILogger logger, string message, params object[] args)
+        public static void Verbose(this Microsoft.Extensions.Logging.ILogger logger, string message, params object[] args)
             => logger.LogTrace(message, args);
 
         public static void Verbose(
-            this ILogger logger,
+            this Microsoft.Extensions.Logging.ILogger logger,
             EventId eventId,
             string message,
             params object[] args
@@ -152,7 +152,7 @@ namespace YuGiOh.Bot.Extensions
             => logger.LogTrace(eventId, message, args);
 
         public static void Verbose(
-            this ILogger logger,
+            this Microsoft.Extensions.Logging.ILogger logger,
             Exception exception,
             string message,
             params object[] args
@@ -160,7 +160,7 @@ namespace YuGiOh.Bot.Extensions
             => logger.LogTrace(exception, message, args);
 
         public static void Verbose(
-            this ILogger logger,
+            this Microsoft.Extensions.Logging.ILogger logger,
             EventId eventId,
             Exception exception,
             string message,
@@ -198,7 +198,7 @@ namespace YuGiOh.Bot.Extensions
 
         #endregion Verbose Logging
 
-        public static void Log(this ILogger logger, LogMessage message)
+        public static void Log(this Microsoft.Extensions.Logging.ILogger logger, LogMessage message)
         {
 
             var logLevel = message.Severity switch
@@ -221,13 +221,13 @@ namespace YuGiOh.Bot.Extensions
 
         }
 
-        public static Serilog.ILogger CreateStaticLogger()
+        public static ILogger CreateStaticLogger()
             => GetStaticLogger();
 
-        public static Serilog.ILogger CreateStaticLogger(string context)
+        public static ILogger CreateStaticLogger(string context)
             => GetStaticLogger().ForContext("SourceContext", context);
 
-        private static Serilog.ILogger GetStaticLogger()
+        private static ILogger GetStaticLogger()
         {
 
             if (_logger is not null)

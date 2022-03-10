@@ -1,13 +1,8 @@
-﻿using Discord.Addons.Interactive;
-using Discord.WebSocket;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Discord.Commands;
-using Discord.Interactions;
+﻿using System.Threading.Tasks;
 using Discord;
+using Discord.Addons.Interactive;
+using Discord.Commands;
+using Discord.WebSocket;
 
 namespace YuGiOh.Bot.Models.Criterion
 {

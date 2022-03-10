@@ -1,9 +1,7 @@
-﻿using Discord.Commands;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
+using Discord.Commands;
 using YuGiOh.Bot.Models;
 using YuGiOh.Bot.Services;
 

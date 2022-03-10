@@ -93,4 +93,8 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="Extensions\GeneralExtensions.cs" />
+  </ItemGroup>
+
 </Project>
