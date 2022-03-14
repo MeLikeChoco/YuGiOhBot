@@ -9,13 +9,12 @@ services:
       - PGDATA=pgdata
       #locale doesn't matter for alpine, it's a pain to override
     #      - LANG=en_US.utf-8
-    restart: always
     volumes:
       - ./yugioh.sql:/docker-entrypoint-initdb.d/yugioh.sql
       - ./guilds.sql:/docker-entrypoint-initdb.d/guilds.sql
   dotnet:
     container_name: YuGiOhBot_dotnet
-    image: mcr.microsoft.com/dotnet/sdk:6.0.200-alpine3.14-amd64
+    image: mcr.microsoft.com/dotnet/sdk:6.0.201-alpine3.15
     depends_on:
       - db
     volumes:
@@ -29,3 +28,5 @@ services:
 networks:
   default:
     driver: bridge
+    
+#todo think about changing alpine to debian/ubuntu due to the server the bot runs on is ubuntu and not alpine
