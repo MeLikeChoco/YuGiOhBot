@@ -31,7 +31,6 @@ public static class ServiceCollectionExtensions
         LogLevel = LogSeverity.Verbose,
         SuppressUnknownDispatchWarnings = true,
         MessageCacheSize = 20,
-        TotalShards = 1
 
     };
 

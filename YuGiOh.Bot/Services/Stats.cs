@@ -53,15 +53,10 @@ namespace YuGiOh.Bot.Services
 
                 var guilds = client.Guilds;
                 var maxGuild = guilds.Where(guild => !guild.Name.Contains("Bot")).MaxBy(guild => guild.MemberCount)!;
-                var uniqueUsers = new HashSet<ulong>();
                 MaxGuild = maxGuild.Name;
                 MaxGuildCount = maxGuild.MemberCount;
                 GuildCount = guilds.Count;
-
-                foreach (var guild in guilds)
-                    await guild.GetUsersAsync().ForEachAsync(users => uniqueUsers.UnionWith(users.Select(user => user.Id)));
-
-                UniqueUserCount = uniqueUsers.Count;
+                UniqueUserCount = guilds.Sum(guild => guild.MemberCount);
 
                 _logger.Info("Finished calculating stats.");
 
