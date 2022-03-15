@@ -143,7 +143,6 @@ namespace YuGiOh.Bot.Modules
             => RespondAsync("Too many results were returned, please refine your search!");
 
         protected void Log(string msg, params object[] parameters)
-            // => AltConsole.Write("Info", currentCaller ?? GetType().Name, msg);
             => Logger.Info(msg, parameters);
 
     }

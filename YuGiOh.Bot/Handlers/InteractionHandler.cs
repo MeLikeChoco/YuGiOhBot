@@ -69,14 +69,12 @@ namespace YuGiOh.Bot.Handlers
             }
 
             _logger.Info(interaction.GetCmdString());
-            // AltConsole.Write("Info", "Interaction Command", interaction.GetCmdString());
 
             var context = new ShardedInteractionContext<SocketSlashCommand>(_client, interaction);
             var result = await _interactionService.ExecuteCommandAsync(context, _serviceProvider);
 
             if (!result.IsSuccess)
                 _logger.Error(result.ErrorReason);
-            // AltConsole.Write("Error", "Error", result.ErrorReason);
 
         }
 
@@ -103,7 +101,6 @@ namespace YuGiOh.Bot.Handlers
 
             if (!result.IsSuccess)
                 _logger.Error(result.ErrorReason);
-            // AltConsole.Write("Error", "Error", result.ErrorReason);
 
         }
 

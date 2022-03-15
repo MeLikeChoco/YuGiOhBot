@@ -75,7 +75,6 @@ namespace YuGiOh.Bot.Handlers
                 }
 
                 _logger.Info(possibleCmd.Content);
-                // AltConsole.Write("Info", "Command", $"{possibleCmd.Content}");
 
                 var result = await _commandService.ExecuteAsync(context, argPos, _serviceProvider);
 
@@ -91,9 +90,6 @@ namespace YuGiOh.Bot.Handlers
                     //await context.Channel.SendMessageAsync("https://goo.gl/JieFJM");
 
                     _logger.Error(result.ErrorReason);
-                    // AltConsole.Write("Error", "Error", result.ErrorReason);
-                    //debug purposes
-                    //await context.Channel.SendMessageAsync($"**Error:** {result.ErrorReason}");
 
                 }
 
