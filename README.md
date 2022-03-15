@@ -10,7 +10,7 @@ Commands for this bot follow this structure: `y! <command> [argument]`.
 
 | Command | Description
 |---------|-------------|
-|`y!card [card name]` | Searches card based on card name|
+|`card [card name]` | Searches card based on card name|
 |`rcard` | Returns a random card. Great for making random decks|
 |`search [search]` | Searches for cards based on search terms given|
 |`archetype [search]` | Attemps an archetype search|
