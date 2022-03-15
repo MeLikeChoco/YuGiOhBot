@@ -34,8 +34,8 @@ namespace YuGiOh.Bot.Core
             _services = new ServiceCollection().BuildServices();
             _logger = _services.GetService<ILoggerFactory>()!.CreateLogger("YuGiOh Bot");
 
-            _logger.Info($"Welcome to {Assembly.GetExecutingAssembly().GetName()}");
-            _logger.Info($"Using Discord.NET v{DiscordConfig.Version}");
+            _logger.Info("Welcome to {AssemblyName:l}", Assembly.GetExecutingAssembly().GetName());
+            _logger.Info("Using Discord.NET v{Version:l}", DiscordConfig.Version);
             _logger.Info("Initializing events...");
 
             _client = _services.GetService<DiscordShardedClient>();
@@ -106,7 +106,7 @@ namespace YuGiOh.Bot.Core
             var isTest = config.IsTest;
             var token = isTest ? config.Tokens.Discord.Test : config.Tokens.Discord.Legit;
 
-            Log($"Test: {isTest}");
+            Log("Test: {IsTest}", isTest);
             Log("Logging in...");
             await _client.LoginAsync(TokenType.Bot, token);
             Log("Logged in.");
@@ -151,7 +151,7 @@ namespace YuGiOh.Bot.Core
                 }
             );
 
-            Log($"Processed guilds that were added when the bot was down. There were {count} guilds that were added.");
+            Log("Processed guilds that were added when the bot was down. There were {GuildCount} guilds that were added.", count);
 
             _client.JoinedGuild += guild => ActivatorUtilities.CreateInstance<GuildHandler>(_services).HandleAddedToGuildAsync(guild);
 
@@ -165,7 +165,7 @@ namespace YuGiOh.Bot.Core
             //initialize the stats gathering timer
             _services.GetService<Stats>();
 
-            Log($"Built services.");
+            Log("Built services.");
 
         }
 
@@ -185,7 +185,7 @@ namespace YuGiOh.Bot.Core
             var appCmdModules = await _interactionService.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
             var cmds = textCmdModules.SelectMany(module => module.Commands).Concat<object>(appCmdModules.SelectMany(module => module.SlashCommands));
 
-            Log($"Registered {cmds.Count()} commands.");
+            Log("Registered {Count} commands.", cmds.Count());
 
         }
 
@@ -202,8 +202,8 @@ namespace YuGiOh.Bot.Core
 
         }
 
-        private void Log(string message)
-            => _logger.Info(message);
+        private void Log(string message, params object[] properties)
+            => _logger.Info(message, properties);
 
     }
 }

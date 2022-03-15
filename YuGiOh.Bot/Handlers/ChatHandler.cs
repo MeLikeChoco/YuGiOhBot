@@ -75,14 +75,14 @@ namespace YuGiOh.Bot.Handlers
                     if (channel is SocketTextChannel textChannel)
                     {
 
-                        logger.Info($"{message.Author.Username} from {textChannel.Guild.Name}");
+                        logger.Info("{Author} from {GuildName}", message.Author.Username, textChannel.Guild.Name);
                         var id = textChannel.Guild.Id;
                         var guildConfig = await _guildConfigDbService.GetGuildConfigAsync(id);
                         minimal = guildConfig.Minimal;
 
                     }
 
-                    logger.Info($"{message.Content}");
+                    logger.Info(message.Content);
 
                     foreach (var match in matches)
                     {
@@ -125,7 +125,7 @@ namespace YuGiOh.Bot.Handlers
                         var elapsed = watch.Elapsed;
                         var time = elapsed.TotalSeconds;
 
-                        logger.Info($"{cardName} took {(time > 1 ? time : time * 1000)} {(time > 1 ? "seconds" : "milliseconds")} to fetch.");
+                        logger.Info("{CardName} took {Time} {Quantifier:l} to fetch", cardName, time > 1 ? time: time * 1000, time > 1 ? "seconds": "milliseconds");
 
                         try
                         {

@@ -61,12 +61,10 @@ namespace YuGiOh.Bot.Handlers
             switch (interaction.Channel)
             {
                 case SocketDMChannel:
-                    _logger.Info($"{user.Username}#{user.Discriminator} in DM's");
-                    // AltConsole.Write("Info", "Command", $"{user.Username}#{user.Discriminator} in DM's");
+                    _logger.Info("{Username:l}#{Discriminator:l} in DM's", user.Username, user.Discriminator);
                     break;
                 case SocketTextChannel txtChannel:
-                    _logger.Info($"{user.Username}#{user.Discriminator} from {txtChannel.Guild.Name}/{txtChannel.Name}");
-                    // AltConsole.Write("Info", "Command", $"{user.Username}#{user.Discriminator} from {txtChannel.Guild.Name}/{txtChannel.Name}");
+                    _logger.Info("{Username:l}#{Discriminator:l} from {GuildName:l}/{ChannelName:l}", txtChannel.Guild.Name, txtChannel.Name);
                     break;
             }
 
@@ -93,12 +91,10 @@ namespace YuGiOh.Bot.Handlers
             switch (interaction.Channel)
             {
                 case SocketDMChannel:
-                    _logger.Info($"{user.Username}#{user.Discriminator} in DM's");
-                    // AltConsole.Write("Info", "Command", $"{user.Username}#{user.Discriminator} in DM's");
+                    _logger.Info("{Username:l}#{Discriminator:l} in DM's", user.Username, user.Discriminator);
                     break;
                 case SocketTextChannel txtChannel:
-                    _logger.Info($"{user.Username}#{user.Discriminator} from {txtChannel.Guild.Name}/{txtChannel.Name}");
-                    // AltConsole.Write("Info", "Command", $"{user.Username}#{user.Discriminator} from {txtChannel.Guild.Name}/{txtChannel.Name}");
+                    _logger.Info("{Username:l}#{Discriminator:l} from {GuildName:l}/{ChannelName:l}", txtChannel.Guild.Name, txtChannel.Name);
                     break;
             }
 

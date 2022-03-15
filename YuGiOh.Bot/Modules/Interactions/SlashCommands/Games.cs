@@ -185,8 +185,7 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
                         if (!string.IsNullOrEmpty(card.RealName))
                             name += $" / {card.RealName}";
 
-                        logger.Info(name);
-                        logger.Info($"{Constants.ArtBaseUrl}{card.Passcode}.{Constants.ArtFileType}");
+                        logger.Info("{CardName} {Url}", name, url);
 
                         await using (var stream = await Web.GetStream(url))
                             await UploadAsync(stream, $"{GetConfusingString()}.{Constants.ArtFileType}", $":stopwatch: You have **{GuildConfig.GuessTime}** seconds to guess what card this art belongs to! Case insensitive (used to be case sensitive)!");

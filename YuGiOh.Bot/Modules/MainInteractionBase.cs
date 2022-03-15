@@ -142,9 +142,9 @@ namespace YuGiOh.Bot.Modules
         protected Task TooManyError()
             => RespondAsync("Too many results were returned, please refine your search!");
 
-        protected void Log(string msg, string currentCaller = null)
+        protected void Log(string msg, params object[] parameters)
             // => AltConsole.Write("Info", currentCaller ?? GetType().Name, msg);
-            => Logger.Info(msg);
+            => Logger.Info(msg, parameters);
 
     }
 }

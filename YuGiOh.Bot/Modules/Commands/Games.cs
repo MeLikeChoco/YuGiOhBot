@@ -74,14 +74,12 @@ namespace YuGiOh.Bot.Modules.Commands
 
                         //https://storage.googleapis.com/ygoprodeck.com/pics_artgame/{passcode}.jpg
                         var url = $"{Constants.ArtBaseUrl}{card.Passcode}.{Constants.ArtFileType}";
-                        var consoleOutput = $"{card.Name}";
+                        var name = $"{card.Name}";
 
                         if (!string.IsNullOrEmpty(card.RealName))
-                            consoleOutput += $" / {card.RealName}";
+                            name += $" / {card.RealName}";
 
-                        consoleOutput += $"\n{Constants.ArtBaseUrl}{card.Passcode}.{Constants.ArtFileType}";
-
-                        logger.Info(consoleOutput);
+                        logger.Info("{CardName} {Url}", name, url);
 
                         await using (var stream = await Web.GetStream(url))
                             await UploadAsync(stream, $"{GenObufscatedString()}.{Constants.ArtFileType}", $":stopwatch: You have **{GuildConfig.GuessTime}** seconds to guess what card this art belongs to! Case insensitive (used to be case sensitive)!");

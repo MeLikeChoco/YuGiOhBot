@@ -101,13 +101,13 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
             try
             {
 
-                Log($"Attempting to upload \"{name}\"...");
+                Log("Attempting to upload {CardName}...", name);
 
                 var stream = await Web.GetStream(url);
 
                 await UploadAsync(stream, $"{Uri.EscapeDataString(name)}.png");
 
-                Log($"Uploaded \"{name}\"");
+                Log("Uploaded {CardName}", name);
 
             }
             catch
