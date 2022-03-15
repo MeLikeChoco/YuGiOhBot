@@ -1,5 +1,5 @@
 * linguist-vendored
-./*.sql -linguist-vendored
+./*.sql linguist-vendored=false
 
 ###############################################################################
 # Set default behavior to automatically normalize line endings.
