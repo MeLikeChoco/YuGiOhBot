@@ -40,7 +40,7 @@ namespace YuGiOh.Bot.Services
 
         }
 
-        private async void CalculateStats(object state)
+        private void CalculateStats(object state)
         {
 
             try
@@ -123,7 +123,7 @@ namespace YuGiOh.Bot.Services
 
                 _logger.Info("Sending stats to discord.bots.gg...");
                 var response = await _web.Post(string.Format(Constants.DiscordBotsGG, _id), payload, authorization: Config.Instance.Tokens.BotList.DiscordBotsGG);
-                _logger.Info($"Status: ({response.StatusCode}) Sent stats to discord.bots.gg.");
+                _logger.Info("Status: ({StatusCode}) Sent stats to discord.bots.gg.", response.StatusCode);
 
             }
             catch
