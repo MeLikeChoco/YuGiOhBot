@@ -1,4 +1,5 @@
-./*.sql linguist-vendored
+guilds.sql linguist-vendored
+yugioh.sql linguist-vendored
 
 ###############################################################################
 # Set default behavior to automatically normalize line endings.
