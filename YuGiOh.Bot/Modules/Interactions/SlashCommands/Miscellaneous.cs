@@ -10,6 +10,7 @@ using Discord.Interactions;
 using Discord.WebSocket;
 using Microsoft.Extensions.Logging;
 using YuGiOh.Bot.Extensions;
+using YuGiOh.Bot.Models;
 using YuGiOh.Bot.Modules.Interactions.Autocompletes;
 using YuGiOh.Bot.Services;
 using YuGiOh.Bot.Services.Interfaces;
@@ -34,7 +35,7 @@ public class Miscellaneous : MainInteractionBase<SocketSlashCommand>
     }
 
     [SlashCommand("probability", "Gets the chance of a card appearing in your opening hand")]
-    public Task ProbabilityCommand(
+    public async Task ProbabilityCommand(
         [Summary(description: "deck size")] int deckSize,
         [Summary(description: "copies in deck")]
         int inDeck,
@@ -46,80 +47,75 @@ public class Miscellaneous : MainInteractionBase<SocketSlashCommand>
     {
 
         if (inDeck > deckSize)
-            return RespondAsync($"There are more cards in deck `({inDeck})` than the deck size `({inHand})`!");
+        {
+            await RespondAsync($"There are more cards in deck `({inDeck})` than the deck size `({deckSize})`!");
+            return;
+        }
 
         if (handSize > deckSize)
-            return RespondAsync($"The hand is larger `({handSize})` than the deck size `({deckSize})`!");
+        {
+            await RespondAsync($"The hand is larger `({handSize})` than the deck size `({deckSize})`!");
+            return;
+        }
 
         if (inHand > deckSize)
-            return RespondAsync($"There are more copies of the card in hand `({inHand})` than the deck size `({deckSize})`!");
+        {
+            await RespondAsync($"There are more copies of the card in hand `({inHand})` than the deck size `({deckSize})`!");
+            return;
+        }
 
         if (inHand > inDeck)
-            return RespondAsync($"There are more copies of the card in hand `({inHand})` than the copies in deck `({inDeck})`!");
+        {
+            await RespondAsync($"There are more copies of the card in hand `({inHand})` than the copies in deck `({inDeck})`!");
+            return;
+        }
 
         if (inHand > handSize)
-            return RespondAsync($"There are more cards in hand `({inHand})` than the hand size `({handSize})`!");
+        {
+            await RespondAsync($"There are more cards in hand `({inHand})` than the hand size `({handSize})`!");
+            return;
+        }
 
         try
         {
 
-            var exactly = Probability(deckSize, inDeck, handSize, inHand);
-            double more, lessequal, moreequal;
-            var less = more = lessequal = moreequal = 0;
-
-            for (var i = inHand; i >= 0; i--)
-            {
-
-                lessequal += Probability(deckSize, inDeck, handSize, i);
-
-                if (i != inHand)
-                    less += Probability(deckSize, inDeck, handSize, i);
-
-            }
-
-            for (var i = inHand; i < handSize; i++)
-            {
-
-                moreequal += Probability(deckSize, inDeck, handSize, i);
-
-                if (i != inHand)
-                    more += Probability(deckSize, inDeck, handSize, i);
-
-            }
-
+            var probability = new HandProbability(deckSize, handSize, inDeck, inHand);
             var display = $"{deckSize} cards in deck\n" +
                           $"{inDeck} copies in deck\n" +
                           $"{handSize} cards in hand\n" +
                           $"{inHand} copies in hand\n" +
-                          $"Exactly {inHand} in hand: {exactly}%\n" +
-                          $"Less than {inHand} in hand: {less}%\n" +
-                          $"Less or equal to {inHand} in hand: {lessequal}%\n" +
-                          $"More than {inHand} in hand: {more}%\n" +
-                          $"More or equal to {inHand} in hand: {moreequal}%";
+                          $"Exactly {inHand} in hand: {probability.GetExact()}%\n" +
+                          $"Less than {inHand} in hand: {probability.GetLess()}%\n" +
+                          $"Less or equal to {inHand} in hand: {probability.GetLessOrEqual()}%\n" +
+                          $"More than {inHand} in hand: {probability.GetMore()}%\n" +
+                          $"More or equal to {inHand} in hand: {probability.GetMoreOrEqual()}%";
 
             if (inHand == 1)
-                return RespondAsync($"```{display}```");
+            {
+                await RespondAsync($"```{display}```");
+                return;
+            }
 
-            double onetoInHand = 0;
+            decimal onetoInHand = 0;
 
             for (var i = inHand; i >= 1; i--)
                 onetoInHand += Probability(deckSize, inDeck, handSize, i);
 
             display += $"\n1-{inHand} copies in hand: {onetoInHand}%";
 
-            return RespondAsync($"```{display}```");
+            await RespondAsync($"```{display}```");
 
         }
         catch
         {
-            return RespondAsync("There was an error. Please check your values and try again!\nEx. `y!prob 40 7 5 2`");
+            await RespondAsync("There was an error. Please check your values and try again!\nEx. `y!prob 40 7 5 2`");
         }
 
     }
 
     #region Probability
 
-    private static double HyperGeometricProbability(
+    private static decimal HyperGeometricProbability(
         int deckSize,
         int inDeck,
         int handSize,
@@ -135,7 +131,7 @@ public class Miscellaneous : MainInteractionBase<SocketSlashCommand>
 
     }
 
-    private static double Probability(
+    private static decimal Probability(
         int deckSize,
         int inDeck,
         int handSize,
@@ -143,12 +139,12 @@ public class Miscellaneous : MainInteractionBase<SocketSlashCommand>
     )
         => HyperGeometricProbability(deckSize, inDeck, handSize, inHand) * 100;
 
-    private static double Combinational(int n, int k)
+    private static decimal Combinational(int n, int k)
     {
 
         var numerator = Factorial(n);
         var denominator = Factorial(k) * Factorial(n - k);
-        return (double) (numerator / denominator);
+        return (decimal) (numerator / denominator);
 
     }
 

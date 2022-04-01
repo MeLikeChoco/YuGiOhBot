@@ -21,6 +21,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "YuGiOh.Common", "YuGiOh.Com
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YuGiOh.Common.Test", "YuGiOh.Common.Test\YuGiOh.Common.Test.csproj", "{C4E1BB23-6570-41A1-A6F5-DE8C6A60601C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YuGiOh.Bot.Test", "YuGiOh.Bot.Test\YuGiOh.Bot.Test.csproj", "{E0704EF9-1560-4A62-89BA-3B917E369C23}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -63,6 +65,10 @@ Global
 		{C4E1BB23-6570-41A1-A6F5-DE8C6A60601C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C4E1BB23-6570-41A1-A6F5-DE8C6A60601C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C4E1BB23-6570-41A1-A6F5-DE8C6A60601C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E0704EF9-1560-4A62-89BA-3B917E369C23}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E0704EF9-1560-4A62-89BA-3B917E369C23}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E0704EF9-1560-4A62-89BA-3B917E369C23}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E0704EF9-1560-4A62-89BA-3B917E369C23}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
