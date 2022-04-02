@@ -18,6 +18,7 @@ public class Config
     public int MaxRetry { get; set; }
     [JsonPropertyName("Hash Seed")]
     public uint HashSeed { get; set; }
+    public Webhook Webhook { get; set; }
 
 }
 
@@ -27,4 +28,12 @@ public class Databases
     public string Staging { get; set; }
     public string Production { get; set; }
 
+}
+
+public class Webhook
+{
+    
+    public string Url { get; set; }
+    public string Content { get; set; }
+    
 }

@@ -1,8 +1,12 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
+using System.Net.Http;
 using System.Runtime.CompilerServices;
+using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using MoreLinq;
@@ -14,6 +18,7 @@ using YuGiOh.Common.Models.YuGiOh;
 using YuGiOh.Common.Repositories;
 using YuGiOh.Common.Services;
 using YuGiOh.Scraper.Constants;
+using YuGiOh.Scraper.Models;
 using YuGiOh.Scraper.Models.Parsers;
 using YuGiOh.Scraper.Models.Responses;
 using Type = YuGiOh.Common.Models.YuGiOh.Type;
@@ -72,6 +77,11 @@ public class Program : IYuGiOhRepositoryConfiguration
         await ProcessErrors(errors);
 
         Log($"Processed {errors.Count} errors.");
+        Log("Sending Discord webhook database updated status...");
+
+        await SendDiscordWebhook();
+        
+        Log("Sent Discord webhook database updated status.");
 
     }
 
@@ -328,6 +338,39 @@ public class Program : IYuGiOhRepositoryConfiguration
 
     }
 
+    private static async Task SendDiscordWebhook()
+    {
+
+        var webhookConfig = Options.Config.Webhook;
+
+        if (!string.IsNullOrWhiteSpace(webhookConfig.Url))
+        {
+            
+            using var httpClient = new HttpClient();
+            var random = new Random();
+            var payload = new WebhookMessage
+            {
+                Content = null,
+                Embeds = new[]
+                {
+                    new WebhookMessageEmbed
+                    {
+                        Title = webhookConfig.Content,
+                        Color = $"{random.Next(0x1000000)}"
+                    }
+                }
+            };
+            var json = JsonSerializer.Serialize(payload);
+            // var json = "{\"content\":null,\"embeds\":[{\"title\":\"Database updated\", \"color\":5814783, \"timestamp\":\"2022-04-01T04:00:00.000Z\"}]}";
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var response = await httpClient.PostAsync(webhookConfig.Url, content);
+            
+            Log($"Discord webhook status: ${response.StatusCode}");
+            
+        }
+
+    }
+
     private static void Log(string message)
     {
 
@@ -356,7 +399,10 @@ public class Program : IYuGiOhRepositoryConfiguration
 
         var connectionStr = Options.IsDebug ? Options.Config.Databases.Staging : Options.Config.Databases.Production;
 
-        connectionStr += $"Pooling=true;Minimum Pool Size={Environment.ProcessorCount};Maximum Pool Size={Environment.ProcessorCount};";
+        if (!connectionStr.EndsWith(';'))
+            connectionStr += ';';
+        
+        connectionStr += $"Pooling=true;Minimum Pool Size={ParallelOptions.MaxDegreeOfParallelism};Maximum Pool Size={ParallelOptions.MaxDegreeOfParallelism};";
 
         return new NpgsqlConnection(connectionStr);
 

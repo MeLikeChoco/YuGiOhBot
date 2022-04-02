@@ -5,5 +5,9 @@
   },
   "Retry Delay": "00:00:30",
   "Max Retry": 3,
-  "Hash Seed": 0
+  "Hash Seed": 0,
+  "Webhook": {
+    "Url": "",
+    "Content": ""
+  }
 }
