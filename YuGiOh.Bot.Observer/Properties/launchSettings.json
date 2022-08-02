@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "YuGiOh.Bot.Observer": {
-      "commandName": "Project",
-      "workingDirectory": "C:\\Users\\Edgar Chang\\Documents\\Visual Studio 2017\\Projects\\YuGiOhBot\\YuGiOhV2\\bin\\Debug\\net5.0"
-    }
-  }
-}
