@@ -1,13 +1,22 @@
 # directories
-**/bin
-**/obj
-**/out
+**/bin/
+**/obj/
+**/out/
+.vs/
+.idea/
 
 # files
 Dockerfile*
 *.Dockerfile
+.dockerignore
+docker-compose.yml
 **/*.trx
 **/*.md
 **/*.ps1
 **/*.cmd
 **/*.sh
+*.md
+*.DotSettings
+*.DotSettings.user
+
+.git*

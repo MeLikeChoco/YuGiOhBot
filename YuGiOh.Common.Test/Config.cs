@@ -9,7 +9,7 @@ public record Config
 {
 
     [JsonPropertyName("Db Connection Strings")]
-    public DbConnectionStrings? DbConnectionString { get; init; }
+    public DbConnectionStrings? DbConnectionStrings { get; init; }
 
     private static Config? _instance;
 
@@ -34,11 +34,33 @@ public record Config
 }
 
 // ReSharper disable once ClassNeverInstantiated.Global
-public record DbConnectionStrings
+public class DbConnectionStrings
+{
+    
+    public DbConnectionString? Dev { get; init; }
+    public DbConnectionString? Docker { get; init; }
+
+    /// <summary>
+    /// Gets connection string based on environment variables
+    /// </summary>
+    public DbConnectionString? GetConnectionString()
+    {
+        return Environment.GetEnvironmentVariable("YUGIOH_ENV") switch
+        {
+            "Dev" => Dev,
+            "Docker" => Docker,
+            _ => Docker
+        };
+    }
+    
+}
+
+public record DbConnectionString
 {
 
     // ReSharper disable once UnusedAutoPropertyAccessor.Global
     public string? YuGiOh { get; init; }
+    // ReSharper disable once UnusedAutoPropertyAccessor.Global
     public string? Guilds { get; init; }
-    
+
 }

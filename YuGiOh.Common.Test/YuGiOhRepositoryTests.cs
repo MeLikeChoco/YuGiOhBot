@@ -30,7 +30,7 @@ public class YuGiOhRepositoryTests
 
         mockRepoConfig
             .Setup(repoConfig => repoConfig.GetYuGiOhDbConnection())
-            .Returns(() => new NpgsqlConnection(Config.Instance.DbConnectionString!.YuGiOh));
+            .Returns(() => new NpgsqlConnection(Config.Instance.DbConnectionStrings!.GetConnectionString()!.YuGiOh));
 
         _yugiohRepo = new YuGiOhRepository(mockRepoConfig.Object);
 
@@ -93,7 +93,7 @@ public class YuGiOhRepositoryTests
     }
 
     [Theory]
-    [InlineData("cherries")]
+    [InlineData("book")]
     [InlineData("ghost")]
     [InlineData("dragon")]
     public async Task SearchCardAsync_ExpectNotEmpty_ExpectSuccess(string input)
@@ -141,7 +141,7 @@ public class YuGiOhRepositoryTests
 
     [Theory]
     [InlineData("elemental hero")]
-    [InlineData("Eldlich")]
+    [InlineData("Infernity")]
     [InlineData("SyNcHrOn")]
     public async Task GetCardsInArchetype_ExpectNotEmpty_ExpectSuccess(string input)
     {
@@ -258,8 +258,8 @@ public class YuGiOhRepositoryTests
     public async Task GetNameWithPasscodeAsync_ExpectSuccess()
     {
 
-        const string passcode = "30576089";
-        const string expected = "Blue-Eyes Jet Dragon";
+        const string passcode = "11759079";
+        const string expected = "Dual Avatar Feet - Kokoku";
         var actual = await _yugiohRepo.GetNameWithPasscodeAsync(passcode);
 
         Assert.Equal(expected, actual);
@@ -270,8 +270,8 @@ public class YuGiOhRepositoryTests
     public async Task GetImageLinkAsync_ExpectSuccess()
     {
 
-        const string name = "Red-Eyes Retro Dragon";
-        const string expected = "https://ms.yugipedia.com//a/a6/RedEyesRetroDragon-LDS1-EN-C-1E.png";
+        const string name = "Crystal Girl";
+        const string expected = "https://ms.yugipedia.com//thumb/1/1f/CrystalGirl-KICO-EN-SR-1E.png/600px-CrystalGirl-KICO-EN-SR-1E.png";
         var actual = await _yugiohRepo.GetImageLinkAsync(name);
 
         Assert.Equal(expected, actual);

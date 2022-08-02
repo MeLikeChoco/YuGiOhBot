@@ -144,6 +144,24 @@ public class HandProbabilityTests
 
     }
 
+    [Theory]
+    [InlineData(40, 5, 3, 1, "96.35627530364372469635627530")]
+    public void Calculate_GetLessOrEqualChance_ExpectSuccess(
+        int deckSize,
+        int handSize,
+        int copiesInDeck,
+        int copiesInHand,
+        string expected
+    )
+    {
+
+        var service = new HandProbability(deckSize, handSize, copiesInDeck, copiesInHand);
+        var actual = service.GetLessOrEqual();
+
+        Assert.Equal(decimal.Parse(expected), actual);
+
+    }
+
     #endregion Calculation Tests
 
 }
