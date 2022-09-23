@@ -39,7 +39,7 @@ public class GuildConfigsRepository
 
         mockRepoConfig
             .Setup(repoConfig => repoConfig.GetGuildConfigConnection())
-            .Returns(() => new NpgsqlConnection(Config.Instance.DbConnectionStrings!.GetConnectionString()!.Guilds));
+            .Returns(() => new NpgsqlConnection(Config.Instance.GetDbConnectionStrings().Guilds));
 
         _guildConfigRepo = new GuildConfigRepository(mockRepoConfig.Object);
 
@@ -63,7 +63,7 @@ public class GuildConfigsRepository
 
         await _guildConfigRepo.InsertGuildConfigAsync(expected);
 
-        await using var connection = new NpgsqlConnection(Config.Instance.DbConnectionStrings!.GetConnectionString()!.Guilds);
+        await using var connection = new NpgsqlConnection(Config.Instance.GetDbConnectionStrings().Guilds);
 
         var actual = await connection.ExecuteScalarAsync<decimal>("select id from configs where id = @id", new { id = expected.Id });
 
@@ -85,7 +85,7 @@ public class GuildConfigsRepository
 
         await _guildConfigRepo.UpdateGuildConfigAsync(expected);
 
-        await using var connection = new NpgsqlConnection(Config.Instance.DbConnectionStrings!.GetConnectionString()!.Guilds);
+        await using var connection = new NpgsqlConnection(Config.Instance.GetDbConnectionStrings().Guilds);
         //dont use deconstruction for intent/readability
         // ReSharper disable once UseDeconstruction
         var actual = await connection.QuerySingleAsync<(string prefix, int guessTime, int hangmanTime)>("select prefix, guesstime, hangmantime from configs where id = @id", new { id = expected.Id });

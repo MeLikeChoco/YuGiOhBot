@@ -34,7 +34,7 @@ namespace YuGiOh.Bot.Services
             _web = web;
             IsReady = false;
             _id = client.CurrentUser.Id;
-            _topGG = new AuthDiscordBotListApi(_id, Config.Instance.Tokens.BotList.TopGG);
+            _topGG = new AuthDiscordBotListApi(_id, Config.Instance.GetTokens().BotList.TopGG);
             _calculateStats = new Timer(CalculateStats!, client, TimeSpan.FromSeconds(60), TimeSpan.FromHours(1));
 
         }
@@ -82,7 +82,7 @@ namespace YuGiOh.Bot.Services
         private void SendStats(DiscordShardedClient client)
         {
 
-            _ = SendStatsToBotsOnDiscordXyz(client);
+            // _ = SendStatsToBotsOnDiscordXyz(client);
             _ = SendStatsToDiscordBotsGG(client);
             _ = SendStatsToTopGG(client);
 
@@ -111,7 +111,7 @@ namespace YuGiOh.Bot.Services
         }
 
         // ReSharper disable once InconsistentNaming
-        private async Task SendStatsToDiscordBotsGG(DiscordShardedClient client)
+        private async Task SendStatsToDiscordBotsGG(BaseSocketClient client)
         {
 
             try
@@ -121,7 +121,7 @@ namespace YuGiOh.Bot.Services
                 // var payload = JsonConvert.SerializeObject(new { guildCount = client.Guilds.Count });
 
                 _logger.Info("Sending stats to discord.bots.gg...");
-                var response = await _web.Post(string.Format(Constants.DiscordBotsGG, _id), payload, authorization: Config.Instance.Tokens.BotList.DiscordBotsGG);
+                var response = await _web.Post(string.Format(Constants.Url.DiscordBotsGGUrl, _id), payload, authorization: Config.Instance.GetTokens().BotList.DiscordBotsGG);
                 _logger.Info("Status: ({StatusCode}) Sent stats to discord.bots.gg.", response.StatusCode);
 
             }

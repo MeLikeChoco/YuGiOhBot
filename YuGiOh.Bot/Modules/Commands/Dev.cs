@@ -446,7 +446,7 @@ namespace YuGiOh.Bot.Modules.Commands
                 .ToString();
 
             url = $"http://store.tcgplayer.com/massentry?productline=YuGiOh&c={cards}";
-            var response = await Web.Post("https://api-ssl.bitly.com/v4/shorten", $"{{\"long_url\": \"{url}\"}}", "Bearer", Config.Instance.Tokens.Bitly);
+            var response = await Web.Post("https://api-ssl.bitly.com/v4/shorten", $"{{\"long_url\": \"{url}\"}}", "Bearer", Config.Instance.GetTokens().Bitly);
             url = JObject.Parse(await response.Content.ReadAsStringAsync())["link"].Value<string>();
 
             await ReplyAsync(url);
@@ -539,7 +539,7 @@ namespace YuGiOh.Bot.Modules.Commands
             if (name is not null)
             {
 
-                var response = await Web.GetResponseMessage(Constants.FandomWikiUrl + passcode);
+                var response = await Web.GetResponseMessage(Constants.Url.FandomWikiUrl + passcode);
                 name = response.RequestMessage.RequestUri.Segments.Last().Replace('_', ' ');
                 name = WebUtility.UrlDecode(name);
 

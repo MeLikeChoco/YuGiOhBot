@@ -30,7 +30,7 @@ public class YuGiOhRepositoryTests
 
         mockRepoConfig
             .Setup(repoConfig => repoConfig.GetYuGiOhDbConnection())
-            .Returns(() => new NpgsqlConnection(Config.Instance.DbConnectionStrings!.GetConnectionString()!.YuGiOh));
+            .Returns(() => new NpgsqlConnection(Config.Instance.GetDbConnectionStrings().YuGiOh));
 
         _yugiohRepo = new YuGiOhRepository(mockRepoConfig.Object);
 
@@ -138,6 +138,16 @@ public class YuGiOhRepositoryTests
         Assert.NotNull(result);
 
     }
+
+    // [Fact]
+    // public async Task GetRandomMonsterAsync_ExpectSuccess()
+    // {
+    //
+    //     var result = await _yugiohRepo.GetRandomMonsterAsync();
+    //     
+    //     Assert.NotNull(result);
+    //
+    // }
 
     [Theory]
     [InlineData("elemental hero")]

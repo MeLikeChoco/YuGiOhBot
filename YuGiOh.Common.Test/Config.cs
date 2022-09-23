@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -8,8 +9,9 @@ namespace YuGiOh.Common.Test;
 public record Config
 {
 
+    [JsonInclude]
     [JsonPropertyName("Db Connection Strings")]
-    public DbConnectionStrings? DbConnectionStrings { get; init; }
+    public Dictionary<string, DbConnectionStrings> DbConnectionStrings { get; private set; }
 
     private static Config? _instance;
 
@@ -28,34 +30,15 @@ public record Config
         }
     }
 
+    public DbConnectionStrings GetDbConnectionStrings()
+        => DbConnectionStrings[Constants.YuGiOhEnv];
+
     // public NpgsqlConnection GetYuGiOhDbConnection()
     //     => new(DbConnectionString);
 
 }
 
-// ReSharper disable once ClassNeverInstantiated.Global
-public class DbConnectionStrings
-{
-    
-    public DbConnectionString? Dev { get; init; }
-    public DbConnectionString? Docker { get; init; }
-
-    /// <summary>
-    /// Gets connection string based on environment variables
-    /// </summary>
-    public DbConnectionString? GetConnectionString()
-    {
-        return Environment.GetEnvironmentVariable("YUGIOH_ENV") switch
-        {
-            "Dev" => Dev,
-            "Docker" => Docker,
-            _ => Docker
-        };
-    }
-    
-}
-
-public record DbConnectionString
+public record DbConnectionStrings
 {
 
     // ReSharper disable once UnusedAutoPropertyAccessor.Global

@@ -9,22 +9,21 @@
   "Feedback Channel": 0,
   "Owner Id": 0,
   "Is Test": false,
-  "Databases": {
-    "YuGiOh Prod": "",
-    "YuGiOh Staging": "",
-    "Guilds Prod": "",
-    "Guilds Staging": ""
+  "Db Connection Strings": {
+    "": {
+      "YuGiOh": "",
+      "Guilds": ""
+    }
   },
   "Tokens": {
-    "Discord": {
-      "Legit": "",
-      "Test": ""
-    },
-    "Bot List": {
-      "BotsOnDiscordXyz": "",
-      "TopGG": "",
-      "DiscordBotsGG": ""
-    },
-    "Bitly": ""
+    "": {
+      "Discord": "",
+      "Bot List": {
+        "BotsOnDiscordXyz": "",
+        "TopGG": "",
+        "DiscordBotsGG": ""
+      },
+      "Bitly": ""
+    }
   }
 }

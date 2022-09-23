@@ -179,7 +179,7 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
                             throw new NullReferenceException(nameof(card.Passcode));
 
                         //https://storage.googleapis.com/ygoprodeck.com/pics_artgame/{passcode}.jpg
-                        var url = $"{Constants.ArtBaseUrl}{card.Passcode}.{Constants.ArtFileType}";
+                        var url = $"{Constants.Url.ArtBaseUrl}{card.Passcode}.{Constants.ArtFileType}";
                         var name = $"{card.Name}";
 
                         if (!string.IsNullOrEmpty(card.RealName))
@@ -243,27 +243,27 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
             {
 
                 char startingChar;
-                int displacement;
+                int offset;
 
                 switch (_random.Next(0, 3))
                 {
 
                     case 0:
                         startingChar = 'a';
-                        displacement = _random.Next(0, 26);
+                        offset = _random.Next(0, 26);
                         break;
                     case 1:
                         startingChar = 'A';
-                        displacement = _random.Next(0, 26);
+                        offset = _random.Next(0, 26);
                         break;
                     default:
                         startingChar = '0';
-                        displacement = _random.Next(0, 10);
+                        offset = _random.Next(0, 10);
                         break;
 
                 }
 
-                str += (char) (startingChar + displacement);
+                str += (char) (startingChar + offset);
 
             }
 

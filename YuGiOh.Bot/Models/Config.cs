@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Configuration;
 using System.IO;
 using System.Text.Json;
@@ -9,6 +11,7 @@ using LoggerExtensions = YuGiOh.Bot.Extensions.LoggerExtensions;
 
 namespace YuGiOh.Bot.Models
 {
+    
     public class Config
     {
 
@@ -47,10 +50,12 @@ namespace YuGiOh.Bot.Models
         public bool IsTest { get; private set; }
 
         [JsonInclude]
-        public Databases Databases { get; private set; }
+        [JsonPropertyName("Db Connection Strings")]
+        public Dictionary<string, DbConnectionStrings> DbConnectionStrings { get; private set; }
 
         [JsonInclude]
-        public Tokens Tokens { get; private set; }
+        [JsonPropertyName("Tokens")]
+        public Dictionary<string, Tokens> Tokens { get; private set; }
 
         private static Config _instance;
 
@@ -63,7 +68,8 @@ namespace YuGiOh.Bot.Models
                 if (_instance is not null)
                     return _instance;
 
-                _instance = JsonSerializer.Deserialize<Config>(File.ReadAllText("Files/Config.json")) ?? throw new ConfigurationErrorsException();
+                _instance = JsonSerializer.Deserialize<Config>(File.ReadAllText("Files/Config.json"))
+                            ?? throw new ConfigurationErrorsException();
 
                 Parser.Default
                     .ParseArguments<Config>(Environment.GetCommandLineArgs())
@@ -84,6 +90,12 @@ namespace YuGiOh.Bot.Models
 
         }
 
+        public DbConnectionStrings GetDbConnectionStrings()
+            => DbConnectionStrings[Constants.YuGiOhEnvironment];
+
+        public Tokens GetTokens()
+            => Tokens[Constants.YuGiOhEnvironment];
+
     }
 
     public class LoggingTemplates
@@ -97,24 +109,30 @@ namespace YuGiOh.Bot.Models
 
     }
 
-    public class Databases
+    public class DbConnectionStrings
     {
-
+        
         [JsonInclude]
-        [JsonPropertyName("YuGiOh Staging")]
-        public string YuGiOhStaging { get; private set; }
-
+        public string YuGiOh { get; private set; }
+        
         [JsonInclude]
-        [JsonPropertyName("Guilds Staging")]
-        public string GuildsStaging { get; private set; }
+        public string Guilds { get; private set; }
 
-        [JsonInclude]
-        [JsonPropertyName("YuGiOh Prod")]
-        public string YuGiOhProd { get; private set; }
-
-        [JsonInclude]
-        [JsonPropertyName("Guilds Prod")]
-        public string GuildsProd { get; private set; }
+        // [JsonInclude]
+        // [JsonPropertyName("YuGiOh Staging")]
+        // public string YuGiOhStaging { get; private set; }
+        //
+        // [JsonInclude]
+        // [JsonPropertyName("Guilds Staging")]
+        // public string GuildsStaging { get; private set; }
+        //
+        // [JsonInclude]
+        // [JsonPropertyName("YuGiOh Prod")]
+        // public string YuGiOhProd { get; private set; }
+        //
+        // [JsonInclude]
+        // [JsonPropertyName("Guilds Prod")]
+        // public string GuildsProd { get; private set; }
 
     }
 
@@ -122,7 +140,7 @@ namespace YuGiOh.Bot.Models
     {
 
         [JsonInclude]
-        public DiscordTokenConfig Discord { get; private set; }
+        public string Discord { get; private set; }
 
         [JsonInclude]
         [JsonPropertyName("Bot List")]
@@ -130,17 +148,6 @@ namespace YuGiOh.Bot.Models
 
         [JsonInclude]
         public string Bitly { get; private set; }
-
-    }
-
-    public class DiscordTokenConfig
-    {
-
-        [JsonInclude]
-        public string Legit { get; private set; }
-
-        [JsonInclude]
-        public string Test { get; private set; }
 
     }
 

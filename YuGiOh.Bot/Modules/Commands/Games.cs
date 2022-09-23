@@ -73,7 +73,7 @@ namespace YuGiOh.Bot.Modules.Commands
                             throw new NullReferenceException(nameof(card.Passcode));
 
                         //https://storage.googleapis.com/ygoprodeck.com/pics_artgame/{passcode}.jpg
-                        var url = $"{Constants.ArtBaseUrl}{card.Passcode}.{Constants.ArtFileType}";
+                        var url = $"{Constants.Url.ArtBaseUrl}{card.Passcode}.{Constants.ArtFileType}";
                         var name = $"{card.Name}";
 
                         if (!string.IsNullOrEmpty(card.RealName))

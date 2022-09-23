@@ -104,7 +104,7 @@ namespace YuGiOh.Bot.Core
 
             var config = Config.Instance;
             var isTest = config.IsTest;
-            var token = isTest ? config.Tokens.Discord.Test : config.Tokens.Discord.Legit;
+            var token = config.GetTokens().Discord;
 
             Log("Test: {IsTest}", isTest);
             Log("Logging in...");

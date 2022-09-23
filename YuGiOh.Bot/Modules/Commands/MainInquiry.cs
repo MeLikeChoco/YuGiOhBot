@@ -351,13 +351,13 @@ namespace YuGiOh.Bot.Modules.Commands
         private Task<Stream> GetArt(string passcode)
         {
 
-            var url = $"{Constants.ArtBaseUrl}{passcode}.{Constants.ArtFileType}";
+            var url = $"{Constants.Url.ArtBaseUrl}{passcode}.{Constants.ArtFileType}";
             return Web.GetStream(url);
 
         }
 
         private string GetArtUrl(string passcode)
-            => $"{Constants.ArtBaseUrl}{passcode}.{Constants.ArtFileType}";
+            => $"{Constants.Url.ArtBaseUrl}{passcode}.{Constants.ArtFileType}";
 
         //public string GetFormattedList(IEnumerable<string> cards, string top = null)
         //{

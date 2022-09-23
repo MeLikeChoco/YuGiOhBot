@@ -116,7 +116,7 @@ namespace YuGiOh.Bot.Models.Cards
         }
 
         public string GetArtUrl()
-            => $"{Constants.ArtBaseUrl}{Passcode}.{Constants.ArtFileType}";
+            => $"{Constants.Url.ArtBaseUrl}{Passcode}.{Constants.ArtFileType}";
 
     }
 
