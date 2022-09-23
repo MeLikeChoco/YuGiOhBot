@@ -343,7 +343,7 @@ public class Program : IYuGiOhRepositoryConfiguration
 
         var webhookConfig = Options.Config.Webhook;
 
-        if (!string.IsNullOrWhiteSpace(webhookConfig.Url))
+        if (!string.IsNullOrWhiteSpace(webhookConfig.Url) && Options.IsDebug)
         {
             
             using var httpClient = new HttpClient();
@@ -365,7 +365,7 @@ public class Program : IYuGiOhRepositoryConfiguration
             var content = new StringContent(json, Encoding.UTF8, "application/json");
             var response = await httpClient.PostAsync(webhookConfig.Url, content);
             
-            Log($"Discord webhook status: ${response.StatusCode}");
+            Log($"Discord webhook status: {response.StatusCode}");
             
         }
 
