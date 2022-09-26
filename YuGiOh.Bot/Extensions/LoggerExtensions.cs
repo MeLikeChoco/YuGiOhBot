@@ -265,7 +265,7 @@ namespace YuGiOh.Bot.Extensions
                     lc
                         .Filter.ByExcluding(logEvent
                             => logEvent.MessageTemplate.Text.StartsWith("unknown dispatch", StringComparison.OrdinalIgnoreCase)
-                               || logEvent.MessageTemplate.Text.ToString().StartsWith("error handling dispatch", StringComparison.OrdinalIgnoreCase))
+                               || logEvent.MessageTemplate.Text.StartsWith("error handling dispatch", StringComparison.OrdinalIgnoreCase))
                         .WriteTo.Console(outputTemplate: Config.Instance.LoggingTemplates.Console, theme: ConsoleTheme.None)
                 ); //ConsoleTheme.None to disable theme overwriting my own colors
         // .WriteTo.Console(
