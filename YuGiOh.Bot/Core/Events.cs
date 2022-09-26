@@ -35,6 +35,7 @@ namespace YuGiOh.Bot.Core
             _logger = _services.GetService<ILoggerFactory>()!.CreateLogger("YuGiOh Bot");
 
             _logger.Info("Welcome to {AssemblyName:l}", Assembly.GetExecutingAssembly().GetName());
+            _logger.Info("Current environment: {Environment:l}", Constants.YuGiOhEnvironment);
             _logger.Info("Using Discord.NET v{Version:l}", DiscordConfig.Version);
             _logger.Info("Initializing events...");
 
