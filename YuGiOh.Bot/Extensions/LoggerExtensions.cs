@@ -235,19 +235,25 @@ namespace YuGiOh.Bot.Extensions
 
             Console.OutputEncoding = Encoding.UTF8;
 
-            //todo instead of disabling Unknown Dispatch globally, we will write them to file and ignore them in console
             _logger = new LoggerConfiguration()
+                .ConfigureMinimumLevel()
+                .ConfigureEnrich()
+                .ConfigureWriteTo()
+                .CreateLogger();
+
+            return _logger;
+
+        }
+
+        private static LoggerConfiguration ConfigureMinimumLevel(this LoggerConfiguration loggerConfiguration)
+            => loggerConfiguration
                 .MinimumLevel.Verbose()
                 .MinimumLevel.Override("Microsoft.Extensions.Http", LogEventLevel.Error) //disable IHttpClientFactory logging except for Errors
-                .MinimumLevel.Override("System.Net.Http", LogEventLevel.Error) //disable HttpClient logging except for Errors
-                // .WriteTo.Logger(lc =>
-                //     lc
-                //         .Filter.ByExcluding(logEvent => logEvent.Properties["Message"].ToString().StartsWith("unknown dispatch", StringComparison.OrdinalIgnoreCase))
-                //         .WriteTo.Console(outputTemplate: Config.Instance.LoggingTemplates.Console, theme: ConsoleTheme.None)
-                // ) //ConsoleTheme.None to disable theme overwriting my own colors
-                .WriteTo.Console(outputTemplate: Config.Instance.LoggingTemplates.Console, theme: ConsoleTheme.None) 
-                .WriteTo.File(
-                    Config.Instance.LogFilePath,
+                .MinimumLevel.Override("System.Net.Http", LogEventLevel.Error); //disable HttpClient logging except for Errors
+
+        private static LoggerConfiguration ConfigureWriteTo(this LoggerConfiguration loggerConfiguration)
+            => loggerConfiguration
+                .WriteTo.File(Config.Instance.LogFilePath,
                     outputTemplate: Config.Instance.LoggingTemplates.File,
                     encoding: Encoding.UTF8,
                     shared: false,
@@ -255,14 +261,23 @@ namespace YuGiOh.Bot.Extensions
                     rollOnFileSizeLimit: true,
                     retainedFileCountLimit: 5
                 )
+                .WriteTo.Logger(lc =>
+                    lc
+                        .Filter.ByExcluding(logEvent
+                            => logEvent.MessageTemplate.Text.StartsWith("unknown dispatch", StringComparison.OrdinalIgnoreCase)
+                               || logEvent.MessageTemplate.Text.ToString().StartsWith("error handling dispatch", StringComparison.OrdinalIgnoreCase))
+                        .WriteTo.Console(outputTemplate: Config.Instance.LoggingTemplates.Console, theme: ConsoleTheme.None)
+                ); //ConsoleTheme.None to disable theme overwriting my own colors
+        // .WriteTo.Console(
+        //     outputTemplate: Config.Instance.LoggingTemplates.Console,
+        //     theme: ConsoleTheme.None
+        // );
+
+        private static LoggerConfiguration ConfigureEnrich(this LoggerConfiguration loggerConfiguration)
+            => loggerConfiguration
                 .Enrich.FromLogContext()
                 .Enrich.With<ColorEnricher>()
-                .Enrich.With<LogLevelEnricher>()
-                .CreateLogger();
-
-            return _logger;
-
-        }
+                .Enrich.With<LogLevelEnricher>();
 
     }
 }
