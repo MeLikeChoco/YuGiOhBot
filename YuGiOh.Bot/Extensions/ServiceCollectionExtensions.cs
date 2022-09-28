@@ -31,6 +31,7 @@ public static class ServiceCollectionExtensions
         LogLevel = LogSeverity.Verbose,
         SuppressUnknownDispatchWarnings = true,
         MessageCacheSize = 20,
+        GatewayIntents = GatewayIntents.MessageContent | GatewayIntents.DirectMessages | GatewayIntents.AllUnprivileged
 
     };
 
