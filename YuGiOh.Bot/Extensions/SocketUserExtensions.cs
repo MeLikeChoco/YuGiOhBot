@@ -10,6 +10,6 @@ public static class SocketUserExtensions
     /// </summary>
     /// <returns>{username}#{discriminator}</returns>
     public static string GetFullUsername(this SocketUser user)
-        => $"{user.Username}#${user.Discriminator}";
+        => $"{user.Username}#{user.Discriminator}";
 
 }
