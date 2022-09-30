@@ -50,7 +50,7 @@ namespace YuGiOh.Bot.Handlers
 
         }
 
-        private async Task HandleSlashCommand(SocketSlashCommand interaction)
+        private void PreprocessInteraction(SocketInteraction interaction)
         {
 
             if (interaction.User.IsBot)
@@ -61,12 +61,19 @@ namespace YuGiOh.Bot.Handlers
             switch (interaction.Channel)
             {
                 case SocketDMChannel:
-                    _logger.Info("{Username:l}#{Discriminator:l} in DM's", user.Username, user.Discriminator);
+                    _logger.Info("{Username} in DM's", user.GetFullUsername());
                     break;
                 case SocketTextChannel txtChannel:
-                    _logger.Info("{Username:l}#{Discriminator:l} from {GuildName:l}/{ChannelName:l}", txtChannel.Guild.Name, txtChannel.Name);
+                    _logger.Info("{Username} from {Channel}", user.GetFullUsername(), txtChannel.GetGuildAndChannel());
                     break;
             }
+
+        }
+
+        private async Task HandleSlashCommand(SocketSlashCommand interaction)
+        {
+
+            PreprocessInteraction(interaction);
 
             _logger.Info(interaction.GetCmdString());
 
@@ -81,20 +88,7 @@ namespace YuGiOh.Bot.Handlers
         private async Task HandleAutocomplete(SocketAutocompleteInteraction interaction)
         {
 
-            if (interaction.User.IsBot)
-                return;
-
-            var user = interaction.User;
-
-            switch (interaction.Channel)
-            {
-                case SocketDMChannel:
-                    _logger.Info("{Username:l}#{Discriminator:l} in DM's", user.Username, user.Discriminator);
-                    break;
-                case SocketTextChannel txtChannel:
-                    _logger.Info("{Username:l}#{Discriminator:l} from {GuildName:l}/{ChannelName:l}", txtChannel.Guild.Name, txtChannel.Name);
-                    break;
-            }
+            PreprocessInteraction(interaction);
 
             var context = new ShardedInteractionContext<SocketAutocompleteInteraction>(_client, interaction);
             var result = await _interactionService.ExecuteCommandAsync(context, _serviceProvider);

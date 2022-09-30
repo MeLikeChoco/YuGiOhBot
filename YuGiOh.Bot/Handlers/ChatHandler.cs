@@ -75,7 +75,7 @@ namespace YuGiOh.Bot.Handlers
                     if (channel is SocketTextChannel textChannel)
                     {
 
-                        logger.Info("{Author} from {GuildName}", message.Author.Username, textChannel.Guild.Name);
+                        logger.Info("{Username} from {GuildName}", message.Author.GetFullUsername(), textChannel.Guild.Name);
                         var id = textChannel.Guild.Id;
                         var guildConfig = await _guildConfigDbService.GetGuildConfigAsync(id);
                         minimal = guildConfig.Minimal;
@@ -125,7 +125,7 @@ namespace YuGiOh.Bot.Handlers
                         var elapsed = watch.Elapsed;
                         var time = elapsed.TotalSeconds;
 
-                        logger.Info("{CardName} took {Time} {Quantifier:l} to fetch", cardName, time > 1 ? time: time * 1000, time > 1 ? "seconds": "milliseconds");
+                        logger.Info("{CardName} took {Time} {Quantifier:l} to fetch", cardName, time > 1 ? time : time * 1000, time > 1 ? "seconds" : "milliseconds");
 
                         try
                         {

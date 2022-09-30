@@ -66,10 +66,10 @@ namespace YuGiOh.Bot.Handlers
                 {
 
                     case SocketDMChannel:
-                        _logger.Info("{Username:l}#{Discriminator:l} in DM's", user.Username, user.Discriminator);
+                        _logger.Info("{Username} in DM's", user.GetFullUsername());
                         break;
                     case SocketTextChannel txtChannel:
-                        _logger.Info("{Username:l}#{Discriminator:l} from {GuildName:l}/{ChannelName:l}", user.Username, user.Discriminator, txtChannel.Guild.Name, txtChannel.Name);
+                        _logger.Info("{Username} from {Channel}", user.GetFullUsername(), txtChannel.GetGuildAndChannel());
                         break;
 
                 }
