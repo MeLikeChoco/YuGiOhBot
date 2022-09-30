@@ -102,7 +102,7 @@ public class Utility : MainInteractionBase<SocketSlashCommand>
 
     [SlashCommand("ping", "Get the latency of the bot to the gateway")]
     public Task PingCommand()
-        => ReplyAsync($"**{Context.Client.Latency}ms**");
+        => RespondAsync($"**{Context.Client.Latency}ms**");
 
     [SlashCommand("info", "Get info on the bot")]
     public async Task InfoCommand()

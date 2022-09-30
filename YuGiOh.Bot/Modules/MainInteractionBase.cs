@@ -85,7 +85,7 @@ namespace YuGiOh.Bot.Modules
                 FollowupAsync(text, embeds, isTTS, ephemeral, allowedMentions, options, components, embed) :
                 !Context.Interaction.HasResponded ?
                     base.RespondAsync(text, embeds, isTTS, ephemeral, allowedMentions, options, components, embed) :
-                    ReplyAsync(text, isTTS, embed, options, allowedMentions, components: components);
+                    base.ReplyAsync(text, isTTS, embed, options, allowedMentions, components: components);
 
         }
 
