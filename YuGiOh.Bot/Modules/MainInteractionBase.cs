@@ -23,7 +23,7 @@ namespace YuGiOh.Bot.Modules
         protected IGuildConfigDbService GuildConfigDbService { get; }
         protected Web Web { get; }
 
-        protected GuildConfig GuildConfig;
+        protected GuildConfig GuildConfig { get; private set; }
 
         protected static PaginatedAppearanceOptions PagedOptions => new()
         {
