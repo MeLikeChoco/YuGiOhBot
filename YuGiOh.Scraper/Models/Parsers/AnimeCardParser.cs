@@ -29,13 +29,14 @@ public class AnimeCardParser
         var dom = await GetDom(url);
         var parserOutput = dom.GetElementByClassName("mw-parser-output");
         var cardTable = parserOutput.GetElementByClassName("card-table");
+        var img = cardTable.GetElementByClassName("cardtable-main_image-wrapper").GetElementsByTagName("img").FirstOrDefault();
 
         var card = new AnimeCardEntity
         {
 
             Id = int.Parse(_id),
             Name = cardTable.GetElementByClassName("heading").TextContent.Trim(),
-            Img = cardTable.GetElementByClassName("cardtable-main_image-wrapper").GetElementsByTagName("img").FirstOrDefault()?.GetAttribute("src"),
+            Img = img?.GetAttribute("srcset")?.Split(' ').FirstOrDefault() ?? img?.GetAttribute("src"),
             Url = string.Format(ConstantString.YugipediaUrl + ConstantString.MediaWikiIdUrl, _id)
 
         };
