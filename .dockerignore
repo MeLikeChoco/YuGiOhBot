@@ -20,3 +20,5 @@ docker-compose.yml
 *.DotSettings.user
 
 .git*
+
+!wait-for-it.sh

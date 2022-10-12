@@ -22,7 +22,7 @@ public class BoosterPackParser
         _id = id;
     }
 
-    public async Task<BoosterPackEntity> Parse()
+    public async Task<BoosterPackEntity> ParseAsync()
     {
 
         var url = string.Format(ConstantString.MediaWikiParseIdUrl, _id);

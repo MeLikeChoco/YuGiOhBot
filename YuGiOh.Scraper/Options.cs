@@ -51,6 +51,9 @@ public class Options
 
     [Option('b', "boosters", Default = int.MaxValue)]
     public int MaxBoostersToParse { get; set; }
+    
+    [Option("anime", Default = int.MaxValue)]
+    public int AnimeCardsToParse { get; set; }
 
     [Option("ignore_hash", Default = false)]
     public bool ShouldIgnoreHash { get; set; }

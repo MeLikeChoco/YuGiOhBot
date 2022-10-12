@@ -9,7 +9,6 @@ using YuGiOh.Common.Interfaces;
 using YuGiOh.Common.Models.YuGiOh;
 using YuGiOh.Common.Repositories;
 using YuGiOh.Common.Repositories.Interfaces;
-using YuGiOh.Common.Test.Attributes.DataAttributes;
 
 namespace YuGiOh.Common.Test;
 
@@ -82,13 +81,15 @@ public class YuGiOhRepositoryTests
     // }
 
     [Theory]
-    [InputCardEntityData("GetCardAsync_ExpectSuccess_Data.json")]
-    public async Task GetCardAsync_ExpectSuccess(string input, CardEntity expected)
+    [InlineData("Raidraptor - Revolution Falcon - Air Raid")]
+    [InlineData("D/D/D Deviser King Deus Machinex")]
+    [InlineData("Astrograph Sorcerer")]
+    public async Task GetCardAsync_ExpectSuccess(string input)
     {
 
-        var actual = await _yugiohRepo.GetCardAsync(input);
+        var result = await _yugiohRepo.GetCardAsync(input);
 
-        AssertCardEntityEquality(expected, actual);
+        Assert.NotNull(result);
 
     }
 
@@ -96,10 +97,23 @@ public class YuGiOhRepositoryTests
     [InlineData("book")]
     [InlineData("ghost")]
     [InlineData("dragon")]
-    public async Task SearchCardAsync_ExpectNotEmpty_ExpectSuccess(string input)
+    public async Task SearchCardsAsync_ExpectNotEmpty_ExpectSuccess(string input)
     {
 
         var result = await _yugiohRepo.SearchCardsAsync(input);
+
+        Assert.NotEmpty(result);
+
+    }
+
+    [Theory]
+    [InlineData("number 1")]
+    [InlineData("Red")]
+    [InlineData("plANeT")]
+    public async Task SearchAnimeCardsAsync_ExpectNotEmpty_ExpectSuccess(string input)
+    {
+
+        var result = await _yugiohRepo.SearchAnimeCardsAsync(input);
 
         Assert.NotEmpty(result);
 
@@ -119,13 +133,15 @@ public class YuGiOhRepositoryTests
     }
 
     [Theory]
-    [InputCardEntityData("GetCardFuzzyAsync_ExpectSuccess_Data.json")]
-    public async Task GetCardFuzzyAsync_ExpectSuccess(string input, CardEntity expected)
+    [InlineData("awakening of the possdessed - nefariouser archfiend")]
+    [InlineData("carpiponjca, mystical beast of the forest")]
+    [InlineData("Karakuri Steel SahOgun mdl 00x \"Bureido\"")]
+    public async Task GetCardFuzzyAsync_ExpectSuccess(string input)
     {
 
-        var actual = await _yugiohRepo.GetCardFuzzyAsync(input);
+        var result = await _yugiohRepo.GetCardFuzzyAsync(input);
 
-        AssertCardEntityEquality(expected, actual);
+        Assert.NotNull(result);
 
     }
 
@@ -139,15 +155,15 @@ public class YuGiOhRepositoryTests
 
     }
 
-    // [Fact]
-    // public async Task GetRandomMonsterAsync_ExpectSuccess()
-    // {
-    //
-    //     var result = await _yugiohRepo.GetRandomMonsterAsync();
-    //     
-    //     Assert.NotNull(result);
-    //
-    // }
+    [Fact]
+    public async Task GetRandomMonsterAsync_ExpectSuccess()
+    {
+
+        var result = await _yugiohRepo.GetRandomMonsterAsync();
+
+        Assert.NotNull(result);
+
+    }
 
     [Theory]
     [InlineData("elemental hero")]
@@ -264,6 +280,25 @@ public class YuGiOhRepositoryTests
 
     }
 
+    [Theory]
+    [InlineData("dragon")]
+    [InlineData("Harpie")]
+    [InlineData("mAgiCiAN")]
+    public async Task GetAnimeCardsAutocompleteAsync_TypingSimulation_ExpectSuccess(string input)
+    {
+
+        for (var i = 0; i < input.Length; i++)
+        {
+
+            var parameter = input[..(i + 1)];
+            var names = await _yugiohRepo.GetAnimeCardsAutocompleteAsync(parameter);
+
+            AssertCollectionStartsWithThenOrdered(names, parameter);
+
+        }
+
+    }
+
     [Fact]
     public async Task GetNameWithPasscodeAsync_ExpectSuccess()
     {
@@ -318,7 +353,7 @@ public class YuGiOhRepositoryTests
     [InlineData("premium")]
     public async Task GetBoosterPacksAutocompleteAsync_TypingSimulation_ExpectSuccess(string input)
     {
-        
+
         for (var i = 0; i < input.Length; i++)
         {
 
@@ -328,7 +363,7 @@ public class YuGiOhRepositoryTests
             AssertCollectionStartsWithThenOrdered(names, parameter);
 
         }
-        
+
     }
 
     private static void AssertCardEntityEquality(CardEntity expected, CardEntity actual, bool compareCollections = true)

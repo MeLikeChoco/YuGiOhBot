@@ -2,7 +2,7 @@
   "Db Connection Strings": {
     "Dev": {
       "YuGiOh": "Server=localhost;Port=5432;Database=yugioh;User Id=postgres;Password=testing",
-      "Guilds": "Server=localhost;Port=5432;Database=guilds;User Id=postgres;Password=testing"      
+      "Guilds": "Server=localhost;Port=5432;Database=guilds;User Id=postgres;Password=testing"
     },
     "Docker": {
       "YuGiOh": "Server=db;Port=5432;Database=yugioh;User Id=postgres;Password=testing",

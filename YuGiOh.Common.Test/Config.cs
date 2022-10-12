@@ -43,6 +43,7 @@ public record DbConnectionStrings
 
     // ReSharper disable once UnusedAutoPropertyAccessor.Global
     public string? YuGiOh { get; init; }
+
     // ReSharper disable once UnusedAutoPropertyAccessor.Global
     public string? Guilds { get; init; }
 

@@ -22,13 +22,12 @@ public class CardParser
 
     private string _parseOutput;
 
-    public int Id { get; }
-    public string Name { get; }
+    private readonly string _id, _name;
 
     public CardParser(string name, string id)
     {
-        Name = name;
-        Id = int.Parse(id);
+        _id = id;
+        _name = name;
     }
 
     public async Task<CardEntity> ParseAsync()
@@ -41,7 +40,7 @@ public class CardParser
         var card = new CardEntity
         {
 
-            Name = Name,
+            Name = _name,
             Img = imgElement.GetAttribute("srcset")?.Split(' ').ElementAtOrDefault(2) ?? imgElement.GetAttribute("src")
 
         };
@@ -49,7 +48,7 @@ public class CardParser
         var table = parserOutput.GetElementByClassName("card-table");
         var realName = table.FirstElementChild?.TextContent.Trim();
 
-        if (Name != realName)
+        if (_name != realName)
             card.RealName = realName;
 
         //don't inline for readability
@@ -293,8 +292,8 @@ public class CardParser
         GetTranslations(card, parserOutput);
 
         //card.CardTrivia = await GetCardTrivia(parserOutput);
-        card.Url = string.Format(ConstantString.YugipediaUrl + ConstantString.MediaWikiIdUrl, Id);
-        card.Id = Id;
+        card.Url = string.Format(ConstantString.YugipediaUrl + ConstantString.MediaWikiIdUrl, _id);
+        card.Id = int.Parse(_id);
 
         return card;
 
@@ -494,7 +493,7 @@ public class CardParser
         if (_parseOutput != null)
             return _parseOutput;
 
-        var url = string.Format(ConstantString.MediaWikiParseIdUrl, Id);
+        var url = string.Format(ConstantString.MediaWikiParseIdUrl, _id);
         _parseOutput = await Constant.HttpClient.GetStringAsync(url);
 
         return _parseOutput;

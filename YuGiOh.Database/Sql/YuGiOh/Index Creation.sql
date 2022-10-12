@@ -87,3 +87,12 @@ create unique index if not exists boosterpacks_cards_uindex
 
 create unique index if not exists boosterpacks_dates_uindex
     on boosterpacks (dates);
+
+create index if not exists anime_cards_name_fuzzy_idx
+    on anime_cards using gin (name gin_trgm_ops);
+
+create index if not exists anime_cards_name_idx
+    on anime_cards (name);
+
+create index if not exists anime_cards_name_include_id_idx
+    on anime_cards (name) include (id);

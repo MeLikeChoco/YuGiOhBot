@@ -25,6 +25,7 @@ public static class ConstantString
     public const string MediaWikiSkillCards = "api.php?action=query&format=json&list=categorymembers&cmtitle=Category%3ASkill_Cards&cmlimit=50000";
     public const string MediaWikiTokenCards = "api.php?action=query&format=json&list=categorymembers&cmtitle=Category%3ATokens&cmlimit=50000";
     public const string MediaWikiCounterCards = "api.php?action=query&format=json&list=categorymembers&cmtitle=Category%3ACounters&cmlimit=50000";
+    public const string MediaWikiAnimeCards = "api.php?action=query&format=json&list=categorymembers&cmtitle=Category%3AAnime_cards&cmlimit=50000";
 
     public const string MediaWikiTcgPacks = "api.php?action=query&format=json&list=categorymembers&cmtitle=Category%3ATCG_Booster_Packs";
     public const string MediaWikiOcgPacks = "api.php?action=query&format=json&list=categorymembers&cmtitle=Category%3AOCG_Booster_Packs";

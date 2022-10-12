@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
@@ -48,6 +47,10 @@ public class Program : IYuGiOhRepositoryConfiguration
 
         var ocgLinks = await GetLinks(ConstantString.MediaWikiOcgCards);
 
+        Log("Getting Anime cards.");
+
+        var animeLinks = await GetLinks(ConstantString.MediaWikiAnimeCards);
+
         Log("Filtering cards...");
 
         var links = await FilterCardLinks(tcgLinks, ocgLinks);
@@ -70,9 +73,14 @@ public class Program : IYuGiOhRepositoryConfiguration
         var boosterProcResponse = await ProcessBoosters(tcgLinks, ocgLinks);
 
         Log($"Processed {boosterProcResponse.Count} booster packs. There were {boosterProcResponse.Errors.Count} errors.");
+        Log($"Getting anime cards.");
+
+        var animeCardProcResponse = await ProcessAnimeCards(animeLinks);
+
+        Log($"Processed {animeCardProcResponse.Count} anime cards. There were {animeCardProcResponse.Errors.Count} errors.");
         Log("Processing errors.");
 
-        var errors = cardProcResponse.Errors.Concat(boosterProcResponse.Errors).ToList();
+        var errors = cardProcResponse.Errors.Concat(boosterProcResponse.Errors).Concat(animeCardProcResponse.Errors).ToList();
 
         await ProcessErrors(errors);
 
@@ -80,7 +88,7 @@ public class Program : IYuGiOhRepositoryConfiguration
         Log("Sending Discord webhook database updated status...");
 
         await SendDiscordWebhook();
-        
+
         Log("Sent Discord webhook database updated status.");
 
     }
@@ -104,7 +112,7 @@ public class Program : IYuGiOhRepositoryConfiguration
 
     }
 
-    private async Task<CardProcessorResponse> ProcessCards(
+    private async Task<ProcessorResponse> ProcessCards(
         IDictionary<string, string> tcgLinks,
         IDictionary<string, string> ocgLinks,
         IDictionary<string, string> links
@@ -114,7 +122,11 @@ public class Program : IYuGiOhRepositoryConfiguration
         var size = links.Count;
 
         if (Options.MaxCardsToParse <= size)
+        {
             links = links.RandomSubset(Options.MaxCardsToParse).ToDictionary(kv => kv.Key, kv => kv.Value);
+            size = links.Count;
+        }
+
         //links = links.Take(Options.MaxCardsToParse);
 
         var errors = new ConcurrentBag<Error>();
@@ -130,12 +142,12 @@ public class Program : IYuGiOhRepositoryConfiguration
             do
             {
 
-                var (name, link) = nameToLink;
+                var (name, id) = nameToLink;
 
                 try
                 {
 
-                    var parser = new CardParser(name, link);
+                    var parser = new CardParser(name, id);
                     // var parserHash = await parser.GetParseOutput().ContinueWith(outputTask => outputTask.Result.GetMurMurHash(), _); //wanted to try ContinueWith instead of wrapping await
                     //
                     // //this is to determine whether or not to parse
@@ -166,7 +178,7 @@ public class Program : IYuGiOhRepositoryConfiguration
                             Name = name,
                             Message = ex.Message,
                             StackTrace = ex.StackTrace,
-                            Url = string.Format(ConstantString.YugipediaUrl + ConstantString.MediaWikiIdUrl, link),
+                            Url = string.Format(ConstantString.YugipediaUrl + ConstantString.MediaWikiIdUrl, id),
                             Type = Type.Card,
                             Timestamp = DateTime.UtcNow
                         });
@@ -184,7 +196,7 @@ public class Program : IYuGiOhRepositoryConfiguration
 
         ClearLine();
 
-        return new CardProcessorResponse
+        return new ProcessorResponse
         {
 
             Count = size,
@@ -194,7 +206,10 @@ public class Program : IYuGiOhRepositoryConfiguration
 
     }
 
-    private async Task<BoosterProcessorResponse> ProcessBoosters(IDictionary<string, string> tcgLinks, IDictionary<string, string> ocgLinks)
+    private async Task<ProcessorResponse> ProcessBoosters(
+        IDictionary<string, string> tcgLinks,
+        IDictionary<string, string> ocgLinks
+    )
     {
 
         var nameToLinks = tcgLinks.Union(ocgLinks).ToList();
@@ -220,13 +235,13 @@ public class Program : IYuGiOhRepositoryConfiguration
             do
             {
 
-                var (name, link) = nameToLink;
+                var (name, id) = nameToLink;
 
                 try
                 {
 
-                    var parser = new BoosterPackParser(name, link);
-                    var card = await parser.Parse();
+                    var parser = new BoosterPackParser(name, id);
+                    var card = await parser.ParseAsync();
                     card.TcgExists = tcgLinks.ContainsKey(name);
                     card.OcgExists = ocgLinks.ContainsKey(name);
 
@@ -249,7 +264,7 @@ public class Program : IYuGiOhRepositoryConfiguration
                             Name = name,
                             Message = ex.Message,
                             StackTrace = ex.StackTrace,
-                            Url = string.Format(ConstantString.YugipediaUrl + ConstantString.MediaWikiIdUrl, link),
+                            Url = string.Format(ConstantString.YugipediaUrl + ConstantString.MediaWikiIdUrl, id),
                             Type = Type.Booster,
                             Timestamp = DateTime.UtcNow
                         });
@@ -268,7 +283,87 @@ public class Program : IYuGiOhRepositoryConfiguration
 
         ClearLine();
 
-        return new BoosterProcessorResponse
+        return new ProcessorResponse
+        {
+
+            Count = size,
+            Errors = errors
+
+        };
+
+    }
+
+    private async Task<ProcessorResponse> ProcessAnimeCards(IDictionary<string, string> links)
+    {
+
+        var size = links.Count;
+
+        if (Options.AnimeCardsToParse <= size)
+        {
+            links = links.RandomSubset(Options.AnimeCardsToParse).ToDictionary(kv => kv.Key, kv => kv.Value);
+            size = links.Count;
+        }
+
+        var errors = new ConcurrentBag<Error>();
+        var repo = new YuGiOhRepository(this);
+        var count = 0;
+
+        await Parallel.ForEachAsync(links, ParallelOptions, async (nameToLink, _) =>
+        {
+
+            var retryCount = 0;
+            Exception check;
+
+            do
+            {
+
+                var (name, id) = nameToLink;
+
+                try
+                {
+
+                    var parser = new AnimeCardParser(name, id);
+                    var card = await parser.ParseAsync();
+
+                    await repo.InsertAnimeCardAsync(card);
+
+                    check = null;
+
+                }
+                catch (Exception ex)
+                {
+
+                    retryCount++;
+                    check = ex;
+
+                    if (retryCount == Options.Config.MaxRetry)
+                    {
+
+                        errors.Add(new Error
+                        {
+                            Name = name,
+                            Message = ex.Message,
+                            StackTrace = ex.StackTrace,
+                            Url = string.Format(ConstantString.YugipediaUrl + ConstantString.MediaWikiIdUrl, id),
+                            Type = Type.Booster,
+                            Timestamp = DateTime.UtcNow
+                        });
+
+                    }
+
+                    await Task.Delay(Options.Config.RetryDelay, CancellationToken.None);
+
+                }
+
+            } while (check is not null && retryCount < Options.Config.MaxRetry);
+
+            var __ = WriteProgress("Anime cards", ref count, size);
+
+        });
+
+        ClearLine();
+
+        return new ProcessorResponse
         {
 
             Count = size,
@@ -345,7 +440,7 @@ public class Program : IYuGiOhRepositoryConfiguration
 
         if (!string.IsNullOrWhiteSpace(webhookConfig.Url) && Options.IsDebug)
         {
-            
+
             using var httpClient = new HttpClient();
             var random = new Random();
             var payload = new WebhookMessage
@@ -364,9 +459,9 @@ public class Program : IYuGiOhRepositoryConfiguration
             // var json = "{\"content\":null,\"embeds\":[{\"title\":\"Database updated\", \"color\":5814783, \"timestamp\":\"2022-04-01T04:00:00.000Z\"}]}";
             var content = new StringContent(json, Encoding.UTF8, "application/json");
             var response = await httpClient.PostAsync(webhookConfig.Url, content);
-            
+
             Log($"Discord webhook status: {response.StatusCode}");
-            
+
         }
 
     }
@@ -401,7 +496,7 @@ public class Program : IYuGiOhRepositoryConfiguration
 
         if (!connectionStr.EndsWith(';'))
             connectionStr += ';';
-        
+
         connectionStr += $"Pooling=true;Minimum Pool Size={ParallelOptions.MaxDegreeOfParallelism};Maximum Pool Size={ParallelOptions.MaxDegreeOfParallelism};";
 
         return new NpgsqlConnection(connectionStr);

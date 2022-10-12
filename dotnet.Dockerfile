@@ -2,6 +2,8 @@ FROM mcr.microsoft.com/dotnet/sdk:6.0.401
 
 WORKDIR src/
 
+COPY wait-for-it.sh ./
+
 COPY *.sln ./
 
 #COPY YuGiOh.Database/YuGiOh.Database.csproj ./YuGiOh.Database/
@@ -19,4 +21,7 @@ COPY *.sln ./
 ##I have no trust in myself remembering 
 COPY . .
 
-ENTRYPOINT dotnet test --verbosity normal
+RUN chmod +x wait-for-it.sh
+
+ENTRYPOINT ["./wait-for-it.sh", "db:5432", "--strict", "--timeout=60", "--", "dotnet", "test", "--verbosity=normal"]
+#ENTRYPOINT dotnet test --verbosity normal

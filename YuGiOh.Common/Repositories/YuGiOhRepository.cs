@@ -242,6 +242,22 @@ namespace YuGiOh.Common.Repositories
 
         }
 
+        public async Task InsertAnimeCardAsync(AnimeCardEntity card)
+        {
+
+            await using var connection = _config.GetYuGiOhDbConnection();
+
+            await connection.OpenAsync().ConfigureAwait(false);
+
+            var doesExistBit = await connection.ExecuteScalarAsync<bool>("select true from anime_cards where id = @Id", new { card.Id }).ConfigureAwait(false);
+
+            if (doesExistBit)
+                await connection.UpdateAsync(card).ConfigureAwait(false);
+            else
+                await connection.InsertAsync(card).ConfigureAwait(false);
+
+        }
+
         public async Task InsertErrorAsync(Error error)
         {
 
@@ -290,6 +306,19 @@ namespace YuGiOh.Common.Repositories
             await connection.OpenAsync().ConfigureAwait(false);
 
             var cards = await connection.QueryCardsProcAsync("search_cards", new { input }).ConfigureAwait(false);
+
+            return cards;
+
+        }
+
+        public async Task<IEnumerable<AnimeCardEntity>> SearchAnimeCardsAsync(string input)
+        {
+
+            await using var connection = _config.GetYuGiOhDbConnection();
+
+            await connection.OpenAsync().ConfigureAwait(false);
+
+            var cards = await connection.QueryProcAsync<AnimeCardEntity>("search_anime_cards", new { input }).ConfigureAwait(false);
 
             return cards;
 
@@ -348,6 +377,19 @@ namespace YuGiOh.Common.Repositories
             await connection.OpenAsync().ConfigureAwait(false);
 
             var card = await connection.QuerySingleCardProcAsync("get_random_card").ConfigureAwait(false);
+
+            return card;
+
+        }
+
+        public async Task<CardEntity> GetRandomMonsterAsync()
+        {
+
+            await using var connection = _config.GetYuGiOhDbConnection();
+
+            await connection.OpenAsync().ConfigureAwait(false);
+
+            var card = await connection.QuerySingleCardProcAsync("get_random_monster").ConfigureAwait(false);
 
             return card;
 
@@ -445,6 +487,19 @@ namespace YuGiOh.Common.Repositories
             var antisupports = await connection.QueryProcAsync<string>("get_antisupports_autocomplete", new { input }).ConfigureAwait(false);
 
             return antisupports;
+
+        }
+
+        public async Task<IEnumerable<string>> GetAnimeCardsAutocompleteAsync(string input)
+        {
+
+            await using var connection = _config.GetYuGiOhDbConnection();
+
+            await connection.OpenAsync().ConfigureAwait(false);
+
+            var cards = await connection.QueryProcAsync<string>("get_anime_cards_autocomplete", new { input }).ConfigureAwait(false);
+
+            return cards;
 
         }
 

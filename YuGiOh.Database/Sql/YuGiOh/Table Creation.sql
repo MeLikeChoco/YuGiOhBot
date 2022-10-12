@@ -51,7 +51,8 @@ create table if not exists cards
 
 create table if not exists card_to_antisupports
 (
-    cardantisupportsid integer references cards (antisupports),
+    cardantisupportsid integer
+        references cards (antisupports),
     antisupportsid integer references antisupports,
     constraint cardantisupportsid_antisupportsid_pair_unique unique (cardantisupportsid, antisupportsid)
 );
@@ -147,4 +148,25 @@ create table if not exists errors
     stacktrace text,
     url varchar,
     type varchar(12)
+);
+
+create table if not exists anime_cards
+(
+    id integer not null primary key,
+    name varchar,
+    cardtype varchar,
+    property varchar,
+    attribute varchar,
+    link integer,
+    linkarrows varchar,
+    level varchar,
+    pendulumscale varchar,
+    rank varchar,
+    types varchar,
+    lore varchar,
+    atk varchar,
+    def varchar,
+    appearances varchar,
+    img varchar,
+    url varchar
 );
