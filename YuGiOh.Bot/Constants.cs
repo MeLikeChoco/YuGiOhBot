@@ -15,7 +15,7 @@ namespace YuGiOh.Bot
             public const string YugiPediaWikiUrl = "https://yugipedia.com/wiki/";
 
 
-            public const string ArtBaseUrl = "https://storage.googleapis.com/ygoprodeck.com/pics_artgame/";
+            public const string ArtBaseUrl = "https://images.ygoprodeck.com/images/cards_cropped/";
             public const string BotsOnDiscordXyzUrl = "https://bots.ondiscord.xyz/bot-api/bots/{0}/guilds";
             public const string DiscordBotsGGUrl = "https://discord.bots.gg/api/v1/bots/{0}/stats";
             //public const string BlueDiscordBotUrl = "https://discordbots.org/api/bots/{0}/stats";
