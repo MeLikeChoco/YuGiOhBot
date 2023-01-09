@@ -63,7 +63,7 @@ public class Utility : MainInteractionBase<SocketSlashCommand>
 
     [SlashCommand("invite", "Gets an invite to the bot")]
     public Task InviteCommand()
-        => RespondAsync($"{Context.User.Mention} <{_config.BotInvite}>");
+        => RespondAsync($"{_config.BotInvite}");
 
     [SlashCommand("uptime", "Gets the uptime of the bot")]
     public async Task UptimeCommand()

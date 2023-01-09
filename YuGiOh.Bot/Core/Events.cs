@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using YuGiOh.Bot.Extensions;
 using YuGiOh.Bot.Handlers;
 using YuGiOh.Bot.Models;
+using YuGiOh.Bot.Models.TypeReaders;
 using YuGiOh.Bot.Services;
 using YuGiOh.Bot.Services.Interfaces;
 
@@ -180,7 +181,8 @@ namespace YuGiOh.Bot.Core
             _client.MessageReceived += ActivatorUtilities.CreateInstance<ChatHandler>(_services).HandlePotentialInlineSearchAsync;
             _client.InteractionCreated += ActivatorUtilities.CreateInstance<InteractionHandler>(_services).HandleInteractionAsync;
 
-            _commandService.AddTypeReader<string>(new StringInputTypeReader());
+            _commandService.AddTypeReader<string>(new StringCommandInputTypeReader());
+            _interactionService.AddTypeConverter<string>(new StringInteractionInputTypeConverter());
 
             var textCmdModules = await _commandService.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
             var appCmdModules = await _interactionService.AddModulesAsync(Assembly.GetEntryAssembly(), _services);

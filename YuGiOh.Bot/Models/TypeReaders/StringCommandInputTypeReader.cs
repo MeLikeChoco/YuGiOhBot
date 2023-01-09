@@ -3,9 +3,9 @@ using System.Threading.Tasks;
 using Discord.Commands;
 using YuGiOh.Bot.Extensions;
 
-namespace YuGiOh.Bot.Models
+namespace YuGiOh.Bot.Models.TypeReaders
 {
-    public class StringInputTypeReader : TypeReader
+    public class StringCommandInputTypeReader : TypeReader
     {
 
         public override Task<TypeReaderResult> ReadAsync(ICommandContext context, string input, IServiceProvider services)
@@ -14,7 +14,9 @@ namespace YuGiOh.Bot.Models
             if (string.IsNullOrEmpty(input))
                 return Task.FromResult(TypeReaderResult.FromError(CommandError.ParseFailed, "Null or empty input"));
 
-            return Task.FromResult(TypeReaderResult.FromSuccess(input.ConvertTypesetterToTypewriter().Trim()));
+            input = TypeReaderUtils.SanitizeInput(input);
+
+            return Task.FromResult(TypeReaderResult.FromSuccess(input));
 
         }
 
