@@ -9,7 +9,7 @@ public class StringInteractionInputTypeConverter : TypeConverter<string>
 {
 
     public override ApplicationCommandOptionType GetDiscordType()
-        => ApplicationCommandOptionType.Mentionable;
+        => ApplicationCommandOptionType.String;
 
     public override Task<TypeConverterResult> ReadAsync(IInteractionContext context, IApplicationCommandInteractionDataOption option, IServiceProvider services)
     {

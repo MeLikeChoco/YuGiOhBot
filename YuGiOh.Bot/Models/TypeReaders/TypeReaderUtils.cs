@@ -6,10 +6,15 @@ public static class TypeReaderUtils
 {
 
     public static string SanitizeInput(string input)
+        => SanitizeMentions(
+            input
+                .ConvertTypesetterToTypewriter()
+                .Trim()
+        );
+
+    public static string SanitizeMentions(string input)
         => input
-            .ConvertTypesetterToTypewriter()
             .Replace("@everyone", "\\@everyone")
-            .Replace("@here", "\\@here")
-            .Trim();
+            .Replace("@here", "\\@here");
 
 }

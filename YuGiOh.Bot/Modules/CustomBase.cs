@@ -42,12 +42,33 @@ namespace YuGiOh.Bot.Modules
 
             str += "!";
 
-            return ReplyAsync(str);
+            return ReplyAsync(str, allowedMentions: AllowedMentions.None);
 
         }
 
         protected Task TooManyError()
             => ReplyAsync("Too many results were returned, please refine your search!");
+
+        protected override Task<IUserMessage> ReplyAsync(
+            string message = null,
+            bool isTTS = false,
+            Embed embed = null,
+            RequestOptions options = null,
+            AllowedMentions allowedMentions = null,
+            MessageReference messageReference = null,
+            MessageComponent components = null,
+            ISticker[] stickers = null,
+            Embed[] embeds = null
+        )
+        {
+
+            if (!string.IsNullOrWhiteSpace(message))
+                message = message
+                    .Replace("@everyone", "\\@everyone")
+                    .Replace("@here", "\\@here");
+
+            return base.ReplyAsync(message, isTTS, embed, options, allowedMentions, messageReference, components, stickers, embeds);
+        }
 
     }
 }

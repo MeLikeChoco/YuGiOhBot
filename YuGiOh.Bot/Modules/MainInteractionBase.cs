@@ -81,6 +81,11 @@ namespace YuGiOh.Bot.Modules
         )
         {
 
+            if (!string.IsNullOrWhiteSpace(text))
+                text = text
+                    .Replace("@everyone", "\\@everyone")
+                    .Replace("@here", "\\@here");
+
             return IsDeferred ?
                 FollowupAsync(text, embeds, isTTS, ephemeral, allowedMentions, options, components, embed) :
                 !Context.Interaction.HasResponded ?
@@ -135,7 +140,7 @@ namespace YuGiOh.Bot.Modules
 
             str += "!";
 
-            return RespondAsync(str);
+            return RespondAsync(str, allowedMentions: AllowedMentions.None);
 
         }
 
