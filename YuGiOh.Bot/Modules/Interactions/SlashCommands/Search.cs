@@ -54,7 +54,7 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
 
             var cards = (await YuGiOhDbService.SearchCardsAsync(input)).ToImmutableArray();
 
-            await DisplaySearch(cards, input);
+            await DisplaySearch(cards, input, "cards");
 
         }
 
