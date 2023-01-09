@@ -81,11 +81,6 @@ namespace YuGiOh.Bot.Modules
         )
         {
 
-            if (!string.IsNullOrWhiteSpace(text))
-                text = text
-                    .Replace("@everyone", "\\@everyone")
-                    .Replace("@here", "\\@here");
-
             return IsDeferred ?
                 FollowupAsync(text, embeds, isTTS, ephemeral, allowedMentions, options, components, embed) :
                 !Context.Interaction.HasResponded ?
@@ -133,6 +128,9 @@ namespace YuGiOh.Bot.Modules
         protected Task NoResultError(string objects, string input)
         {
 
+            if (objects.Length + input.Length >= 1800)
+                input = input[..(1800 - objects.Length)] + "...";
+
             var str = $"No {objects} were found with the given input";
 
             if (!string.IsNullOrWhiteSpace(input))
@@ -143,6 +141,17 @@ namespace YuGiOh.Bot.Modules
             return RespondAsync(str, allowedMentions: AllowedMentions.None);
 
         }
+
+        protected override Task<IUserMessage> ReplyAsync(
+            string text = null,
+            bool isTTS = false,
+            Embed embed = null,
+            RequestOptions options = null,
+            AllowedMentions allowedMentions = null,
+            MessageReference messageReference = null,
+            MessageComponent components = null
+        )
+            => base.ReplyAsync(text, isTTS, embed, options, AllowedMentions.None, messageReference, components);
 
         protected Task TooManyError()
             => RespondAsync("Too many results were returned, please refine your search!");
