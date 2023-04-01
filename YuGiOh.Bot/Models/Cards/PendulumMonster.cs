@@ -7,9 +7,10 @@ namespace YuGiOh.Bot.Models.Cards
     public class PendulumMonster : RegularMonster, IHasScale
     {
 
-        private static readonly Color PendulumColor = new Color(150, 208, 189);
+        private static readonly Color PendulumColor = new(150, 208, 189);
 
         public int PendulumScale { get; set; }
+        public string PendulumLore { get; set; }
 
         protected override Color GetColor()
             => PendulumColor;
@@ -20,13 +21,10 @@ namespace YuGiOh.Bot.Models.Cards
         protected override EmbedBuilder AddLore(EmbedBuilder body)
         {
 
-            var effects = Lore?.StartsWith("Pendulum Effect") == true ? Lore?.Split("Monster Effect") : null;
+            if (!string.IsNullOrEmpty(PendulumLore))
+                body.AddField("Pendulum Effect", PendulumLore);
 
-            return effects is null ?
-                base.AddLore(body) :
-                body
-                .AddField("Pendulum Effect", effects[0].Substring(15).Trim())
-                .AddField($"[ {Types.Join(" / ")} ]", effects[1].Trim());
+            return base.AddLore(body);
 
         }
 

@@ -39,7 +39,7 @@ namespace YuGiOh.Bot.Extensions
             card.Name = entity.Name;
             card.RealName = entity.RealName;
             card.CardType = Enum.TryParse<CardType>(entity.CardType, true, out var cardType) ? cardType : CardType.Unknown;
-            card.Lore = entity.Lore?.Replace(@"\n", "\n");
+            card.Lore = entity.Lore;
             card.Archetypes = entity.Archetypes;
             card.Supports = entity.Supports;
             card.AntiSupports = entity.AntiSupports;
@@ -62,8 +62,10 @@ namespace YuGiOh.Bot.Extensions
 
             switch (card)
             {
+
                 case Monster monster:
                 {
+
                     monster.Attribute = Enum.TryParse<MonsterAttribute>(entity.Attribute, true, out var attribute) ? attribute : MonsterAttribute.Unknown;
                     monster.Types = entity.Types.Split(" / ");
 
@@ -91,8 +93,15 @@ namespace YuGiOh.Bot.Extensions
                         hasRank.Rank = entity.Rank;
 
                     if (monster is IHasScale hasScale)
+                    {
+
                         hasScale.PendulumScale = entity.PendulumScale;
+                        hasScale.PendulumLore = entity.PendulumLore;
+
+                    }
+
                     break;
+
                 }
                 case IHasProperty hasProperty:
                     hasProperty.Property = entity.Property;
@@ -115,10 +124,10 @@ namespace YuGiOh.Bot.Extensions
             if (status.Contains("legal", StringComparison.OrdinalIgnoreCase))
                 return CardStatus.Legal;
             if (status.Contains("unlimited", StringComparison.OrdinalIgnoreCase))
-                return CardStatus.Unlimited;  //unlimited and semi limited is checked first because they both contain "limited"
+                return CardStatus.Unlimited; //unlimited and semi limited is checked first because they both contain "limited"
             if (status.Contains("semi", StringComparison.OrdinalIgnoreCase) && status.Contains("limited", StringComparison.OrdinalIgnoreCase))
                 return CardStatus.SemiLimited;
-            
+
             return status.Contains("limited", StringComparison.OrdinalIgnoreCase) ? CardStatus.Limited : CardStatus.NA;
 
         }

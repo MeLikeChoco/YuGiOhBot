@@ -1,12 +1,13 @@
 ﻿using System.IO;
 using System.Text;
+using YuGiOh.Scraper.Models.ParserOptions;
 
 namespace YuGiOh.Scraper.Extensions;
 
 public static class StringExtensions
 {
 
-    private static readonly uint Seed = Options.Instance.Config.HashSeed;
+    private static readonly uint Seed = Options.GetInstance(new OptionsArgs()).Config.HashSeed;
 
     public static string GetMurMurHash(this string str)
     {

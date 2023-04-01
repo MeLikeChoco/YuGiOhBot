@@ -10,10 +10,7 @@ namespace YuGiOh.Common.Services
 
         private static string _defaultCategory;
 
-        private static string DefaultCategory
-        {
-            get => _defaultCategory ??= Assembly.GetEntryAssembly().GetName().Name;
-        }
+        private static string DefaultCategory => _defaultCategory ??= Assembly.GetEntryAssembly().GetName().Name;
 
         static Logger()
         {

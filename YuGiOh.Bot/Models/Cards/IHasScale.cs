@@ -4,6 +4,7 @@
     {
 
         int PendulumScale { get; set; }
+        string PendulumLore { get; set; }
 
     }
 }

@@ -11,6 +11,7 @@ namespace YuGiOh.Bot.Models.Cards
     {
 
         public int PendulumScale { get; set; }
+        public string PendulumLore { get; set; }
 
         protected override List<string> GetDescription()
             => base.GetDescription().With($"**Scale:** {PendulumScale}");
@@ -18,13 +19,10 @@ namespace YuGiOh.Bot.Models.Cards
         protected override EmbedBuilder AddLore(EmbedBuilder body)
         {
 
-            var effects = Lore?.StartsWith("Pendulum Effect") == true ? Lore?.Split("Monster Effect") : null;
+            if (!string.IsNullOrEmpty(PendulumLore))
+                body.AddField("Pendulum Effect", PendulumLore);
 
-            return effects is null ?
-                base.AddLore(body) :
-                body
-                .AddField("Pendulum Effect", effects[0].Substring(15).Trim())
-                .AddField($"[ {Types.Join(" / ")} ]", effects[1].Trim());
+            return base.AddLore(body);
 
         }
 

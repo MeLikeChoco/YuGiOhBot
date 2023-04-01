@@ -27,6 +27,7 @@ namespace YuGiOh.Common.Models.YuGiOh
         public string Materials { get; set; }
 
         public string Lore { get; set; }
+        public string PendulumLore { get; set; }
 
         [Ignore]
         public List<TranslationEntity> Translations { get; set; }

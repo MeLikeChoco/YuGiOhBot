@@ -9,16 +9,16 @@ namespace YuGiOh.Common.Models.YuGiOh
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity), Column("translationid")]
         public int Id { get; set; }
 
-        [Column("translationcardid")]
+        [Column("cardid")]
         public int CardId { get; set; }
 
-        [Column("translatedlanguage")]
+        [Column("language")]
         public string Language { get; set; }
 
-        [Column("translatedname")]
+        [Column("translationname")]
         public string Name { get; set; }
 
-        [Column("translatedlore")]
+        [Column("translationlore")]
         public string Lore { get; set; }
 
     }
