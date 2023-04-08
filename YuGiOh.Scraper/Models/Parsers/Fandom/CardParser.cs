@@ -198,12 +198,18 @@ public class CardParser : IParser<CardEntity>
             var splitLore = loreFormatted.Split("Monster Effect:");
 
             if (splitLore.Length < 2)
-                card.Lore = splitLore[0].Trim();
+            {
+
+                var lore = TrimPropertyCardTextError(splitLore[0]);
+
+                card.Lore = lore;
+
+            }
             else
             {
 
-                var pendulumLore = splitLore[0].Replace("Pendulum Effect: ", "").Trim();
-                var lore = splitLore[1].Trim();
+                var pendulumLore = TrimPropertyCardTextError(splitLore[0]);
+                var lore = TrimPropertyCardTextError(splitLore[1]);
 
                 card.PendulumLore = pendulumLore;
                 card.Lore = lore;
@@ -212,7 +218,12 @@ public class CardParser : IParser<CardEntity>
 
         }
         else
+        {
+
+            loreFormatted = TrimPropertyCardTextError(loreFormatted);
             card.Lore = WebUtility.HtmlDecode(loreFormatted);
+
+        }
 
         // var loreBox = table.GetElementByClassName("lore");
         //
@@ -224,6 +235,18 @@ public class CardParser : IParser<CardEntity>
         // var descriptionFormatted = Regex.Replace(descriptionUnformatted.InnerHtml.Replace("<br>", "\\n"), ConstantString.HtmlTagRegex, "").Trim();
         //
         // return WebUtility.HtmlDecode(descriptionFormatted);
+
+    }
+
+    private static string TrimPropertyCardTextError(string str)
+    {
+
+        if (string.IsNullOrWhiteSpace(str))
+            return str;
+
+        var errorIndex = str.IndexOf("Property \"Card text", StringComparison.OrdinalIgnoreCase);
+
+        return errorIndex != -1 ? str[..errorIndex].Trim() : str;
 
     }
 
