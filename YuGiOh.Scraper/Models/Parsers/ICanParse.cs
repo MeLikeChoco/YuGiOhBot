@@ -3,7 +3,7 @@ using YuGiOh.Common.Models.YuGiOh;
 
 namespace YuGiOh.Scraper.Models.Parsers;
 
-public interface IParser<T>
+public interface ICanParse<T>
 {
 
     Task<T> ParseAsync();

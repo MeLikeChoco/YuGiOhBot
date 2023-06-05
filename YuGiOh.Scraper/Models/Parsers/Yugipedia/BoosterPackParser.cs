@@ -13,7 +13,7 @@ using YuGiOh.Scraper.Models.ParserOptions;
 namespace YuGiOh.Scraper.Models.Parsers.Yugipedia;
 
 [ParserModule("yugipedia")]
-public class BoosterPackParser : IParser<BoosterPackEntity>
+public class BoosterPackParser : ICanParse<BoosterPackEntity>
 {
     
     private readonly string _name, _id;

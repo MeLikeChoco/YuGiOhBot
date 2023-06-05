@@ -12,7 +12,7 @@ using YuGiOh.Scraper.Models.ParserOptions;
 namespace YuGiOh.Scraper.Models.Parsers.Yugipedia;
 
 [ParserModule("yugipedia")]
-public class AnimeCardParser : IParser<AnimeCardEntity>
+public class AnimeCardParser : ICanParse<AnimeCardEntity>
 {
 
     private readonly string _id, _name;

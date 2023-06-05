@@ -16,7 +16,7 @@ using YuGiOh.Scraper.Models.ParserOptions;
 namespace YuGiOh.Scraper.Models.Parsers.Yugipedia;
 
 [ParserModule("yugipedia")]
-public class CardParser : IParser<CardEntity>
+public class CardParser : ICanParse<CardEntity>
 {
 
     private static readonly string[] ArchetypesHeaderMustHaveWords = { "archetypes", "series" };
@@ -44,8 +44,10 @@ public class CardParser : IParser<CardEntity>
         var card = new CardEntity
         {
 
+            Id = int.Parse(_id),
             Name = _name,
-            Img = imgElement?.GetAttribute("srcset")?.Split(' ').ElementAtOrDefault(2) ?? imgElement?.GetAttribute("src")
+            Img = imgElement?.GetAttribute("srcset")?.Split(' ').ElementAtOrDefault(2) ?? imgElement?.GetAttribute("src"),
+            Url = string.Format(ConstantString.YugipediaUrl + ConstantString.MediaWikiIdUrl, _id)
 
         };
 
@@ -294,8 +296,6 @@ public class CardParser : IParser<CardEntity>
         GetTranslations(card, parserOutput);
 
         //card.CardTrivia = await GetCardTrivia(parserOutput);
-        card.Url = string.Format(ConstantString.YugipediaUrl + ConstantString.MediaWikiIdUrl, _id);
-        card.Id = int.Parse(_id);
 
         return card;
 
@@ -314,12 +314,12 @@ public class CardParser : IParser<CardEntity>
             .Replace("<br>", "\n")
             .Trim();
 
+        loreFormatted = WebUtility.HtmlDecode(loreFormatted);
         var isPendulum = card.PendulumScale > -1;
 
         if (isPendulum)
         {
 
-            loreFormatted = WebUtility.HtmlDecode(loreFormatted);
             var splitLore = loreFormatted.Split("Monster Effect");
 
             if (splitLore.Length < 2)
@@ -337,7 +337,7 @@ public class CardParser : IParser<CardEntity>
 
         }
         else
-            card.Lore = WebUtility.HtmlDecode(loreFormatted);
+            card.Lore = loreFormatted;
 
     }
 
@@ -357,16 +357,23 @@ public class CardParser : IParser<CardEntity>
             var header = searchCategory.GetElementByTagName("dt").TextContent;
             var value = searchCategory.GetElementsByTagName("dd")
                 .Where(element => !string.IsNullOrEmpty(element.TextContent))
-                .Select(element => element.TextContent.Trim());
+                .Select(element => element.TextContent.Trim())
+                .ToList();
 
-            //damn im fancy
-            //please dont criticize, i like to appear flamboyantly unnecessary
-            if (ArchetypesHeaderMustHaveWords.All(word => header.ContainsIgnoreCase(word)) && !header.ContainsIgnoreCase("related")) //filter out "related archetypes and series"
-                card.Archetypes = value.ToList();
-            else if (header.ContainsIgnoreCase("anti-supports"))
-                card.AntiSupports = value.ToList();
-            else if (header.ContainsIgnoreCase("supports") && !header.ContainsIgnoreCase("archetypes"))
-                card.Supports = value.ToList();
+            if (
+                (ArchetypesHeaderMustHaveWords.All(word => header.ContainsIgnoreCase(word)) && !header.ContainsIgnoreCase("related"))
+                || (header.ContainsIgnoreCase("supports") && header.ContainsIgnoreCase("archetypes"))
+            ) //filter out "related archetypes and series"
+                card.Archetypes = card.Archetypes is null ? value : card.Archetypes.Union(value).ToList();
+
+            if (header.ContainsIgnoreCase("anti-supports"))
+                card.AntiSupports = value;
+
+            if (
+                (header.ContainsIgnoreCase("supports") && !header.ContainsIgnoreCase("archetypes"))
+                || (header.ContainsIgnoreCase("supports") && header.ContainsIgnoreCase("archetypes"))
+            )
+                card.Supports = card.Supports is null ? value : card.Supports.Union(value).ToList();
 
         }
 
