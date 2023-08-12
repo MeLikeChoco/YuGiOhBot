@@ -149,7 +149,10 @@ namespace YuGiOh.Bot.Modules
             RequestOptions options = null,
             AllowedMentions allowedMentions = null,
             MessageReference messageReference = null,
-            MessageComponent components = null
+            MessageComponent components = null,
+            ISticker[] stickers = null,
+            Embed[] embeds = null,
+            MessageFlags flags = MessageFlags.None
         )
             => base.ReplyAsync(text, isTTS, embed, options, AllowedMentions.None, messageReference, components);
 

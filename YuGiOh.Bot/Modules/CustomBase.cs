@@ -58,15 +58,16 @@ namespace YuGiOh.Bot.Modules
             MessageReference messageReference = null,
             MessageComponent components = null,
             ISticker[] stickers = null,
-            Embed[] embeds = null
+            Embed[] embeds = null,
+            MessageFlags flags = MessageFlags.None
         )
         {
-
+        
             if (!string.IsNullOrWhiteSpace(message))
                 message = message
                     .Replace("@everyone", "\\@everyone")
                     .Replace("@here", "\\@here");
-
+        
             return base.ReplyAsync(message, isTTS, embed, options, allowedMentions, messageReference, components, stickers, embeds);
         }
 
