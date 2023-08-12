@@ -1,4 +1,4 @@
-using Moq;
+using NSubstitute;
 using YuGiOh.Scraper.Models.ParserOptions;
 using YuGiOh.Scraper.Models.Parsers.Fandom;
 
@@ -12,13 +12,11 @@ public class CardParserTests
     public CardParserTests()
     {
 
-        var optionsArgs = new Mock<IOptionsArgs>();
+        var optionsArgs = Substitute.For<IOptionsArgs>();
 
-        optionsArgs
-            .Setup(args => args.GetOptionsArgs())
-            .Returns("-m fandom".Split(' '));
+        optionsArgs.GetOptionsArgs().Returns(_ => "-m fandom".Split(' '));
 
-        _options = Options.GetInstance(optionsArgs.Object);
+        _options = Options.GetInstance(optionsArgs);
 
     }
 

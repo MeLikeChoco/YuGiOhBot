@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using FluentAssertions;
-using Moq;
+using NSubstitute;
 using Npgsql;
 using Xunit;
 using YuGiOh.Common.Interfaces;
@@ -25,13 +25,11 @@ public class YuGiOhRepositoryTests
     public YuGiOhRepositoryTests()
     {
 
-        var mockRepoConfig = new Mock<IYuGiOhRepositoryConfiguration>();
+        var mockRepoConfig = Substitute.For<IYuGiOhRepositoryConfiguration>();
 
-        mockRepoConfig
-            .Setup(repoConfig => repoConfig.GetYuGiOhDbConnection())
-            .Returns(() => new NpgsqlConnection(Config.Instance.GetDbConnectionStrings().YuGiOh));
+        mockRepoConfig.GetYuGiOhDbConnection().Returns(_ => new NpgsqlConnection(Config.Instance.GetDbConnectionStrings().YuGiOh));
 
-        _yugiohRepo = new YuGiOhRepository(mockRepoConfig.Object);
+        _yugiohRepo = new YuGiOhRepository(mockRepoConfig);
 
     }
 

@@ -2,7 +2,7 @@ using System.Threading.Tasks;
 using Dapper;
 using Dommel;
 using FluentAssertions;
-using Moq;
+using NSubstitute;
 using Npgsql;
 using Xunit;
 using YuGiOh.Common.Interfaces;
@@ -34,13 +34,11 @@ public class GuildConfigsRepository
     public GuildConfigsRepository()
     {
 
-        var mockRepoConfig = new Mock<IGuildConfigConfiguration>();
+        var mockRepoConfig = Substitute.For<IGuildConfigConfiguration>();
 
-        mockRepoConfig
-            .Setup(repoConfig => repoConfig.GetGuildConfigConnection())
-            .Returns(() => new NpgsqlConnection(Config.Instance.GetDbConnectionStrings().Guilds));
+        mockRepoConfig.GetGuildConfigConnection().Returns(_ => new NpgsqlConnection(Config.Instance.GetDbConnectionStrings().Guilds));
 
-        _guildConfigRepo = new GuildConfigRepository(mockRepoConfig.Object);
+        _guildConfigRepo = new GuildConfigRepository(mockRepoConfig);
 
     }
 
