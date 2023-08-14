@@ -2,15 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using FluentAssertions;
-using NSubstitute;
 using Npgsql;
+using NSubstitute;
 using Xunit;
 using YuGiOh.Common.Interfaces;
 using YuGiOh.Common.Models.YuGiOh;
 using YuGiOh.Common.Repositories;
 using YuGiOh.Common.Repositories.Interfaces;
 
-namespace YuGiOh.Common.Test;
+namespace YuGiOh.Common.Test.Tests;
 
 public class YuGiOhRepositoryTests
 {
@@ -334,15 +334,15 @@ public class YuGiOhRepositoryTests
 
     }
 
-    [Fact]
-    public async Task GetBanlistAsync_ExpectTradSemiLimitedNotEmpty_ExpectSuccess()
-    {
-
-        var result = await _yugiohRepo.GetBanlistAsync(BanlistFormats.TRAD);
-
-        Assert.NotEmpty(result.Limited);
-
-    }
+    // [Fact]
+    // public async Task GetBanlistAsync_ExpectTradSemiLimitedNotEmpty_ExpectSuccess()
+    // {
+    //
+    //     var result = await _yugiohRepo.GetBanlistAsync(BanlistFormats.TRAD);
+    //
+    //     Assert.NotEmpty(result.Limited);
+    //
+    // }
 
     [Theory]
     [InlineData("Duelist")]

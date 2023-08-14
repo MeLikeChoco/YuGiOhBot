@@ -2,15 +2,15 @@ using System.Threading.Tasks;
 using Dapper;
 using Dommel;
 using FluentAssertions;
-using NSubstitute;
 using Npgsql;
+using NSubstitute;
 using Xunit;
 using YuGiOh.Common.Interfaces;
 using YuGiOh.Common.Models;
 using YuGiOh.Common.Repositories;
 using YuGiOh.Common.Repositories.Interfaces;
 
-namespace YuGiOh.Common.Test;
+namespace YuGiOh.Common.Test.Tests;
 
 public class GuildConfigsRepository
 {
