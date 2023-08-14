@@ -47,7 +47,7 @@ namespace YuGiOh.Common.Repositories
 
             await connection.OpenAsync().ConfigureAwait(false);
 
-            var guildConfig = await connection.QuerySingleAsync<GuildConfigEntity>("select * from configs where id = @id", new { id = (decimal)id }).ConfigureAwait(false);
+            var guildConfig = await connection.QuerySingleAsync<GuildConfigEntity>("select * from configs where id = @id", new { id = (decimal) id }).ConfigureAwait(false);
 
             return guildConfig;
 
@@ -80,7 +80,7 @@ namespace YuGiOh.Common.Repositories
 
             await connection.OpenAsync().ConfigureAwait(false);
 
-            var doesExist = await connection.ExecuteScalarAsync<bool>("select 1 from configs where id = @id", new { id = (decimal)id }).ConfigureAwait(false);
+            var doesExist = await connection.ExecuteScalarAsync<bool>("select 1 from configs where id = @id", new { id = (decimal) id }).ConfigureAwait(false);
 
             return doesExist;
 

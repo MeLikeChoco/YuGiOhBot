@@ -51,7 +51,7 @@ namespace YuGiOh.Common.Repositories
                 DommelMapper.AddSqlBuilder(typeof(NpgsqlConnection), new PostgresSqlBuilder());
 
             });
-            
+
             AppContext.SetSwitch("Npgsql.EnableStoredProcedureCompatMode", true);
 
         }

@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using NpgsqlTypes;
 
 namespace YuGiOh.Common.Models.YuGiOh
@@ -15,6 +11,7 @@ namespace YuGiOh.Common.Models.YuGiOh
 
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
+
         public string Name { get; set; }
         public string Message { get; set; }
         public string StackTrace { get; set; }
@@ -28,6 +25,7 @@ namespace YuGiOh.Common.Models.YuGiOh
     {
         [PgName("Card")]
         Card,
+
         [PgName("Boosterpack")]
         Booster
     }

@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace YuGiOh.Common.Models
 {
@@ -14,6 +9,7 @@ namespace YuGiOh.Common.Models
 
         [Key, DatabaseGenerated(DatabaseGeneratedOption.None)]
         public decimal Id { get; set; }
+
         public string Prefix { get; set; } = "y!";
         public bool Minimal { get; set; } = true;
         public int GuessTime { get; set; } = 60;

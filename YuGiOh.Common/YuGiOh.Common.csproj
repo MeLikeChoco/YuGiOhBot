@@ -1,15 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Dapper" Version="2.0.143" />
-    <PackageReference Include="Dapper.FluentMap" Version="2.0.0" />
-    <PackageReference Include="Dapper.FluentMap.Dommel" Version="2.0.0" />
-    <PackageReference Include="Dapper.SqlBuilder" Version="2.0.78" />
-    <PackageReference Include="Npgsql" Version="7.0.4" />
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Dapper" Version="2.0.143"/>
+        <PackageReference Include="Dapper.FluentMap" Version="2.0.0"/>
+        <PackageReference Include="Dapper.FluentMap.Dommel" Version="2.0.0"/>
+        <PackageReference Include="Dapper.SqlBuilder" Version="2.0.78"/>
+        <PackageReference Include="Npgsql" Version="7.0.4"/>
+    </ItemGroup>
 
 </Project>
