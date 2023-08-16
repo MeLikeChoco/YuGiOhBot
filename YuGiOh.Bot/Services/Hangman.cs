@@ -7,7 +7,7 @@ using YuGiOh.Common.Extensions;
 
 namespace YuGiOh.Bot.Services
 {
-    public class HangmanService
+    public class Hangman
     {
 
         public string Word { get; }
@@ -34,7 +34,7 @@ namespace YuGiOh.Bot.Services
         private int _nooseStage;
         private readonly ConcurrentDictionary<string, object> _guesses;
 
-        public HangmanService(string word)
+        public Hangman(string word)
         {
 
             Word = word;
