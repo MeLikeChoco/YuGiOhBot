@@ -5,10 +5,11 @@ using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using Discord;
-using Discord.Addons.Interactive;
 using Discord.Commands;
+using Fergun.Interactive;
 using Microsoft.Extensions.Logging;
 using YuGiOh.Bot.Extensions;
+using YuGiOh.Bot.Models;
 using YuGiOh.Bot.Services;
 using YuGiOh.Bot.Services.Interfaces;
 
@@ -17,14 +18,21 @@ namespace YuGiOh.Bot.Modules.Commands
     public class Miscellaneous : MainBase
     {
 
+        private readonly PaginatorFactory _paginatorFactory;
+
         public Miscellaneous(
             ILoggerFactory loggerFactory,
             Cache cache,
             IYuGiOhDbService yuGiOhDbService,
             IGuildConfigDbService guildConfigDbService,
             Web web,
-            Random rand
-        ) : base(loggerFactory, cache, yuGiOhDbService, guildConfigDbService, web, rand) { }
+            Random rand,
+            InteractiveService interactiveService,
+            PaginatorFactory paginatorFactory
+        ) : base(loggerFactory, cache, yuGiOhDbService, guildConfigDbService, web, rand, interactiveService)
+        {
+            _paginatorFactory = paginatorFactory;
+        }
 
         [Command("probability"), Alias("prob")]
         [Summary("Returns the chance of your hand occuring!")]
@@ -58,7 +66,7 @@ namespace YuGiOh.Bot.Modules.Commands
                 double less, more, lessequal, moreequal;
                 less = more = lessequal = moreequal = 0;
 
-                for (int i = inHand; i >= 0; i--)
+                for (var i = inHand; i >= 0; i--)
                 {
 
                     lessequal += Probability(deckSize, inDeck, handSize, i);
@@ -68,7 +76,7 @@ namespace YuGiOh.Bot.Modules.Commands
 
                 }
 
-                for (int i = inHand; i < handSize; i++)
+                for (var i = inHand; i < handSize; i++)
                 {
 
                     moreequal += Probability(deckSize, inDeck, handSize, i);
@@ -130,25 +138,26 @@ namespace YuGiOh.Bot.Modules.Commands
                         current.Append("**")
                             .Append(date.Name)
                             .Append(":** ")
-                            .AppendFormat("{0: MM/dd/yyyy}", date.Date)
+                            .Append($"{date.Date: MM/dd/yyyy}")
                             .AppendLine()
                     );
 
-                var options = PagedOptions;
-                options.FieldsPerPage = 1;
+                var description = descBuilder.ToString();
 
-                var paginator = new PaginatedMessage()
-                {
+                // var options = PagedOptions;
+                // options.FieldsPerPage = 1;
 
-                    Title = boosterPack.Name,
-                    Color = Rand.NextColor(),
-                    AlternateDescription = descBuilder.ToString(),
-                    Options = options
+                // new PaginatedMessage()
+                // {
+                //
+                //     Title = boosterPack.Name,
+                //     Color = Rand.NextColor(),
+                //     AlternateDescription = descBuilder.ToString(),
+                //     Options = options
+                //
+                // };
 
-                };
-
-                var pages = new LinkedList<EmbedFieldBuilder>();
-                paginator.Pages = pages;
+                var pages = new List<PageBuilder>();
                 var rarityToCards = new Dictionary<string, List<string>>();
 
                 foreach (var card in boosterPack.Cards)
@@ -165,6 +174,8 @@ namespace YuGiOh.Bot.Modules.Commands
                     }
 
                 }
+
+                var color = Rand.NextColor();
 
                 foreach (var (rarity, card) in rarityToCards)
                 {
@@ -183,9 +194,13 @@ namespace YuGiOh.Bot.Modules.Commands
                         substring = cards[..cutoff];
                         var cardsField = $"```{substring}```";
 
-                        pages.AddLast(new EmbedFieldBuilder()
-                            .WithName(rarity)
-                            .WithValue(cardsField));
+                        var pageBuilder = GetPageBuilder()
+                            .AddField(new EmbedFieldBuilder()
+                                .WithName(rarity)
+                                .WithValue(cardsField)
+                            );
+
+                        pages.Add(pageBuilder);
 
                         if (cards.Length >= maxLength)
                             cards = cards[cutoff..];
@@ -195,15 +210,29 @@ namespace YuGiOh.Bot.Modules.Commands
                     if (!string.IsNullOrEmpty(cards) || !string.IsNullOrWhiteSpace(cards))
                     {
 
-                        pages.AddLast(new EmbedFieldBuilder()
-                            .WithName(rarity)
-                            .WithValue($"```{cards}```"));
+                        pages.Add(
+                            GetPageBuilder()
+                                .AddField(new EmbedFieldBuilder()
+                                    .WithName(rarity)
+                                    .WithValue($"```{cards}```")
+                                )
+                        );
 
                     }
 
                 }
 
-                await PagedReplyAsync(paginator);
+                var paginatorBuilder = _paginatorFactory
+                    .CreateStaticPaginatorBuilder(GuildConfig)
+                    .WithPages(pages);
+
+                await SendPaginatorAsync(paginatorBuilder.Build());
+
+                PageBuilder GetPageBuilder()
+                    => new PageBuilder()
+                        .WithTitle(boosterPack.Name)
+                        .WithColor(color)
+                        .WithDescription(description);
 
             }
             else

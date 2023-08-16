@@ -5,9 +5,9 @@ using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using Discord;
-using Discord.Addons.Interactive;
 using Discord.Interactions;
 using Discord.WebSocket;
+using Fergun.Interactive;
 using Microsoft.Extensions.Logging;
 using YuGiOh.Bot.Extensions;
 using YuGiOh.Bot.Models;
@@ -21,6 +21,7 @@ public class Miscellaneous : MainInteractionBase<SocketSlashCommand>
 {
 
     private readonly Random _random;
+    private readonly PaginatorFactory _paginatorFactory;
 
     public Miscellaneous(
         ILoggerFactory loggerFactory,
@@ -28,10 +29,13 @@ public class Miscellaneous : MainInteractionBase<SocketSlashCommand>
         IYuGiOhDbService yuGiOhDbService,
         IGuildConfigDbService guildConfigDbService,
         Web web,
-        Random random
-    ) : base(loggerFactory, cache, yuGiOhDbService, guildConfigDbService, web)
+        Random random,
+        InteractiveService interactiveService,
+        PaginatorFactory paginatorFactory
+    ) : base(loggerFactory, cache, yuGiOhDbService, guildConfigDbService, web, interactiveService)
     {
         _random = random;
+        _paginatorFactory = paginatorFactory;
     }
 
     [SlashCommand("probability", "Gets the chance of a card appearing in your opening hand")]
@@ -184,25 +188,26 @@ public class Miscellaneous : MainInteractionBase<SocketSlashCommand>
                     current.Append("**")
                         .Append(date.Name)
                         .Append(":** ")
-                        .AppendFormat("{0: MM/dd/yyyy}", date.Date)
+                        .Append($"{date.Date: MM/dd/yyyy}")
                         .AppendLine()
                 );
 
-            var options = PagedOptions;
-            options.FieldsPerPage = 1;
+            var description = descBuilder.ToString();
 
-            var paginator = new PaginatedMessage()
-            {
+            // var options = PagedOptions;
+            // options.FieldsPerPage = 1;
 
-                Title = boosterPack.Name,
-                Color = _random.NextColor(),
-                AlternateDescription = descBuilder.ToString(),
-                Options = options
+            // new PaginatedMessage()
+            // {
+            //
+            //     Title = boosterPack.Name,
+            //     Color = Rand.NextColor(),
+            //     AlternateDescription = descBuilder.ToString(),
+            //     Options = options
+            //
+            // };
 
-            };
-
-            var pages = new LinkedList<EmbedFieldBuilder>();
-            paginator.Pages = pages;
+            var pages = new List<PageBuilder>();
             var rarityToCards = new Dictionary<string, List<string>>();
 
             foreach (var card in boosterPack.Cards)
@@ -219,6 +224,8 @@ public class Miscellaneous : MainInteractionBase<SocketSlashCommand>
                 }
 
             }
+
+            var color = _random.NextColor();
 
             foreach (var (rarity, card) in rarityToCards)
             {
@@ -237,9 +244,13 @@ public class Miscellaneous : MainInteractionBase<SocketSlashCommand>
                     substring = cards[..cutoff];
                     var cardsField = $"```{substring}```";
 
-                    pages.AddLast(new EmbedFieldBuilder()
-                        .WithName(rarity)
-                        .WithValue(cardsField));
+                    var pageBuilder = GetPageBuilder()
+                        .AddField(new EmbedFieldBuilder()
+                            .WithName(rarity)
+                            .WithValue(cardsField)
+                        );
+
+                    pages.Add(pageBuilder);
 
                     if (cards.Length >= maxLength)
                         cards = cards[cutoff..];
@@ -249,15 +260,29 @@ public class Miscellaneous : MainInteractionBase<SocketSlashCommand>
                 if (!string.IsNullOrEmpty(cards) || !string.IsNullOrWhiteSpace(cards))
                 {
 
-                    pages.AddLast(new EmbedFieldBuilder()
-                        .WithName(rarity)
-                        .WithValue($"```{cards}```"));
+                    pages.Add(
+                        GetPageBuilder()
+                            .AddField(new EmbedFieldBuilder()
+                                .WithName(rarity)
+                                .WithValue($"```{cards}```")
+                            )
+                    );
 
                 }
 
             }
 
-            await PagedComponentReplyAsync(paginator);
+            var paginatorBuilder = _paginatorFactory
+                .CreateStaticPaginatorBuilder(GuildConfig)
+                .WithPages(pages);
+
+            await SendPaginatorAsync(paginatorBuilder.Build());
+
+            PageBuilder GetPageBuilder()
+                => new PageBuilder()
+                    .WithTitle(boosterPack.Name)
+                    .WithColor(color)
+                    .WithDescription(description);
 
         }
         else

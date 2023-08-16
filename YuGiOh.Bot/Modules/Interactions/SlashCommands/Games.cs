@@ -3,13 +3,13 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Discord.Addons.Interactive;
 using Discord.Interactions;
 using Discord.WebSocket;
+using Fergun.Interactive;
 using Microsoft.Extensions.Logging;
 using YuGiOh.Bot.Extensions;
 using YuGiOh.Bot.Models.Cards;
-using YuGiOh.Bot.Models.Criterion;
+using YuGiOh.Bot.Models.Criteria;
 using YuGiOh.Bot.Services;
 using YuGiOh.Bot.Services.Interfaces;
 
@@ -21,10 +21,15 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
         private readonly ILoggerFactory _loggerFactory;
         private readonly Random _random;
 
-        private static Criteria<SocketMessage> BaseCriteria
-            => new Criteria<SocketMessage>()
-                .AddCriterion(new EnsureSourceChannelCriterion())
-                .AddCriterion(new NotBotCriteria());
+        private Criteria BaseCriteria
+            => new Criteria()
+                .AddCriteria(new ChannelCriteria(Context.Channel))
+                .AddCriteria(new NotBotCriteria());
+
+        // private static Criteria<SocketMessage> BaseCriteria
+        //     => new Criteria<SocketMessage>()
+        //         .AddCriterion(new EnsureSourceChannelCriterion())
+        //         .AddCriterion(new NotBotCriteria());
 
         public Games(
             ILoggerFactory loggerFactory,
@@ -32,8 +37,9 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
             IYuGiOhDbService yuGiOhDbService,
             IGuildConfigDbService guildConfigDbService,
             Web web,
-            Random random
-        ) : base(loggerFactory, cache, yuGiOhDbService, guildConfigDbService, web)
+            Random random,
+            InteractiveService interactiveService
+        ) : base(loggerFactory, cache, yuGiOhDbService, guildConfigDbService, web, interactiveService)
         {
             _loggerFactory = loggerFactory;
             _random = random;
@@ -61,16 +67,15 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
                 var card = await YuGiOhDbService.GetRandomCardAsync();
 
                 logger.Info(card.Name);
-
-                var cts = new CancellationTokenSource();
-                var hangmanService = new HangmanService(card.Name);
+                
+                var hangmanService = new Hangman(card.Name);
 
                 var criteria = BaseCriteria
-                    .AddCriterion(new NotCommandCriteria(GuildConfig))
-                    .AddCriterion(new NotInlineSearchCriteria());
+                    .AddCriteria(new NotCommandCriteria(GuildConfig))
+                    .AddCriteria(new NotInlineSearchCriteria());
 
                 if (!GuildConfig.HangmanAllowWords)
-                    criteria.AddCriterion(new CharacterOnlyCriteria());
+                    criteria.AddCriteria(new CharacterOnlyCriteria());
 
                 var time = TimeSpan.FromSeconds(GuildConfig.HangmanTime);
 
@@ -80,20 +85,21 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
                                    $"You have **{time.ToPrettyString()}**!\n" +
                                    hangmanService.GetCurrentDisplay());
 
-                var _ = new Timer((cancelTokenSrc) => (cancelTokenSrc as CancellationTokenSource)!.Cancel(), cts, TimeSpan.FromSeconds(GuildConfig.HangmanTime), Timeout.InfiniteTimeSpan);
                 SocketUser user = null;
+                var cts = new CancellationTokenSource();
 
+                //todo move this logic into HangmanService
                 do
                 {
 
-                    var input = await NextMessageAsync(criteria, token: cts.Token);
+                    var input = await NextMessageAsync(criteria, TimeSpan.FromSeconds(GuildConfig.HangmanTime), ct: cts.Token);
 
-                    if (cts.IsCancellationRequested)
+                    if (cts.IsCancellationRequested || input.IsCanceled || input.IsTimeout)
                         break;
 
-                    user = input.Author;
+                    user = input.Value!.Author;
 
-                    switch (hangmanService.AddGuess(input.Content))
+                    switch (hangmanService.AddGuess(input.Value.Content))
                     {
 
                         case GuessStatus.Duplicate:
@@ -107,7 +113,8 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
                         case GuessStatus.Accepted:
                             await ReplyAsync(hangmanService.GetCurrentDisplay());
                             break;
-
+                        default:
+                            throw new ArgumentOutOfRangeException();
                     }
 
                 } while (!cts.IsCancellationRequested && hangmanService.CompletionStatus == CompletionStatus.Incomplete);
@@ -201,11 +208,11 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
                 } while (e is not null);
 
                 var criteria = new GuessCriteria(card.Name, card.RealName);
-                var answer = await NextMessageAsync(BaseCriteria.AddCriterion(criteria), TimeSpan.FromSeconds(GuildConfig.GuessTime));
+                var input = await NextMessageAsync(BaseCriteria.AddCriteria(criteria), TimeSpan.FromSeconds(GuildConfig.GuessTime));
 
-                if (answer is not null)
+                if (input.Value is not null)
                 {
-                    await ReplyAsync($":trophy: The winner is **{(answer.Author as SocketGuildUser)?.Nickname ?? answer.Author.Username}**! The card was `{criteria.Answer}`!");
+                    await ReplyAsync($":trophy: The winner is **{(input.Value.Author as SocketGuildUser)?.Nickname ?? input.Value.Author.Username}**! The card was `{criteria.Answer}`!");
                 }
                 else
                 {

@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using Fergun.Interactive;
 using Microsoft.Extensions.Logging;
 using YuGiOh.Bot.Extensions;
 using YuGiOh.Bot.Services;
@@ -19,8 +20,9 @@ namespace YuGiOh.Bot.Modules.Commands
             IYuGiOhDbService yuGiOhDbService,
             IGuildConfigDbService guildConfigDbService,
             Web web,
-            Random rand
-        ) : base(loggerFactory, cache, yuGiOhDbService, guildConfigDbService, web, rand) { }
+            Random rand,
+            InteractiveService interactiveService
+        ) : base(loggerFactory, cache, yuGiOhDbService, guildConfigDbService, web, rand, interactiveService) { }
 
         [Command("autodelete")]
         [RequireUserPermission(GuildPermission.Administrator)]

@@ -8,6 +8,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Discord.Commands;
 using Discord.Interactions;
+using Fergun.Interactive;
 using Microsoft.Extensions.Logging;
 using MoreLinq;
 using Newtonsoft.Json.Linq;
@@ -37,8 +38,9 @@ namespace YuGiOh.Bot.Modules.Commands
             Web web,
             Random rand,
             InteractionService interactionService,
-            IYuGiOhRepository yugiohRepo
-        ) : base(loggerFactory, cache, yuGiOhDbService, guildConfigDbService, web, rand)
+            IYuGiOhRepository yugiohRepo,
+            InteractiveService interactiveService
+        ) : base(loggerFactory, cache, yuGiOhDbService, guildConfigDbService, web, rand, interactiveService)
         {
             _interactionService = interactionService;
             _yugiohRepo = yugiohRepo;

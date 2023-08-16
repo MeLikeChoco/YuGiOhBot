@@ -2,8 +2,11 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Discord.Commands;
+using Fergun.Interactive;
+using Microsoft.Extensions.Logging;
 using YuGiOh.Bot.Models;
 using YuGiOh.Bot.Services;
+using YuGiOh.Bot.Services.Interfaces;
 
 //The getinvite command can be intruding, however, I only use it to ask for feedback on the bot, else there is no other way to get 
 //any sort of information on what I could improve or add. Sure, I have the feedback command, but no one uses it.
@@ -11,12 +14,18 @@ using YuGiOh.Bot.Services;
 namespace YuGiOh.Bot.Modules.Commands
 {
     [RequireOwner]
-    public class Owner : CustomBase
+    public class Owner : MainBase
     {
 
-        public Cache Cache { get; set; }
-        public Web Web { get; set; }
-        public Config Config { get; set; }
+        public Owner(
+            ILoggerFactory loggerFactory,
+            Cache cache,
+            IYuGiOhDbService yuGiOhDbService,
+            IGuildConfigDbService guildConfigDbService,
+            Web web,
+            Random rand,
+            InteractiveService interactiveService
+        ) : base(loggerFactory, cache, yuGiOhDbService, guildConfigDbService, web, rand, interactiveService) { }
 
         [Command("getinvite")]
         [Summary("Gets invite to the default channel of the guild")]
@@ -83,14 +92,14 @@ namespace YuGiOh.Bot.Modules.Commands
             await ReplyAsync("Which channel would you like to use?");
 
             var response = await NextMessageAsync();
-            var id = ulong.Parse(response.Content);
+            var id = ulong.Parse(response.Value!.Content);
             var channel = guild.GetTextChannel(id);
 
             await ReplyAsync("What would you like to tell them?");
 
             response = await NextMessageAsync();
 
-            await channel.SendMessageAsync(response.Content);
+            await channel.SendMessageAsync(response.Value!.Content);
 
         }
 

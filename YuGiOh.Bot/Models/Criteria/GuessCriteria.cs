@@ -2,14 +2,13 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
-using Discord.Addons.Interactive;
 using Discord.Commands;
 using Discord.WebSocket;
 using YuGiOh.Bot.Extensions;
 
-namespace YuGiOh.Bot.Models.Criterion
+namespace YuGiOh.Bot.Models.Criteria
 {
-    public class GuessCriteria : ICriterion<SocketMessage>
+    public class GuessCriteria : ICriteria
     {
 
         public IEnumerable<string> PossibleAnswers { get; }
@@ -20,7 +19,7 @@ namespace YuGiOh.Bot.Models.Criterion
             PossibleAnswers = possibleAnswers.Where(possibleAnswer => !string.IsNullOrEmpty(possibleAnswer));
         }
 
-        public Task<bool> JudgeAsync(SocketCommandContext sourceContext, SocketMessage message)
+        public Task<bool> ValidateAsync(ICommandContext context, SocketMessage message)
         {
 
             var input = message.Content.ConvertTypesetterToTypewriter();
@@ -30,13 +29,15 @@ namespace YuGiOh.Bot.Models.Criterion
 
         }
 
-        public Task<bool> JudgeAsync(IInteractionContext sourceContext, SocketMessage parameter)
+        public Task<bool> ValidateAsync(IInteractionContext context, SocketMessage message)
         {
 
-            var input = parameter.Content.ConvertTypesetterToTypewriter();
+            var input = message.Content.ConvertTypesetterToTypewriter();
             Answer = PossibleAnswers.FirstOrDefault(possibleAnswer => possibleAnswer.EqualsIgnoreCase(input));
 
             return Task.FromResult(!string.IsNullOrEmpty(Answer));
+
         }
+
     }
 }

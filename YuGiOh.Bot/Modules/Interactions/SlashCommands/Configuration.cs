@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
+using Fergun.Interactive;
 using Microsoft.Extensions.Logging;
 using YuGiOh.Bot.Extensions;
 using YuGiOh.Bot.Modules.Interactions.Autocompletes;
@@ -20,8 +21,9 @@ public class Configuration : MainInteractionBase<SocketSlashCommand>
         Cache cache,
         IYuGiOhDbService yuGiOhDbService,
         IGuildConfigDbService guildConfigDbService,
-        Web web
-    ) : base(loggerFactory, cache, yuGiOhDbService, guildConfigDbService, web) { }
+        Web web,
+        InteractiveService interactiveService
+    ) : base(loggerFactory, cache, yuGiOhDbService, guildConfigDbService, web, interactiveService) { }
 
     [SlashCommand("autodelete", "Toggles auto delete for embeds (true/false)")]
     public async Task AutoDeleteCommand([Summary(description: "true/false")] bool? input = null)

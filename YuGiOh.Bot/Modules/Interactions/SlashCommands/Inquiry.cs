@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
+using Fergun.Interactive;
 using Microsoft.Extensions.Logging;
 using YuGiOh.Bot.Extensions;
 using YuGiOh.Bot.Modules.Interactions.Autocompletes;
@@ -23,8 +24,9 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
             Cache cache,
             IYuGiOhDbService yuGiOhDbService,
             IGuildConfigDbService guildConfigDbService,
-            Web web
-        ) : base(loggerFactory, cache, yuGiOhDbService, guildConfigDbService, web) { }
+            Web web,
+            InteractiveService interactiveService
+        ) : base(loggerFactory, cache, yuGiOhDbService, guildConfigDbService, web, interactiveService) { }
 
         [SlashCommand(Constants.CardCommand, "Gets a card")]
         public async Task CardCommand([Autocomplete(typeof(CardAutocomplete)), Summary(description: "The card")] string input)

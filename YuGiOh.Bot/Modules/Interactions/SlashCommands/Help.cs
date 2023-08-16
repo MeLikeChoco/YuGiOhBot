@@ -3,10 +3,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Discord;
-using Discord.Addons.Interactive;
 using Discord.Commands;
 using Discord.Interactions;
 using Discord.WebSocket;
+using Fergun.Interactive;
+using Fergun.Interactive.Pagination;
 using Microsoft.Extensions.Logging;
 using YuGiOh.Bot.Extensions;
 using YuGiOh.Bot.Models;
@@ -23,16 +24,16 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
         private readonly Config _config;
         private readonly Random _random;
 
-        private PaginatedAppearanceOptions AOptions => new()
-        {
-
-            JumpDisplayOptions = JumpDisplayOptions.Never,
-            DisplayInformationIcon = false,
-            FooterFormat = GuildConfig.AutoDelete ? "This message will be deleted in 3 minutes! | Page {0}/{1}" : "This message's input will expire in 3 minutes! | Page {0}/{1}",
-            Timeout = TimeSpan.FromMinutes(3),
-            ShouldDeleteOnTimeout = GuildConfig.AutoDelete
-
-        };
+        // private PaginatedAppearanceOptions AOptions => new()
+        // {
+        //
+        //     JumpDisplayOptions = JumpDisplayOptions.Never,
+        //     DisplayInformationIcon = false,
+        //     FooterFormat = GuildConfig.AutoDelete ? "This message will be deleted in 3 minutes! | Page {0}/{1}" : "This message's input will expire in 3 minutes! | Page {0}/{1}",
+        //     Timeout = TimeSpan.FromMinutes(3),
+        //     ShouldDeleteOnTimeout = GuildConfig.AutoDelete
+        //
+        // };
 
         public Help(
             ILoggerFactory loggerFactory,
@@ -42,14 +43,13 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
             Web web,
             CommandHelpService cmdHelpService,
             Config config,
-            Random random
-        ) : base(loggerFactory, cache, yuGiOhDbService, guildConfigDbService, web)
+            Random random,
+            InteractiveService interactiveService
+        ) : base(loggerFactory, cache, yuGiOhDbService, guildConfigDbService, web, interactiveService)
         {
-
             _cmdHelpService = cmdHelpService;
             _config = config;
             _random = random;
-
         }
 
         [SlashCommand("help", "The defacto help command")]
@@ -94,61 +94,129 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
                 .WithName("Click for support guild/server")
                 .WithUrl(_config.GuildInvite);
 
-            var paginatedMessage = new PaginatedMessage
+            var color = _random.NextColor();
+            var pages = _cmdHelpService.GetCmds(Context.User)
+                .Select(GenerateCommandHelp)
+                .Distinct()
+                .OrderBy(str => str)
+                .Chunk(5)
+                .Select(group => @group.Join("\n\n"))
+                .Select(description => 
+                    new PageBuilder()
+                        .WithAuthor(author)
+                        .WithDescription(description)
+                        .WithColor(color)
+                );
+
+            var actionOnTimeout = ActionOnStop.DisableInput;
+
+            if (GuildConfig.AutoDelete)
+                actionOnTimeout |= ActionOnStop.DeleteMessage;
+
+            var paginatorBuilder = new StaticPaginatorBuilder()
+                .WithPages(pages)
+                .WithFooter(PaginatorFooter.PageNumber)
+                .WithActionOnTimeout(actionOnTimeout)
+                .WithActionOnCancellation(ActionOnStop.DeleteMessage);
+
+            return SendPaginatorAsync(paginatorBuilder.Build(), TimeSpan.FromMinutes(3));
+
+            // var paginatedMessage = new PaginatedMessage
+            // {
+            //
+            //     Author = author,
+            //     Color = _random.NextColor(),
+            //     Options = AOptions,
+            //     Pages = _cmdHelpService.GetCmds(Context.User)
+            //         .Select(cmd =>
+            //         {
+            //
+            //             string str = null;
+            //
+            //             switch (cmd)
+            //             {
+            //
+            //                 case CommandInfo cmdInfo:
+            //                 {
+            //
+            //                     str = $"**Command:** {GuildConfig.Prefix}{cmdInfo.Name} {cmdInfo.Parameters.Select(param => $"<{param.Name}>").Join(' ')}";
+            //
+            //                     if (!string.IsNullOrEmpty(cmdInfo.Summary))
+            //                         str += $"\n{cmdInfo.Summary}";
+            //
+            //                     break;
+            //
+            //                 }
+            //
+            //                 case SlashCommandInfo slashCmdInfo:
+            //                 {
+            //
+            //                     str = $"**Command:** /{slashCmdInfo.Name} ";
+            //                     str += slashCmdInfo.Parameters
+            //                         .Select(param => param.IsRequired ? $" <{param.Name}> " : $" <optional: {param.Name}> ")
+            //                         .Join(' ');
+            //
+            //                     if (!string.IsNullOrEmpty(slashCmdInfo.Description))
+            //                         str += $"\n{slashCmdInfo.Description}";
+            //
+            //                     break;
+            //
+            //                 }
+            //
+            //             }
+            //
+            //             return str;
+            //
+            //         })
+            //         .Distinct()
+            //         .OrderBy(str => str)
+            //         .Chunk(5)
+            //         .Select(group => @group.Join("\n\n"))
+            // };
+            //
+            // return PagedComponentReplyAsync(paginatedMessage);
+
+        }
+
+        private string GenerateCommandHelp(object cmd)
+        {
+            
+            string str = null;
+
+            switch (cmd)
             {
 
-                Author = author,
-                Color = _random.NextColor(),
-                Options = AOptions,
-                Pages = _cmdHelpService.GetCmds(Context.User)
-                    .Select(cmd =>
-                    {
+                case CommandInfo cmdInfo:
+                {
 
-                        string str = null;
+                    str = $"**Command:** {GuildConfig.Prefix}{cmdInfo.Name} {cmdInfo.Parameters.Select(param => $"<{param.Name}>").Join(' ')}";
 
-                        switch (cmd)
-                        {
+                    if (!string.IsNullOrEmpty(cmdInfo.Summary))
+                        str += $"\n{cmdInfo.Summary}";
 
-                            case CommandInfo cmdInfo:
-                            {
+                    break;
 
-                                str = $"**Command:** {GuildConfig.Prefix}{cmdInfo.Name} {cmdInfo.Parameters.Select(param => $"<{param.Name}>").Join(' ')}";
+                }
 
-                                if (!string.IsNullOrEmpty(cmdInfo.Summary))
-                                    str += $"\n{cmdInfo.Summary}";
+                case SlashCommandInfo slashCmdInfo:
+                {
 
-                                break;
+                    str = $"**Command:** /{slashCmdInfo.Name} ";
+                    str += slashCmdInfo.Parameters
+                        .Select(param => param.IsRequired ? $" <{param.Name}> " : $" <optional: {param.Name}> ")
+                        .Join(' ');
 
-                            }
+                    if (!string.IsNullOrEmpty(slashCmdInfo.Description))
+                        str += $"\n{slashCmdInfo.Description}";
 
-                            case SlashCommandInfo slashCmdInfo:
-                            {
+                    break;
 
-                                str = $"**Command:** /{slashCmdInfo.Name} ";
-                                str += slashCmdInfo.Parameters
-                                    .Select(param => param.IsRequired ? $" <{param.Name}> " : $" <optional: {param.Name}> ")
-                                    .Join(' ');
+                }
 
-                                if (!string.IsNullOrEmpty(slashCmdInfo.Description))
-                                    str += $"\n{slashCmdInfo.Description}";
+            }
 
-                                break;
-
-                            }
-
-                        }
-
-                        return str;
-
-                    })
-                    .Distinct()
-                    .OrderBy(str => str)
-                    .Chunk(5)
-                    .Select(group => @group.Join("\n\n"))
-            };
-
-            return PagedComponentReplyAsync(paginatedMessage);
-
+            return str;
+            
         }
 
     }

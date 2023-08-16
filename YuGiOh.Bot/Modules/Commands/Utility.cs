@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using Fergun.Interactive;
+using Microsoft.Extensions.Logging;
 using YuGiOh.Bot.Extensions;
 using YuGiOh.Bot.Models;
 using YuGiOh.Bot.Services;
@@ -12,13 +14,30 @@ using YuGiOh.Bot.Services.Interfaces;
 
 namespace YuGiOh.Bot.Modules.Commands
 {
-    public class Utility : CustomBase
+    public class Utility : MainBase
     {
 
-        public Stats Stats { get; set; }
-        public Random Rand { get; set; }
-        public Config Config { get; set; }
-        public IPerformanceMetrics PerfMetrics { get; set; }
+        private readonly Stats _stats;
+        private readonly Config _config;
+        private readonly IPerformanceMetrics _perfMetrics;
+
+        public Utility(
+            ILoggerFactory loggerFactory,
+            Cache cache,
+            IYuGiOhDbService yuGiOhDbService,
+            IGuildConfigDbService guildConfigDbService,
+            Web web,
+            Random rand,
+            InteractiveService interactiveService,
+            Stats stats,
+            Config config,
+            IPerformanceMetrics perfMetrics
+        ) : base(loggerFactory, cache, yuGiOhDbService, guildConfigDbService, web, rand, interactiveService)
+        {
+            _stats = stats;
+            _config = config;
+            _perfMetrics = perfMetrics;
+        }
 
         [Command("feedback")]
         [Summary("Send feedback to the bot owner!")]
@@ -39,15 +58,15 @@ namespace YuGiOh.Bot.Modules.Commands
                 .WithRandomColor()
                 .WithDescription(message);
 
-            await (Context.Client.GetChannel(Config.FeedbackChannel) as SocketTextChannel).SendMessageAsync("", embed: body.Build());
-            await ReplyAsync($"Feedback was sent!\n**Support guild/server: <{Config.GuildInvite}>**");
+            await (Context.Client.GetChannel(_config.FeedbackChannel) as SocketTextChannel).SendMessageAsync("", embed: body.Build());
+            await ReplyAsync($"Feedback was sent!\n**Support guild/server: <{_config.GuildInvite}>**");
 
         }
 
         [Command("invite")]
         [Summary("Gets an invite to the bot!")]
         public Task InviteCommand()
-            => ReplyAsync($"{Context.User.Mention} <{Config.BotInvite}>");
+            => ReplyAsync($"{Context.User.Mention} <{_config.BotInvite}>");
 
         [Command("uptime")]
         [Summary("Gets the uptime of the bot!")]
@@ -59,7 +78,7 @@ namespace YuGiOh.Bot.Modules.Commands
         public async Task StatsCommand()
         {
 
-            if (Stats.IsReady)
+            if (_stats.IsReady)
             {
 
                 var bot = Context.Client.CurrentUser;
@@ -68,10 +87,10 @@ namespace YuGiOh.Bot.Modules.Commands
                     .WithIconUrl(bot.GetAvatarUrl())
                     .WithName("Statistics");
 
-                var desc = $"This bot is present on **{Stats.GuildCount}** guilds.\n" +
-                    $"**{Stats.MaxGuild}** is the largest guild with **{Stats.MaxGuildCount}** users.\n" +
-                    $"**{Stats.UniqueUserCount}** users are in the same guild as this bot.\n" +
-                    $"{GetUptime()}";
+                var desc = $"This bot is present on **{_stats.GuildCount}** guilds.\n" +
+                           $"**{_stats.MaxGuild}** is the largest guild with **{_stats.MaxGuildCount}** users.\n" +
+                           $"**{_stats.UniqueUserCount}** users are in the same guild as this bot.\n" +
+                           $"{GetUptime()}";
 
                 var body = new EmbedBuilder()
                     .WithAuthor(author)
@@ -100,25 +119,34 @@ namespace YuGiOh.Bot.Modules.Commands
             {
 
                 var getAppInfoTask = Context.Client.GetApplicationInfoAsync();
-                var getOSInfoTask = PerfMetrics.GetOperatingSystem();
-                var calcCpuUsageTask = PerfMetrics.GetCpuUsage();
-                var calcMemUsageTask = PerfMetrics.GetMemUsage();
+                var getOSInfoTask = _perfMetrics.GetOperatingSystem();
+                var calcCpuUsageTask = _perfMetrics.GetCpuUsage();
+                var calcMemUsageTask = _perfMetrics.GetMemUsage();
 
                 var strBuilder = new StringBuilder()
-                    .Append("**Discord API Version:** ").Append(DiscordConfig.APIVersion).AppendLine()
-                    .Append("**Discord.NET Version:** ").AppendLine(DiscordConfig.Version);
+                    .Append("**Discord API Version:** ")
+                    .Append(DiscordConfig.APIVersion)
+                    .AppendLine()
+                    .Append("**Discord.NET Version:** ")
+                    .AppendLine(DiscordConfig.Version);
 
                 var appInfo = await getAppInfoTask;
 
                 strBuilder
-                    .Append("**Owner/Developer:** ").AppendLine(appInfo.Owner.ToString())
-                    .Append("**Shards:** ").Append(Context.Client.Shards.Count).AppendLine();
+                    .Append("**Owner/Developer:** ")
+                    .AppendLine(appInfo.Owner.ToString())
+                    .Append("**Shards:** ")
+                    .Append(Context.Client.Shards.Count)
+                    .AppendLine();
 
                 var osInfo = await getOSInfoTask;
 
                 strBuilder
-                    .Append("**Operating System:** ").AppendLine(osInfo)
-                    .Append("**Processor Count:** ").Append(Environment.ProcessorCount).AppendLine();
+                    .Append("**Operating System:** ")
+                    .AppendLine(osInfo)
+                    .Append("**Processor Count:** ")
+                    .Append(Environment.ProcessorCount)
+                    .AppendLine();
 
                 var cpuUsage = await calcCpuUsageTask;
                 var memUsage = await calcMemUsageTask;

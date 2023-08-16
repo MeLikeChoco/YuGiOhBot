@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Discord.Interactions;
 using Discord.WebSocket;
+using Fergun.Interactive;
 using Microsoft.Extensions.Logging;
 using YuGiOh.Bot.Extensions;
 using YuGiOh.Bot.Models.Attributes;
@@ -26,8 +27,9 @@ public class Dev : MainInteractionBase<SocketSlashCommand>
         IYuGiOhDbService yuGiOhDbService,
         IGuildConfigDbService guildConfigDbService,
         Web web,
-        IYuGiOhRepository yuGiOhRepository
-    ) : base(loggerFactory, cache, yuGiOhDbService, guildConfigDbService, web)
+        IYuGiOhRepository yuGiOhRepository,
+        InteractiveService interactiveService
+    ) : base(loggerFactory, cache, yuGiOhDbService, guildConfigDbService, web, interactiveService)
     {
         _yugiohRepo = yuGiOhRepository;
     }

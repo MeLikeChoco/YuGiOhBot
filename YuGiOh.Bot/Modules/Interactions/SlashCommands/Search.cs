@@ -6,13 +6,15 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Discord;
-using Discord.Addons.Interactive;
 using Discord.Interactions;
 using Discord.WebSocket;
+using Fergun.Interactive;
+using Fergun.Interactive.Pagination;
 using Microsoft.Extensions.Logging;
 using YuGiOh.Bot.Extensions;
+using YuGiOh.Bot.Models;
 using YuGiOh.Bot.Models.Cards;
-using YuGiOh.Bot.Models.Criterion;
+using YuGiOh.Bot.Models.Criteria;
 using YuGiOh.Bot.Modules.Interactions.Autocompletes;
 using YuGiOh.Bot.Services;
 using YuGiOh.Bot.Services.Interfaces;
@@ -23,6 +25,7 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
     {
 
         private readonly Random _random;
+        private readonly PaginatorFactory _paginatorFactory;
 
         public Search(
             ILoggerFactory loggerFactory,
@@ -30,12 +33,15 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
             IYuGiOhDbService yuGiOhDbService,
             IGuildConfigDbService guildConfigDbService,
             Web web,
-            Random random
+            InteractiveService interactiveService,
+            Random random,
+            PaginatorFactory paginatorFactory
         )
-            : base(loggerFactory, cache, yuGiOhDbService, guildConfigDbService, web)
+            : base(loggerFactory, cache, yuGiOhDbService, guildConfigDbService, web, interactiveService)
         {
 
             _random = random;
+            _paginatorFactory = paginatorFactory;
 
         }
 
@@ -107,24 +113,53 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
 
             var author = new EmbedAuthorBuilder()
                 .WithIconUrl(Context.Client.CurrentUser.GetAvatarUrl())
-                .WithName($"There are {amount} results from your search!");
+                .WithName($"There are {amount} results from your search. Timeout in 60 seconds!");
 
-            var paginator = new PaginatedMessage()
+            var color = _random.NextColor();
+            var pageDescriptions = GenDescriptions(cards.Select(card => card.Name));
+            var pages = pageDescriptions
+                .Select(description =>
+                    new PageBuilder()
+                        .WithAuthor(author)
+                        .WithDescription(description)
+                        .WithColor(color)
+                );
+
+            var paginatorBuilder = _paginatorFactory
+                .CreateStaticPaginatorBuilder(GuildConfig)
+                .WithPages(pages);
+
+            var cts = new CancellationTokenSource();
+            var paginatorMessageTask = SendPaginatorAsync(paginatorBuilder.Build(), ct: cts.Token);
+
+            Context.Client.MessageDeleted += CheckMessage;
+
+            var input = await NextMessageAsync(
+                new BaseCriteria(Context).AddCriteria(new IntegerCriteria(1, cards.Count)),
+                TimeSpan.FromSeconds(60),
+                cts.Token
+            );
+
+            if (
+                cts.IsCancellationRequested ||
+                !input.IsSuccess ||
+                input.IsCanceled ||
+                input.IsTimeout ||
+                !int.TryParse(input.Value?.Content, out var selection) ||
+                selection < 0 ||
+                selection > amount
+            )
             {
 
-                Author = author,
-                Color = _random.NextColor(),
-                Pages = GenDescriptions(cards.Select(card => card.Name)),
-                Options = PagedOptions
+                Context.Client.MessageDeleted -= CheckMessage;
 
-            };
+                return;
 
-            var criteria = new BaseCriteria()
-                .AddCriterion(new IntegerCriteria(amount));
+            }
 
-            var display = await PagedComponentReplyAsync(paginator);
-            var cts = new CancellationTokenSource();
-            var token = cts.Token;
+            await SendCardEmbedAsync(cards[selection - 1].GetEmbedBuilder(), GuildConfig.Minimal);
+
+            return;
 
             #region CheckMessage
 
@@ -132,10 +167,17 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
             Task CheckMessage(Cacheable<IMessage, ulong> cache, Cacheable<IMessageChannel, ulong> _)
             {
 
-                if (cache.Id == display.Id)
-                    cts.Cancel();
+                Task.Run(async () =>
+                {
 
-                Context.Client.MessageDeleted -= CheckMessage;
+                    var paginatorMessage = await paginatorMessageTask;
+
+                    if (cache.Id == paginatorMessage.Message.Id)
+                        cts.Cancel();
+
+                    Context.Client.MessageDeleted -= CheckMessage;
+
+                }, cts.Token);
 
                 return Task.CompletedTask;
 
@@ -143,24 +185,67 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
 
             #endregion CheckMessage
 
-            Context.Client.MessageDeleted += CheckMessage;
-
-            var input = await NextMessageAsync(criteria, TimeSpan.FromSeconds(60), token);
-
-            if (
-                token.IsCancellationRequested ||
-                input is null ||
-                !int.TryParse(input.Content, out var selection) ||
-                selection < 0 ||
-                selection > amount
-            )
-            {
-                return;
-            }
-
-            await SendCardEmbedAsync(cards[selection - 1].GetEmbedBuilder(), GuildConfig.Minimal);
-
         }
+
+        // private async Task ReceiveInput(int amount, IList<Card> cards)
+        // {
+        //
+        //     var author = new EmbedAuthorBuilder()
+        //         .WithIconUrl(Context.Client.CurrentUser.GetAvatarUrl())
+        //         .WithName($"There are {amount} results from your search!");
+        //
+        //     var paginator = new PaginatedMessage()
+        //     {
+        //
+        //         Author = author,
+        //         Color = _random.NextColor(),
+        //         Pages = GenDescriptions(cards.Select(card => card.Name)),
+        //         Options = PagedOptions
+        //
+        //     };
+        //
+        //     var criteria = new BaseCriteria()
+        //         .AddCriterion(new IntegerCriteria(amount));
+        //
+        //     var display = await PagedComponentReplyAsync(paginator);
+        //     var cts = new CancellationTokenSource();
+        //     var token = cts.Token;
+        //
+        //     #region CheckMessage
+        //
+        //     //cancel if pagination is deleted
+        //     Task CheckMessage(Cacheable<IMessage, ulong> cache, Cacheable<IMessageChannel, ulong> _)
+        //     {
+        //
+        //         if (cache.Id == display.Id)
+        //             cts.Cancel();
+        //
+        //         Context.Client.MessageDeleted -= CheckMessage;
+        //
+        //         return Task.CompletedTask;
+        //
+        //     }
+        //
+        //     #endregion CheckMessage
+        //
+        //     Context.Client.MessageDeleted += CheckMessage;
+        //
+        //     var input = await NextMessageAsync(criteria, TimeSpan.FromSeconds(60), token);
+        //
+        //     if (
+        //         token.IsCancellationRequested ||
+        //         input is null ||
+        //         !int.TryParse(input.Content, out var selection) ||
+        //         selection < 0 ||
+        //         selection > amount
+        //     )
+        //     {
+        //         return;
+        //     }
+        //
+        //     await SendCardEmbedAsync(cards[selection - 1].GetEmbedBuilder(), GuildConfig.Minimal);
+        //
+        // }
 
         private static IEnumerable<string> GenDescriptions(IEnumerable<string> cards)
         {

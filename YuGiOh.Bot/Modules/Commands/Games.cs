@@ -3,13 +3,13 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Discord.Addons.Interactive;
 using Discord.Commands;
 using Discord.WebSocket;
+using Fergun.Interactive;
 using Microsoft.Extensions.Logging;
 using YuGiOh.Bot.Extensions;
 using YuGiOh.Bot.Models.Cards;
-using YuGiOh.Bot.Models.Criterion;
+using YuGiOh.Bot.Models.Criteria;
 using YuGiOh.Bot.Services;
 using YuGiOh.Bot.Services.Interfaces;
 
@@ -19,9 +19,9 @@ namespace YuGiOh.Bot.Modules.Commands
     public class Games : MainBase
     {
 
-        private static Criteria<SocketMessage> BaseCriteria => new Criteria<SocketMessage>()
-            .AddCriterion(new EnsureSourceChannelCriterion())
-            .AddCriterion(new NotBotCriteria());
+        private Criteria BaseCriteria => new Criteria()
+            .AddCriteria(new ChannelCriteria(Context.Channel))
+            .AddCriteria(new NotBotCriteria());
 
         private readonly ILoggerFactory _loggerFactory;
 
@@ -31,8 +31,9 @@ namespace YuGiOh.Bot.Modules.Commands
             IYuGiOhDbService yuGiOhDbService,
             IGuildConfigDbService guildConfigDbService,
             Web web,
-            Random rand
-        ) : base(loggerFactory, cache, yuGiOhDbService, guildConfigDbService, web, rand)
+            Random rand,
+            InteractiveService interactiveService
+        ) : base(loggerFactory, cache, yuGiOhDbService, guildConfigDbService, web, rand, interactiveService)
         {
             _loggerFactory = loggerFactory;
         }
@@ -95,11 +96,15 @@ namespace YuGiOh.Bot.Modules.Commands
                 } while (e is not null);
 
                 var criteria = new GuessCriteria(card.Name, card.RealName);
-                var answer = await NextMessageAsync(BaseCriteria.AddCriterion(criteria), TimeSpan.FromSeconds(GuildConfig.GuessTime));
+                var answer = await NextMessageAsync(BaseCriteria.AddCriteria(criteria), TimeSpan.FromSeconds(GuildConfig.GuessTime));
 
-                if (answer is not null)
+                if (answer.IsSuccess)
                 {
-                    await ReplyAsync($":trophy: The winner is **{(answer.Author as SocketGuildUser)?.Nickname ?? answer.Author.Username}**! The card was `{criteria.Answer}`!");
+
+                    var message = answer.Value;
+                    
+                    await ReplyAsync($":trophy: The winner is **{(message.Author as SocketGuildUser)?.Nickname ?? message.Author.Username}**! The card was `{criteria.Answer}`!");
+                    
                 }
                 else
                 {
@@ -153,14 +158,14 @@ namespace YuGiOh.Bot.Modules.Commands
                 logger.Info(card.Name);
 
                 var cts = new CancellationTokenSource();
-                var hangmanService = new HangmanService(card.Name);
+                var hangmanService = new Hangman(card.Name);
 
                 var criteria = BaseCriteria
-                    .AddCriterion(new NotCommandCriteria(GuildConfig))
-                    .AddCriterion(new NotInlineSearchCriteria());
+                    .AddCriteria(new NotCommandCriteria(GuildConfig))
+                    .AddCriteria(new NotInlineSearchCriteria());
 
                 if (!GuildConfig.HangmanAllowWords)
-                    criteria.AddCriterion(new CharacterOnlyCriteria());
+                    criteria.AddCriteria(new CharacterOnlyCriteria());
 
                 var time = TimeSpan.FromSeconds(GuildConfig.HangmanTime);
 
@@ -176,14 +181,15 @@ namespace YuGiOh.Bot.Modules.Commands
                 do
                 {
 
-                    var input = await NextMessageAsync(criteria, token: cts.Token);
+                    var input = await NextMessageAsync(criteria, cts.Token);
 
                     if (cts.IsCancellationRequested)
                         break;
 
-                    user = input.Author;
+                    var message = input.Value;
+                    user = message.Author;
 
-                    switch (hangmanService.AddGuess(input.Content))
+                    switch (hangmanService.AddGuess(message.Content))
                     {
 
                         case GuessStatus.Duplicate:

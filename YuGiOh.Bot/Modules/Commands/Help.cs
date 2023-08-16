@@ -4,8 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Discord;
-using Discord.Addons.Interactive;
 using Discord.Commands;
+using Fergun.Interactive;
 using Microsoft.Extensions.Logging;
 using YuGiOh.Bot.Extensions;
 using YuGiOh.Bot.Models;
@@ -19,18 +19,19 @@ namespace YuGiOh.Bot.Modules.Commands
 
         private readonly CommandService _commandService;
         private readonly Config _config;
+        private readonly PaginatorFactory _paginatorFactory;
 
         private IEnumerable<CommandInfo> _commands;
 
-        private PaginatedAppearanceOptions AOptions => new()
-        {
-
-            JumpDisplayOptions = JumpDisplayOptions.Never,
-            DisplayInformationIcon = false,
-            FooterFormat = GuildConfig.AutoDelete ? "This message will be deleted in 3 minutes! | Page {0}/{1}" : "This message will not be deleted! | Page {0}/{1}",
-            Timeout = GuildConfig.AutoDelete ? TimeSpan.FromMinutes(3) : TimeSpan.FromMilliseconds(-1)
-
-        };
+        // private PaginatedAppearanceOptions AOptions => new()
+        // {
+        //
+        //     JumpDisplayOptions = JumpDisplayOptions.Never,
+        //     DisplayInformationIcon = false,
+        //     FooterFormat = GuildConfig.AutoDelete ? "This message will be deleted in 3 minutes! | Page {0}/{1}" : "This message will not be deleted! | Page {0}/{1}",
+        //     Timeout = GuildConfig.AutoDelete ? TimeSpan.FromMinutes(3) : TimeSpan.FromMilliseconds(-1)
+        //
+        // };
 
         public Help(
             ILoggerFactory loggerFactory,
@@ -39,12 +40,15 @@ namespace YuGiOh.Bot.Modules.Commands
             IGuildConfigDbService guildConfigDbService,
             Web web,
             Random rand,
+            InteractiveService interactiveService,
             CommandService commandService,
-            Config config
-        ) : base(loggerFactory, cache, yuGiOhDbService, guildConfigDbService, web, rand)
+            Config config,
+            PaginatorFactory paginatorFactory
+        ) : base(loggerFactory, cache, yuGiOhDbService, guildConfigDbService, web, rand, interactiveService)
         {
             _commandService = commandService;
             _config = config;
+            _paginatorFactory = paginatorFactory;
         }
 
         protected override void BeforeExecute(CommandInfo command)
@@ -85,22 +89,23 @@ namespace YuGiOh.Bot.Modules.Commands
                 .WithName("Click for support guild/server!")
                 .WithUrl(_config.GuildInvite);
 
-            var paginatedMessage = new PaginatedMessage()
-            {
+            var color = Rand.NextColor();
+            var paginatorBuilder = _paginatorFactory
+                .CreateStaticPaginatorBuilder(GuildConfig)
+                .WithPages(
+                    _commands
+                        .Select(cmdInfo => $"**Command:** {cmdInfo.Name} {cmdInfo.Parameters.Select(param => $"<{param.Name}>").Join(' ')}\n{cmdInfo.Summary}")
+                        .Distinct()
+                        .Chunk(5)
+                        .Select(group => group.Join("\n\n"))
+                        .Select(cmds => new PageBuilder()
+                            .WithAuthor(author)
+                            .WithColor(color)
+                            .WithDescription(cmds)
+                        )
+                );
 
-                Author = author,
-                Color = Rand.NextColor(),
-                Options = AOptions
-
-            };
-
-            paginatedMessage.Pages = _commands
-                .Select(cmdInfo => $"**Command:** {cmdInfo.Name} {cmdInfo.Parameters.Select(param => $"<{param.Name}>").Join(' ')}\n{cmdInfo.Summary}")
-                .Distinct()
-                .Chunk(5)
-                .Select(group => group.Join("\n\n"));
-
-            return PagedReplyAsync(paginatedMessage);
+            return SendPaginatorAsync(paginatorBuilder.Build());
 
         }
 

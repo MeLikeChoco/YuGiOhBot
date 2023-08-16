@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
+using Fergun.Interactive;
 using Microsoft.Extensions.Logging;
 using YuGiOh.Bot.Extensions;
 using YuGiOh.Bot.Models;
@@ -28,8 +29,9 @@ public class Utility : MainInteractionBase<SocketSlashCommand>
         Web web,
         Stats stats,
         Config config,
-        IPerformanceMetrics perfMetrics
-    ) : base(loggerFactory, cache, yuGiOhDbService, guildConfigDbService, web)
+        IPerformanceMetrics perfMetrics,
+        InteractiveService interactiveService
+    ) : base(loggerFactory, cache, yuGiOhDbService, guildConfigDbService, web, interactiveService)
     {
 
         _stats = stats;

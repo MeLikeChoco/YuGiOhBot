@@ -1,21 +1,35 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using Fergun.Interactive;
+using Microsoft.Extensions.Logging;
 using YuGiOh.Bot.Extensions;
 using YuGiOh.Bot.Services;
+using YuGiOh.Bot.Services.Interfaces;
 
 namespace YuGiOh.Bot.Modules.Commands
 {
-    public class Wikia : CustomBase
+    public class Wikia : MainBase
     {
+
+        public Wikia(
+            ILoggerFactory loggerFactory,
+            Cache cache,
+            IYuGiOhDbService yuGiOhDbService,
+            IGuildConfigDbService guildConfigDbService,
+            Web web,
+            Random rand,
+            InteractiveService interactiveService
+        ) : base(loggerFactory, cache, yuGiOhDbService, guildConfigDbService, web, rand, interactiveService) { }
 
         public Web Web { get; set; }
 
         [Command("wikia")]
         [Summary("Search for stuff on the yugioh wikia")]
-        public async Task WikiaCommand([Remainder]string search)
+        public async Task WikiaCommand([Remainder] string search)
         {
 
             var dom = await Web.GetDom($"http://yugioh.wikia.com/wiki/Special:Search?query={search}");
@@ -41,10 +55,10 @@ namespace YuGiOh.Bot.Modules.Commands
 
                 var builder = new StringBuilder();
 
-                for(int i = 1; i <= limit; i++)
+                for (var i = 1; i <= limit; i++)
                 {
-                    
-                    var topic = children.ElementAt(i - 1)   .GetElementsByTagName("a").First();
+
+                    var topic = children.ElementAt(i - 1).GetElementsByTagName("a").First();
                     var title = topic.TextContent;
                     var link = topic.GetAttribute("href").Replace("(", "%28").Replace(")", "%29");
 

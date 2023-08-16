@@ -1,15 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Discord;
-using Discord.Addons.Interactive;
 using Discord.Commands;
+using Fergun.Interactive;
 using Microsoft.Extensions.Logging;
 using YuGiOh.Bot.Extensions;
-using YuGiOh.Bot.Models.Criterion;
+using YuGiOh.Bot.Models;
+using YuGiOh.Bot.Models.Cards;
+using YuGiOh.Bot.Models.Criteria;
 using YuGiOh.Bot.Services;
 using YuGiOh.Bot.Services.Interfaces;
 
@@ -20,6 +23,7 @@ namespace YuGiOh.Bot.Modules.Commands
 
         private readonly CommandService _commandService;
         private readonly IServiceProvider _services;
+        private readonly PaginatorFactory _paginatorFactory;
 
         private static CommandInfo _cardCommand;
         private static readonly object CardCmdLock = new();
@@ -31,12 +35,15 @@ namespace YuGiOh.Bot.Modules.Commands
             IGuildConfigDbService guildConfigDbService,
             Web web,
             Random rand,
+            InteractiveService interactiveService,
             CommandService commandService,
-            IServiceProvider services
-        ) : base(loggerFactory, cache, yuGiOhDbService, guildConfigDbService, web, rand)
+            IServiceProvider services,
+            PaginatorFactory paginatorFactory
+        ) : base(loggerFactory, cache, yuGiOhDbService, guildConfigDbService, web, rand, interactiveService)
         {
             _commandService = commandService;
             _services = services;
+            _paginatorFactory = paginatorFactory;
         }
 
         protected override void BeforeExecute(CommandInfo command)
@@ -61,15 +68,9 @@ namespace YuGiOh.Bot.Modules.Commands
         public async Task SearchCommand([Remainder] string input)
         {
 
-            var cards = await YuGiOhDbService.SearchCardsAsync(input);
-            var amount = cards.Count();
+            var cards = (await YuGiOhDbService.SearchCardsAsync(input)).ToImmutableArray();
 
-            if (amount == 1)
-                await ExecuteCardCommand(cards.First().Name);
-            else if (amount != 0)
-                await ReceiveInput(amount, cards.Select(card => card.Name));
-            else
-                await NoResultError(input);
+            await DisplaySearch(cards, input, "cards");
 
         }
 
@@ -78,12 +79,9 @@ namespace YuGiOh.Bot.Modules.Commands
         public async Task ArchetypeCommand([Remainder] string input)
         {
 
-            var cards = await YuGiOhDbService.GetCardsInArchetypeAsync(input);
+            var cards = (await YuGiOhDbService.GetCardsInArchetypeAsync(input)).ToImmutableArray();
 
-            if (cards.Any())
-                await ReceiveInput(cards.Count(), cards.Select(card => card.Name));
-            else
-                await NoResultError("archetypes", input);
+            await DisplaySearch(cards, input, "archetypes");
 
         }
 
@@ -92,12 +90,9 @@ namespace YuGiOh.Bot.Modules.Commands
         public async Task SupportsCommand([Remainder] string input)
         {
 
-            var cards = await YuGiOhDbService.GetCardsInSupportAsync(input);
+            var cards = (await YuGiOhDbService.GetCardsInSupportAsync(input)).ToImmutableArray();
 
-            if (cards.Any())
-                await ReceiveInput(cards.Count(), cards.Select(card => card.Name));
-            else
-                await NoResultError("supports", input);
+            await DisplaySearch(cards, input, "supports");
 
         }
 
@@ -106,38 +101,78 @@ namespace YuGiOh.Bot.Modules.Commands
         public async Task AntiSupportsCommand([Remainder] string input)
         {
 
-            var cards = await YuGiOhDbService.GetCardsInAntisupportAsync(input).ContinueWith(result => result.Result.ToArray());
+            var cards = (await YuGiOhDbService.GetCardsInAntisupportAsync(input)).ToImmutableArray();
 
-            if (cards.Any())
-                await ReceiveInput(cards.Length, cards.Select(card => card.Name));
-            else
-                await NoResultError("antisupports", input);
+            await DisplaySearch(cards, input, "antisupports");
 
         }
 
-        public async Task ReceiveInput(int amount, IEnumerable<string> cards)
+        private async Task DisplaySearch(IList<Card> cards, string input, string objects = null)
+        {
+
+            var amount = cards.Count;
+
+            if (amount == 1)
+                await SendCardEmbedAsync(cards.First().GetEmbedBuilder(), GuildConfig.Minimal);
+            else if (amount != 0)
+                await ReceiveInput(amount, cards);
+            else
+                await NoResultError(objects, input);
+
+        }
+
+        private async Task ReceiveInput(int amount, IList<Card> cards)
         {
 
             var author = new EmbedAuthorBuilder()
                 .WithIconUrl(Context.Client.CurrentUser.GetAvatarUrl())
-                .WithName($"There are {amount} results from your search!");
+                .WithName($"There are {amount} results from your search. Timeout in 60 seconds!");
 
-            var paginator = new PaginatedMessage()
+            var color = Rand.NextColor();
+            var pageDescriptions = GenDescriptions(cards.Select(card => card.Name));
+            var pages = pageDescriptions
+                .Select(description =>
+                    new PageBuilder()
+                        .WithAuthor(author)
+                        .WithDescription(description)
+                        .WithColor(color)
+                );
+
+            var paginatorBuilder = _paginatorFactory
+                .CreateStaticPaginatorBuilder(GuildConfig)
+                .WithPages(pages);
+
+            var cts = new CancellationTokenSource();
+            var paginatorMessageTask = SendPaginatorAsync(paginatorBuilder.Build(), ct: cts.Token);
+
+            Context.Client.MessageDeleted += CheckMessage;
+
+            var input = await NextMessageAsync(
+                new BaseCriteria(Context).AddCriteria(new IntegerCriteria(1, cards.Count)),
+                TimeSpan.FromSeconds(60),
+                cts.Token
+            );
+
+            if (
+                cts.IsCancellationRequested ||
+                !input.IsSuccess ||
+                input.IsCanceled ||
+                input.IsTimeout ||
+                !int.TryParse(input.Value?.Content, out var selection) ||
+                selection < 0 ||
+                selection > amount
+            )
             {
 
-                Author = author,
-                Color = Rand.NextColor(),
-                Pages = GenDescriptions(cards),
-                Options = PagedOptions
+                Context.Client.MessageDeleted -= CheckMessage;
 
-            };
+                return;
 
-            var criteria = new BaseCriteria()
-                .AddCriterion(new IntegerCriteria(amount));
+            }
 
-            var display = await PagedReplyAsync(paginator);
-            var cts = new CancellationTokenSource();
-            var token = cts.Token;
+            await SendCardEmbedAsync(cards[selection - 1].GetEmbedBuilder(), GuildConfig.Minimal);
+
+            return;
 
             #region CheckMessage
 
@@ -145,23 +180,23 @@ namespace YuGiOh.Bot.Modules.Commands
             Task CheckMessage(Cacheable<IMessage, ulong> cache, Cacheable<IMessageChannel, ulong> _)
             {
 
-                if (cache.Id == display.Id)
-                    cts.Cancel();
+                Task.Run(async () =>
+                {
 
-                Context.Client.MessageDeleted -= CheckMessage;
+                    var paginatorMessage = await paginatorMessageTask;
+
+                    if (cache.Id == paginatorMessage.Message.Id)
+                        cts.Cancel();
+
+                    Context.Client.MessageDeleted -= CheckMessage;
+
+                }, cts.Token);
 
                 return Task.CompletedTask;
 
             }
 
             #endregion CheckMessage
-
-            Context.Client.MessageDeleted += CheckMessage;
-
-            var input = await NextMessageAsync(criteria, TimeSpan.FromSeconds(60), token);
-
-            if (!token.IsCancellationRequested && input is not null && int.TryParse(input.Content, out var selection) && selection > 0 && selection <= cards.Count())
-                await ExecuteCardCommand(cards.ElementAt(selection - 1));
 
         }
 

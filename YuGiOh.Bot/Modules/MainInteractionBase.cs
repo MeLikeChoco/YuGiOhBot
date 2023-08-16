@@ -1,19 +1,23 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using Discord;
-using Discord.Addons.Interactive;
 using Discord.Interactions;
 using Discord.Rest;
 using Discord.WebSocket;
+using Fergun.Interactive;
+using Fergun.Interactive.Pagination;
 using Microsoft.Extensions.Logging;
 using YuGiOh.Bot.Extensions;
 using YuGiOh.Bot.Models;
+using YuGiOh.Bot.Models.Criteria;
 using YuGiOh.Bot.Services;
 using YuGiOh.Bot.Services.Interfaces;
 
 namespace YuGiOh.Bot.Modules
 {
-    public abstract class MainInteractionBase<TInteraction> : InteractiveInteractionBase<ShardedInteractionContext<TInteraction>>
+    public abstract class MainInteractionBase<TInteraction> : InteractionModuleBase<ShardedInteractionContext<TInteraction>>
         where TInteraction : SocketInteraction
     {
 
@@ -22,24 +26,27 @@ namespace YuGiOh.Bot.Modules
         protected IYuGiOhDbService YuGiOhDbService { get; }
         protected IGuildConfigDbService GuildConfigDbService { get; }
         protected Web Web { get; }
+        protected InteractiveService InteractiveService { get; }
 
         protected GuildConfig GuildConfig { get; private set; }
+        protected bool IsDeferred { get; set; }
 
-        protected static PaginatedAppearanceOptions PagedOptions => new()
-        {
-
-            DisplayInformationIcon = false,
-            JumpDisplayOptions = JumpDisplayOptions.Never,
-            FooterFormat = "Enter a number to see that result! Expires in 60 seconds! | Page {0}/{1}"
-
-        };
+        // protected static PaginatedAppearanceOptions PagedOptions => new()
+        // {
+        //
+        //     DisplayInformationIcon = false,
+        //     JumpDisplayOptions = JumpDisplayOptions.Never,
+        //     FooterFormat = "Enter a number to see that result! Expires in 60 seconds! | Page {0}/{1}"
+        //
+        // };
 
         protected MainInteractionBase(
             ILoggerFactory loggerFactory,
             Cache cache,
             IYuGiOhDbService yuGiOhDbService,
             IGuildConfigDbService guildConfigDbService,
-            Web web
+            Web web,
+            InteractiveService interactiveService
         )
         {
 
@@ -48,6 +55,8 @@ namespace YuGiOh.Bot.Modules
             YuGiOhDbService = yuGiOhDbService;
             GuildConfigDbService = guildConfigDbService;
             Web = web;
+            IsDeferred = false;
+            InteractiveService = interactiveService;
 
         }
 
@@ -155,6 +164,73 @@ namespace YuGiOh.Bot.Modules
             MessageFlags flags = MessageFlags.None
         )
             => base.ReplyAsync(text, isTTS, embed, options, AllowedMentions.None, messageReference, components);
+
+        protected Task<InteractiveMessageResult> SendPaginatorAsync(
+            Paginator paginator,
+            TimeSpan timeSpan,
+            CancellationToken ct = default
+        )
+        {
+
+            if (IsDeferred)
+            {
+
+                return InteractiveService.SendPaginatorAsync(
+                    paginator,
+                    Context.Interaction,
+                    timeout: timeSpan,
+                    responseType: InteractionResponseType.DeferredChannelMessageWithSource,
+                    cancellationToken: ct
+                );
+
+            }
+
+            if (!Context.Interaction.HasResponded)
+            {
+
+                return InteractiveService.SendPaginatorAsync(
+                    paginator,
+                    Context.Interaction,
+                    timeout: timeSpan,
+                    cancellationToken: ct
+                );
+
+            }
+
+            return InteractiveService.SendPaginatorAsync(
+                paginator,
+                Context.Channel,
+                timeout: timeSpan,
+                cancellationToken: ct
+            );
+
+        }
+
+        protected Task<InteractiveMessageResult> SendPaginatorAsync(
+            Paginator paginator,
+            CancellationToken ct = default
+        )
+            => SendPaginatorAsync(
+                paginator,
+                TimeSpan.FromSeconds(60),
+                ct
+            );
+
+
+        protected Task<InteractiveResult<SocketMessage>> NextMessageAsync(
+            ICriteria criteria,
+            TimeSpan timespan,
+            CancellationToken ct = default
+        )
+        {
+
+            return InteractiveService.NextMessageAsync(
+                (message) => criteria.ValidateAsync(Context, message).Result,
+                timeout: timespan,
+                cancellationToken: ct
+            );
+
+        }
 
         protected Task TooManyError()
             => RespondAsync("Too many results were returned, please refine your search!");

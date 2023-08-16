@@ -2,10 +2,10 @@ using System;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Discord;
-using Discord.Addons.Interactive;
 using Discord.Commands;
 using Discord.Interactions;
 using Discord.WebSocket;
+using Fergun.Interactive;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Serilog;
@@ -52,11 +52,10 @@ public static class ServiceCollectionExtensions
 
     };
 
-    private static readonly InteractiveServiceConfig InteractiveServiceConfig = new()
+    private static readonly InteractiveConfig InteractiveConfig = new()
     {
-
-        DefaultTimeout = Timeout.InfiniteTimeSpan
-
+        DefaultTimeout = TimeSpan.FromSeconds(60),
+        LogLevel = LogSeverity.Verbose
     };
 
     #endregion Discord Client Configs
@@ -90,10 +89,9 @@ public static class ServiceCollectionExtensions
             .AddSingleton<Cache>()
             .AddSingleton<Stats>()
             .AddSingleton<Random>()
+            .AddSingleton(InteractiveConfig)
             .AddSingleton<InteractiveService>()
-            .AddSingleton(InteractiveServiceConfig)
-            .AddSingleton<InteractiveService<SocketInteractionContext<SocketSlashCommand>>>()
-            .AddSingleton<InteractiveService<ShardedInteractionContext<SocketSlashCommand>>>()
+            .AddSingleton<PaginatorFactory>()
             .BuildServiceProvider();
 
     }
