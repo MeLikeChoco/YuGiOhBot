@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Configuration;
 using System.IO;
 using System.Text.Json;
@@ -11,7 +10,7 @@ using LoggerExtensions = YuGiOh.Bot.Extensions.LoggerExtensions;
 
 namespace YuGiOh.Bot.Models
 {
-    
+
     public class Config
     {
 
@@ -111,10 +110,10 @@ namespace YuGiOh.Bot.Models
 
     public class DbConnectionStrings
     {
-        
+
         [JsonInclude]
         public string YuGiOh { get; private set; }
-        
+
         [JsonInclude]
         public string Guilds { get; private set; }
 

@@ -20,7 +20,7 @@ namespace YuGiOh.Bot.Services.Interfaces
         Task<IEnumerable<Card>> GetCardsInArchetypeAsync(string input);
         Task<IEnumerable<Card>> GetCardsInSupportAsync(string input);
         Task<IEnumerable<Card>> GetCardsInAntisupportAsync(string input);
-        
+
         Task<IEnumerable<string>> GetCardsAutocompleteAsync(string input);
         Task<IEnumerable<string>> GetArchetypesAutocompleteAsync(string input);
         Task<IEnumerable<string>> GetSupportsAutocompleteAsync(string input);

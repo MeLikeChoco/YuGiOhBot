@@ -25,7 +25,9 @@ namespace YuGiOh.Bot.Models
     }
 
     public class Ocg : BanlistFormat { }
+
     public class TcgAdv : BanlistFormat { }
+
     public class TcgTrad : BanlistFormat { }
 
     public abstract class BanlistFormat

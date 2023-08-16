@@ -1,6 +1,5 @@
 using System;
 using System.Runtime.InteropServices;
-using System.Threading;
 using Discord;
 using Discord.Commands;
 using Discord.Interactions;

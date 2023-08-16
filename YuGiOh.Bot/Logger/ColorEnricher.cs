@@ -7,7 +7,7 @@ public class ColorEnricher : ILogEventEnricher
 {
 
     #region Colors
-    
+
     //ANSI Color Formatting
     //For foreground 24bit color: \x1b[38;5;{value}m
     //For foreground 24bit color with rgb: \x1b[38;2;{r};{g};{b}m

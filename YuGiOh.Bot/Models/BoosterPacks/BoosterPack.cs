@@ -5,7 +5,7 @@ namespace YuGiOh.Bot.Models.BoosterPacks
 {
     public record BoosterPack
     {
-        
+
         public string Name { get; set; }
         public List<BoosterPackDate> Dates { get; set; }
         public List<BoosterPackCard> Cards { get; set; }
@@ -56,17 +56,17 @@ namespace YuGiOh.Bot.Models.BoosterPacks
 
     public class BoosterPackDate
     {
-        
+
         public string Name { get; set; }
         public DateTime Date { get; set; }
-        
+
     }
 
     public class BoosterPackCard
     {
-        
+
         public string Name { get; set; }
         public List<string> Rarities { get; set; }
-        
+
     }
 }

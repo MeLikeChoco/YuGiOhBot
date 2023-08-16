@@ -9,14 +9,17 @@ namespace YuGiOh.Bot.Models.Cards
     {
 
         #region Colors
+
         private static readonly Color FusionColor = new Color(160, 134, 183);
         private static readonly Color SynchroColor = new Color(204, 204, 204);
         private static readonly Color RitualColor = new Color(157, 181, 204);
         private static readonly Color EffectColor = new Color(255, 139, 83);
         private static readonly Color RegularColor = new Color(253, 230, 138);
+
         #endregion Colors
 
         #region Icon Urls
+
         private const string WindIconUrl = "http://1.bp.blogspot.com/-ndLNmGIXXKk/UxXrNXeUH-I/AAAAAAAABys/rdoqo1Bkhnk/s1600/Wind.png";
         private const string DarkIconUrl = "http://1.bp.blogspot.com/-QUU5KSFMYig/UxXrJZoOOfI/AAAAAAAABxE/7p8CLfWdTXA/s1600/Dark.png";
         private const string LightIconUrl = "http://1.bp.blogspot.com/-MxQabegkthM/UxXrLHywzrI/AAAAAAAABx8/h86nYieq9nc/s1600/Light.png";
@@ -24,6 +27,7 @@ namespace YuGiOh.Bot.Models.Cards
         private const string FireIconUrl = "http://4.bp.blogspot.com/-sS0-GqQ19gQ/UxXrLIymRVI/AAAAAAAAByA/aOAdiLerXoQ/s1600/Fire.png";
         private const string WaterIconUrl = "http://4.bp.blogspot.com/-A43QT1n8o5k/UxXrNJcG-fI/AAAAAAAAByo/0KFlRXQbZjI/s1600/Water.png";
         private const string DivineIconUrl = "http://1.bp.blogspot.com/-xZZF5E2NXi4/UxXrJwDWkaI/AAAAAAAABxg/EG-7ajL9WGc/s1600/Divine.png";
+
         #endregion Icon Urls
 
         public MonsterAttribute Attribute { get; set; }

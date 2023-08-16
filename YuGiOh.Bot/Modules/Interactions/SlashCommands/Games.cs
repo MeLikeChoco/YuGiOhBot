@@ -67,7 +67,7 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
                 var card = await YuGiOhDbService.GetRandomCardAsync();
 
                 logger.Info(card.Name);
-                
+
                 var hangmanService = new Hangman(card.Name);
 
                 var criteria = BaseCriteria

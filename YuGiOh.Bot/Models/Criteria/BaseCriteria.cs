@@ -1,6 +1,5 @@
 ﻿using Discord;
 using Discord.Commands;
-using Discord.WebSocket;
 
 namespace YuGiOh.Bot.Models.Criteria
 {

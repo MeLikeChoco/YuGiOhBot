@@ -14,14 +14,14 @@ namespace YuGiOh.Bot.Extensions
 
             var boosterpack = new BoosterPack
             {
-                
+
                 Name = entity.Name,
                 Url = entity.Url,
                 OcgEcists = entity.OcgExists,
                 TcgExists = entity.TcgExists,
                 Dates = entity.Dates.Select(dateEntity => dateEntity.ToModel()).ToList(),
                 Cards = entity.Cards.Select(cardEntity => cardEntity.ToModel()).ToList()
-                
+
             };
 
             return boosterpack;

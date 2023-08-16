@@ -6,7 +6,6 @@ using Discord.WebSocket;
 using Fergun.Interactive;
 using Microsoft.Extensions.Logging;
 using YuGiOh.Bot.Extensions;
-using YuGiOh.Bot.Modules.Interactions.Autocompletes;
 using YuGiOh.Bot.Services;
 using YuGiOh.Bot.Services.Interfaces;
 

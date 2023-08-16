@@ -16,10 +16,10 @@ namespace YuGiOh.Bot.Extensions
         }
 
         public static bool ContainsIgnoreCase(this string str, string value, IgnoreCaseComparison comparisonType = IgnoreCaseComparison.OrdinalIgnoreCase)
-            => str.Contains(value, (StringComparison)comparisonType);
+            => str.Contains(value, (StringComparison) comparisonType);
 
         public static bool EqualsIgnoreCase(this string str, string value, IgnoreCaseComparison comparisonType = IgnoreCaseComparison.OrdinalIgnoreCase)
-            => str.Equals(value, (StringComparison)comparisonType);
+            => str.Equals(value, (StringComparison) comparisonType);
 
         public static string Title(this string str)
         {

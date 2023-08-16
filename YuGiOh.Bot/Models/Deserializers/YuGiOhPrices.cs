@@ -8,8 +8,10 @@ namespace YuGiOh.Bot.Models.Deserializers
 
         [JsonProperty("high")]
         public double High { get; set; }
+
         [JsonProperty("low")]
         public double Low { get; set; }
+
         [JsonProperty("average")]
         public double Average { get; set; }
 
@@ -25,9 +27,10 @@ namespace YuGiOh.Bot.Models.Deserializers
 
     public class PriceData
     {
-        
+
         [JsonProperty("data")]
         public Data Data { get; set; }
+
         [JsonProperty("message")]
         public string Message { get; set; }
 
@@ -38,10 +41,13 @@ namespace YuGiOh.Bot.Models.Deserializers
 
         [JsonProperty("name")]
         public string Name { get; set; }
+
         [JsonProperty("print_tag")]
         public string PrintTag { get; set; }
+
         [JsonProperty("rarity")]
         public string Rarity { get; set; }
+
         [JsonProperty("price_data")]
         public PriceData PriceData { get; set; }
 
@@ -52,6 +58,7 @@ namespace YuGiOh.Bot.Models.Deserializers
 
         [JsonProperty("data")]
         public List<Datum> Data { get; set; }
+
         [JsonProperty("status")]
         public string Status { get; set; }
 

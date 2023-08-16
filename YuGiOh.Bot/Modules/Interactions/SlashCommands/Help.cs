@@ -101,7 +101,7 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
                 .OrderBy(str => str)
                 .Chunk(5)
                 .Select(group => @group.Join("\n\n"))
-                .Select(description => 
+                .Select(description =>
                     new PageBuilder()
                         .WithAuthor(author)
                         .WithDescription(description)
@@ -180,7 +180,7 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
 
         private string GenerateCommandHelp(object cmd)
         {
-            
+
             string str = null;
 
             switch (cmd)
@@ -216,7 +216,7 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
             }
 
             return str;
-            
+
         }
 
     }

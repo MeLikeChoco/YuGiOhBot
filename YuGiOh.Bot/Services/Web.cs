@@ -41,7 +41,13 @@ namespace YuGiOh.Bot.Services
 
         }
 
-        public Task<HttpResponseMessage> Post(string url, string content, string authorizationScheme = null, string authorization = null, ContentType contentType = ContentType.Json)
+        public Task<HttpResponseMessage> Post(
+            string url,
+            string content,
+            string authorizationScheme = null,
+            string authorization = null,
+            ContentType contentType = ContentType.Json
+        )
         {
 
             var payload = new StringContent(content);

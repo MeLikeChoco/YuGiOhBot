@@ -7,6 +7,7 @@ namespace YuGiOh.Bot.Models.Deserializers
 
         [JsonProperty("summary")]
         public string Name { get; set; }
+
         [JsonProperty("photos")]
         public Photos[] Photos { get; set; }
 

@@ -13,7 +13,7 @@ namespace YuGiOh.Bot.Models.Serializers
 
         [JsonProperty("server_count")]
         public int ServerCount { get; set; }
-        
+
 
         public GuildCount(int shardId, int shardCount, int count)
             => ServerCount = count;

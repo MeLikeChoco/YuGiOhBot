@@ -13,6 +13,6 @@ namespace YuGiOh.Bot.Models.Criteria
 
         public Task<bool> ValidateAsync(IInteractionContext context, SocketMessage message)
             => Task.FromResult(!message.Author.IsBot);
-        
+
     }
 }

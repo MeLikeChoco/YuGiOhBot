@@ -8,7 +8,7 @@ namespace YuGiOh.Bot
 
         public static class Url
         {
-            
+
             public const string FandomUrl = "https://yugioh.fandom.com/";
             public const string FandomWikiUrl = "https://yugioh.fandom.com/wiki/";
             public const string YugiPediaUrl = "https://yugipedia.com/";
@@ -19,7 +19,7 @@ namespace YuGiOh.Bot
             public const string BotsOnDiscordXyzUrl = "https://bots.ondiscord.xyz/bot-api/bots/{0}/guilds";
             public const string DiscordBotsGGUrl = "https://discord.bots.gg/api/v1/bots/{0}/stats";
             //public const string BlueDiscordBotUrl = "https://discordbots.org/api/bots/{0}/stats";
-            
+
         }
 
         public const string ArtFileType = "jpg";

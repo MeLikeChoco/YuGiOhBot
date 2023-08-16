@@ -25,19 +25,19 @@ namespace YuGiOh.Bot.Models.Criteria
         {
 
             var content = message.Content;
-            
+
             return Task.FromResult(int.TryParse(content, out var selection) && selection <= _max && selection >= _min);
-            
+
         }
 
         public Task<bool> ValidateAsync(IInteractionContext context, SocketMessage message)
         {
 
             var content = message.Content;
-            
+
             return Task.FromResult(int.TryParse(content, out var selection) && selection <= _max && selection >= _min);
-            
+
         }
-        
+
     }
 }

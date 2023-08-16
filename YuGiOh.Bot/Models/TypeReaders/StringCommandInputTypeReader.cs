@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Discord.Commands;
-using YuGiOh.Bot.Extensions;
 
 namespace YuGiOh.Bot.Models.TypeReaders
 {

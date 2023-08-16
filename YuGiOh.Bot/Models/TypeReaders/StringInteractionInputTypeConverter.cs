@@ -15,14 +15,14 @@ public class StringInteractionInputTypeConverter : TypeConverter<string>
     {
 
         var input = option.Value.ToString();
-        
+
         if (string.IsNullOrEmpty(input))
             return Task.FromResult(TypeConverterResult.FromError(InteractionCommandError.ParseFailed, "Null or empty input"));
 
         input = TypeReaderUtils.SanitizeInput(input);
 
         return Task.FromResult(TypeConverterResult.FromSuccess(input));
-        
+
     }
 
 }

@@ -7,8 +7,10 @@ namespace YuGiOh.Bot.Models.Cards
     {
 
         #region Colors
+
         private static readonly Color FusionColor = new Color(160, 134, 183);
         private static readonly Color SynchroColor = new Color(204, 204, 204);
+
         #endregion Colors
 
         public string Materials { get; set; }

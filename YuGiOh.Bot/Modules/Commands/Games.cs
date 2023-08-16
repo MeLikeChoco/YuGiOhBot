@@ -102,9 +102,9 @@ namespace YuGiOh.Bot.Modules.Commands
                 {
 
                     var message = answer.Value;
-                    
+
                     await ReplyAsync($":trophy: The winner is **{(message.Author as SocketGuildUser)?.Nickname ?? message.Author.Username}**! The card was `{criteria.Answer}`!");
-                    
+
                 }
                 else
                 {
