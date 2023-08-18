@@ -25,8 +25,6 @@ namespace YuGiOh.Bot.Modules.Commands
             InteractiveService interactiveService
         ) : base(loggerFactory, cache, yuGiOhDbService, guildConfigDbService, web, rand, interactiveService) { }
 
-        public Web Web { get; set; }
-
         [Command("wikia")]
         [Summary("Search for stuff on the yugioh wikia")]
         public async Task WikiaCommand([Remainder] string search)
