@@ -11,7 +11,7 @@ public record Config
 
     [JsonInclude]
     [JsonPropertyName("Db Connection Strings")]
-    public Dictionary<string, DbConnectionStrings> DbConnectionStrings { get; private set; }
+    public Dictionary<string, DbConnectionStrings> DbConnectionStrings { get; private set; } = null!;
 
     private static Config? _instance;
 
