@@ -8,28 +8,25 @@ using Newtonsoft.Json.Linq;
 using YuGiOh.Common.Models.YuGiOh;
 using YuGiOh.Scraper.Constants;
 using YuGiOh.Scraper.Extensions;
-using YuGiOh.Scraper.Models.ParserOptions;
 
 namespace YuGiOh.Scraper.Models.Parsers.Yugipedia;
 
-[ParserModule("yugipedia")]
+[ParserModule(ConstantString.YugipediaModuleName)]
 public class BoosterPackParser : ICanParse<BoosterPackEntity>
 {
-    
-    private readonly string _name, _id;
-    private readonly Options _options;
 
-    public BoosterPackParser(string name, string id, Options options)
+    private readonly string _name, _id;
+
+    public BoosterPackParser(string id, string name)
     {
         _name = name;
         _id = id;
-        _options = options;
     }
 
     public async Task<BoosterPackEntity> ParseAsync()
     {
 
-        var url = string.Format(ConstantString.MediaWikiParseIdUrl, _id);
+        var url = ConstantString.YugipediaUrl + string.Format(ConstantString.MediaWikiParseIdUrl, _id);
         var dom = await GetDom(url);
         var parserOutput = dom.GetElementByClassName("mw-parser-output");
         var dates = GetReleaseDates(parserOutput);
@@ -153,7 +150,7 @@ public class BoosterPackParser : ICanParse<BoosterPackEntity>
     private async Task<IDocument> GetDom(string url)
     {
 
-        var parseResponse = await Constant.GetHttpClient(_options).GetStringAsync(url);
+        var parseResponse = await Constant.HttpClient.GetStringAsync(url);
         var parseJToken = JObject.Parse(parseResponse)["parse"];
         var html = parseJToken?.Value<string>("text") ?? parseJToken?["text"]?.Value<string>("*");
 

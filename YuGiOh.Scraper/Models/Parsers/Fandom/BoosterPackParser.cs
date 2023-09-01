@@ -1,11 +1,13 @@
+using System;
 using System.Threading.Tasks;
 using YuGiOh.Common.Models.YuGiOh;
+using YuGiOh.Scraper.Constants;
 using YuGiOh.Scraper.Models.ParserOptions;
 
 namespace YuGiOh.Scraper.Models.Parsers.Fandom;
 
-[ParserModule("fandom")]
-public class BoosterPackParser : IParser<BoosterPackEntity>
+[ParserModule(ConstantString.FandomModuleName)]
+public class BoosterPackParser : ICanParse<BoosterPackEntity>
 {
 
     private readonly string _id, _name;
@@ -20,7 +22,7 @@ public class BoosterPackParser : IParser<BoosterPackEntity>
 
     public async Task<BoosterPackEntity> ParseAsync()
     {
-        throw new System.NotImplementedException();
+        throw new NotImplementedException();
     }
-    
+
 }

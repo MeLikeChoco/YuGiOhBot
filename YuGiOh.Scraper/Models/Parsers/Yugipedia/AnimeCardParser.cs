@@ -7,28 +7,25 @@ using Newtonsoft.Json.Linq;
 using YuGiOh.Common.Models.YuGiOh;
 using YuGiOh.Scraper.Constants;
 using YuGiOh.Scraper.Extensions;
-using YuGiOh.Scraper.Models.ParserOptions;
 
 namespace YuGiOh.Scraper.Models.Parsers.Yugipedia;
 
-[ParserModule("yugipedia")]
+[ParserModule(ConstantString.YugipediaModuleName)]
 public class AnimeCardParser : ICanParse<AnimeCardEntity>
 {
 
     private readonly string _id, _name;
-    private readonly Options _options;
 
-    public AnimeCardParser(string name, string id, Options options)
+    public AnimeCardParser(string id, string name)
     {
         _id = id;
         _name = name;
-        _options = options;
     }
 
     public async Task<AnimeCardEntity> ParseAsync()
     {
 
-        var url = string.Format(ConstantString.MediaWikiParseIdUrl, _id);
+        var url = ConstantString.YugipediaUrl + string.Format(ConstantString.MediaWikiParseIdUrl, _id);
         var dom = await GetDom(url);
         var parserOutput = dom.GetElementByClassName("mw-parser-output");
         var cardTable = parserOutput.GetElementByClassName("card-table");
@@ -156,7 +153,7 @@ public class AnimeCardParser : ICanParse<AnimeCardEntity>
     private async Task<IDocument> GetDom(string url)
     {
 
-        var parseResponse = await Constant.GetHttpClient(_options).GetStringAsync(url);
+        var parseResponse = await Constant.HttpClient.GetStringAsync(url);
         var parseJToken = JObject.Parse(parseResponse)["parse"];
         var html = parseJToken?.Value<string>("text") ?? parseJToken?["text"]?.Value<string>("*");
 

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AngleSharp.Dom;
@@ -17,8 +16,8 @@ using YuGiOh.Scraper.Models.ParserOptions;
 
 namespace YuGiOh.Scraper.Models.Parsers.Fandom;
 
-[ParserModule("fandom")]
-public class CardParser : IParser<CardEntity>
+[ParserModule(ConstantString.FandomModuleName)]
+public class CardParser : ICanParse<CardEntity>
 {
 
     private static readonly string[] ArchetypesHeaderMustHaveWords = { "archetypes", "series" };
@@ -38,7 +37,7 @@ public class CardParser : IParser<CardEntity>
     {
 
 
-        var url = string.Format(ConstantString.MediaWikiParseIdUrl, _id);
+        var url = ConstantString.YuGiOhFandomUrl + string.Format(ConstantString.MediaWikiParseIdUrl, _id);
         var dom = await GetDom(url);
         var parserOutput = dom.GetElementByClassName("mw-parser-output");
 
@@ -208,7 +207,7 @@ public class CardParser : IParser<CardEntity>
             else
             {
 
-                var pendulumLore = TrimPropertyCardTextError(splitLore[0]);
+                var pendulumLore = TrimPropertyCardTextError(splitLore[0].Split("Pendulum Effect:")[1]);
                 var lore = TrimPropertyCardTextError(splitLore[1]);
 
                 card.PendulumLore = pendulumLore;
@@ -378,7 +377,7 @@ public class CardParser : IParser<CardEntity>
     private async Task<IDocument> GetDom(string url)
     {
 
-        var parseResponse = await Constant.GetHttpClient(_options).GetStringAsync(url);
+        var parseResponse = await Constant.HttpClient.GetStringAsync(url);
         var parseJToken = JObject.Parse(parseResponse)["parse"];
         var html = parseJToken?.Value<string>("text") ?? parseJToken?["text"]?.Value<string>("*");
 

@@ -13,8 +13,8 @@ using YuGiOh.Scraper.Models.ParserOptions;
 
 namespace YuGiOh.Scraper.Models.Parsers.Fandom;
 
-[ParserModule("fandom")]
-public class AnimeCardParser : IParser<AnimeCardEntity>
+[ParserModule(ConstantString.FandomModuleName)]
+public class AnimeCardParser : ICanParse<AnimeCardEntity>
 {
 
     private readonly string _name, _id;
@@ -30,7 +30,7 @@ public class AnimeCardParser : IParser<AnimeCardEntity>
     public async Task<AnimeCardEntity> ParseAsync()
     {
 
-        var url = string.Format(ConstantString.MediaWikiParseIdUrl, _id);
+        var url = ConstantString.YuGiOhFandomUrl + string.Format(ConstantString.MediaWikiParseIdUrl, _id);
         var parserOutput = await GetDom(url);
         var cardTableRows = parserOutput.GetElementByClassName("infocolumn").GetElementsByTagName("tr");
         var imgElement = parserOutput.GetElementByClassName("cardtable-main_image-wrapper").GetElementByTagName("img");
@@ -59,7 +59,7 @@ public class AnimeCardParser : IParser<AnimeCardEntity>
             Id = int.Parse(_id),
             Name = parserOutput.GetElementByClassName("heading").TextContent.Trim(),
             Img = imgUrl,
-            Url = string.Format(Constant.ModuleToBaseUrl[_options.Module] + ConstantString.MediaWikiIdUrl, _id)
+            Url = string.Format(ConstantString.YugipediaUrl + ConstantString.MediaWikiIdUrl, _id)
 
         };
 
@@ -133,7 +133,7 @@ public class AnimeCardParser : IParser<AnimeCardEntity>
     private async Task<IDocument> GetDom(string url)
     {
 
-        var parseResponse = await Constant.GetHttpClient(_options).GetStringAsync(url);
+        var parseResponse = await Constant.HttpClient.GetStringAsync(url);
         var parseJToken = JObject.Parse(parseResponse)["parse"];
         var html = parseJToken?.Value<string>("text") ?? parseJToken?["text"]?.Value<string>("*");
 

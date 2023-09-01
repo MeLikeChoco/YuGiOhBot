@@ -23,15 +23,15 @@ using YuGiOh.Scraper.Models.Exceptions;
 using YuGiOh.Scraper.Models.ParserOptions;
 using YuGiOh.Scraper.Models.Parsers;
 using YuGiOh.Scraper.Models.Responses;
-using Type = YuGiOh.Common.Models.YuGiOh.Type;
 
 namespace YuGiOh.Scraper;
 
 public class Program : IYuGiOhRepositoryConfiguration
 {
 
+    private static readonly HttpClient HttpClient = new();
     private static readonly Options Options = Options.GetInstance(new OptionsArgs());
-    private static ParallelOptions ParallelOptions => Options.IsDev ? Constant.SerialOptions : Constant.ParallelOptions;
+    private static ParallelOptions ParallelOptions => Options.IsDebug ? Constant.SerialOptions : Constant.ParallelOptions;
 
     private static readonly IEnumerable<TypeInfo> Parsers = Assembly.GetEntryAssembly()!.DefinedTypes.Where(type =>
     {
@@ -85,7 +85,7 @@ public class Program : IYuGiOhRepositoryConfiguration
         var boosterProcResponse = await ProcessBoosters(tcgLinks, ocgLinks);
 
         Log($"Processed {boosterProcResponse.Count} booster packs. There were {boosterProcResponse.Errors.Count} errors.");
-        Log($"Processing anime cards.");
+        Log("Processing anime cards.");
 
         var animeCardProcResponse = await ProcessAnimeCards(animeLinks);
 
@@ -142,7 +142,7 @@ public class Program : IYuGiOhRepositoryConfiguration
 
         //links = links.Take(Options.MaxCardsToParse);
 
-        var parserType = GetParserModule<CardEntity>();
+        var parserModule = GetParserModule<CardEntity>();
         var errors = new ConcurrentBag<Error>();
         var repo = new YuGiOhRepository(this);
         var count = 0;
@@ -161,7 +161,7 @@ public class Program : IYuGiOhRepositoryConfiguration
                 try
                 {
 
-                    var parser = Activator.CreateInstance(parserType, name, id, Options) as IParser<CardEntity>;
+                    var parser = Activator.CreateInstance(parserModule, id, name) as ICanParse<CardEntity>;
                     // var parserHash = await parser.GetParseOutput().ContinueWith(outputTask => outputTask.Result.GetMurMurHash(), _); //wanted to try ContinueWith instead of wrapping await
                     //
                     // //this is to determine whether or not to parse
@@ -187,7 +187,7 @@ public class Program : IYuGiOhRepositoryConfiguration
                         Message = ex.Message,
                         StackTrace = ex.StackTrace,
                         Url = string.Format(Constant.ModuleToBaseUrl[Options.Module] + ConstantString.MediaWikiIdUrl, id),
-                        Type = Type.Card,
+                        Type = Common.Models.YuGiOh.Type.Card,
                         Timestamp = DateTime.UtcNow
                     });
 
@@ -207,7 +207,7 @@ public class Program : IYuGiOhRepositoryConfiguration
                             Message = ex.Message,
                             StackTrace = ex.StackTrace,
                             Url = string.Format(Constant.ModuleToBaseUrl[Options.Module] + ConstantString.MediaWikiIdUrl, id),
-                            Type = Type.Card,
+                            Type = Common.Models.YuGiOh.Type.Card,
                             Timestamp = DateTime.UtcNow
                         });
 
@@ -270,7 +270,7 @@ public class Program : IYuGiOhRepositoryConfiguration
                 try
                 {
 
-                    var parser = Activator.CreateInstance(parserModule, name, id, Options) as IParser<BoosterPackEntity>;
+                    var parser = Activator.CreateInstance(parserModule, id, name, Options) as ICanParse<BoosterPackEntity>;
                     var card = await parser!.ParseAsync();
                     card.TcgExists = tcgLinks.ContainsKey(name);
                     card.OcgExists = ocgLinks.ContainsKey(name);
@@ -295,7 +295,7 @@ public class Program : IYuGiOhRepositoryConfiguration
                             Message = ex.Message,
                             StackTrace = ex.StackTrace,
                             Url = string.Format(ConstantString.YugipediaUrl + ConstantString.MediaWikiIdUrl, id),
-                            Type = Type.Booster,
+                            Type = Common.Models.YuGiOh.Type.Booster,
                             Timestamp = DateTime.UtcNow
                         });
 
@@ -353,7 +353,7 @@ public class Program : IYuGiOhRepositoryConfiguration
                 try
                 {
 
-                    var parser = Activator.CreateInstance(parserModule, name, id, Options) as IParser<AnimeCardEntity>;
+                    var parser = Activator.CreateInstance(parserModule, id, name) as ICanParse<AnimeCardEntity>;
                     var card = await parser!.ParseAsync();
 
                     await repo.InsertAnimeCardAsync(card);
@@ -376,7 +376,7 @@ public class Program : IYuGiOhRepositoryConfiguration
                             Message = ex.Message,
                             StackTrace = ex.StackTrace,
                             Url = string.Format(Constant.ModuleToBaseUrl[Options.Module] + ConstantString.MediaWikiIdUrl, id),
-                            Type = Type.Booster,
+                            Type = Common.Models.YuGiOh.Type.Booster,
                             Timestamp = DateTime.UtcNow
                         });
 
@@ -434,8 +434,8 @@ public class Program : IYuGiOhRepositoryConfiguration
         do
         {
 
-            var url = baseUrl + string.Format(ConstantString.CmcontinueQuery, cmcontinue);
-            var response = await Constant.GetHttpClient(Options).GetStringAsync(url);
+            var url = Constant.ModuleToBaseUrl[Options.Module] + baseUrl + string.Format(ConstantString.CmcontinueQuery, cmcontinue);
+            var response = await HttpClient.GetStringAsync(url);
             var responseJObject = JObject.Parse(response);
             cmcontinue = responseJObject["continue"]?.Value<string>("cmcontinue");
 
@@ -472,7 +472,7 @@ public class Program : IYuGiOhRepositoryConfiguration
 
         var webhookConfig = Options.Config.Webhook;
 
-        if (!string.IsNullOrWhiteSpace(webhookConfig.Url) && !Options.IsDebug)
+        if (!string.IsNullOrWhiteSpace(webhookConfig.Url) && !Options.IsDebug && !Options.IsDev)
         {
 
             using var httpClient = new HttpClient();
@@ -526,7 +526,7 @@ public class Program : IYuGiOhRepositoryConfiguration
     public NpgsqlConnection GetYuGiOhDbConnection()
     {
 
-        var connectionStr = Options.IsDebug ? Options.Config.Databases.Staging : Options.Config.Databases.Production;
+        var connectionStr = Options.IsDev ? Options.Config.Databases.Staging : Options.Config.Databases.Production;
 
         if (!connectionStr.EndsWith(';'))
             connectionStr += ';';

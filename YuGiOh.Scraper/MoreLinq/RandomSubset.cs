@@ -1,4 +1,5 @@
 ﻿#region License and Terms
+
 // MoreLINQ - Extensions to LINQ to Objects
 // Copyright (c) 2010 Leopold Bushkin. All rights reserved.
 //
@@ -13,13 +14,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#endregion
 
-namespace MoreLinq;
+#endregion
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
+
+namespace MoreLinq;
 
 public static partial class MoreEnumerable
 {
@@ -34,7 +36,6 @@ public static partial class MoreEnumerable
     /// <returns>
     /// A random sequence of elements in random order from the original
     /// sequence.</returns>
-
     public static IEnumerable<T> RandomSubset<T>(this IEnumerable<T> source, int subsetSize)
     {
         return RandomSubset(source, subsetSize, new Random());
@@ -54,7 +55,6 @@ public static partial class MoreEnumerable
     /// <returns>
     /// A random sequence of elements in random order from the original
     /// sequence.</returns>
-
     public static IEnumerable<T> RandomSubset<T>(this IEnumerable<T> source, int subsetSize, Random rand)
     {
         if (rand is null) throw new ArgumentNullException(nameof(rand));
@@ -80,9 +80,9 @@ public static partial class MoreEnumerable
                 "Subset size must be less than or equal to the source length.");
         }
 
-        var m = 0;                // keeps track of count items shuffled
-        var w = array.Length;     // upper bound of shrinking swap range
-        var g = w - 1;            // used to compute the second swap index
+        var m = 0; // keeps track of count items shuffled
+        var w = array.Length; // upper bound of shrinking swap range
+        var g = w - 1; // used to compute the second swap index
 
         // perform in-place, partial Fisher-Yates shuffle
         while (m < subsetSize)

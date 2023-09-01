@@ -5,7 +5,7 @@ namespace YuGiOh.Scraper.Models;
 
 public class WebhookMessage
 {
-    
+
     [JsonPropertyName("content")]
     public string Content { get; set; }
 
@@ -16,10 +16,10 @@ public class WebhookMessage
 
 public class WebhookMessageEmbed
 {
-    
+
     [JsonPropertyName("title")]
     public string Title { get; set; }
-    
+
     [JsonPropertyName("color")]
     public string Color { get; set; }
 
