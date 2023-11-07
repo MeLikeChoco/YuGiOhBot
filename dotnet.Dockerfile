@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:6.0.407
+FROM mcr.microsoft.com/dotnet/sdk:6.0.416
 
 WORKDIR src/
 
