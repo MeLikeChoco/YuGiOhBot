@@ -270,7 +270,7 @@ public class Program : IYuGiOhRepositoryConfiguration
                 try
                 {
 
-                    var parser = Activator.CreateInstance(parserModule, id, name, Options) as ICanParse<BoosterPackEntity>;
+                    var parser = Activator.CreateInstance(parserModule, id, name) as ICanParse<BoosterPackEntity>;
                     var card = await parser!.ParseAsync();
                     card.TcgExists = tcgLinks.ContainsKey(name);
                     card.OcgExists = ocgLinks.ContainsKey(name);

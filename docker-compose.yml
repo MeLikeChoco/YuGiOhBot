@@ -1,17 +1,17 @@
 services:
   db:
     container_name: YuGiOhBot_postgres
-    image: postgres:15.2-bullseye
+    image: postgres:16.1-bullseye
     ports:
       - "5432:5432"
     environment:
       - POSTGRES_PASSWORD=testing
       - PGDATA=pgdata
       - YUGIOH_ENV=Docker
-      #locale doesn't matter for alpine, it's a pain to override
-    #      - LANG=en_US.utf-8
-    command: "-c fsync=off -c synchronous_commit=off -c full_page_writes=off"
+      - LANG=en_US.utf-8
+#    command: "-c fsync=off -c synchronous_commit=off -c full_page_writes=off"
     volumes:
+      - ./postgresql.conf:/var/lib/postgresql/data/postgresql.conf
       - ./yugioh.sql:/docker-entrypoint-initdb.d/yugioh.sql
       - ./guilds.sql:/docker-entrypoint-initdb.d/guilds.sql
   dotnet:

@@ -179,7 +179,7 @@ public class YuGiOhRepositoryTests
     [Theory]
     [InlineData("dark")]
     [InlineData("cYbErSe")]
-    [InlineData("Hamon, Lord of Striking Thunder")]
+    [InlineData("Die roll")]
     public async Task GetCardsInSupport_ExpectNotEmpty_ExpectSuccess(string input)
     {
 
@@ -316,7 +316,7 @@ public class YuGiOhRepositoryTests
         const string name = "Crystal Girl";
         var link = await _yugiohRepo.GetImageLinkAsync(name);
 
-        Assert.True(!string.IsNullOrWhiteSpace(link));
+        Assert.False(string.IsNullOrWhiteSpace(link));
 
     }
 

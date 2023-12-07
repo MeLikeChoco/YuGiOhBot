@@ -1,10 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AngleSharp.Dom;
-using AngleSharp.Html.Parser;
-using Newtonsoft.Json.Linq;
 using YuGiOh.Common.Models.YuGiOh;
 using YuGiOh.Scraper.Constants;
 using YuGiOh.Scraper.Extensions;
@@ -12,79 +10,39 @@ using YuGiOh.Scraper.Extensions;
 namespace YuGiOh.Scraper.Models.Parsers.Yugipedia;
 
 [ParserModule(ConstantString.YugipediaModuleName)]
-public class BoosterPackParser : ICanParse<BoosterPackEntity>
+public class BoosterPackParser(string id, string name) : BaseBoosterParser
 {
 
-    private readonly string _name, _id;
+    private IElement _parserOutput;
+    private IHtmlCollection<IElement> _table;
 
-    public BoosterPackParser(string id, string name)
-    {
-        _name = name;
-        _id = id;
-    }
-
-    public async Task<BoosterPackEntity> ParseAsync()
+    protected override async Task BeforeParseAsync()
     {
 
-        var url = ConstantString.YugipediaUrl + string.Format(ConstantString.MediaWikiParseIdUrl, _id);
-        var dom = await GetDom(url);
-        var parserOutput = dom.GetElementByClassName("mw-parser-output");
-        var dates = GetReleaseDates(parserOutput);
-        var table = dom.GetElementsByClassName("card-list").FirstOrDefault()?.FirstElementChild?.Children;
+        await base.BeforeParseAsync();
 
-        if (table is null)
-            throw new NullReferenceException($"No card list exists for {_name}");
-
-        var tableHead = table.First();
-        var nameIndex = GetColumnIndex(tableHead, "name");
-        var rarityIndex = GetColumnIndex(tableHead, "rarity");
-        var cardTable = table.Skip(1);
-        var cards = new List<BoosterPackCardEntity>();
-
-        foreach (var row in cardTable)
-        {
-
-            var name = TrimName(row.Children[nameIndex].TextContent.Trim().Trim('"'));
-            var rarities = new List<string>();
-
-            if (rarityIndex != -1)
-                rarities = row
-                    .Children[rarityIndex]
-                    .Children.Select(element => element.TextContent.Trim())
-                    .Where(text => !string.IsNullOrEmpty(text))
-                    .ToList();
-
-            var card = new BoosterPackCardEntity { Name = name, Rarities = rarities };
-
-            cards.Add(card);
-
-        }
-
-        return new BoosterPackEntity
-        {
-
-            Id = int.Parse(_id),
-            Name = _name,
-            Dates = dates,
-            Cards = cards,
-            Url = string.Format(ConstantString.YugipediaUrl + ConstantString.MediaWikiIdUrl, _id)
-
-        };
+        var url = ConstantString.YugipediaUrl + string.Format(ConstantString.MediaWikiParseIdUrl, id);
+        var dom = await YugipediaParserTools.GetDom(url);
+        _parserOutput = await YugipediaParserTools.GetParserOutput(dom);
+        _table = dom.GetElementsByClassName("card-list").FirstOrDefault()?.FirstElementChild?.Children;
 
     }
 
-    //non static for debugging reasons
-    //easier to access private properties
-    // ReSharper disable once MemberCanBeMadeStatic.Local
-    private List<BoosterPackDateEntity> GetReleaseDates(IElement parserOutput)
+    protected override Task<int> GetId()
+        => Task.FromResult(int.Parse(id));
+
+    protected override Task<string> GetName()
+        => Task.FromResult(name);
+
+    protected override Task<List<BoosterPackDateEntity>> GetDates()
     {
 
         var dates = new List<BoosterPackDateEntity>();
-        var infobox = parserOutput.GetElementByClassName("infobox")?.FirstElementChild?.Children;
+        var infobox = _parserOutput.GetElementByClassName("infobox")?.FirstElementChild?.Children;
         var releaseDateHeader = infobox?.FirstOrDefault(element => !string.IsNullOrEmpty(element.TextContent) && element.TextContent.Contains("release dates", StringComparison.InvariantCultureIgnoreCase));
 
         if (releaseDateHeader is null)
-            return dates;
+            return Task.FromResult(dates);
 
         var startIndex = infobox.Index(releaseDateHeader) + 1;
 
@@ -119,11 +77,43 @@ public class BoosterPackParser : ICanParse<BoosterPackEntity>
 
         }
 
-        return dates;
+        return Task.FromResult(dates);
 
     }
 
-    private static int GetColumnIndex(IElement tableHead, string name)
+    protected override Task<List<BoosterPackCardEntity>> GetCards()
+    {
+
+        var tableHead = _table.First();
+        var nameIndex = GetColumnIndex(tableHead, "name");
+        var rarityIndex = GetColumnIndex(tableHead, "rarity");
+        var cardTable = _table.Skip(1);
+        var cards = new List<BoosterPackCardEntity>();
+
+        foreach (var row in cardTable)
+        {
+
+            var name = TrimName(row.Children[nameIndex].TextContent.Trim().Trim('"'));
+            var rarities = new List<string>();
+
+            if (rarityIndex != -1)
+                rarities = row
+                    .Children[rarityIndex]
+                    .Children.Select(element => element.TextContent.Trim())
+                    .Where(text => !string.IsNullOrEmpty(text))
+                    .ToList();
+
+            var card = new BoosterPackCardEntity { Name = name, Rarities = rarities };
+
+            cards.Add(card);
+
+        }
+
+        return Task.FromResult(cards);
+
+    }
+
+    private static int GetColumnIndex(IParentNode tableHead, string name)
     {
 
         var column = tableHead.Children.FirstOrDefault(element => element.TextContent.Contains(name, StringComparison.OrdinalIgnoreCase));
@@ -147,15 +137,13 @@ public class BoosterPackParser : ICanParse<BoosterPackEntity>
 
     }
 
-    private async Task<IDocument> GetDom(string url)
-    {
+    protected override Task<string> GetUrl()
+        => Task.FromResult(string.Format(ConstantString.YugipediaUrl + ConstantString.MediaWikiIdUrl, id));
 
-        var parseResponse = await Constant.HttpClient.GetStringAsync(url);
-        var parseJToken = JObject.Parse(parseResponse)["parse"];
-        var html = parseJToken?.Value<string>("text") ?? parseJToken?["text"]?.Value<string>("*");
+    protected override Task<bool> GetOcgExists()
+        => Task.FromResult(false);
 
-        return html is not null ? await Constant.HtmlParser.ParseDocumentAsync(html) : null;
-
-    }
+    protected override Task<bool> GetTcgExists()
+        => Task.FromResult(false);
 
 }

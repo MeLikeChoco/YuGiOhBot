@@ -9,7 +9,7 @@ BEGIN
         inner join
         (
             select id from cards
-            tablesample bernoulli(0.05)
+            tablesample bernoulli(1)
             order by random()
             limit 1
         ) absurdly_long_name_because_it_doesnt_matter

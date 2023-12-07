@@ -7,8 +7,15 @@ namespace YuGiOh.Scraper.Models.Parsers;
 public abstract class BaseCardParser : ICanParse<CardEntity>
 {
 
-    protected virtual async Task BeforeParseAsync() { }
-    protected virtual async Task AfterParseAsync() { }
+    protected virtual Task BeforeParseAsync()
+    {
+        return Task.CompletedTask;
+    }
+
+    protected virtual Task AfterParseAsync()
+    {
+        return Task.CompletedTask;
+    }
 
     public virtual async Task<CardEntity> ParseAsync()
     {

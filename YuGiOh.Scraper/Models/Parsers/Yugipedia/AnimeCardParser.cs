@@ -11,21 +11,15 @@ using YuGiOh.Scraper.Extensions;
 namespace YuGiOh.Scraper.Models.Parsers.Yugipedia;
 
 [ParserModule(ConstantString.YugipediaModuleName)]
-public class AnimeCardParser : ICanParse<AnimeCardEntity>
+public class AnimeCardParser(string id, string name) : ICanParse<AnimeCardEntity>
 {
 
-    private readonly string _id, _name;
-
-    public AnimeCardParser(string id, string name)
-    {
-        _id = id;
-        _name = name;
-    }
+    private readonly string _name = name;
 
     public async Task<AnimeCardEntity> ParseAsync()
     {
 
-        var url = ConstantString.YugipediaUrl + string.Format(ConstantString.MediaWikiParseIdUrl, _id);
+        var url = ConstantString.YugipediaUrl + string.Format(ConstantString.MediaWikiParseIdUrl, id);
         var dom = await GetDom(url);
         var parserOutput = dom.GetElementByClassName("mw-parser-output");
         var cardTable = parserOutput.GetElementByClassName("card-table");
@@ -34,10 +28,10 @@ public class AnimeCardParser : ICanParse<AnimeCardEntity>
         var card = new AnimeCardEntity
         {
 
-            Id = int.Parse(_id),
+            Id = int.Parse(id),
             Name = cardTable.GetElementByClassName("heading").TextContent.Trim(),
             Img = img?.GetAttribute("srcset")?.Split(' ').FirstOrDefault() ?? img?.GetAttribute("src"),
-            Url = string.Format(ConstantString.YugipediaUrl + ConstantString.MediaWikiIdUrl, _id)
+            Url = string.Format(ConstantString.YugipediaUrl + ConstantString.MediaWikiIdUrl, id)
 
         };
 

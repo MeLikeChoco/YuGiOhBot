@@ -13,30 +13,23 @@ using YuGiOh.Scraper.Extensions;
 namespace YuGiOh.Scraper.Models.Parsers.Yugipedia;
 
 [ParserModule(ConstantString.YugipediaModuleName)]
-public class CardParser : BaseCardParser
+public class CardParser(string id, string name) : BaseCardParser
 {
 
     private static readonly string[] ArchetypesHeaderMustHaveWords = { "archetypes", "series" };
     private static readonly string[] StatusHeaderMayHaveWords = { "Status", "Statuses" };
 
-    private readonly string _id, _name;
     private string[] _lore;
     private IElement _parserOutput, _table;
     private IDictionary<string, string> _tableRows;
     private IDictionary<string, IEnumerable<IElement>> _searchCategories;
-
-    public CardParser(string id, string name)
-    {
-        _id = id;
-        _name = name;
-    }
 
     protected override async Task BeforeParseAsync()
     {
 
         await base.BeforeParseAsync();
 
-        var url = ConstantString.YugipediaUrl + string.Format(ConstantString.MediaWikiParseIdUrl, _id);
+        var url = ConstantString.YugipediaUrl + string.Format(ConstantString.MediaWikiParseIdUrl, id);
         var dom = await YugipediaParserTools.GetDom(url);
         _parserOutput = await YugipediaParserTools.GetParserOutput(dom);
         _table = _parserOutput.GetElementByClassName("card-table");
@@ -76,17 +69,17 @@ public class CardParser : BaseCardParser
     }
 
     protected override Task<int> GetId()
-        => Task.FromResult(int.Parse(_id));
+        => Task.FromResult(int.Parse(id));
 
     protected override Task<string> GetName()
-        => Task.FromResult(_name);
+        => Task.FromResult(name);
 
     protected override Task<string> GetRealName()
     {
 
         var realName = _table.FirstElementChild?.TextContent.Trim();
 
-        return Task.FromResult(_name != realName ? realName : null);
+        return Task.FromResult(name != realName ? realName : null);
 
     }
 
@@ -350,7 +343,7 @@ public class CardParser : BaseCardParser
         );
 
     protected override Task<string> GetUrl()
-        => Task.FromResult(string.Format(ConstantString.YugipediaUrl + ConstantString.MediaWikiIdUrl, _id));
+        => Task.FromResult(string.Format(ConstantString.YugipediaUrl + ConstantString.MediaWikiIdUrl, id));
 
     protected override Task<string> GetPasscode()
         => Task.FromResult(

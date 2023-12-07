@@ -1,4 +1,5 @@
-FROM mcr.microsoft.com/dotnet/sdk:6.0.416
+FROM mcr.microsoft.com/dotnet/sdk:8.0.100-1-jammy-amd64
+COPY --from=mcr.microsoft.com/dotnet/runtime:6.0.25-jammy-chiseled-amd64 /usr/share/dotnet/shared /usr/share/dotnet/shared
 
 WORKDIR src/
 
@@ -23,5 +24,6 @@ COPY . .
 
 RUN chmod +x wait-for-it.sh
 
-ENTRYPOINT ["./wait-for-it.sh", "db:5432", "--strict", "--timeout=60", "--", "dotnet", "test", "--verbosity=normal"]
+ENTRYPOINT ["./wait-for-it.sh", "db:5432", "--strict", "--timeout=60", "--", "dotnet", "test"]
+#ENTRYPOINT ["./wait-for-it.sh", "db:5432", "--strict", "--timeout=60", "--", "dotnet", "test", "--verbosity=normal"]
 #ENTRYPOINT dotnet test --verbosity normal
