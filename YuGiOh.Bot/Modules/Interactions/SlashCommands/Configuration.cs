@@ -153,7 +153,7 @@ public class Configuration : MainInteractionBase<SocketSlashCommand>
 
     }
 
-    private Task DisplaySetting(string setting, object value)
+    private Task DisplaySetting<T>(string setting, T value)
         => RespondAsync($"**{setting}:** {value}");
 
     private Task TrueOrFalseMessage()
