@@ -183,8 +183,8 @@ public class CardParser : ICanParse<CardEntity>
             .GetElementByClassName("navbox-list")
             .InnerHtml;
 
-        var loreFormatted = Regex
-            .Replace(loreUnformatted, "<(?!br[\x20/>])[^<>]+>", "")
+        var loreFormatted = ConstantRegex.HtmlNewLine()
+            .Replace(loreUnformatted, "")
             .Replace("<br>", "\n")
             .Trim();
 

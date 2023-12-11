@@ -448,7 +448,7 @@ public class Program : IYuGiOhRepositoryConfiguration
 
     }
 
-    private static System.Type GetParserModule<T>()
+    private static TypeInfo GetParserModule<T>()
         => Parsers.FirstOrDefault(parserType => parserType.ImplementedInterfaces.Any(type => type.GenericTypeArguments.Contains(typeof(T))));
 
     [MethodImpl(MethodImplOptions.Synchronized)]

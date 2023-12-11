@@ -9,7 +9,6 @@ public static class ConstantString
     public const string RushDuelCardExceptionMessage = "This is a Rush Duel card.";
     public const string SkillCardExceptionMessage = "This is a Skill card.";
 
-    public const string HtmlTagRegex = "<[^>]*>";
     public const string YugipediaUrl = "https://yugipedia.com/";
     public const string YuGiOhFandomUrl = "https://yugioh.fandom.com/";
 

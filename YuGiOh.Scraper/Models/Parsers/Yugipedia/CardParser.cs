@@ -48,8 +48,8 @@ public class CardParser(string id, string name) : BaseCardParser
             .GetElementByClassName("lore")
             .InnerHtml;
 
-        var loreFormatted = Regex
-            .Replace(loreUnformatted, "<(?!br[\x20/>])[^<>]+>", "")
+        var loreFormatted = ConstantRegex.HtmlNewLine()
+            .Replace(loreUnformatted, "")
             .Replace("<br>", "\n")
             .Trim();
 
