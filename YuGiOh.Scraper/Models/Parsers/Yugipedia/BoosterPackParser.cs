@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AngleSharp.Dom;
+using YuGiOh.Common.Extensions;
 using YuGiOh.Common.Models.YuGiOh;
 using YuGiOh.Scraper.Constants;
 using YuGiOh.Scraper.Extensions;
+using YuGiOh.Scraper.Models.Exceptions;
 
 namespace YuGiOh.Scraper.Models.Parsers.Yugipedia;
 
@@ -26,6 +28,9 @@ public class BoosterPackParser(string id, string name) : BaseBoosterParser
         _parserOutput = await YugipediaParserTools.GetParserOutput(dom);
         _table = dom.GetElementsByClassName("card-list").FirstOrDefault()?.FirstElementChild?.Children;
 
+        if (_table is null)
+            throw new InvalidBoosterPack(name);
+
     }
 
     protected override Task<int> GetId()
@@ -39,7 +44,7 @@ public class BoosterPackParser(string id, string name) : BaseBoosterParser
 
         var dates = new List<BoosterPackDateEntity>();
         var infobox = _parserOutput.GetElementByClassName("infobox")?.FirstElementChild?.Children;
-        var releaseDateHeader = infobox?.FirstOrDefault(element => !string.IsNullOrEmpty(element.TextContent) && element.TextContent.Contains("release dates", StringComparison.InvariantCultureIgnoreCase));
+        var releaseDateHeader = infobox?.FirstOrDefault(element => !string.IsNullOrEmpty(element.TextContent) && element.TextContent.ContainsIgnoreCase("release dates"));
 
         if (releaseDateHeader is null)
             return Task.FromResult(dates);
@@ -93,7 +98,7 @@ public class BoosterPackParser(string id, string name) : BaseBoosterParser
         foreach (var row in cardTable)
         {
 
-            var name = TrimName(row.Children[nameIndex].TextContent.Trim().Trim('"'));
+            var cardName = TrimName(row.Children[nameIndex].TextContent.Trim().Trim('"'));
             var rarities = new List<string>();
 
             if (rarityIndex != -1)
@@ -103,7 +108,7 @@ public class BoosterPackParser(string id, string name) : BaseBoosterParser
                     .Where(text => !string.IsNullOrEmpty(text))
                     .ToList();
 
-            var card = new BoosterPackCardEntity { Name = name, Rarities = rarities };
+            var card = new BoosterPackCardEntity { Name = cardName, Rarities = rarities };
 
             cards.Add(card);
 

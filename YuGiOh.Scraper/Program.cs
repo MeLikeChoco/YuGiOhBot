@@ -80,9 +80,14 @@ public class Program : IYuGiOhRepositoryConfiguration
 
         ocgLinks = await GetLinks(ConstantString.MediaWikiOcgPacks);
 
+        Log("Filtering booster packs...");
+
+        links = FilterBoosterPackLinks(tcgLinks, ocgLinks);
+
+        Log("Filtered booster packs...");
         Log("Processing boosterpacks.");
 
-        var boosterProcResponse = await ProcessBoosters(tcgLinks, ocgLinks);
+        var boosterProcResponse = await ProcessBoosters(links, tcgLinks, ocgLinks);
 
         Log($"Processed {boosterProcResponse.Count} booster packs. There were {boosterProcResponse.Errors.Count} errors.");
         Log("Processing anime cards.");
@@ -112,7 +117,6 @@ public class Program : IYuGiOhRepositoryConfiguration
     {
 
         var links = tcgLinks.Union(ocgLinks);
-
         var tokenLinks = await GetLinks(ConstantString.MediaWikiTokenCards);
         var skillLinks = await GetLinks(ConstantString.MediaWikiSkillCards);
 
@@ -122,6 +126,20 @@ public class Program : IYuGiOhRepositoryConfiguration
             .Where(kv => !kv.Key.ContainsIgnoreCase("alternate password"))
             .Where(kv => !kv.Key.ContainsIgnoreCase("rush duel"))
             .ToDictionary(kv => kv.Key, kv => kv.Value);
+
+    }
+
+    private IDictionary<string, string> FilterBoosterPackLinks(
+        IDictionary<string, string> tcgLinks,
+        IDictionary<string, string> ocgLinks
+    )
+    {
+
+        var links = tcgLinks.Union(ocgLinks);
+
+        return links
+            .Where(kv => !kv.Key.ContainsIgnoreCase("category:"))
+            .ToDictionary();
 
     }
 
@@ -236,18 +254,18 @@ public class Program : IYuGiOhRepositoryConfiguration
     }
 
     private async Task<ProcessorResponse> ProcessBoosters(
+        IDictionary<string, string> links,
         IDictionary<string, string> tcgLinks,
         IDictionary<string, string> ocgLinks
     )
     {
 
-        var nameToLinks = tcgLinks.Union(ocgLinks).ToList();
-        var size = nameToLinks.Count;
+        var size = links.Count;
 
         if (Options.MaxBoostersToParse <= size)
         {
-            nameToLinks = nameToLinks.RandomSubset(Options.MaxBoostersToParse).ToList();
-            size = nameToLinks.Count;
+            links = links.RandomSubset(Options.MaxBoostersToParse).ToDictionary();
+            size = links.Count;
         }
 
         //nameToLinks = nameToLinks.Take(Options.MaxBoostersToParse);
@@ -256,7 +274,7 @@ public class Program : IYuGiOhRepositoryConfiguration
         var repo = new YuGiOhRepository(this);
         var count = 0;
 
-        await Parallel.ForEachAsync(nameToLinks, ParallelOptions, async (nameToLink, _) =>
+        await Parallel.ForEachAsync(links, ParallelOptions, async (nameToLink, _) =>
         {
 
             var retryCount = 0;
@@ -278,6 +296,21 @@ public class Program : IYuGiOhRepositoryConfiguration
                     await repo.InsertBoosterPack(card);
 
                     check = null;
+
+                }
+                catch (InvalidBoosterPack)
+                {
+
+                    check = null;
+
+                    errors.Add(new Error()
+                    {
+                        Name = name,
+                        Message = "Invalid booster pack",
+                        Url = string.Format(ConstantString.YugipediaUrl + ConstantString.MediaWikiIdUrl, id),
+                        Type = Common.Models.YuGiOh.Type.Booster,
+                        Timestamp = DateTime.UtcNow
+                    });
 
                 }
                 catch (Exception ex)
@@ -376,7 +409,7 @@ public class Program : IYuGiOhRepositoryConfiguration
                             Message = ex.Message,
                             StackTrace = ex.StackTrace,
                             Url = string.Format(Constant.ModuleToBaseUrl[Options.Module] + ConstantString.MediaWikiIdUrl, id),
-                            Type = Common.Models.YuGiOh.Type.Booster,
+                            Type = Common.Models.YuGiOh.Type.Anime,
                             Timestamp = DateTime.UtcNow
                         });
 

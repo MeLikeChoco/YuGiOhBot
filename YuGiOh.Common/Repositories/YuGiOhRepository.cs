@@ -79,7 +79,7 @@ namespace YuGiOh.Common.Repositories
 
             // var (cardArchetypesId, cardSupportsId, cardAntiSupportsId) = await connection.ExecuteScalarAsync<(int, int, int)>("select archetypes, supports, antisupports from cards where id = @id", new { id = card.Id });
 
-            if (card.Translations is not null && card.Translations.Any())
+            if (card.Translations is not null && card.Translations.Count > 0)
             {
 
                 foreach (var translation in card.Translations)
@@ -104,7 +104,7 @@ namespace YuGiOh.Common.Repositories
 
             }
 
-            if (card.Archetypes is not null && card.Archetypes.Any())
+            if (card.Archetypes is not null && card.Archetypes.Count > 0)
             {
 
                 var archetypes = card.Archetypes.Where(archetype => !string.IsNullOrEmpty(archetype));
@@ -123,7 +123,7 @@ namespace YuGiOh.Common.Repositories
 
             }
 
-            if (card.Supports is not null && card.Supports.Any())
+            if (card.Supports is not null && card.Supports.Count > 0)
             {
 
                 var supports = card.Supports.Where(support => !string.IsNullOrEmpty(support));
@@ -142,7 +142,7 @@ namespace YuGiOh.Common.Repositories
 
             }
 
-            if (card.AntiSupports is not null && card.AntiSupports.Any())
+            if (card.AntiSupports is not null && card.AntiSupports.Count > 0)
             {
 
                 var antisupports = card.AntiSupports.Where(antisupport => !string.IsNullOrEmpty(antisupport));
@@ -552,9 +552,9 @@ namespace YuGiOh.Common.Repositories
 
             var banlist = new Banlist
             {
-                Forbidden = await connection.QueryAsync<string>($"select name from cards where {formatStr} ilike 'forbidden' order by name asc").ConfigureAwait(false),
-                Limited = await connection.QueryAsync<string>($"select name from cards where {formatStr} ilike 'limited' order by name asc").ConfigureAwait(false),
-                SemiLimited = await connection.QueryAsync<string>($"select name from cards where {formatStr} ilike 'semi-limited' order by name asc").ConfigureAwait(false)
+                Forbidden = await connection.QueryAsync<string>($"select name from cards where {formatStr} ilike 'forbidden' order by name").ConfigureAwait(false),
+                Limited = await connection.QueryAsync<string>($"select name from cards where {formatStr} ilike 'limited' order by name").ConfigureAwait(false),
+                SemiLimited = await connection.QueryAsync<string>($"select name from cards where {formatStr} ilike 'semi-limited' order by name").ConfigureAwait(false)
             };
 
             return banlist;
@@ -586,8 +586,8 @@ namespace YuGiOh.Common.Repositories
                         {
 
                             entity = boosterpackEntity;
-                            entity.Cards = new List<BoosterPackCardEntity>();
-                            entity.Dates = new List<BoosterPackDateEntity>();
+                            entity.Cards = [];
+                            entity.Dates = [];
 
                         }
 
@@ -604,7 +604,7 @@ namespace YuGiOh.Common.Repositories
                         {
 
                             cardBpEntity = cardEntity;
-                            cardBpEntity.Rarities = new List<string>();
+                            cardBpEntity.Rarities = [];
                             cardEntityDict[cardBpEntity.Name] = cardBpEntity;
 
                         }

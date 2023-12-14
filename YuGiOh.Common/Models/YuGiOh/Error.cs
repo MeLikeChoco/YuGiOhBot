@@ -27,6 +27,9 @@ namespace YuGiOh.Common.Models.YuGiOh
         Card,
 
         [PgName("Boosterpack")]
-        Booster
+        Booster,
+        
+        [PgName("Anime")]
+        Anime
     }
 }

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AngleSharp.Dom;
 using YuGiOh.Common.Extensions;
@@ -21,8 +20,8 @@ public class CardParser(string id, string name) : BaseCardParser
 
     private string[] _lore;
     private IElement _parserOutput, _table;
-    private IDictionary<string, string> _tableRows;
-    private IDictionary<string, IEnumerable<IElement>> _searchCategories;
+    private Dictionary<string, string> _tableRows;
+    private Dictionary<string, IEnumerable<IElement>> _searchCategories;
 
     protected override async Task BeforeParseAsync()
     {
@@ -37,9 +36,9 @@ public class CardParser(string id, string name) : BaseCardParser
             .GetElementByClassName("innertable")
             ?
             .GetElementsByTagName("tr")
-            .Where(row => !string.IsNullOrWhiteSpace(row.FirstChild?.TextContent))
+            .Where(row => !string.IsNullOrWhiteSpace(row.FirstChild?.FirstChild?.TextContent))
             .ToDictionary(
-                row => row.FirstChild.TextContent.Trim(),
+                row => row.TextContent.Trim(),
                 row => row.Children.ElementAtOrDefault(1)?.TextContent.Trim(),
                 StringComparer.OrdinalIgnoreCase
             );
@@ -346,11 +345,7 @@ public class CardParser(string id, string name) : BaseCardParser
         => Task.FromResult(string.Format(ConstantString.YugipediaUrl + ConstantString.MediaWikiIdUrl, id));
 
     protected override Task<string> GetPasscode()
-        => Task.FromResult(
-            _tableRows.TryGetValue("Password", out var passcode) ?
-                passcode :
-                null
-        );
+        => Task.FromResult(_tableRows.GetValueOrDefault("Password"));
 
     protected override Task<string> GetOcgStatus()
     {
@@ -385,7 +380,8 @@ public class CardParser(string id, string name) : BaseCardParser
             .GetElementsByTagName("tr")
             .FirstOrDefault(element
                 => StatusHeaderMayHaveWords.Any(word
-                    => element.FirstElementChild?.TextContent?.ContainsIgnoreCase(word) == true));
+                    => element.FirstElementChild?.TextContent.ContainsIgnoreCase(word) == true)
+            );
 
         if (statusElement is null)
             return Task.FromResult("Unreleased");
