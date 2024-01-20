@@ -36,9 +36,9 @@ public class CardParser(string id, string name) : BaseCardParser
             .GetElementByClassName("innertable")
             ?
             .GetElementsByTagName("tr")
-            .Where(row => !string.IsNullOrWhiteSpace(row.FirstChild?.FirstChild?.TextContent))
+            .Where(row => !string.IsNullOrWhiteSpace(row.FirstChild?.FirstChild?.FirstChild?.TextContent))
             .ToDictionary(
-                row => row.TextContent.Trim(),
+                row => row.FirstElementChild!.TextContent.Trim(),
                 row => row.Children.ElementAtOrDefault(1)?.TextContent.Trim(),
                 StringComparer.OrdinalIgnoreCase
             );
@@ -83,18 +83,10 @@ public class CardParser(string id, string name) : BaseCardParser
     }
 
     protected override Task<string> GetCardType()
-        => Task.FromResult(
-            _tableRows.TryGetValue("Card type", out var cardType) ?
-                cardType :
-                null
-        );
+        => Task.FromResult(_tableRows.GetValueOrDefault("Card type"));
 
     protected override Task<string> GetProperty()
-        => Task.FromResult(
-            _tableRows.TryGetValue("Property", out var property) ?
-                property :
-                null
-        );
+        => Task.FromResult(_tableRows.GetValueOrDefault("Property"));
 
     protected override Task<string> GetTypes()
     {
@@ -107,18 +99,10 @@ public class CardParser(string id, string name) : BaseCardParser
     }
 
     protected override Task<string> GetAttribute()
-        => Task.FromResult(
-            _tableRows.TryGetValue("Attribute", out var attribute) ?
-                attribute :
-                null
-        );
+        => Task.FromResult(_tableRows.GetValueOrDefault("Attribute"));
 
     protected override Task<string> GetMaterials()
-        => Task.FromResult(
-            _tableRows.TryGetValue("Materials", out var materials) ?
-                materials :
-                null
-        );
+        => Task.FromResult(_tableRows.GetValueOrDefault("Materials"));
 
     protected override Task<string> GetLore()
     {
@@ -257,15 +241,7 @@ public class CardParser(string id, string name) : BaseCardParser
     }
 
     protected override Task<string> GetLinkArrows()
-    {
-
-        return Task.FromResult(
-            _tableRows.TryGetValue("Link Arrows", out var linkArrows) ?
-                linkArrows :
-                null
-        );
-
-    }
+        => Task.FromResult(_tableRows.GetValueOrDefault("Link Arrows"));
 
     protected override Task<string> GetAtk()
     {
