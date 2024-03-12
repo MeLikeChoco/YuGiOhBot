@@ -86,15 +86,15 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
                                    hangmanService.GetCurrentDisplay());
 
                 SocketUser user = null;
-                var cts = new CancellationTokenSource();
+                InteractiveResult<SocketMessage> input;
 
                 //todo move this logic into HangmanService
                 do
                 {
 
-                    var input = await NextMessageAsync(criteria, TimeSpan.FromSeconds(GuildConfig.HangmanTime), ct: cts.Token);
+                    input = await NextMessageAsync(criteria, time);
 
-                    if (cts.IsCancellationRequested || input.IsCanceled || input.IsTimeout)
+                    if (input.IsCanceled || input.IsTimeout)
                         break;
 
                     user = input.Value!.Author;
@@ -118,9 +118,9 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
                             throw new ArgumentOutOfRangeException();
                     }
 
-                } while (!cts.IsCancellationRequested && hangmanService.CompletionStatus == CompletionStatus.Incomplete);
+                } while (hangmanService.CompletionStatus == CompletionStatus.Incomplete);
 
-                if (cts.IsCancellationRequested)
+                if (input.IsTimeout)
                 {
                     await ReplyAsync($"Time is up! No one won! The card is `{hangmanService.Word}`");
                 }
@@ -271,7 +271,7 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
 
                 }
 
-                str += (char) (startingChar + offset);
+                str += (char)(startingChar + offset);
 
             }
 
