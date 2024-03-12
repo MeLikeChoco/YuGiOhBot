@@ -98,12 +98,13 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
                         break;
 
                     user = input.Value!.Author;
+                    var message = input.Value.Content;
 
-                    switch (hangmanService.AddGuess(input.Value.Content))
+                    switch (hangmanService.AddGuess(message))
                     {
 
                         case GuessStatus.Duplicate:
-                            await ReplyAsync($"You already guessed `{input}`!\n" +
+                            await ReplyAsync($"You already guessed `{message}`!\n" +
                                              hangmanService.GetCurrentDisplay());
                             break;
                         case GuessStatus.Nonexistent:
