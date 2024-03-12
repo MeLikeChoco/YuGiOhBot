@@ -1,11 +1,10 @@
 ﻿using Npgsql;
 
-namespace YuGiOh.Common.Interfaces
+namespace YuGiOh.Common.Interfaces;
+
+public interface IGuildConfigConfiguration
 {
-    public interface IGuildConfigConfiguration
-    {
 
-        NpgsqlConnection GetGuildConfigConnection();
+    NpgsqlConnection GetGuildConfigConnection();
 
-    }
 }

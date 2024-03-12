@@ -1,11 +1,10 @@
 ﻿using Npgsql;
 
-namespace YuGiOh.Common.Interfaces
+namespace YuGiOh.Common.Interfaces;
+
+public interface IBackupsRepositoryConfiguration
 {
-    public interface IBackupsRepositoryConfiguration
-    {
 
-        NpgsqlConnection GetBackupsDbConnection();
+    NpgsqlConnection GetBackupsDbConnection();
 
-    }
 }

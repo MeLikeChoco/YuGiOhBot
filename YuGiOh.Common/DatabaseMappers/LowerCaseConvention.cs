@@ -1,15 +1,14 @@
 ﻿using System.Reflection;
 using Dommel;
 
-namespace YuGiOh.Common.DatabaseMappers
+namespace YuGiOh.Common.DatabaseMappers;
+
+public class LowerCaseConvention : IColumnNameResolver
 {
-    public class LowerCaseConvention : IColumnNameResolver
-    {
         
-        public static readonly LowerCaseConvention Instance = new LowerCaseConvention();
+    public static readonly LowerCaseConvention Instance = new LowerCaseConvention();
 
-        public string ResolveColumnName(PropertyInfo propertyInfo)
-            => propertyInfo.Name.ToLower();
+    public string ResolveColumnName(PropertyInfo propertyInfo)
+        => propertyInfo.Name.ToLower();
 
-    }
 }

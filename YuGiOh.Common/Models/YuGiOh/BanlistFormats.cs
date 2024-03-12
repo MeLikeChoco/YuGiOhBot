@@ -1,11 +1,10 @@
-﻿namespace YuGiOh.Common.Models.YuGiOh
+﻿namespace YuGiOh.Common.Models.YuGiOh;
+
+public enum BanlistFormats
 {
-    public enum BanlistFormats
-    {
 
-        OCG,
-        TCG,
-        TRAD
+    OCG,
+    TCG,
+    TRAD
 
-    }
 }

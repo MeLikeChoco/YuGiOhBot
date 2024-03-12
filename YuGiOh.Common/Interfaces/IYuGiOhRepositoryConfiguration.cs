@@ -1,11 +1,10 @@
 ﻿using Npgsql;
 
-namespace YuGiOh.Common.Interfaces
+namespace YuGiOh.Common.Interfaces;
+
+public interface IYuGiOhRepositoryConfiguration
 {
-    public interface IYuGiOhRepositoryConfiguration
-    {
 
-        NpgsqlConnection GetYuGiOhDbConnection();
+    NpgsqlConnection GetYuGiOhDbConnection();
 
-    }
 }
