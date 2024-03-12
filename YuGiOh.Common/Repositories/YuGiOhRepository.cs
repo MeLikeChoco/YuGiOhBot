@@ -2,10 +2,9 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Dapper;
-using Dapper.FluentMap;
-using Dapper.FluentMap.Dommel;
 using Dommel;
 using Npgsql;
 using YuGiOh.Common.DatabaseMappers;
@@ -13,6 +12,7 @@ using YuGiOh.Common.Extensions;
 using YuGiOh.Common.Interfaces;
 using YuGiOh.Common.Models.YuGiOh;
 using YuGiOh.Common.Repositories.Interfaces;
+using Type = System.Type;
 
 // Although Dapper auto-opens/closes connections that call it when it wasn't opened when called upon, I rather open it myself for consistency
 // Not using CloseAsync() because Dispose() automatically calls it
@@ -22,37 +22,80 @@ using YuGiOh.Common.Repositories.Interfaces;
 
 namespace YuGiOh.Common.Repositories
 {
+
     public class YuGiOhRepository : IYuGiOhRepository
     {
 
         // private const string EscapeSqlParameterRegex = @"([%_\[])";
         // private const string ReplaceEscapeSqlParameterRegex = "[$1]";
 
+        private const BindingFlags DefaultBindingFlags =
+            BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase;
+
+        private static readonly Dictionary<string, string> ColumnMaps = new(StringComparer.OrdinalIgnoreCase)
+        {
+            { "archetypes", nameof(CardEntity.ArchetypesId) },
+            { "supports", nameof(CardEntity.SupportsId) },
+            { "antisupports", nameof(CardEntity.AntiSupportsId) },
+            { "dates", nameof(BoosterPackEntity.DatesId) },
+            { "cards", nameof(BoosterPackEntity.CardsId) },
+            { "rarities", nameof(BoosterPackCardEntity.RaritiesId) }
+        };
+
         private readonly IYuGiOhRepositoryConfiguration _config;
 
         static YuGiOhRepository()
         {
 
-            FluentMapper.Initialize(config =>
-            {
+            // FluentMapper.Initialize(config =>
+            // {
+            //
+            //     config
+            //         .AddConvention<LowerCaseConvention>()
+            //         .ForEntity<CardEntity>()
+            //         .ForEntity<BoosterPackEntity>();
+            //
+            //     config.AddMap(new CardEntityMapper());
+            //     config.AddMap(new BoosterPackEntityMapper());
+            //     config.AddMap(new BoosterPackCardEntityMapper());
+            //     config.ForDommel();
+            //
+            //     var resolver = new LowerCaseConvention();
+            //
+            //     DommelMapper.SetColumnNameResolver(resolver);
+            //     DommelMapper.AddSqlBuilder(typeof(NpgsqlConnection), new PostgresSqlBuilder());
+            //
+            // });
 
-                config
-                    .AddConvention<LowerCaseConvention>()
-                    .ForEntity<CardEntity>()
-                    .ForEntity<BoosterPackEntity>();
+            SqlMapper.SetTypeMap(
+                typeof(CardEntity),
+                new CustomPropertyTypeMap(
+                    typeof(CardEntity),
+                    ColumnToProperty
+                )
+            );
 
-                config.AddMap(new CardEntityMapper());
-                config.AddMap(new BoosterPackEntityMapper());
-                config.ForDommel();
+            SqlMapper.SetTypeMap(
+                typeof(BoosterPackEntity),
+                new CustomPropertyTypeMap(
+                    typeof(BoosterPackEntity),
+                    ColumnToProperty
+                )
+            );
 
-                var resolver = new LowerCaseConvention();
-
-                DommelMapper.SetColumnNameResolver(resolver);
-                DommelMapper.AddSqlBuilder(typeof(NpgsqlConnection), new PostgresSqlBuilder());
-
-            });
+            DommelMapper.SetColumnNameResolver(LowerCaseConvention.Instance);
+            DommelMapper.AddSqlBuilder(typeof(NpgsqlConnection), new PostgresSqlBuilder());
 
             AppContext.SetSwitch("Npgsql.EnableStoredProcedureCompatMode", true);
+
+            return;
+
+            PropertyInfo ColumnToProperty(Type type, string column)
+            {
+                return ColumnMaps.TryGetValue(column, out var propName)
+                    ? type.GetProperty(propName)!
+                    : type.GetProperty(column, DefaultBindingFlags)!;
+            }
 
         }
 

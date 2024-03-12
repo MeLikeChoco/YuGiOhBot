@@ -86,6 +86,8 @@ namespace YuGiOh.Common.Extensions
             CardEntity cardEntity = null;
             var translations = new HashSet<int>();
 
+            return ProcessEntityFunction;
+
             CardEntity ProcessEntityFunction(
                 CardEntity entity,
                 string archetype,
@@ -123,8 +125,6 @@ namespace YuGiOh.Common.Extensions
 
             }
 
-            return ProcessEntityFunction;
-
         }
 
         private static Func<CardEntity, string, string, string, TranslationEntity, CardEntity> ProcessEntities()
@@ -132,6 +132,8 @@ namespace YuGiOh.Common.Extensions
 
             var entities = new Dictionary<int, CardEntity>();
             var entityToTranslations = new Dictionary<int, HashSet<int>>();
+
+            return ProcessEntityFunction;
 
             CardEntity ProcessEntityFunction(
                 CardEntity entity,
@@ -179,8 +181,6 @@ namespace YuGiOh.Common.Extensions
                 return cardEntity;
 
             }
-
-            return ProcessEntityFunction;
 
         }
 

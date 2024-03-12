@@ -9,6 +9,18 @@ namespace YuGiOh.Common.DatabaseMappers
         public CardEntityMapper()
         {
 
+            Map(entity => entity.Translations)
+                .Ignore();
+
+            Map(entity => entity.Archetypes)
+                .Ignore();
+
+            Map(entity => entity.Supports)
+                .Ignore();
+
+            Map(entity => entity.AntiSupports)
+                .Ignore();
+
             Map(entity => entity.ArchetypesId)
                 .ToColumn("archetypes", false);
 

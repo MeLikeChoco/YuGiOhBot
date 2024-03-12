@@ -31,19 +31,19 @@ namespace YuGiOh.Common.Models.YuGiOh
         [Ignore]
         public List<string> Archetypes { get; set; }
 
-        [Column("archetypes"), DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int ArchetypesId { get; set; }
 
         [Ignore]
         public List<string> Supports { get; set; }
 
-        [Column("supports"), DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int SupportsId { get; set; }
 
         [Ignore]
         public List<string> AntiSupports { get; set; }
 
-        [Column("antisupports"), DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int AntiSupportsId { get; set; }
 
         public int Link { get; set; }

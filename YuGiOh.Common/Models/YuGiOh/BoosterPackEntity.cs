@@ -13,13 +13,13 @@ namespace YuGiOh.Common.Models.YuGiOh
         public int Id { get; set; }
 
         public string Name { get; set; }
-
+        
         [Ignore]
         public List<BoosterPackDateEntity> Dates { get; set; }
 
         [Column("dates"), DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int DatesId { get; set; }
-
+        
         [Ignore]
         public List<BoosterPackCardEntity> Cards { get; set; }
 
@@ -47,7 +47,7 @@ namespace YuGiOh.Common.Models.YuGiOh
 
         [Column("rarities"), DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int RaritiesId { get; set; }
-
+        
         [Ignore]
         public List<string> Rarities { get; set; }
 

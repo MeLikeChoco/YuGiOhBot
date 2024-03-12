@@ -7,9 +7,8 @@
 
     <ItemGroup>
         <PackageReference Include="Dapper" Version="2.1.35" />
-        <PackageReference Include="Dapper.FluentMap" Version="2.0.0"/>
-        <PackageReference Include="Dapper.FluentMap.Dommel" Version="2.0.0"/>
         <PackageReference Include="Dapper.SqlBuilder" Version="2.0.78"/>
+        <PackageReference Include="Dommel" Version="3.3.0" />
         <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.2" />
         <PackageReference Include="Npgsql" Version="8.0.2" />
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.2" />

@@ -10,11 +10,30 @@ namespace YuGiOh.Common.DatabaseMappers
         public BoosterPackEntityMapper()
         {
 
+            Map(entity => entity.Dates)
+                .Ignore();
+
+            Map(entity => entity.Cards)
+                .Ignore();
+
             Map(entity => entity.DatesId)
                 .ToColumn("dates", false);
 
             Map(entity => entity.CardsId)
                 .ToColumn("cards", false);
+
+        }
+
+    }
+
+    public class BoosterPackCardEntityMapper : EntityMap<BoosterPackCardEntity>
+    {
+
+        public BoosterPackCardEntityMapper()
+        {
+
+            Map(entity => entity.Rarities)
+                .Ignore();
 
         }
 

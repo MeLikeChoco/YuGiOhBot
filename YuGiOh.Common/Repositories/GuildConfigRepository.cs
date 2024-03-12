@@ -1,7 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Dapper;
-using Dapper.FluentMap;
-using Dapper.FluentMap.Dommel;
 using Dommel;
 using Npgsql;
 using YuGiOh.Common.DatabaseMappers;
@@ -19,19 +18,24 @@ namespace YuGiOh.Common.Repositories
         static GuildConfigRepository()
         {
 
-            FluentMapper.Initialize(config =>
-            {
+            // FluentMapper.Initialize(config =>
+            // {
+            //
+            //     config
+            //         .AddConvention<LowerCaseConvention>()
+            //         .ForEntity<GuildConfigEntity>();
+            //
+            //     config.ForDommel();
+            //
+            //     DommelMapper.SetColumnNameResolver(new LowerCaseConvention());
+            //     DommelMapper.AddSqlBuilder(typeof(NpgsqlConnection), new PostgresSqlBuilder());
+            //
+            // });
 
-                config
-                    .AddConvention<LowerCaseConvention>()
-                    .ForEntity<GuildConfigEntity>();
+            DommelMapper.SetColumnNameResolver(LowerCaseConvention.Instance);
+            DommelMapper.AddSqlBuilder(typeof(NpgsqlConnection), new PostgresSqlBuilder());
 
-                config.ForDommel();
-
-                DommelMapper.SetColumnNameResolver(new LowerCaseConvention());
-                DommelMapper.AddSqlBuilder(typeof(NpgsqlConnection), new PostgresSqlBuilder());
-
-            });
+            AppContext.SetSwitch("Npgsql.EnableStoredProcedureCompatMode", true);
 
         }
 
@@ -47,7 +51,7 @@ namespace YuGiOh.Common.Repositories
 
             await connection.OpenAsync().ConfigureAwait(false);
 
-            var guildConfig = await connection.QuerySingleAsync<GuildConfigEntity>("select * from configs where id = @id", new { id = (decimal) id }).ConfigureAwait(false);
+            var guildConfig = await connection.QuerySingleAsync<GuildConfigEntity>("select * from configs where id = @id", new { id = (decimal)id }).ConfigureAwait(false);
 
             return guildConfig;
 
@@ -80,7 +84,7 @@ namespace YuGiOh.Common.Repositories
 
             await connection.OpenAsync().ConfigureAwait(false);
 
-            var doesExist = await connection.ExecuteScalarAsync<bool>("select 1 from configs where id = @id", new { id = (decimal) id }).ConfigureAwait(false);
+            var doesExist = await connection.ExecuteScalarAsync<bool>("select 1 from configs where id = @id", new { id = (decimal)id }).ConfigureAwait(false);
 
             return doesExist;
 
