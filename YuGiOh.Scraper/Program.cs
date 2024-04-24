@@ -107,6 +107,7 @@ public class Program : IYuGiOhRepositoryConfiguration
         await SendDiscordWebhook();
 
         Log("Sent Discord webhook database updated status.");
+        Log("Finished updating the database.");
 
     }
 
@@ -513,14 +514,14 @@ public class Program : IYuGiOhRepositoryConfiguration
             var payload = new WebhookMessage
             {
                 Content = null,
-                Embeds = new[]
-                {
+                Embeds =
+                [
                     new WebhookMessageEmbed
                     {
                         Title = webhookConfig.Content,
                         Color = $"{random.Next(0x1000000)}"
                     }
-                }
+                ]
             };
             var json = JsonSerializer.Serialize(payload);
             // var json = "{\"content\":null,\"embeds\":[{\"title\":\"Database updated\", \"color\":5814783, \"timestamp\":\"2022-04-01T04:00:00.000Z\"}]}";
