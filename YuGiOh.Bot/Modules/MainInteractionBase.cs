@@ -63,9 +63,7 @@ namespace YuGiOh.Bot.Modules
         public override async Task BeforeExecuteAsync(ICommandInfo command)
         {
 
-            GuildConfig = Context.Channel is not SocketDMChannel ?
-                await GuildConfigDbService.GetGuildConfigAsync(Context.Guild.Id) :
-                await GuildConfigDbService.GetGuildConfigAsync(0);
+            GuildConfig = Context.Channel is not SocketDMChannel ? await GuildConfigDbService.GetGuildConfigAsync(Context.Guild.Id) : await GuildConfigDbService.GetGuildConfigAsync(0);
 
         }
 
@@ -86,15 +84,14 @@ namespace YuGiOh.Bot.Modules
             AllowedMentions allowedMentions = null,
             RequestOptions options = null,
             MessageComponent components = null,
-            Embed embed = null
+            Embed embed = null,
+            PollProperties poll = null
         )
         {
 
-            return IsDeferred ?
-                FollowupAsync(text, embeds, isTTS, ephemeral, allowedMentions, options, components, embed) :
-                !Context.Interaction.HasResponded ?
-                    base.RespondAsync(text, embeds, isTTS, ephemeral, allowedMentions, options, components, embed) :
-                    base.ReplyAsync(text, isTTS, embed, options, allowedMentions, components: components);
+            return IsDeferred ? FollowupAsync(text, embeds, isTTS, ephemeral, allowedMentions, options, components, embed) :
+                !Context.Interaction.HasResponded ? base.RespondAsync(text, embeds, isTTS, ephemeral, allowedMentions, options, components, embed, poll) :
+                base.ReplyAsync(text, isTTS, embed, options, allowedMentions, components: components);
 
         }
 
@@ -161,7 +158,8 @@ namespace YuGiOh.Bot.Modules
             MessageComponent components = null,
             ISticker[] stickers = null,
             Embed[] embeds = null,
-            MessageFlags flags = MessageFlags.None
+            MessageFlags flags = MessageFlags.None,
+            PollProperties poll = null
         )
             => base.ReplyAsync(text, isTTS, embed, options, AllowedMentions.None, messageReference, components);
 
