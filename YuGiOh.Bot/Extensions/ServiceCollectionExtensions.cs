@@ -81,7 +81,8 @@ public static class ServiceCollectionExtensions
             .AddSingleton<CommandHelpService>()
             .AddSingleton<DiscordShardedClient>()
             .AddSingleton<CommandService>()
-            .AddSingleton<InteractionService>()
+            //.AddSingleton<InteractionService>()
+            .AddSingleton(serviceProvider => new InteractionService(serviceProvider.GetRequiredService<DiscordShardedClient>())) //to fix InteractionService injection not picking up IRestClientProvider from DiscordShardedClient
             .AddSingleton(ClientConfig)
             .AddSingleton(CommandConfig)
             .AddSingleton(InteractionConfig)
