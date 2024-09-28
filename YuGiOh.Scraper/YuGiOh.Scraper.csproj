@@ -2,7 +2,6 @@
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <AssemblyName>YuGiOhScraper</AssemblyName>
         <LangVersion>12</LangVersion>
         <TargetFramework>net8.0</TargetFramework>
         <Nullable>warnings</Nullable>
