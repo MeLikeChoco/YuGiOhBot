@@ -148,20 +148,20 @@ namespace YuGiOh.Bot.Modules
 
         }
 
-        protected override Task<IUserMessage> ReplyAsync(
-            string text = null,
-            bool isTTS = false,
-            Embed embed = null,
-            RequestOptions options = null,
-            AllowedMentions allowedMentions = null,
-            MessageReference messageReference = null,
-            MessageComponent components = null,
-            ISticker[] stickers = null,
-            Embed[] embeds = null,
-            MessageFlags flags = MessageFlags.None,
-            PollProperties poll = null
-        )
-            => base.ReplyAsync(text, isTTS, embed, options, AllowedMentions.None, messageReference, components);
+        // protected override Task<IUserMessage> ReplyAsync(
+        //     string text = null,
+        //     bool isTTS = false,
+        //     Embed embed = null,
+        //     RequestOptions options = null,
+        //     AllowedMentions allowedMentions = null,
+        //     MessageReference messageReference = null,
+        //     MessageComponent components = null,
+        //     ISticker[] stickers = null,
+        //     Embed[] embeds = null,
+        //     MessageFlags flags = MessageFlags.None,
+        //     PollProperties poll = null
+        // )
+        //     => base.ReplyAsync(text, isTTS, embed, options, AllowedMentions.None, messageReference, components);
 
         protected Task<InteractiveMessageResult> SendPaginatorAsync(
             Paginator paginator,
