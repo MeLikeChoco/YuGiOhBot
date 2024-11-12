@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:8.0.402-jammy-amd64
+FROM mcr.microsoft.com/dotnet/sdk:8.0.403-jammy-amd64
 COPY --from=mcr.microsoft.com/dotnet/runtime:6.0.25-jammy-chiseled-amd64 /usr/share/dotnet/shared /usr/share/dotnet/shared
 
 WORKDIR src/
