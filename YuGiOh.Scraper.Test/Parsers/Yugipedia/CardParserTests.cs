@@ -591,7 +591,7 @@ public class CardParserTests
     public async Task GetTcgStatus_ExpectSemiLimited()
     {
 
-        var parser = new TestCardParser("566145", "Dinowrestler Pankratops");
+        var parser = new TestCardParser("145152", "Eva");
         var actual = await parser.GetTcgAdvStatus();
 
         Assert.Equal("Semi-Limited", actual);
