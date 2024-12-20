@@ -15,8 +15,8 @@ namespace YuGiOh.Scraper.Models.Parsers.Yugipedia;
 public class CardParser(string id, string name) : BaseCardParser
 {
 
-    private static readonly string[] ArchetypesHeaderMustHaveWords = { "archetypes", "series" };
-    private static readonly string[] StatusHeaderMayHaveWords = { "Status", "Statuses" };
+    private static readonly string[] ArchetypesHeaderMustHaveWords = ["archetypes", "series"];
+    private static readonly string[] StatusHeaderMayHaveWords = ["Status", "Statuses"];
 
     private string[] _lore;
     private IElement _parserOutput, _table;
@@ -169,11 +169,9 @@ public class CardParser(string id, string name) : BaseCardParser
                             child.Remove();
                     }
 
-                    translation.Name = row.Children[1].TextContent.Trim();
-
                 }
-                else
-                    translation.Name = row.Children[1].TextContent.Trim();
+
+                translation.Name = row.Children[1].TextContent.Trim();
 
                 return translation;
 
@@ -231,10 +229,13 @@ public class CardParser(string id, string name) : BaseCardParser
 
     protected override Task<int> GetLinkCount()
     {
+        
+        //I had to do this because at one point it was "ATK  / LINK" instead of "ATK / LINK". Notice the extra space after ATK in the first string.
+        var row = _tableRows.FirstOrDefault(kv => kv.Key.StartsWith("ATK") && kv.Key.EndsWith("LINK"));
 
         return Task.FromResult(
-            _tableRows.TryGetValue("ATK / LINK", out var atkLink) ?
-                int.Parse(atkLink.Split("/")[1].Trim()) :
+            row.Key is not null ?
+                int.Parse(row.Value.Split("/")[1].Trim()) :
                 0
         );
 
@@ -249,7 +250,7 @@ public class CardParser(string id, string name) : BaseCardParser
         var atkRow = _tableRows.FirstOrDefault(kv => kv.Key.StartsWith("ATK"));
 
         return Task.FromResult(
-            atkRow.Equals(default(KeyValuePair<string, string>)) ?
+            atkRow.Key is null ? //this means the default for KeyValuePair was returned
                 null :
                 atkRow.Value.Split('/')[0].Trim()
         );
