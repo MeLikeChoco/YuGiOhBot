@@ -547,7 +547,7 @@ public class CardParserTests
     public async Task GetOcgStatus_ExpectSemiLimited()
     {
 
-        var parser = new TestCardParser("14402", "Destiny HERO - Malicious");
+        var parser = new TestCardParser("992826", "Fire King High Avatar Kirin");
         var actual = await parser.GetOcgStatus();
 
         Assert.Equal("Semi-Limited", actual);
