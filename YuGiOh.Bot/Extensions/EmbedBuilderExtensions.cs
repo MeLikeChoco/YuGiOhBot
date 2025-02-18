@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using YuGiOh.Bot.Models.Deserializers;
-using YuGiOh.Bot.Services;
+using YuGiOh.Bot.Services.Interfaces;
 
 namespace YuGiOh.Bot.Extensions
 {
@@ -16,10 +14,10 @@ namespace YuGiOh.Bot.Extensions
         public static EmbedBuilder WithRandomColor(this EmbedBuilder builder)
             => builder.WithColor(Rand.NextColor());
 
-        public static async Task<EmbedBuilder> WithCardPrices(
+        public static Task<EmbedBuilder> WithCardPrices(
             this EmbedBuilder embed,
             bool minimal,
-            Web web,
+            IYuGiOhPricesService yugiohPricesService,
             TimeSpan? searchTime = null
         )
         {
@@ -36,56 +34,58 @@ namespace YuGiOh.Bot.Extensions
 
             if (minimal)
             {
-
+            
                 embed.ThumbnailUrl = embed.ImageUrl;
                 embed.ImageUrl = null;
-
+            
             }
             else
             {
 
-                string realName;
+                embed.AddField("Prices", "Unfortunately, prices are unavailable for now.");
+            
+                // string realName;
+                //
+                // if (embed.Description.Contains("Real Name"))
+                // {
+                //
+                //     var indexOne = embed.Description.IndexOf(':');
+                //     var indexTwo = embed.Description.IndexOf("**Format", StringComparison.OrdinalIgnoreCase);
+                //     realName = embed.Description.Substring(indexOne, indexTwo).Trim();
+                //
+                // }
+                // else
+                //     realName = embed.Author.Name;
 
-                if (embed.Description.Contains("Real Name"))
-                {
-
-                    var indexOne = embed.Description.IndexOf(':');
-                    var indexTwo = embed.Description.IndexOf("**Format");
-                    realName = embed.Description.Substring(indexOne, indexTwo).Trim();
-
-                }
-                else
-                    realName = embed.Author.Name;
-
-                var response = await web.GetPrices((string) embed.Author.Name, realName);
-
-                if (response?.Data is not null)
-                {
-
-                    IEnumerable<Datum> prices;
-
-                    if (response.Data.Count >= 4)
-                    {
-
-                        embed.AddField("Prices", "**Showing the first 3 prices due to too many to show**");
-
-                        prices = response.Data.Take(3);
-
-                    }
-                    else
-                        prices = response.Data;
-
-                    embed = prices.Aggregate(embed, (current, info)
-                        => string.IsNullOrEmpty(info.PriceData.Message) ? current.AddPriceShort(info) : current.AddField(info.Name, info.PriceData.Message)
-                    );
-
-                }
-                else
-                    embed.AddField("Prices", "**No prices to show for this card at this time!**");
+                // var response = await web.GetPrices((string) embed.Author.Name, realName);
+                //
+                // if (response?.Data is not null)
+                // {
+                //
+                //     IEnumerable<Datum> prices;
+                //
+                //     if (response.Data.Count >= 4)
+                //     {
+                //
+                //         embed.AddField("Prices", "**Showing the first 3 prices due to too many to show**");
+                //
+                //         prices = response.Data.Take(3);
+                //
+                //     }
+                //     else
+                //         prices = response.Data;
+                //
+                //     embed = prices.Aggregate(embed, (current, info)
+                //         => string.IsNullOrEmpty(info.PriceData.Message) ? current.AddPriceShort(info) : current.AddField(info.Name, info.PriceData.Message)
+                //     );
+                //
+                // }
+                // else
+                //     embed.AddField("Prices", "**No prices to show for this card at this time!**");
 
             }
 
-            return embed;
+            return Task.FromResult(embed);
 
         }
 

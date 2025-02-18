@@ -18,7 +18,6 @@ namespace YuGiOh.Bot.Modules
 {
     public abstract class MainBase : ModuleBase<ShardedCommandContext>
     {
-
         protected ILogger Logger { get; }
         protected Cache Cache { get; }
         protected IYuGiOhDbService YuGiOhDbService { get; }
@@ -46,10 +45,8 @@ namespace YuGiOh.Bot.Modules
             IGuildConfigDbService guildConfigDbService,
             Web web,
             Random rand,
-            InteractiveService interactiveService
-        )
+            InteractiveService interactiveService)
         {
-
             Logger = loggerFactory.CreateLogger(GetType().Name);
             Cache = cache;
             YuGiOhDbService = yuGiOhDbService;
@@ -57,14 +54,13 @@ namespace YuGiOh.Bot.Modules
             Web = web;
             Rand = rand;
             InteractiveService = interactiveService;
-
         }
 
         protected override void BeforeExecute(CommandInfo command)
         {
-
-            GuildConfig = Context.Channel is not SocketDMChannel ? GuildConfigDbService.GetGuildConfigAsync(Context.Guild.Id).GetAwaiter().GetResult() : GuildConfigDbService.GetGuildConfigAsync(0).GetAwaiter().GetResult();
-
+            GuildConfig = Context.Channel is not SocketDMChannel
+                ? GuildConfigDbService.GetGuildConfigAsync(Context.Guild.Id).GetAwaiter().GetResult()
+                : GuildConfigDbService.GetGuildConfigAsync(0).GetAwaiter().GetResult();
         }
 
         protected Task DirectMessageAsync(Embed embed)
@@ -79,8 +75,8 @@ namespace YuGiOh.Bot.Modules
         protected Task UploadAsync(Stream stream, string filename, string text = null)
             => Context.Channel.SendFileAsync(stream, filename, text);
 
-        protected async Task SendCardEmbedAsync(EmbedBuilder embed, bool minimal, Web web = null)
-            => await ReplyAsync(embed: (await embed.WithCardPrices(minimal, web ?? Web)).Build());
+        protected async Task SendCardEmbedAsync(EmbedBuilder embed, bool minimal, IYuGiOhPricesService yuGiOhPricesService = null)
+            => await ReplyAsync(embed: (await embed.WithCardPrices(minimal, yuGiOhPricesService)).Build());
 
         protected Task SendEmbedAsync(EmbedBuilder embed)
             => ReplyAsync(embed: embed.Build());
@@ -90,7 +86,6 @@ namespace YuGiOh.Bot.Modules
 
         protected Task NoResultError(string objects, string input)
         {
-
             var str = $"No {objects} were found with the given input";
 
             if (!string.IsNullOrEmpty(input))
@@ -99,7 +94,6 @@ namespace YuGiOh.Bot.Modules
             str += "!";
 
             return ReplyAsync(str, allowedMentions: AllowedMentions.None);
-
         }
 
         protected Task TooManyError()
@@ -118,14 +112,13 @@ namespace YuGiOh.Bot.Modules
             MessageFlags flags = MessageFlags.None
         )
         {
-
             if (!string.IsNullOrWhiteSpace(message))
                 message = message
                     .Replace("@everyone", "\\@everyone")
                     .Replace("@here", "\\@here");
 
-            return base.ReplyAsync(message, isTTS, embed, options, allowedMentions, messageReference, components, stickers, embeds);
-
+            return base.ReplyAsync(message, isTTS, embed, options, allowedMentions, messageReference, components,
+                stickers, embeds);
         }
 
         protected Task<InteractiveResult<SocketMessage>> NextMessageAsync(
@@ -134,35 +127,30 @@ namespace YuGiOh.Bot.Modules
             CancellationToken ct = default
         )
         {
-
             return InteractiveService.NextMessageAsync(
                 (message) => criteria.ValidateAsync(Context, message).Result,
                 timeout: timeSpan,
                 cancellationToken: ct
             );
-
         }
 
-        protected Task<InteractiveResult<SocketMessage>> NextMessageAsync(Criteria criteria, CancellationToken ct = default)
+        protected Task<InteractiveResult<SocketMessage>> NextMessageAsync(Criteria criteria,
+            CancellationToken ct = default)
         {
-
             return NextMessageAsync(
                 criteria,
                 TimeSpan.FromSeconds(60),
                 ct
             );
-
         }
 
         protected Task<InteractiveResult<SocketMessage>> NextMessageAsync(CancellationToken ct = default)
         {
-
             return NextMessageAsync(
                 new BaseCriteria(Context),
                 TimeSpan.FromSeconds(60),
                 ct
             );
-
         }
 
         protected Task<InteractiveMessageResult> SendPaginatorAsync(
@@ -171,18 +159,15 @@ namespace YuGiOh.Bot.Modules
             CancellationToken ct = default
         )
         {
-
             return InteractiveService.SendPaginatorAsync(
                 paginator,
                 Context.Channel,
                 timeout: timeSpan,
                 cancellationToken: ct
             );
-
         }
 
         protected Task<InteractiveMessageResult> SendPaginatorAsync(Paginator paginator, CancellationToken ct = default)
             => SendPaginatorAsync(paginator, TimeSpan.FromSeconds(60), ct);
-
     }
 }

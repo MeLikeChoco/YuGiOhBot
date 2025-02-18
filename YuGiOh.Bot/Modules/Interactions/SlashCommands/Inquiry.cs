@@ -18,15 +18,21 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
 {
     public class Inquiry : MainInteractionBase<SocketSlashCommand>
     {
+        
+        private IYuGiOhPricesService _yugiohPricesService;
 
         public Inquiry(
             ILoggerFactory loggerFactory,
             Cache cache,
             IYuGiOhDbService yuGiOhDbService,
+            IYuGiOhPricesService yuGiOhPricesService,
             IGuildConfigDbService guildConfigDbService,
             Web web,
             InteractiveService interactiveService
-        ) : base(loggerFactory, cache, yuGiOhDbService, guildConfigDbService, web, interactiveService) { }
+        ) : base(loggerFactory, cache, yuGiOhDbService, guildConfigDbService, web, interactiveService)
+        {
+            _yugiohPricesService = yuGiOhPricesService;
+        }
 
         [SlashCommand(Constants.CardCommand, "Gets a card")]
         public async Task CardCommand([Autocomplete(typeof(CardAutocomplete)), Summary(description: "The card")] string input)
@@ -35,7 +41,7 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
             var card = await YuGiOhDbService.GetCardAsync(input);
 
             if (card is not null)
-                await SendCardEmbedAsync(card.GetEmbedBuilder(), GuildConfig.Minimal);
+                await SendCardEmbedAsync(card.GetEmbedBuilder(), GuildConfig.Minimal, _yugiohPricesService);
             else
                 await NoResultError(input);
 
@@ -47,7 +53,7 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
 
             var card = await YuGiOhDbService.GetRandomCardAsync();
 
-            await SendCardEmbedAsync(card.GetEmbedBuilder(), GuildConfig.Minimal);
+            await SendCardEmbedAsync(card.GetEmbedBuilder(), GuildConfig.Minimal, _yugiohPricesService);
 
         }
 
@@ -127,64 +133,66 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
         }
 
         [SlashCommand("price", "Returns the prices of a card based on your input")]
-        public async Task PriceCommand([Autocomplete(typeof(CardAutocomplete)), Summary(description: "The card")] string input)
+        public Task PriceCommand([Autocomplete(typeof(CardAutocomplete)), Summary(description: "The card")] string input)
         {
 
-            var card = await YuGiOhDbService.GetCardAsync(input);
+            return RespondAsync("Unfortunately, prices are not available at the moment.");
 
-            if (card is not null)
-            {
-
-                if (!card.TcgExists)
-                {
-
-                    await RespondAsync("Card does not exist in TCG therefore no price can be determined for this card currently!");
-                    return;
-
-                }
-
-                using (Context.Channel.EnterTypingState())
-                {
-
-                    var response = await Web.GetPrices(card.Name) ?? await Web.GetPrices(card.RealName);
-
-                    if (response is null)
-                    {
-
-                        await ReplyAsync($"There was an error in retrieving the prices for \"{input}\". Please try again later.");
-                        return;
-
-                    }
-
-                    var data = response.Data.Where(d => string.IsNullOrEmpty(d.PriceData.Message)).ToList();
-
-                    var author = new EmbedAuthorBuilder()
-                        .WithIconUrl("https://vignette1.wikia.nocookie.net/yugioh/images/8/82/PotofGreed-TF04-JP-VG.jpg/revision/latest?cb=20120829225457")
-                        .WithName("YuGiOh Prices")
-                        .WithUrl($"https://yugiohprices.com/card_price?name={Uri.EscapeDataString(input)}");
-
-                    var body = new EmbedBuilder()
-                        .WithAuthor(author)
-                        .WithColor(new Color(33, 108, 42))
-                        .WithCurrentTimestamp();
-
-                    if (data.Count > 25)
-                    {
-
-                        body.WithDescription("**There are more than 25 results! Due to that, only the first 25 results are shown!**");
-                        data = data.GetRange(0, 25);
-
-                    }
-
-                    body = data.Aggregate(body, (current, datum) => current.AddPrice(datum, true));
-
-                    await SendEmbedAsync(body);
-
-                }
-
-            }
-            else
-                await NoResultError(input);
+            // var card = await YuGiOhDbService.GetCardAsync(input);
+            //
+            // if (card is not null)
+            // {
+            //
+            //     if (!card.TcgExists)
+            //     {
+            //
+            //         await RespondAsync("Card does not exist in TCG therefore no price can be determined for this card currently!");
+            //         return;
+            //
+            //     }
+            //
+            //     using (Context.Channel.EnterTypingState())
+            //     {
+            //
+            //         var response = await _yuGiOhPricesService.GetPrices(card) ?? await _yuGiOhPricesService.GetPrices(card);
+            //
+            //         if (response is null)
+            //         {
+            //
+            //             await ReplyAsync($"There was an error in retrieving the prices for \"{input}\". Please try again later.");
+            //             return;
+            //
+            //         }
+            //
+            //         var data = response.Data.Where(d => string.IsNullOrEmpty(d.PriceData.Message)).ToList();
+            //
+            //         var author = new EmbedAuthorBuilder()
+            //             .WithIconUrl("https://vignette1.wikia.nocookie.net/yugioh/images/8/82/PotofGreed-TF04-JP-VG.jpg/revision/latest?cb=20120829225457")
+            //             .WithName("YuGiOh Prices")
+            //             .WithUrl($"https://yugiohprices.com/card_price?name={Uri.EscapeDataString(input)}");
+            //
+            //         var body = new EmbedBuilder()
+            //             .WithAuthor(author)
+            //             .WithColor(new Color(33, 108, 42))
+            //             .WithCurrentTimestamp();
+            //
+            //         if (data.Count > 25)
+            //         {
+            //
+            //             body.WithDescription("**There are more than 25 results! Due to that, only the first 25 results are shown!**");
+            //             data = data.GetRange(0, 25);
+            //
+            //         }
+            //
+            //         body = data.Aggregate(body, (current, datum) => current.AddPrice(datum, true));
+            //
+            //         await SendEmbedAsync(body);
+            //
+            //     }
+            //
+            // }
+            // else
+            //     await NoResultError(input);
 
         }
 

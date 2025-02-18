@@ -17,10 +17,10 @@ using YuGiOh.Bot.Services.Interfaces;
 
 namespace YuGiOh.Bot.Modules
 {
-    public abstract class MainInteractionBase<TInteraction> : InteractionModuleBase<ShardedInteractionContext<TInteraction>>
+    public abstract class
+        MainInteractionBase<TInteraction> : InteractionModuleBase<ShardedInteractionContext<TInteraction>>
         where TInteraction : SocketInteraction
     {
-
         protected ILogger Logger { get; }
         protected Cache Cache { get; }
         protected IYuGiOhDbService YuGiOhDbService { get; }
@@ -46,10 +46,8 @@ namespace YuGiOh.Bot.Modules
             IYuGiOhDbService yuGiOhDbService,
             IGuildConfigDbService guildConfigDbService,
             Web web,
-            InteractiveService interactiveService
-        )
+            InteractiveService interactiveService)
         {
-
             Logger = loggerFactory.CreateLogger(GetType().Name);
             Cache = cache;
             YuGiOhDbService = yuGiOhDbService;
@@ -57,23 +55,20 @@ namespace YuGiOh.Bot.Modules
             Web = web;
             IsDeferred = false;
             InteractiveService = interactiveService;
-
         }
 
         public override async Task BeforeExecuteAsync(ICommandInfo command)
         {
-
-            GuildConfig = Context.Channel is not SocketDMChannel ? await GuildConfigDbService.GetGuildConfigAsync(Context.Guild.Id) : await GuildConfigDbService.GetGuildConfigAsync(0);
-
+            GuildConfig = Context.Channel is not SocketDMChannel
+                ? await GuildConfigDbService.GetGuildConfigAsync(Context.Guild.Id)
+                : await GuildConfigDbService.GetGuildConfigAsync(0);
         }
 
         protected override async Task DeferAsync(bool ephemeral = false, RequestOptions options = null)
         {
-
             await base.DeferAsync(ephemeral, options);
 
             IsDeferred = true;
-
         }
 
         protected override Task RespondAsync(
@@ -88,11 +83,12 @@ namespace YuGiOh.Bot.Modules
             PollProperties poll = null
         )
         {
-
-            return IsDeferred ? FollowupAsync(text, embeds, isTTS, ephemeral, allowedMentions, options, components, embed) :
-                !Context.Interaction.HasResponded ? base.RespondAsync(text, embeds, isTTS, ephemeral, allowedMentions, options, components, embed, poll) :
-                base.ReplyAsync(text, isTTS, embed, options, allowedMentions, components: components);
-
+            return IsDeferred
+                ? FollowupAsync(text, embeds, isTTS, ephemeral, allowedMentions, options, components, embed)
+                : !Context.Interaction.HasResponded
+                    ? base.RespondAsync(text, embeds, isTTS, ephemeral, allowedMentions, options, components, embed,
+                        poll)
+                    : base.ReplyAsync(text, isTTS, embed, options, allowedMentions, components: components);
         }
 
         protected Task DirectMessageAsync(Embed embed)
@@ -109,20 +105,16 @@ namespace YuGiOh.Bot.Modules
 
         protected async Task<RestFollowupMessage> UploadAsync(Stream stream, string filename, string text = null)
         {
-
             await DeferAsync();
 
             return await Context.Interaction.FollowupWithFileAsync(new FileAttachment(stream, filename), text);
-
         }
 
-        protected async Task SendCardEmbedAsync(EmbedBuilder embed, bool minimal, Web web = null)
+        protected async Task SendCardEmbedAsync(EmbedBuilder embed, bool minimal, IYuGiOhPricesService yuGiOhPricesService = null)
         {
-
-            embed = await embed.WithCardPrices(minimal, web ?? Web);
+            embed = await embed.WithCardPrices(minimal, yuGiOhPricesService);
 
             await RespondAsync(embed: embed.Build());
-
         }
 
         protected Task SendEmbedAsync(EmbedBuilder embed)
@@ -133,7 +125,6 @@ namespace YuGiOh.Bot.Modules
 
         protected Task NoResultError(string objects, string input)
         {
-
             if (objects.Length + input.Length >= 1800)
                 input = input[..(1800 - objects.Length)] + "...";
 
@@ -145,7 +136,6 @@ namespace YuGiOh.Bot.Modules
             str += "!";
 
             return RespondAsync(str, allowedMentions: AllowedMentions.None);
-
         }
 
         // protected override Task<IUserMessage> ReplyAsync(
@@ -169,10 +159,8 @@ namespace YuGiOh.Bot.Modules
             CancellationToken ct = default
         )
         {
-
             if (IsDeferred)
             {
-
                 return InteractiveService.SendPaginatorAsync(
                     paginator,
                     Context.Interaction,
@@ -180,19 +168,16 @@ namespace YuGiOh.Bot.Modules
                     responseType: InteractionResponseType.DeferredChannelMessageWithSource,
                     cancellationToken: ct
                 );
-
             }
 
             if (!Context.Interaction.HasResponded)
             {
-
                 return InteractiveService.SendPaginatorAsync(
                     paginator,
                     Context.Interaction,
                     timeout: timeSpan,
                     cancellationToken: ct
                 );
-
             }
 
             return InteractiveService.SendPaginatorAsync(
@@ -201,7 +186,6 @@ namespace YuGiOh.Bot.Modules
                 timeout: timeSpan,
                 cancellationToken: ct
             );
-
         }
 
         protected Task<InteractiveMessageResult> SendPaginatorAsync(
@@ -221,13 +205,11 @@ namespace YuGiOh.Bot.Modules
             CancellationToken ct = default
         )
         {
-
             return InteractiveService.NextMessageAsync(
                 (message) => criteria.ValidateAsync(Context, message).Result,
                 timeout: timespan,
                 cancellationToken: ct
             );
-
         }
 
         protected Task TooManyError()
@@ -235,6 +217,5 @@ namespace YuGiOh.Bot.Modules
 
         protected void Log(string msg, params object[] parameters)
             => Logger.Info(msg, parameters);
-
     }
 }

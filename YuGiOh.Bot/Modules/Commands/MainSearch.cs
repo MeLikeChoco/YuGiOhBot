@@ -21,6 +21,7 @@ namespace YuGiOh.Bot.Modules.Commands
     public class MainSearch : MainBase
     {
 
+        private readonly IYuGiOhPricesService _yuGiOhPricesService;
         private readonly CommandService _commandService;
         private readonly IServiceProvider _services;
         private readonly PaginatorFactory _paginatorFactory;
@@ -32,6 +33,7 @@ namespace YuGiOh.Bot.Modules.Commands
             ILoggerFactory loggerFactory,
             Cache cache,
             IYuGiOhDbService yuGiOhDbService,
+            IYuGiOhPricesService yuGiOhPricesService,
             IGuildConfigDbService guildConfigDbService,
             Web web,
             Random rand,
@@ -41,6 +43,7 @@ namespace YuGiOh.Bot.Modules.Commands
             PaginatorFactory paginatorFactory
         ) : base(loggerFactory, cache, yuGiOhDbService, guildConfigDbService, web, rand, interactiveService)
         {
+            _yuGiOhPricesService = yuGiOhPricesService;
             _commandService = commandService;
             _services = services;
             _paginatorFactory = paginatorFactory;
@@ -113,7 +116,7 @@ namespace YuGiOh.Bot.Modules.Commands
             var amount = cards.Count;
 
             if (amount == 1)
-                await SendCardEmbedAsync(cards.First().GetEmbedBuilder(), GuildConfig.Minimal);
+                await SendCardEmbedAsync(cards.First().GetEmbedBuilder(), GuildConfig.Minimal, _yuGiOhPricesService);
             else if (amount != 0)
                 await ReceiveInput(amount, cards);
             else
@@ -170,7 +173,7 @@ namespace YuGiOh.Bot.Modules.Commands
 
             }
 
-            await SendCardEmbedAsync(cards[selection - 1].GetEmbedBuilder(), GuildConfig.Minimal);
+            await SendCardEmbedAsync(cards[selection - 1].GetEmbedBuilder(), GuildConfig.Minimal, _yuGiOhPricesService);
 
             return;
 

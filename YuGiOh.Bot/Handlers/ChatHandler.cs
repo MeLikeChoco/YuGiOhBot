@@ -11,17 +11,20 @@ using YuGiOh.Bot.Services.Interfaces;
 
 namespace YuGiOh.Bot.Handlers
 {
-    public class ChatHandler
+    public partial class ChatHandler
     {
 
-        //private const string Pattern = @"(\[{2}[^\[\]].+?[^\[\]]\]{2})";
-        private const string Pattern = @"(?<=\[{2}).+?(?=\]{2})";
-        private static readonly Regex InlineRegex = new(Pattern, RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        //private const string Pattern = @"(\[{2}[^\[\]].+?[^\[\]]\]{2})"; //old pattern
+
+        [GeneratedRegex(@"(?<=\[{2}).+?(?=\]{2})", RegexOptions.IgnoreCase | RegexOptions.Compiled, "en-US")]
+        private static partial Regex InlineRegexCompiled();
+        private static readonly Regex InlineRegex = InlineRegexCompiled();
 
         private readonly ILoggerFactory _loggerFactory;
         private readonly Cache _cache;
         private readonly Web _web;
         private readonly IYuGiOhDbService _yuGiOhDbService;
+        private readonly IYuGiOhPricesService _yuGiOhPricesService;
         private readonly IGuildConfigDbService _guildConfigDbService;
 
         public ChatHandler(
@@ -29,6 +32,7 @@ namespace YuGiOh.Bot.Handlers
             Cache cache,
             Web web,
             IYuGiOhDbService yuGiOhDbService,
+            IYuGiOhPricesService yuGiOhPricesService,
             IGuildConfigDbService guildConfigDbService
         )
         {
@@ -37,6 +41,7 @@ namespace YuGiOh.Bot.Handlers
             _cache = cache;
             _web = web;
             _yuGiOhDbService = yuGiOhDbService;
+            _yuGiOhPricesService = yuGiOhPricesService;
             _guildConfigDbService = guildConfigDbService;
             //_ignoreCaseComparer = new IgnoreCaseComparer();
 
@@ -131,7 +136,7 @@ namespace YuGiOh.Bot.Handlers
                         {
 
                             var embed = closestCard.GetEmbedBuilder();
-                            await channel.SendMessageAsync(embed: (await embed.WithCardPrices(minimal, _web, elapsed)).Build());
+                            await channel.SendMessageAsync(embed: (await embed.WithCardPrices(minimal, _yuGiOhPricesService, elapsed)).Build());
 
                         }
                         catch (Exception ex)

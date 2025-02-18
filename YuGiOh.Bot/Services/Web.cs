@@ -13,15 +13,8 @@ namespace YuGiOh.Bot.Services
 {
     public class Web
     {
-
-        public string FandomUrl = "https://yugioh.fandom.com/wiki/";
-
-        //private HttpClient _http;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly HtmlParser _parser;
-
-        private const string PricesBaseUrl = "https://yugiohprices.com/api/get_card_prices/";
-        // private const string ImagesBaseUrl = "https://yugiohprices.com/api/card_image/";
 
         public Web(IHttpClientFactory httpClientFactory)
         {
@@ -80,18 +73,6 @@ namespace YuGiOh.Bot.Services
 
         }
 
-        public async Task<YuGiOhPrices> GetPrices(string name, string realName = null)
-        {
-
-            var response = await GetDeserializedContent<YuGiOhPrices>($"{PricesBaseUrl}{Uri.EscapeDataString(name)}").ConfigureAwait(false);
-
-            if ((response is null || response.Status == "fail") && !string.IsNullOrEmpty(realName))
-                response = await GetDeserializedContent<YuGiOhPrices>($"{PricesBaseUrl}{Uri.EscapeDataString(realName)}");
-
-            return response;
-
-        }
-
         public async Task<Stream> GetStream(string url)
         {
 
@@ -106,7 +87,7 @@ namespace YuGiOh.Bot.Services
 
         }
 
-        private async Task<T> GetDeserializedContent<T>(string url)
+        public async Task<T> GetDeserializedContent<T>(string url)
         {
 
             var response = await Check(url).ConfigureAwait(false);
