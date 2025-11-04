@@ -9,8 +9,8 @@
         <PackageReference Include="Dapper" Version="2.1.66" />
         <PackageReference Include="Dapper.SqlBuilder" Version="2.1.66" />
         <PackageReference Include="Dommel" Version="3.4.0" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.6" />
-        <PackageReference Include="Npgsql" Version="9.0.3" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.10" />
+        <PackageReference Include="Npgsql" Version="9.0.4" />
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
     </ItemGroup>
 
