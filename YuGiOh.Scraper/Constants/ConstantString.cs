@@ -20,7 +20,7 @@ public static class ConstantString
 
     //Categories
     public const string MediaWikiAllCards = "api.php?action=query&format=json&list=categorymemebers&cmtitle=Category%3AAll_cards&cmlimit=50000";
-    public const string MediaWikiDuelMonstersCards = "api.php?action=query&format=json&list=categorymembers&cmtitle=Category%3ADuel_Monsters_cards";
+    public const string MediaWikiDuelMonstersCards = "api.php?action=query&format=json&list=categorymembers&cmtitle=Category%3ADuel_Monsters_cards&cmlimit=50000";
 
     public const string MediaWikiTcgCards = "api.php?action=query&format=json&list=categorymembers&cmtitle=Category%3ATCG_cards&cmlimit=50000";
     public const string MediaWikiOcgCards = "api.php?action=query&format=json&list=categorymembers&cmtitle=Category%3AOCG_cards&cmlimit=50000";
@@ -28,6 +28,7 @@ public static class ConstantString
     public const string MediaWikiTokenCards = "api.php?action=query&format=json&list=categorymembers&cmtitle=Category%3ATokens&cmlimit=50000";
     public const string MediaWikiCounterCards = "api.php?action=query&format=json&list=categorymembers&cmtitle=Category%3ACounters&cmlimit=50000";
     public const string MediaWikiAnimeCards = "api.php?action=query&format=json&list=categorymembers&cmtitle=Category%3AAnime_cards&cmlimit=50000";
+    public const string MediaWikiMasterDuelCards = "api.php?action=query&format=json&list=categorymembers&cmtitle=Category%3AYu-Gi-Oh%21_Master_Duel_cards&cmlimit=50000"; 
 
     public const string MediaWikiTcgPacks = "api.php?action=query&format=json&list=categorymembers&cmtitle=Category%3ATCG_Booster_Packs";
     public const string MediaWikiOcgPacks = "api.php?action=query&format=json&list=categorymembers&cmtitle=Category%3AOCG_Booster_Packs";

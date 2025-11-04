@@ -31,7 +31,8 @@ public class Program : IYuGiOhRepositoryConfiguration
 
     private static readonly HttpClient HttpClient = new();
     private static readonly Options Options = Options.GetInstance(new OptionsArgs());
-    private static ParallelOptions ParallelOptions => Options.IsDebug ? Constant.SerialOptions : Constant.ParallelOptions;
+    private static ParallelOptions ParallelOptions => Options.IsDebug ? Constant.SerialOptions : Constant.GetParallelOptions();
+    private static readonly KeyValuePairEqualityComparer KeyValuePairComparer = new(); 
 
     private static readonly IEnumerable<TypeInfo> Parsers = Assembly.GetEntryAssembly()!.DefinedTypes.Where(type =>
     {
@@ -117,13 +118,13 @@ public class Program : IYuGiOhRepositoryConfiguration
     )
     {
 
-        var links = tcgLinks.Union(ocgLinks);
+        var links = tcgLinks.Union(ocgLinks, KeyValuePairComparer);
         var tokenLinks = await GetLinks(ConstantString.MediaWikiTokenCards);
         var skillLinks = await GetLinks(ConstantString.MediaWikiSkillCards);
 
         return links
-            .Except(tokenLinks)
-            .Except(skillLinks)
+            .Except(tokenLinks, KeyValuePairComparer)
+            .Except(skillLinks, KeyValuePairComparer)
             .Where(kv => !kv.Key.ContainsIgnoreCase("alternate password"))
             .Where(kv => !kv.Key.ContainsIgnoreCase("rush duel"))
             .ToDictionary(kv => kv.Key, kv => kv.Value);
@@ -136,7 +137,7 @@ public class Program : IYuGiOhRepositoryConfiguration
     )
     {
 
-        var links = tcgLinks.Union(ocgLinks);
+        var links = tcgLinks.Union(ocgLinks, KeyValuePairComparer);
 
         return links
             .Where(kv => !kv.Key.ContainsIgnoreCase("category:"))
@@ -183,7 +184,7 @@ public class Program : IYuGiOhRepositoryConfiguration
                     var parser = Activator.CreateInstance(parserModule, id, name) as ICanParse<CardEntity>;
                     // var parserHash = await parser.GetParseOutput().ContinueWith(outputTask => outputTask.Result.GetMurMurHash(), _); //wanted to try ContinueWith instead of wrapping await
                     //
-                    // //this is to determine whether or not to parse
+                    // //this is to determine whether to parse
                     // if (!Options.ShouldIgnoreHash && await repo.GetCardHashAsync(parser.Id) == parserHash)
                     //     continue;
 
@@ -238,7 +239,8 @@ public class Program : IYuGiOhRepositoryConfiguration
 
             } while (check is not null && retryCount < Options.Config.MaxRetry);
 
-            var __ = WriteProgress("Cards", ref count, size);
+            var numOfErrors = errors.Count;
+            var __ = WriteProgress("Cards", ref count, size, ref numOfErrors);
 
         });
 
@@ -341,7 +343,8 @@ public class Program : IYuGiOhRepositoryConfiguration
 
             } while (check is not null && retryCount < Options.Config.MaxRetry);
 
-            var __ = WriteProgress("Booster packs", ref count, size);
+            var numOfErrors= errors.Count;
+            var __ = WriteProgress("Booster packs", ref count, size, ref numOfErrors);
 
         });
 
@@ -422,7 +425,8 @@ public class Program : IYuGiOhRepositoryConfiguration
 
             } while (check is not null && retryCount < Options.Config.MaxRetry);
 
-            var __ = WriteProgress("Anime cards", ref count, size);
+            var numOfErrors= errors.Count;
+            var __ = WriteProgress("Anime cards", ref count, size, ref numOfErrors);
 
         });
 
@@ -485,6 +489,22 @@ public class Program : IYuGiOhRepositoryConfiguration
     private static TypeInfo GetParserModule<T>()
         => Parsers.FirstOrDefault(parserType => parserType.ImplementedInterfaces.Any(type => type.GenericTypeArguments.Contains(typeof(T))));
 
+    [MethodImpl(MethodImplOptions.Synchronized)]
+    private static Task WriteProgress(string what, ref int current, int size, ref int errors)
+    {
+
+        var curr = Interlocked.Increment(ref current);
+        var display = $"{what} processed: {curr}/{size} ({(double) current / size * 100:0.00}%) (Errors: {errors})";
+
+        if (curr % 1000 == 0 && Options.IsSubProc)
+            Log(display);
+        else
+            InlineLog(display);
+
+        return Task.CompletedTask;
+
+    }
+    
     [MethodImpl(MethodImplOptions.Synchronized)]
     private static Task WriteProgress(string what, ref int current, int size)
     {

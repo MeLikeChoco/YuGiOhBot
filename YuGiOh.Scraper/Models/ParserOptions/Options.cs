@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
 using CommandLine;
@@ -42,11 +43,14 @@ public class Options
 
     }
 
-    [Option('m', "module", Required = true)]
+    [Option('m', "module", Default = "yugipedia")]
     public string Module { get; set; }
 
     [Option('d', "dev", Default = false)]
     public bool IsDev { get; set; }
+
+    [Option('t', "threads")]
+    public int Threads { get; set; } = Environment.ProcessorCount;
 
     [Option('p', "subprocess", Default = false)]
     public bool IsSubProc { get; set; }
