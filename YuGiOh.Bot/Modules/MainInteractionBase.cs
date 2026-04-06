@@ -80,14 +80,15 @@ namespace YuGiOh.Bot.Modules
             RequestOptions options = null,
             MessageComponent components = null,
             Embed embed = null,
-            PollProperties poll = null
+            PollProperties poll = null,
+            MessageFlags flags = MessageFlags.None
         )
         {
             return IsDeferred
                 ? FollowupAsync(text, embeds, isTTS, ephemeral, allowedMentions, options, components, embed)
                 : !Context.Interaction.HasResponded
                     ? base.RespondAsync(text, embeds, isTTS, ephemeral, allowedMentions, options, components, embed,
-                        poll)
+                        poll, flags)
                     : base.ReplyAsync(text, isTTS, embed, options, allowedMentions, components: components);
         }
 
@@ -103,11 +104,10 @@ namespace YuGiOh.Bot.Modules
         //public Task UploadAsync(Stream stream, string filename, string text = null)
         //    => Context.Channel.SendFileAsync(stream, filename, text);
 
-        protected async Task<RestFollowupMessage> UploadAsync(Stream stream, string filename, string text = null)
+        protected async Task UploadAsync(Stream stream, string filename, string text = null)
         {
             await DeferAsync();
-
-            return await Context.Interaction.FollowupWithFileAsync(new FileAttachment(stream, filename), text);
+            await FollowupWithFileAsync(new FileAttachment(stream, filename), text);
         }
 
         protected async Task SendCardEmbedAsync(EmbedBuilder embed, bool minimal, IYuGiOhPricesService yuGiOhPricesService = null)
@@ -159,6 +159,7 @@ namespace YuGiOh.Bot.Modules
             CancellationToken ct = default
         )
         {
+            
             if (IsDeferred)
             {
                 return InteractiveService.SendPaginatorAsync(
@@ -186,6 +187,7 @@ namespace YuGiOh.Bot.Modules
                 timeout: timeSpan,
                 cancellationToken: ct
             );
+            
         }
 
         protected Task<InteractiveMessageResult> SendPaginatorAsync(
