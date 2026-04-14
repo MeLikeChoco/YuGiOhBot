@@ -20,8 +20,8 @@ namespace YuGiOh.Scraper.Models.Parsers.Fandom;
 public class CardParser : ICanParse<CardEntity>
 {
 
-    private static readonly string[] ArchetypesHeaderMustHaveWords = { "archetypes", "series" };
-    private static readonly string[] PendulumLoreAdditionalTypesCanHaveWords = { "synchro", "fusion", "xyz" };
+    private static readonly string[] ArchetypesHeaderMustHaveWords = ["archetypes", "series"];
+    private static readonly string[] PendulumLoreAdditionalTypesCanHaveWords = ["synchro", "fusion", "xyz"];
 
     private readonly string _id, _name;
     private readonly Options _options;
@@ -139,21 +139,11 @@ public class CardParser : ICanParse<CardEntity>
 
                     card.OcgStatus = count > 0 ? data[..index].TrimEnd() : data;
 
-                    switch (count)
+                    card.TcgStatus = count switch
                     {
-                        case 2:
-                            card.TcgAdvStatus = statuses.First().FirstElementChild.TextContent;
-                            card.TcgTrnStatus = statuses.ElementAt(1).FirstElementChild.TextContent;
-                            break;
-                        case 1:
-                            card.TcgAdvStatus = statuses.First().FirstElementChild.TextContent;
-                            card.TcgTrnStatus = card.TcgAdvStatus;
-                            break;
-                        default:
-                            card.TcgAdvStatus = card.OcgStatus;
-                            card.TcgTrnStatus = card.OcgStatus;
-                            break;
-                    }
+                        2 or 1 => statuses.First().FirstElementChild.TextContent,
+                        _ => card.OcgStatus
+                    };
 
                     break;
 

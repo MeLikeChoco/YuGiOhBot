@@ -166,12 +166,12 @@ public class UpdatedCardParser : BaseFandomCardParser
         throw new NotImplementedException();
     }
 
-    protected override Task<string> GetTcgAdvStatus()
+    protected override Task<string> GetTcgStatus()
     {
         throw new NotImplementedException();
     }
 
-    protected override Task<string> GetTcgTrnStatus()
+    protected override Task<string> GetGenesys()
     {
         throw new NotImplementedException();
     }

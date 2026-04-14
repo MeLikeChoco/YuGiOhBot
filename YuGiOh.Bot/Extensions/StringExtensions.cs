@@ -24,7 +24,7 @@ namespace YuGiOh.Bot.Extensions
         public static string Title(this string str)
         {
 
-            return char.ToUpper(str.First()) + str.Substring(1).ToLower();
+            return char.ToUpper(str.First()) + str[1..].ToLower();
 
         }
 

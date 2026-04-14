@@ -95,14 +95,16 @@ namespace YuGiOh.Bot.Modules.Commands
             try
             {
 
-                //await InteractionService.AddModulesToGuildAsync(Context.Guild, true, InteractionService.Modules.ToArray());
-
                 if (isGlobal)
-                    //await Context.Client.Rest.CreateOrOverwriteBulkGlobalApplicationCommands(cmds);
+                    // await Context.Client.Rest.CreateOrOverwriteBulkGlobalApplicationCommands(cmds);
                     await _interactionService.AddModulesGloballyAsync(true, cmds);
                 else
+                {
                     //await Context.Guild.CreateOrOverwriteApplicationCommands(cmds);
+                    // await _interactionService.RemoveModulesFromGuildAsync(Context.Guild, cmds);
+                    await Context.Guild.DeleteApplicationCommandsAsync();
                     await _interactionService.AddModulesToGuildAsync(Context.Guild, true, cmds);
+                }
 
             }
             catch (Exception ex)
