@@ -1,7 +1,7 @@
 ﻿create or replace view joined_cards
             (id, name, realname, cardtype, property, types, attribute, materials, lore, archetypes, supports,
              antisupports, link, linkarrows, atk, def, level, pendulumscale, rank, tcgexists, ocgexists, img, url,
-             passcode, ocgstatus, tcgadvstatus, tcgtrnstatus, cardtrivia, archetypename, supportname, antisupportname,
+             passcode, ocgstatus, tcgstatus, genesys, cardtrivia, archetypename, supportname, antisupportname,
              translationid, cardid, language, translationname, translationlore)
 as
     SELECT cards.*,

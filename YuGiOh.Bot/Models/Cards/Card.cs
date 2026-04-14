@@ -34,8 +34,9 @@ namespace YuGiOh.Bot.Models.Cards
         public string Passcode { get; set; }
 
         public CardStatus OcgStatus { get; set; }
-        public CardStatus TcgAdvStatus { get; set; }
-        public CardStatus TcgTrnStatus { get; set; }
+        public CardStatus TcgStatus { get; set; }
+        public string GenesysPoints { get; set; }
+        // public CardStatus TcgTrnStatus { get; set; }
 
         public abstract bool HasEffect { get; }
 
@@ -84,7 +85,10 @@ namespace YuGiOh.Bot.Models.Cards
                 format += $"OCG({OcgStatus})";
 
             if (TcgExists)
-                format += $"{(OcgExists ? "/" : "")}TCG({TcgAdvStatus})/Traditional({TcgTrnStatus})";
+                format += $"{(OcgExists ? "/" : "")}TCG({TcgStatus})";
+
+            if (!string.IsNullOrWhiteSpace(GenesysPoints))
+                format += $"{(OcgExists || TcgExists ? "/" : "")}Genesys({GenesysPoints})";
 
             desc.Add(format);
 
@@ -103,9 +107,9 @@ namespace YuGiOh.Bot.Models.Cards
         protected virtual EmbedBuilder AddAdditionalFields(EmbedBuilder body)
         {
 
-            var hasArchetypes = Archetypes?.Any() == true;
-            var hasSupports = Supports?.Any() == true;
-            var hasAntisupports = AntiSupports?.Any() == true;
+            var hasArchetypes = Archetypes.Count > 0;
+            var hasSupports = Supports.Count > 0;
+            var hasAntisupports = AntiSupports.Count > 0;
 
             body = hasArchetypes ? body.AddField("Archetypes", Archetypes.Join(", "), true) : body;
             body = hasSupports ? body.AddField("Supports", Supports.Join(", "), true) : body;

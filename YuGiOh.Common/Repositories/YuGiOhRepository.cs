@@ -582,8 +582,8 @@ public class YuGiOhRepository : IYuGiOhRepository
         {
 
             BanlistFormats.OCG => "ocgstatus",
-            BanlistFormats.TCG => "tcgadvstatus",
-            BanlistFormats.TRAD => "tcgtrnstatus",
+            BanlistFormats.TCG => "tcgstatus",
+            BanlistFormats.GENESYS => "genesys",
             _ => null
 
         };
@@ -592,12 +592,28 @@ public class YuGiOhRepository : IYuGiOhRepository
 
         await connection.OpenAsync().ConfigureAwait(false);
 
-        var banlist = new Banlist
+        Banlist banlist;
+
+        if (format == BanlistFormats.GENESYS)
         {
-            Forbidden = await connection.QueryAsync<string>($"select name from cards where {formatStr} ilike 'forbidden' order by name").ConfigureAwait(false),
-            Limited = await connection.QueryAsync<string>($"select name from cards where {formatStr} ilike 'limited' order by name").ConfigureAwait(false),
-            SemiLimited = await connection.QueryAsync<string>($"select name from cards where {formatStr} ilike 'semi-limited' order by name").ConfigureAwait(false)
-        };
+
+            banlist = new Banlist()
+            {
+                Forbidden = await connection.QueryAsync<string>("select concat(name, '|', genesys) from cards where genesys is not null").ConfigureAwait(false)
+            };
+
+        }
+        else
+        {
+            
+            banlist = new Banlist
+            {
+                Forbidden = await connection.QueryAsync<string>($"select name from cards where {formatStr} ilike 'forbidden' order by name").ConfigureAwait(false),
+                Limited = await connection.QueryAsync<string>($"select name from cards where {formatStr} ilike 'limited' order by name").ConfigureAwait(false),
+                SemiLimited = await connection.QueryAsync<string>($"select name from cards where {formatStr} ilike 'semi-limited' order by name").ConfigureAwait(false)
+            };
+            
+        }
 
         return banlist;
 

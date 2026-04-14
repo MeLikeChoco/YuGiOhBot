@@ -55,10 +55,12 @@ namespace YuGiOh.Bot.Extensions
             if (card.TcgExists)
             {
 
-                card.TcgAdvStatus = GetCardStatus(entity.TcgAdvStatus);
-                card.TcgTrnStatus = GetCardStatus(entity.TcgTrnStatus);
+                card.TcgStatus = GetCardStatus(entity.TcgStatus);
+                // card.TcgTrnStatus = GetCardStatus(entity.TcgTrnStatus);
 
             }
+            
+            card.GenesysPoints = entity.Genesys;
 
             switch (card)
             {
@@ -115,20 +117,20 @@ namespace YuGiOh.Bot.Extensions
         private static CardStatus GetCardStatus(string status)
         {
 
-            if (status.Contains("not yet released", StringComparison.OrdinalIgnoreCase))
+            if (status is null || status.ContainsIgnoreCase("unreleased"))
                 return CardStatus.Unreleased;
-            if (status.Contains("forbidden", StringComparison.OrdinalIgnoreCase))
+            if (status.ContainsIgnoreCase("forbidden"))
                 return CardStatus.Forbidden;
-            if (status.Contains("illegal", StringComparison.OrdinalIgnoreCase))
+            if (status.ContainsIgnoreCase("illegal"))
                 return CardStatus.Illegal;
-            if (status.Contains("legal", StringComparison.OrdinalIgnoreCase))
+            if (status.ContainsIgnoreCase("legal"))
                 return CardStatus.Legal;
-            if (status.Contains("unlimited", StringComparison.OrdinalIgnoreCase))
+            if (status.ContainsIgnoreCase("unlimited"))
                 return CardStatus.Unlimited; //unlimited and semi limited is checked first because they both contain "limited"
-            if (status.Contains("semi", StringComparison.OrdinalIgnoreCase) && status.Contains("limited", StringComparison.OrdinalIgnoreCase))
+            if (status.ContainsIgnoreCase("semi") && status.Contains("limited"))
                 return CardStatus.SemiLimited;
 
-            return status.Contains("limited", StringComparison.OrdinalIgnoreCase) ? CardStatus.Limited : CardStatus.NA;
+            return status.ContainsIgnoreCase("limited") ? CardStatus.Limited : CardStatus.NA;
 
         }
 

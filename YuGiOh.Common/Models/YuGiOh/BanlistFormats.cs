@@ -5,6 +5,6 @@ public enum BanlistFormats
 
     OCG,
     TCG,
-    TRAD
+    GENESYS
 
 }

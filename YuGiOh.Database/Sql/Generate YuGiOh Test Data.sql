@@ -216,21 +216,21 @@ where
         (
             (
                 select id from cards
-                where tcgadvstatus = 'Forbidden'
+                where tcgstatus = 'Forbidden'
                 order by random()
                 limit 5
             )
             union all
             (
                 select id from cards
-                where tcgadvstatus = 'Limited'
+                where tcgstatus = 'Limited'
                 order by random()
                 limit 5
             )
             union all
             (
                 select id from cards
-                where tcgadvstatus = 'Semi-Limited'
+                where tcgstatus = 'Semi-Limited'
                 order by random()
                 limit 5
             )

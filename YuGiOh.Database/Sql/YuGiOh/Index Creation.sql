@@ -43,8 +43,8 @@ create index if not exists cards_real_name_idx
 create index if not exists ocgstatus_cards_idx
     on cards using gin (ocgstatus gin_trgm_ops);
 
-create index if not exists tcgadvstatus_cards_idx
-    on cards using gin (tcgadvstatus gin_trgm_ops);
+create index if not exists tcgstatus_cards_idx
+    on cards using gin (tcgstatus gin_trgm_ops);
 
 create index if not exists tcgtrnstatus_cards_idx
     on cards using gin (tcgtrnstatus gin_trgm_ops);

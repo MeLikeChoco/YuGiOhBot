@@ -19,7 +19,7 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
     public class Inquiry : MainInteractionBase<SocketSlashCommand>
     {
         
-        private IYuGiOhPricesService _yugiohPricesService;
+        private readonly IYuGiOhPricesService _yugiohPricesService;
 
         public Inquiry(
             ILoggerFactory loggerFactory,
@@ -203,8 +203,8 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
             var format = input switch
             {
                 Banlist.Ocg => BanlistFormats.OCG,
-                Banlist.TcgAdv => BanlistFormats.TCG,
-                Banlist.TcgTrad => BanlistFormats.TRAD,
+                Banlist.Tcg => BanlistFormats.TCG,
+                Banlist.Genesys => BanlistFormats.GENESYS,
                 _ => throw new ArgumentOutOfRangeException(nameof(input), input, null)
             };
 
@@ -285,11 +285,11 @@ namespace YuGiOh.Bot.Modules.Interactions.SlashCommands
         [ChoiceDisplay("OCG")]
         Ocg,
 
-        [ChoiceDisplay("TCG-Regular")]
-        TcgAdv,
+        [ChoiceDisplay("TCG")]
+        Tcg,
 
-        [ChoiceDisplay("TCG-Traditional")]
-        TcgTrad
+        [ChoiceDisplay("Genesys")]
+        Genesys
 
     }
 }

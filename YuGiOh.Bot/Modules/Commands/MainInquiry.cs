@@ -215,41 +215,39 @@ namespace YuGiOh.Bot.Modules.Commands
         }
 
         [Command("banlist")]
-        [Summary("Get the banlist of a specified format! OCG or 1, TCGADV or 2, TCGTRAD or 3")]
+        [Summary("Get the banlist of a specified format! OCG or 1, TCG or 2, GENESYS or 3")]
         public async Task BanlistCommand([Remainder] string input)
         {
-            BanlistFormats format;
-
-            switch (input.ToLower())
+            
+            var format = input.ToLower() switch
             {
-                case "ocg":
-                case "1":
-                    format = BanlistFormats.OCG;
-                    break;
-                case "tcg":
-                case "2":
-                    format = BanlistFormats.TCG;
-                    break;
-                case "tcgtrad":
-                case "trad":
-                case "3":
-                    format = BanlistFormats.TRAD;
-                    break;
-                default:
-                    format = BanlistFormats.TCG;
-                    break;
-            }
+                "ocg" or "1" => BanlistFormats.OCG,
+                "tcg" or "2" => BanlistFormats.TCG,
+                "genesys" or "3" => BanlistFormats.GENESYS,
+                _ => BanlistFormats.TCG
+            };
 
             var banlist = await YuGiOhDbService.GetBanlistAsync(format);
 
-            if (banlist.Forbidden.Any())
-                await DirectMessageAsync(FormatBanlist("Forbidden", banlist.Forbidden));
+            if (format == BanlistFormats.GENESYS)
+            {
 
-            if (banlist.Limited.Any())
-                await DirectMessageAsync(FormatBanlist("Limited", banlist.Limited));
+                await DirectMessageAsync(FormatBanlist("Genesys", banlist.Limited));
 
-            if (banlist.SemiLimited.Any())
-                await DirectMessageAsync(FormatBanlist("Semi-Limited", banlist.SemiLimited));
+            }
+            else
+            {
+                
+                if (banlist.Forbidden.Any())
+                    await DirectMessageAsync(FormatBanlist("Forbidden", banlist.Forbidden));
+
+                if (banlist.Limited.Any())
+                    await DirectMessageAsync(FormatBanlist("Limited", banlist.Limited));
+
+                if (banlist.SemiLimited.Any())
+                    await DirectMessageAsync(FormatBanlist("Semi-Limited", banlist.SemiLimited));
+                
+            }
 
             //BanlistFormat banlist;
 

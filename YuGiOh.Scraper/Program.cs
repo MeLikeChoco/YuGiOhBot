@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -29,7 +30,7 @@ namespace YuGiOh.Scraper;
 public class Program : IYuGiOhRepositoryConfiguration
 {
 
-    private static readonly HttpClient HttpClient = new();
+    // private static readonly HttpClient HttpClient = new();
     private static readonly Options Options = Options.GetInstance(new OptionsArgs());
     private static ParallelOptions ParallelOptions => Options.IsDebug ? Constant.SerialOptions : Constant.GetParallelOptions();
     private static readonly KeyValuePairEqualityComparer KeyValuePairComparer = new(); 
@@ -244,7 +245,8 @@ public class Program : IYuGiOhRepositoryConfiguration
 
         });
 
-        ClearLine();
+        if(!Options.IsSubProc)
+            ClearLine();
 
         return new ProcessorResponse
         {
@@ -348,7 +350,8 @@ public class Program : IYuGiOhRepositoryConfiguration
 
         });
 
-        ClearLine();
+        if(!Options.IsSubProc)
+            ClearLine();
 
         return new ProcessorResponse
         {
@@ -430,7 +433,8 @@ public class Program : IYuGiOhRepositoryConfiguration
 
         });
 
-        ClearLine();
+        if(!Options.IsSubProc)
+            ClearLine();
 
         return new ProcessorResponse
         {
@@ -459,11 +463,12 @@ public class Program : IYuGiOhRepositoryConfiguration
 
         });
 
-        ClearLine();
+        if(!Options.IsSubProc)
+            ClearLine();
 
     }
 
-    private static async Task<IDictionary<string, string>> GetLinks(string baseUrl)
+    private static async Task<IDictionary<string, string>> GetLinks(string apiUrl)
     {
 
         var cmcontinue = "";
@@ -472,14 +477,25 @@ public class Program : IYuGiOhRepositoryConfiguration
         do
         {
 
-            var url = Constant.ModuleToBaseUrl[Options.Module] + baseUrl + string.Format(ConstantString.CmcontinueQuery, cmcontinue);
-            var response = await HttpClient.GetStringAsync(url);
-            var responseJObject = JObject.Parse(response);
+            var url = Constant.ModuleToBaseUrl[Options.Module] + apiUrl + string.Format(ConstantString.CmcontinueQuery, cmcontinue);
+            var content = await Constant.HttpClient.GetStringAsync(url);
+
+            // using var reqMsg = new HttpRequestMessage(HttpMethod.Get, url);
+            //
+            // reqMsg.Headers.UserAgent.Add(new ProductInfoHeaderValue("YuGiOhDiscordBot", "1.0"));
+            // reqMsg.Headers.UserAgent.Add(new ProductInfoHeaderValue("(YuGiOh#7592)"));
+            //
+            // using var response = await HttpClient.SendAsync(reqMsg);
+            //
+            // response.EnsureSuccessStatusCode();
+
+            // var content = await response.Content.ReadAsStringAsync();
+            var responseJObject = JObject.Parse(content);
             cmcontinue = responseJObject["continue"]?.Value<string>("cmcontinue");
 
             foreach (var item in responseJObject["query"]!.Value<JArray>("categorymembers")!)
                 links[item.Value<string>("title")!] = item.Value<string>("pageid");
-
+            
         } while (!string.IsNullOrEmpty(cmcontinue));
 
         return links;

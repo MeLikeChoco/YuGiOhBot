@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using AngleSharp.Html.Parser;
 using YuGiOh.Scraper.Models.ParserOptions;
@@ -22,9 +24,18 @@ public static class Constant
             if (_httpClient is not null)
                 return _httpClient;
 
-            _httpClient = new HttpClient();
+            var httpClientHandler = new HttpClientHandler
+            {
+                AutomaticDecompression = DecompressionMethods.None | DecompressionMethods.GZip 
+            };
 
-            _httpClient.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", "YuGiOh discord bot created by melikechoco");
+            
+            _httpClient = new HttpClient(httpClientHandler)
+            {
+                DefaultRequestHeaders = { AcceptEncoding = { new StringWithQualityHeaderValue("gzip") } }
+            };
+
+            _httpClient.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", "YuGiOh discord bot created by MeLikeChoco");
 
             return _httpClient;
 

@@ -52,8 +52,9 @@ public abstract class BaseCardParser : ICanParse<CardEntity>
             Url = await GetUrl(),
             Passcode = await GetPasscode(),
             OcgStatus = await GetOcgStatus(),
-            TcgAdvStatus = await GetTcgAdvStatus(),
-            TcgTrnStatus = await GetTcgTrnStatus(),
+            TcgStatus = await GetTcgStatus(),
+            Genesys = await GetGenesys(),
+            // TcgTrnStatus = await GetTcgTrnStatus(),
             CardTrivia = await GetCardTrivia()
 
         };
@@ -91,8 +92,9 @@ public abstract class BaseCardParser : ICanParse<CardEntity>
     protected abstract Task<string> GetUrl();
     protected abstract Task<string> GetPasscode();
     protected abstract Task<string> GetOcgStatus();
-    protected abstract Task<string> GetTcgAdvStatus();
-    protected abstract Task<string> GetTcgTrnStatus();
+    protected abstract Task<string> GetTcgStatus();
+    protected abstract Task<string> GetGenesys();
+    // protected abstract Task<string> GetTcgTrnStatus();
     protected abstract Task<string> GetCardTrivia();
 
 }

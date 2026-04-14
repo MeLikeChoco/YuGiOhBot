@@ -15,6 +15,7 @@ namespace YuGiOh.Scraper.Models.Parsers.Yugipedia;
 public class CardParser(string id, string name) : BaseCardParser
 {
 
+    private const string UNRELEASED = "Unreleased";
     private static readonly string[] ArchetypesHeaderMustHaveWords = ["archetypes", "series"];
     private static readonly string[] StatusHeaderMayHaveWords = ["Status", "Statuses"];
 
@@ -328,32 +329,35 @@ public class CardParser(string id, string name) : BaseCardParser
     {
 
         var statusElement = _table
-            .GetElementByClassName("innertable")
-            ?
+            .GetElementByClassName("innertable")?
             .GetElementsByTagName("tr")
             .FirstOrDefault(element
                 => StatusHeaderMayHaveWords.Any(word
-                    => element.FirstElementChild?.TextContent?.ContainsIgnoreCase(word) == true));
+                    => element.FirstElementChild?.TextContent?.ContainsIgnoreCase(word) == true)
+            );
 
         if (statusElement is null)
-            return Task.FromResult("Unreleased");
+            return Task.FromResult(UNRELEASED);
 
-        var status = statusElement.LastElementChild?.FirstElementChild?.FirstElementChild;
+        var status = statusElement
+            .LastElementChild?
+            .FirstElementChild?
+            .Children
+            .FirstOrDefault(element => element.TextContent.Trim().EndsWith("(OCG)"));
 
         return Task.FromResult(
-            status?.TextContent.ContainsIgnoreCase("ocg") == true ?
+            status != null ?
                 status.GetElementByTagName("a").TextContent.Trim() :
-                "Unreleased"
+                UNRELEASED
         );
 
     }
 
-    protected override Task<string> GetTcgAdvStatus()
+    protected override Task<string> GetTcgStatus()
     {
 
         var statusElement = _table
-            .GetElementByClassName("innertable")
-            ?
+            .GetElementByClassName("innertable")?
             .GetElementsByTagName("tr")
             .FirstOrDefault(element
                 => StatusHeaderMayHaveWords.Any(word
@@ -361,7 +365,7 @@ public class CardParser(string id, string name) : BaseCardParser
             );
 
         if (statusElement is null)
-            return Task.FromResult("Unreleased");
+            return Task.FromResult(UNRELEASED);
 
         var status = statusElement
             .LastElementChild?
@@ -372,15 +376,43 @@ public class CardParser(string id, string name) : BaseCardParser
         return Task.FromResult(
             status != null ?
                 status.GetElementByTagName("a").TextContent.Trim() :
-                "Unreleased"
+                UNRELEASED
         );
 
     }
 
-    protected override Task<string> GetTcgTrnStatus()
+    protected override Task<string> GetGenesys()
     {
-        return Task.FromResult<string>(null);
+
+        var statusElement = _table
+            .GetElementByClassName("innertable")?
+            .GetElementsByTagName("tr")
+            .FirstOrDefault(element
+                => StatusHeaderMayHaveWords.Any(word
+                    => element.FirstElementChild?.TextContent.ContainsIgnoreCase(word) == true)
+            );
+
+        if (statusElement is null)
+            return Task.FromResult("0");
+
+        var status = statusElement
+            .LastElementChild?
+            .FirstElementChild?
+            .Children
+            .FirstOrDefault(element => element.TextContent.Trim().EndsWith("(Genesys)"));
+        
+        return Task.FromResult(
+            status != null ?
+                string.Join("", status.TextContent.TakeWhile(c => c != '(')).Trim() :
+                "0"
+        );
+
     }
+
+    // protected override Task<string> GetTcgTrnStatus()
+    // {
+    //     return Task.FromResult<string>(null);
+    // }
 
     protected override Task<string> GetCardTrivia()
     {

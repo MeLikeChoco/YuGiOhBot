@@ -44,8 +44,8 @@ create table if not exists cards
     url varchar,
     passcode varchar,
     ocgstatus varchar,
-    tcgadvstatus varchar,
-    tcgtrnstatus varchar,
+    tcgstatus varchar,
+    genesys varchar,
     cardtrivia varchar
 );
 

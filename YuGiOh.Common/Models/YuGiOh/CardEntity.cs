@@ -65,9 +65,10 @@ public class CardEntity
 
     public string Passcode { get; set; }
 
-    public string OcgStatus { get; set; } = "N/A";
-    public string TcgAdvStatus { get; set; } = "N/A";
-    public string TcgTrnStatus { get; set; } = "N/A";
+    public string OcgStatus { get; set; }
+    public string TcgStatus { get; set; }
+    public string Genesys { get; set; }
+    // public string TcgTrnStatus { get; set; } = "N/A";
 
     public string CardTrivia { get; set; }
 
