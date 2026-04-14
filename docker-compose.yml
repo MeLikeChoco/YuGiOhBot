@@ -1,7 +1,7 @@
 services:
   db:
     container_name: YuGiOhBot_postgres
-    image: postgres:16-bullseye
+    image: postgres:18-trixie
     ports:
       - "5432:5432"
     environment:
