@@ -1,4 +1,4 @@
-namespace YuGiOh.Scraper.Test.Parsers.Yugipedia;
+namespace YuGiOh.Scraper.Test.Parsers.Yugipedia.IntegrationTests;
 
 public class BoosterPackParserTests
 {

@@ -1,7 +1,7 @@
 using YuGiOh.Common.Models.YuGiOh;
 using YuGiOh.Scraper.Models.Parsers.Yugipedia;
 
-namespace YuGiOh.Scraper.Test.Parsers.Yugipedia;
+namespace YuGiOh.Scraper.Test.Parsers.Yugipedia.IntegrationTests;
 
 public class TestBoosterPackParser : BoosterPackParser, IDisposable
 {

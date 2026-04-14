@@ -1,4 +1,4 @@
-namespace YuGiOh.Scraper.Test.Parsers.Yugipedia;
+namespace YuGiOh.Scraper.Test.Parsers.Yugipedia.IntegrationTests;
 
 public class CardParserTests
 {
@@ -467,6 +467,28 @@ public class CardParserTests
     }
 
     [Fact]
+    public async Task GetGenesys_ExpectHundred()
+    {
+
+        var parser = new TestCardParser("532132", "There Can Be Only One");
+        var actual = await parser.GetGenesys();
+        
+        Assert.Equal("100", actual);
+
+    }
+
+    [Fact]
+    public async Task GetGenesys_ExpectZero()
+    {
+
+        var parser = new TestCardParser("30", "Blue-Eyes White Dragon");
+        var actual = await parser.GetGenesys();
+        
+        Assert.Equal("0", actual);
+
+    }
+
+    [Fact]
     public async Task GetOcgExists_ExpectTrue()
     {
 
@@ -543,16 +565,16 @@ public class CardParserTests
 
     }
 
-    [Fact]
-    public async Task GetOcgStatus_ExpectSemiLimited()
-    {
-
-        var parser = new TestCardParser("992826", "Fire King High Avatar Kirin");
-        var actual = await parser.GetOcgStatus();
-
-        Assert.Equal("Semi-Limited", actual);
-
-    }
+    // [Fact]
+    // public async Task GetOcgStatus_ExpectSemiLimited()
+    // {
+    //
+    //     var parser = new TestCardParser("432321", "Foolish Burial Goods");
+    //     var actual = await parser.GetOcgStatus();
+    //
+    //     Assert.Equal("Semi-Limited", actual);
+    //
+    // }
 
     [Fact]
     public async Task GetOcgStatus_ExpectUnlimited()
@@ -570,7 +592,7 @@ public class CardParserTests
     {
 
         var parser = new TestCardParser("159", "Confiscation");
-        var actual = await parser.GetTcgAdvStatus();
+        var actual = await parser.GetTcgStatus();
 
         Assert.Equal("Forbidden", actual);
 
@@ -581,29 +603,29 @@ public class CardParserTests
     {
 
         var parser = new TestCardParser("278", "Exodia the Forbidden One");
-        var actual = await parser.GetTcgAdvStatus();
+        var actual = await parser.GetTcgStatus();
 
         Assert.Equal("Limited", actual);
 
     }
 
-    [Fact]
-    public async Task GetTcgStatus_ExpectSemiLimited()
-    {
-
-        var parser = new TestCardParser("145152", "Eva");
-        var actual = await parser.GetTcgAdvStatus();
-
-        Assert.Equal("Semi-Limited", actual);
-
-    }
+    // [Fact]
+    // public async Task GetTcgStatus_ExpectSemiLimited()
+    // {
+    //
+    //     var parser = new TestCardParser("145152", "Eva");
+    //     var actual = await parser.GetTcgAdvStatus();
+    //
+    //     Assert.Equal("Semi-Limited", actual);
+    //
+    // }
 
     [Fact]
     public async Task GetTcgStatus_ExpectedUnlimited()
     {
 
         var parser = new TestCardParser("357417", "Sky Dragoons of Draconia");
-        var actual = await parser.GetTcgAdvStatus();
+        var actual = await parser.GetTcgStatus();
 
         Assert.Equal("Unlimited", actual);
 

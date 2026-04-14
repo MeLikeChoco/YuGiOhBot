@@ -1,7 +1,7 @@
 using YuGiOh.Common.Models.YuGiOh;
 using YuGiOh.Scraper.Models.Parsers.Yugipedia;
 
-namespace YuGiOh.Scraper.Test.Parsers.Yugipedia;
+namespace YuGiOh.Scraper.Test.Parsers.Yugipedia.IntegrationTests;
 
 public class TestCardParser : CardParser, IDisposable
 {
@@ -151,15 +151,20 @@ public class TestCardParser : CardParser, IDisposable
         return base.GetOcgStatus();
     }
 
-    public new Task<string> GetTcgAdvStatus()
+    public new Task<string> GetTcgStatus()
     {
-        return base.GetTcgAdvStatus();
+        return base.GetTcgStatus();
     }
 
-    public new Task<string> GetTcgTrnStatus()
+    public new Task<string> GetGenesys()
     {
-        return base.GetTcgTrnStatus();
+        return base.GetGenesys();
     }
+
+    // public new Task<string> GetTcgTrnStatus()
+    // {
+    //     return base.GetTcgTrnStatus();
+    // }
 
     public new Task<string> GetCardTrivia()
     {

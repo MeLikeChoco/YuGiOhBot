@@ -11,7 +11,7 @@ public record Config
 
     [JsonInclude]
     [JsonPropertyName("Db Connection Strings")]
-    public Dictionary<string, DbConnectionStrings> DbConnectionStrings { get; private set; } = null!;
+    public CaseInsensitiveDictionary<DbConnectionStrings> DbConnectionStrings { get; private set; } = null!;
 
     private static Config? _instance;
 
@@ -48,3 +48,5 @@ public record DbConnectionStrings
     public string? Guilds { get; init; }
 
 }
+
+public class CaseInsensitiveDictionary<TV>() : Dictionary<string, TV>(StringComparer.OrdinalIgnoreCase);
